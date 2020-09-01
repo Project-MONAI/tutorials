@@ -26,8 +26,8 @@ This tutorial shows how to apply the automatic mixed precision(AMP) feature of P
 And compares the training speed and memory usage with/without AMP.
 #### [brats_segmentation_3d](./brats_segmentation_3d.ipynb)
 This tutorial shows how to construct a training workflow of multi-labels segmentation task based on [MSD Brain Tumor dataset](http://medicaldecathlon.com).
-#### [cache_dataset_speed](./cache_dataset_speed.ipynb)
-This tutorial shows how to accelerate PyTorch medical DL program based on MONAI `CacheDataset`.
+#### [dataset_type_performance](./dataset_type_performance.ipynb)
+This notebook compares the performance of `Dataset`, `CacheDataset` and `PersistentDataset`. These classes differ in how data is stored (in memory or on disk), and at which moment transforms are applied.
 #### [integrate_3rd_party_transforms](./integrate_3rd_party_transforms.ipynb)
 This tutorial shows how to integrate 3rd party transforms into MONAI program.
 Mainly shows transforms from BatchGenerator, TorchIO, Rising and ITK.
@@ -46,10 +46,6 @@ This tutorial shows how to leverage `EnsembleEvaluator`, `MeanEnsemble` and `Vot
 This notebook is a quick demo for devices, run the Ignite trainer engine on CPU, GPU and multiple GPUs.
 #### [nifti_read_example](./nifti_read_example.ipynb)
 Illustrate reading NIfTI files and iterating over image patches of the volumes loaded from them.
-#### [persistent_dataset_speed](./persistent_dataset_speed.ipynb)
-This notebook shows `PersistentDataset` that processes original data sources through the non-random transforms on first use.
-And stores these intermediate tensor values to an on-disk persistence representation.
-The intermediate processed tensors are loaded from disk on each use for processing by the random-transforms for each analysis request.
 #### [post_transforms](./post_transforms.ipynb)
 This notebook shows the usage of several post transforms based on the model output of spleen segmentation task.
 #### [public_datasets](./public_datasets.ipynb)

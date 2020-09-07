@@ -31,6 +31,8 @@ This notebook compares the performance of `Dataset`, `CacheDataset` and `Persist
 #### [integrate_3rd_party_transforms](./integrate_3rd_party_transforms.ipynb)
 This tutorial shows how to integrate 3rd party transforms into MONAI program.
 Mainly shows transforms from BatchGenerator, TorchIO, Rising and ITK.
+#### [load_medical_imagesl](./load_medical_images.ipynb)
+This notebook introduces how to easily load different formats of medical images in MONAI and execute many additional operations.
 #### [mednist_GAN_tutorial](./mednist_GAN_tutorial.ipynb)
 This notebook illustrates the use of MONAI for training a network to generate images from a random input tensor.
 A simple GAN is employed to do with a separate Generator and Discriminator networks.

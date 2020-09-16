@@ -30,7 +30,7 @@ This tutorial shows how to construct a training workflow of multi-labels segment
 This notebook compares the performance of `Dataset`, `CacheDataset` and `PersistentDataset`. These classes differ in how data is stored (in memory or on disk), and at which moment transforms are applied.
 #### [fast_training_tutorial](./fast_training_tutorial.ipynb)
 This tutorial compares the training performance of pure PyTorch program and optimized program in MONAI based on NVIDIA GPU device and latest CUDA library.
-The optimization methods mainly include: `AMP`, `SmartCache` and `Novograd`.
+The optimization methods mainly include: `AMP`, `CacheDataset` and `Novograd`.
 #### [integrate_3rd_party_transforms](./integrate_3rd_party_transforms.ipynb)
 This tutorial shows how to integrate 3rd party transforms into MONAI program.
 Mainly shows transforms from BatchGenerator, TorchIO, Rising and ITK.

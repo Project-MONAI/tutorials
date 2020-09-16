@@ -28,6 +28,9 @@ And compares the training speed and memory usage with/without AMP.
 This tutorial shows how to construct a training workflow of multi-labels segmentation task based on [MSD Brain Tumor dataset](http://medicaldecathlon.com).
 #### [dataset_type_performance](./dataset_type_performance.ipynb)
 This notebook compares the performance of `Dataset`, `CacheDataset` and `PersistentDataset`. These classes differ in how data is stored (in memory or on disk), and at which moment transforms are applied.
+#### [fast_training_tutorial](./fast_training_tutorial.ipynb)
+This tutorial compares the training performance of pure PyTorch program and optimized program in MONAI based on NVIDIA GPU device and latest CUDA library.
+The optimization methods mainly include: `AMP`, `CacheDataset` and `Novograd`.
 #### [integrate_3rd_party_transforms](./integrate_3rd_party_transforms.ipynb)
 This tutorial shows how to integrate 3rd party transforms into MONAI program.
 Mainly shows transforms from BatchGenerator, TorchIO, Rising and ITK.
@@ -48,6 +51,8 @@ This tutorial shows how to leverage `EnsembleEvaluator`, `MeanEnsemble` and `Vot
 This notebook is a quick demo for devices, run the Ignite trainer engine on CPU, GPU and multiple GPUs.
 #### [nifti_read_example](./nifti_read_example.ipynb)
 Illustrate reading NIfTI files and iterating over image patches of the volumes loaded from them.
+#### [nnunet_tutorial](./nnunet_tutorial.ipynb)
+This tutorial shows how to train 3D segmentation tasks on all the 10 decathlon datasets with the reimplementation of NNUnet in MONAI.
 #### [post_transforms](./post_transforms.ipynb)
 This notebook shows the usage of several post transforms based on the model output of spleen segmentation task.
 #### [public_datasets](./public_datasets.ipynb)

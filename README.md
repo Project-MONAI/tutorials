@@ -51,8 +51,8 @@ This tutorial shows how to leverage `EnsembleEvaluator`, `MeanEnsemble` and `Vot
 This notebook is a quick demo for devices, run the Ignite trainer engine on CPU, GPU and multiple GPUs.
 #### [nifti_read_example](./nifti_read_example.ipynb)
 Illustrate reading NIfTI files and iterating over image patches of the volumes loaded from them.
-#### [nnunet_tutorial](./nnunet_tutorial.ipynb)
-This tutorial shows how to train 3D segmentation tasks on all the 10 decathlon datasets with the reimplementation of NNUnet in MONAI.
+#### [dynunet_tutorial](./dynunet_tutorial.ipynb)
+This tutorial shows how to train 3D segmentation tasks on all the 10 decathlon datasets with the reimplementation of dynUNet in MONAI.
 #### [post_transforms](./post_transforms.ipynb)
 This notebook shows the usage of several post transforms based on the model output of spleen segmentation task.
 #### [public_datasets](./public_datasets.ipynb)

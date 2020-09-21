@@ -40,118 +40,103 @@ else
 fi
 
 
-# run training files in examples/classification_3d
-for file in "examples/classification_3d"/*train*
+# run training files in 3d_classification/torch
+for file in "3d_classification/torch"/*train*
 do
     python "$file"
 done
 
-# check training files generated from examples/classification_3d
-[ -e "./best_metric_model_classification3d_array.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples classification_3d: model file not generated" | tee $TEMP_LOG && exit 0)
-[ -e "./best_metric_model_classification3d_dict.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples classification_3d: model file not generated" | tee $TEMP_LOG && exit 0)
+# check training files generated from 3d_classification/torch
+[ -e "./best_metric_model_classification3d_array.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples 3d classification torch: model file not generated" | tee $TEMP_LOG && exit 0)
+[ -e "./best_metric_model_classification3d_dict.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples 3d classification torch: model file not generated" | tee $TEMP_LOG && exit 0)
 
-# run eval files in examples/classification_3d
-for file in "examples/classification_3d"/*eval*
-do
-    python "$file"
-done
-
-
-# run training files in examples/classification_3d_ignite
-for file in "examples/classification_3d_ignite"/*train*
-do
-    python "$file"
-done
-
-# check training files generated from examples/classification_3d_ignite
-[ -e "./runs_array/net_checkpoint_20.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples classification_3d_ignite: model file not generated" | tee $TEMP_LOG && exit 0)
-[ -e "./runs_dict/net_checkpoint_20.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples classification_3d_ignite: model file not generated" | tee $TEMP_LOG && exit 0)
-
-# run eval files in examples/classification_3d_ignite
-for file in "examples/classification_3d_ignite"/*eval*
+# run eval files in 3d_classification/torch
+for file in "3d_classification/torch"/*eval*
 do
     python "$file"
 done
 
 
-# run training files in examples/segmentation_2d
-for file in "examples/segmentation_2d"/*train*
+# run training files in 3d_classification/ignite
+for file in "3d_classification/ignite"/*train*
 do
     python "$file"
 done
 
-# check training files generated from examples/segmentation_2d
-[ -e "./best_metric_model_segmentation2d_array.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples segmentation_2d: model file not generated" | tee $TEMP_LOG && exit 0)
-[ -e "./best_metric_model_segmentation2d_dict.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples segmentation_2d: model file not generated" | tee $TEMP_LOG && exit 0)
+# check training files generated from 3d_classification/ignite
+[ -e "./runs_array/net_checkpoint_20.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples 3d classification ignite: model file not generated" | tee $TEMP_LOG && exit 0)
+[ -e "./runs_dict/net_checkpoint_20.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples 3d classification ignite: model file not generated" | tee $TEMP_LOG && exit 0)
 
-# run eval files in examples/segmentation_2d
-for file in "examples/segmentation_2d"/*eval*
-do
-    python "$file"
-done
-
-
-# run training files in examples/segmentation_3d
-for file in "examples/segmentation_3d"/*train*
-do
-    python "$file"
-done
-
-# check training files generated from examples/segmentation_3d
-[ -e "./best_metric_model_segmentation3d_array.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples segmentation_3d: model file not generated" | tee $TEMP_LOG && exit 0)
-[ -e "./best_metric_model_segmentation3d_dict.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples segmentation_3d: model file not generated" | tee $TEMP_LOG && exit 0)
-
-# run eval files in examples/segmentation_3d
-for file in "examples/segmentation_3d"/*eval*
+# run eval files in 3d_classification/ignite
+for file in "3d_classification/ignite"/*eval*
 do
     python "$file"
 done
 
 
-# run training files in examples/segmentation_3d_ignite
-for file in "examples/segmentation_3d_ignite"/*train*
+# run training files in 2d_segmentation/torch
+for file in "2d_segmentation/torch"/*train*
 do
     python "$file"
 done
 
-# check training files generated from examples/segmentation_3d_ignite
-[ -e "./runs_array/net_checkpoint_100.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples segmentation_3d_ignite: model file not generated" | tee $TEMP_LOG && exit 0)
-[ -e "./runs_dict/net_checkpoint_50.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples segmentation_3d_ignite: model file not generated" | tee $TEMP_LOG && exit 0)
+# check training files generated from 2d_segmentation/torch
+[ -e "./best_metric_model_segmentation2d_array.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples 2d segmentation torch: model file not generated" | tee $TEMP_LOG && exit 0)
+[ -e "./best_metric_model_segmentation2d_dict.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples 2d segmentation torch: model file not generated" | tee $TEMP_LOG && exit 0)
 
-# run eval files in examples/segmentation_3d_ignite
-for file in "examples/segmentation_3d_ignite"/*eval*
-do
-    python "$file"
-done
-
-
-# run training file in examples/workflows
-for file in "examples/workflows"/*train*
-do
-    python "$file"
-done
-
-# check training file generated from examples/workflows
-[ -e "./runs/net_key_metric*.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples workflows: model file not generated" | tee $TEMP_LOG && exit 0)
-
-# run eval file in examples/workflows
-for file in "examples/workflows"/*eval*
+# run eval files in 2d_segmentation/torch
+for file in "2d_segmentation/torch"/*eval*
 do
     python "$file"
 done
 
 
-# run training file in examples/synthesis
-for file in "examples/synthesis"/*train*
+# run training files in 3d_segmentation/torch
+for file in "3d_segmentation/torch"/*train*
 do
     python "$file"
 done
 
-# check training file generated from examples/synthesis
-[ -e "./model_out/*.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples synthesis: model file not generated" | tee $TEMP_LOG && exit 0)
+# check training files generated from 3d_segmentation/torch
+[ -e "./best_metric_model_segmentation3d_array.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples 3d segmentation torch: model file not generated" | tee $TEMP_LOG && exit 0)
+[ -e "./best_metric_model_segmentation3d_dict.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples 3d segmentation torch: model file not generated" | tee $TEMP_LOG && exit 0)
 
-# run eval file in examples/synthesis
-for file in "examples/synthesis"/*eval*
+# run eval files in 3d_segmentation/torch
+for file in "3d_segmentation/torch"/*eval*
+do
+    python "$file"
+done
+
+
+# run training files in 3d_segmentation/ignite
+for file in "3d_segmentation/ignite"/*train*
+do
+    python "$file"
+done
+
+# check training files generated from 3d_segmentation/ignite
+[ -e "./runs_array/net_checkpoint_100.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples 3d segmentation ignite: model file not generated" | tee $TEMP_LOG && exit 0)
+[ -e "./runs_dict/net_checkpoint_50.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples 3d segmentation ignite: model file not generated" | tee $TEMP_LOG && exit 0)
+
+# run eval files in 3d_segmentation/ignite
+for file in "3d_segmentation/ignite"/*eval*
+do
+    python "$file"
+done
+
+
+# run training file in modules/workflows
+for file in "modules/workflows"/*train*
+do
+    python "$file"
+done
+
+# check training file generated from modules/workflows
+[ -e "./runs/net_key_metric*.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples supervised workflows: model file not generated" | tee $TEMP_LOG && exit 0)
+[ -e "./model_out/*.pth" ] && echo "1" >> $TEMP_LOG || (echo "examples GAN workflows: model file not generated" | tee $TEMP_LOG && exit 0)
+
+# run eval file in modules/workflows
+for file in "modules/workflows"/*eval*
 do
     python "$file"
 done

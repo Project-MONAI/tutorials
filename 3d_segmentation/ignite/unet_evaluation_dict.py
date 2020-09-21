@@ -67,8 +67,7 @@ def main(tempdir):
         channels=(16, 32, 64, 128, 256),
         strides=(2, 2, 2, 2),
         num_res_units=2,
-    )
-    net.to(device)
+    ).to(device)
 
     # define sliding window size and batch size for windows inference
     roi_size = (96, 96, 96)
@@ -104,7 +103,7 @@ def main(tempdir):
         output_transform=lambda output: predict_segmentation(output[0]),
     ).attach(evaluator)
     # the model was trained by "unet_training_dict" example
-    CheckpointLoader(load_path="./runs_dict/net_checkpoint_50.pth", load_dict={"net": net}).attach(evaluator)
+    CheckpointLoader(load_path="./runs_dict/net_checkpoint_50.pt", load_dict={"net": net}).attach(evaluator)
 
     # sliding window inference for one image at every iteration
     val_loader = DataLoader(

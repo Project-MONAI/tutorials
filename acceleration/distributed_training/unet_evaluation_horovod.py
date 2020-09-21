@@ -115,6 +115,7 @@ def evaluate(args):
 
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device(f"cuda:{hvd.local_rank()}")
+    torch.cuda.set_device(device)
     model = monai.networks.nets.UNet(
         dimensions=3,
         in_channels=1,

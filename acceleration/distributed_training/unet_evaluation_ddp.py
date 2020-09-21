@@ -107,6 +107,7 @@ def evaluate(args):
 
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device(f"cuda:{args.local_rank}")
+    torch.cuda.set_device(device)
     model = monai.networks.nets.UNet(
         dimensions=3,
         in_channels=1,
@@ -116,7 +117,7 @@ def evaluate(args):
         num_res_units=2,
     ).to(device)
     # wrap the model with DistributedDataParallel module
-    model = DistributedDataParallel(model, device_ids=[args.local_rank])
+    model = DistributedDataParallel(model, device_ids=[device])
     # config mapping to expected GPU device
     map_location = {"cuda:0": f"cuda:{args.local_rank}"}
     # load model parameters to GPU device

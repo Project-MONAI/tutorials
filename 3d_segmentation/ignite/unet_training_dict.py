@@ -112,6 +112,7 @@ def main(tempdir):
     )
 
     # create UNet, DiceLoss and Adam optimizer
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     net = monai.networks.nets.UNet(
         dimensions=3,
         in_channels=1,
@@ -119,11 +120,10 @@ def main(tempdir):
         channels=(16, 32, 64, 128, 256),
         strides=(2, 2, 2, 2),
         num_res_units=2,
-    )
+    ).to(device)
     loss = monai.losses.DiceLoss(sigmoid=True)
     lr = 1e-3
     opt = torch.optim.Adam(net.parameters(), lr)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Ignite trainer expects batch=(img, seg) and returns output=loss at every iteration,
     # user can add output_transform to return other values, like: y_pred, y, etc.

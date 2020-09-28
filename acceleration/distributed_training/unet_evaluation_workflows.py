@@ -32,7 +32,7 @@ Main steps to set up the distributed evaluation:
 - Wrap Dataset with `DistributedSampler`, disable the `shuffle` in sampler and DataLoader.
 - Add `StatsHandler` and `SegmentationSaver` to the master process which is `dist.get_rank() == 0`.
 - ignite can automatically reduce metrics for distributed evaluation, refer to:
-  https://github.com/pytorch/ignite/blob/v0.3.0/ignite/metrics/metric.py#L85
+  https://github.com/pytorch/ignite/blob/v0.4.2/ignite/metrics/metric.py#L507
 
 Note:
     `torch.distributed.launch` will launch `nnodes * nproc_per_node = world_size` processes in total.
@@ -121,6 +121,7 @@ def evaluate(args):
 
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device(f"cuda:{args.local_rank}")
+    torch.cuda.set_device(device)
     net = monai.networks.nets.UNet(
         dimensions=3,
         in_channels=1,
@@ -130,7 +131,7 @@ def evaluate(args):
         num_res_units=2,
     ).to(device)
     # wrap the model with DistributedDataParallel module
-    net = DistributedDataParallel(net, device_ids=[args.local_rank])
+    net = DistributedDataParallel(net, device_ids=[device])
 
     val_post_transforms = Compose(
         [
@@ -141,7 +142,7 @@ def evaluate(args):
     )
     val_handlers = [
         CheckpointLoader(
-            load_path="./runs/checkpoint_epoch=4.pth",
+            load_path="./runs/checkpoint_epoch=4.pt",
             load_dict={"net": net},
             # config mapping to expected GPU device
             map_location={"cuda:0": f"cuda:{args.local_rank}"},

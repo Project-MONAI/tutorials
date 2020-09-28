@@ -60,8 +60,7 @@ def main(tempdir):
         channels=(16, 32, 64, 128, 256),
         strides=(2, 2, 2, 2),
         num_res_units=2,
-    )
-    net.to(device)
+    ).to(device)
 
     # define sliding window size and batch size for windows inference
     roi_size = (96, 96, 96)
@@ -99,7 +98,7 @@ def main(tempdir):
     file_saver.attach(evaluator)
 
     # the model was trained by "unet_training_array" example
-    ckpt_saver = CheckpointLoader(load_path="./runs_array/net_checkpoint_100.pth", load_dict={"net": net})
+    ckpt_saver = CheckpointLoader(load_path="./runs_array/net_checkpoint_100.pt", load_dict={"net": net})
     ckpt_saver.attach(evaluator)
 
     # sliding window inference for one image at every iteration

@@ -127,6 +127,7 @@ def train(args):
 
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device(f"cuda:{args.local_rank}")
+    torch.cuda.set_device(device)
     model = monai.networks.nets.UNet(
         dimensions=3,
         in_channels=1,
@@ -138,7 +139,7 @@ def train(args):
     loss_function = monai.losses.DiceLoss(sigmoid=True).to(device)
     optimizer = torch.optim.Adam(model.parameters(), 1e-3)
     # wrap the model with DistributedDataParallel module
-    model = DistributedDataParallel(model, device_ids=[args.local_rank])
+    model = DistributedDataParallel(model, device_ids=[device])
 
     # start a typical PyTorch training
     epoch_loss_values = list()

@@ -32,7 +32,7 @@ Main steps to set up the distributed training:
   Instead, `SupervisedTrainer` shuffles data by `train_sampler.set_epoch(epoch)` before every epoch.
 - Add `StatsHandler` and `CheckpointHandler` to the master process which is `dist.get_rank() == 0`.
 - ignite can automatically reduce metrics for distributed training, refer to:
-  https://github.com/pytorch/ignite/blob/v0.3.0/ignite/metrics/metric.py#L85
+  https://github.com/pytorch/ignite/blob/v0.4.2/ignite/metrics/metric.py#L507
 
 Note:
     `torch.distributed.launch` will launch `nnodes * nproc_per_node = world_size` processes in total.
@@ -134,6 +134,7 @@ def train(args):
 
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device(f"cuda:{args.local_rank}")
+    torch.cuda.set_device(device)
     net = monai.networks.nets.UNet(
         dimensions=3,
         in_channels=1,
@@ -142,11 +143,11 @@ def train(args):
         strides=(2, 2, 2, 2),
         num_res_units=2,
     ).to(device)
-    loss = monai.losses.DiceLoss(sigmoid=True).to(device)
+    loss = monai.losses.DiceLoss(sigmoid=True)
     opt = torch.optim.Adam(net.parameters(), 1e-3)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=2, gamma=0.1)
     # wrap the model with DistributedDataParallel module
-    net = DistributedDataParallel(net, device_ids=[args.local_rank])
+    net = DistributedDataParallel(net, device_ids=[device])
 
     train_post_transforms = Compose(
         [

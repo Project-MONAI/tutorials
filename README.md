@@ -88,8 +88,8 @@ This notebook is a quick demo for devices, run the Ignite trainer engine on CPU,
 Illustrate reading NIfTI files and test speed of different transforms on different devices.
 
 **modules**
-#### [workflows](./modules/workflows)
-Training and evaluation examples of 3D segmentation based on UNet3D and synthetic dataset. And GAN training and evaluation example for a medical image generative adversarial network. Easy run training script uses `GanTrainer` to train a 2D CT scan reconstruction network. Evaluation script generates random samples from a trained network.
+#### [engines](./modules/engines)
+Training and evaluation examples of 3D segmentation based on UNet3D and synthetic dataset with MONAI workflows, which contains engines, event-handlers, and post-transforms. And GAN training and evaluation example for a medical image generative adversarial network. Easy run training script uses `GanTrainer` to train a 2D CT scan reconstruction network. Evaluation script generates random samples from a trained network.
 
 The examples are built with MONAI workflows, mainly contain: trainer/evaluator, handlers, post_transforms, etc.
 #### [3d_image_transforms](./modules/3d_image_transforms.ipynb)

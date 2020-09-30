@@ -104,8 +104,10 @@ This notebook introduces how to easily load different formats of medical images 
 #### [mednist_GAN_tutorial](./modules/mednist_GAN_tutorial.ipynb)
 This notebook illustrates the use of MONAI for training a network to generate images from a random input tensor.
 A simple GAN is employed to do with a separate Generator and Discriminator networks.
-#### [mednist_GAN_workflow](./modules/mednist_GAN_workflow.ipynb)
-This notebook shows the `GanTrainer`, a MONAI workflow engine for modularized adversarial learning. Train a medical image reconstruction network using the MedNIST hand CT scan dataset. Based on the tutorial.
+#### [mednist_GAN_workflow_dict](./modules/mednist_GAN_workflow_dict.ipynb)
+This notebook shows the `GanTrainer`, a MONAI workflow engine for modularized adversarial learning. Train a medical image reconstruction network using the MedNIST hand CT scan dataset. Dictionary version.
+#### [mednist_GAN_workflow_array](./modules/mednist_GAN_workflow_array.ipynb)
+This notebook shows the `GanTrainer`, a MONAI workflow engine for modularized adversarial learning. Train a medical image reconstruction network using the MedNIST hand CT scan dataset. Array version.
 #### [models_ensemble](./modules/models_ensemble.ipynb)
 This tutorial shows how to leverage `EnsembleEvaluator`, `MeanEnsemble` and `VoteEnsemble` modules in MONAI to set up ensemble program.
 #### [nifti_read_example](./modules/nifti_read_example.ipynb)

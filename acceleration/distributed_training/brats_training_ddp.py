@@ -236,6 +236,7 @@ def main_worker(args):
 
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device(f"cuda:{args.local_rank}")
+    torch.cuda.set_device(device)
     if args.network == "UNet":
         model = UNet(
             dimensions=3,
@@ -250,7 +251,7 @@ def main_worker(args):
     loss_function = DiceLoss(to_onehot_y=False, sigmoid=True, squared_pred=True)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-5, amsgrad=True)
     # wrap the model with DistributedDataParallel module
-    model = DistributedDataParallel(model, device_ids=[args.local_rank])
+    model = DistributedDataParallel(model, device_ids=[device])
 
     # start a typical PyTorch training
     total_epoch = args.epochs

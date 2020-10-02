@@ -74,8 +74,7 @@ The examples show how to execute distributed training and evaluation based on 3 
 - PyTorch ignite and MONAI workflows.
 
 They can run on several distributed nodes with multiple GPU devices on every node.
-#### [automatic_mixed_precision](./acceleration/accautomatic_mixed_precision.ipynb)
-This tutorial shows how to apply the automatic mixed precision(AMP) feature of PyTorch into training and evaluation programs.
+#### [automatic_mixed_precision](./acceleration/automatic_mixed_precision.ipynb)
 And compares the training speed and memory usage with/without AMP.
 #### [dataset_type_performance](./acceleration/dataset_type_performance.ipynb)
 This notebook compares the performance of `Dataset`, `CacheDataset` and `PersistentDataset`. These classes differ in how data is stored (in memory or on disk), and at which moment transforms are applied.

@@ -43,7 +43,7 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # load generator
-    network_filepath = glob("./model_out/*.pth")[0]
+    network_filepath = glob("./model_out/*.pt")[0]
     data = torch.load(network_filepath)
     latent_size = 64
     gen_net = Generator(

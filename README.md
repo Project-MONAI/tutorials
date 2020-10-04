@@ -6,6 +6,7 @@ Most of the examples and tutorials require
 [matplotlib](https://matplotlib.org/) and [Jupyter Notebook](https://jupyter.org/).
 
 These could be installed by:
+
 ```bash
 python -m pip install -U pip
 python -m pip install -U matplotlib
@@ -13,11 +14,33 @@ python -m pip install -U notebook
 ```
 
 Some of the examples may require optional dependencies. In case of any optional import errors,
-please install the relevant packages according to the error message.
+please install the relevant packages according to MONAI's [installation guide](https://docs.monai.io/en/latest/installation.html).
 Or install all optional requirements by:
-```
+
+```bash
 pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/master/requirements-dev.txt
 ```
+
+#### Run the notebooks from Colab
+
+Most of the Jupyter Notebooks have an "Open in Colab" button.
+Please right-click on the button, and select "Open Link in New Tab" to start a Colab page with the corresponding notebook content.
+
+To use GPU resources through Colab, please remember to change the runtime type to `GPU`:
+
+1. From the `Runtime` menu select `Change runtime type`
+1. Choose `GPU` from the drop-down menu
+1. Click `SAVE`
+This will reset the notebook and may ask you if you are a robot (these instructions assume you are not).
+
+Running:
+
+```bash
+!nvidia-smi
+```
+
+in a cell will verify this has worked and show you what kind of hardware you have access to.
+
 ### 2. List of notebooks and examples
 **2D classification**
 #### [mednist_tutorial](./2d_classification/mednist_tutorial.ipynb)
@@ -74,8 +97,7 @@ The examples show how to execute distributed training and evaluation based on 3 
 - PyTorch ignite and MONAI workflows.
 
 They can run on several distributed nodes with multiple GPU devices on every node.
-#### [automatic_mixed_precision](./acceleration/accautomatic_mixed_precision.ipynb)
-This tutorial shows how to apply the automatic mixed precision(AMP) feature of PyTorch into training and evaluation programs.
+#### [automatic_mixed_precision](./acceleration/automatic_mixed_precision.ipynb)
 And compares the training speed and memory usage with/without AMP.
 #### [dataset_type_performance](./acceleration/dataset_type_performance.ipynb)
 This notebook compares the performance of `Dataset`, `CacheDataset` and `PersistentDataset`. These classes differ in how data is stored (in memory or on disk), and at which moment transforms are applied.

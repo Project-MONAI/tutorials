@@ -89,6 +89,10 @@ This notebook shows how MONAI may be used in conjunction with the [Catalyst](htt
 This notebook is an end-to-end training & evaluation example of 3D segmentation based on synthetic dataset.
 The example is a PyTorch Ignite program and shows several key features of MONAI, especially with medical domain specific transforms and event handlers.
 
+**federated learning**
+### [Substra](./federated_learning/substra)
+The example show how to execute the 3d segmentation torch tutorial on a federated learning platform, Substra.
+
 **acceleration**
 #### [distributed_training](./acceleration/distributed_training)
 The examples show how to execute distributed training and evaluation based on 3 different frameworks:

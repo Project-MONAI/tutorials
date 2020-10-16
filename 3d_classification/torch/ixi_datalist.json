@@ -4,7 +4,7 @@
     "meta": {
       "lastUpdated": "2020-09-25T01:00:00Z"
     },
-    "type": "batch",
+    "type": "collection",
     "entry": [
         {
             "resource": {
@@ -13,8 +13,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI314-IOP-0889-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI314-IOP-0889-T1.nii.gz"
                 },
                 "note": {
                     "text": "man"
@@ -28,8 +28,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI249-Guys-1072-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI249-Guys-1072-T1.nii.gz"
                 },
                 "note": {
                     "text": "man"
@@ -43,8 +43,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI609-HH-2600-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI609-HH-2600-T1.nii.gz"
                 },
                 "note": {
                     "text": "man"
@@ -58,8 +58,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI173-HH-1590-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI173-HH-1590-T1.nii.gz"
                 },
                 "note": {
                     "text": "woman"
@@ -73,8 +73,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI020-Guys-0700-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI020-Guys-0700-T1.nii.gz"
                 },
                 "note": {
                     "text": "man"
@@ -88,8 +88,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI342-Guys-0909-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI342-Guys-0909-T1.nii.gz"
                 },
                 "note": {
                     "text": "man"
@@ -103,8 +103,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI134-Guys-0780-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI134-Guys-0780-T1.nii.gz"
                 },
                 "note": {
                     "text": "man"
@@ -118,8 +118,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI577-HH-2661-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI577-HH-2661-T1.nii.gz"
                 },
                 "note": {
                     "text": "woman"
@@ -133,8 +133,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI066-Guys-0731-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI066-Guys-0731-T1.nii.gz"
                 },
                 "note": {
                     "text": "woman"
@@ -148,8 +148,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI130-HH-1528-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI130-HH-1528-T1.nii.gz"
                 },
                 "note": {
                     "text": "man"
@@ -163,8 +163,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI607-Guys-1097-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI607-Guys-1097-T1.nii.gz"
                 },
                 "note": {
                     "text": "man"
@@ -178,8 +178,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI175-HH-1570-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI175-HH-1570-T1.nii.gz"
                 },
                 "note": {
                     "text": "man"
@@ -193,8 +193,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI385-HH-2078-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI385-HH-2078-T1.nii.gz"
                 },
                 "note": {
                     "text": "woman"
@@ -208,8 +208,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI344-Guys-0905-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI344-Guys-0905-T1.nii.gz"
                 },
                 "note": {
                     "text": "man"
@@ -223,8 +223,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI409-Guys-0960-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI409-Guys-0960-T1.nii.gz"
                 },
                 "note": {
                     "text": "woman"
@@ -238,8 +238,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI584-Guys-1129-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI584-Guys-1129-T1.nii.gz"
                 },
                 "note": {
                     "text": "man"
@@ -253,8 +253,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI253-HH-1694-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI253-HH-1694-T1.nii.gz"
                 },
                 "note": {
                     "text": "woman"
@@ -268,8 +268,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI092-HH-1436-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI092-HH-1436-T1.nii.gz"
                 },
                 "note": {
                     "text": "man"
@@ -283,8 +283,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI574-IOP-1156-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI574-IOP-1156-T1.nii.gz"
                 },
                 "note": {
                     "text": "woman"
@@ -298,8 +298,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI585-Guys-1130-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI585-Guys-1130-T1.nii.gz"
                 },
                 "note": {
                     "text": "man"
@@ -313,8 +313,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI607-Guys-1097-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI607-Guys-1097-T1.nii.gz"
                 },
                 "note": {
                     "text": "man"
@@ -328,8 +328,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI175-HH-1570-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI175-HH-1570-T1.nii.gz"
                 },
                 "note": {
                     "text": "man"
@@ -343,8 +343,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI385-HH-2078-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI385-HH-2078-T1.nii.gz"
                 },
                 "note": {
                     "text": "woman"
@@ -358,8 +358,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI344-Guys-0905-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI344-Guys-0905-T1.nii.gz"
                 },
                 "note": {
                     "text": "man"
@@ -373,8 +373,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI409-Guys-0960-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI409-Guys-0960-T1.nii.gz"
                 },
                 "note": {
                     "text": "woman"
@@ -388,8 +388,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI584-Guys-1129-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI584-Guys-1129-T1.nii.gz"
                 },
                 "note": {
                     "text": "man"
@@ -403,8 +403,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI253-HH-1694-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI253-HH-1694-T1.nii.gz"
                 },
                 "note": {
                     "text": "woman"
@@ -418,8 +418,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI092-HH-1436-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI092-HH-1436-T1.nii.gz"
                 },
                 "note": {
                     "text": "man"
@@ -433,8 +433,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI574-IOP-1156-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI574-IOP-1156-T1.nii.gz"
                 },
                 "note": {
                     "text": "woman"
@@ -448,8 +448,8 @@
                 "status": "unknown",
                 "type": "image",
                 "content": {
-                    "contentType": "image/nifti",
-                    "url": "IXI585-Guys-1130-T1.nii.gz"
+                    "contentType": "application/x-gzip",
+                    "url": "file://IXI585-Guys-1130-T1.nii.gz"
                 },
                 "note": {
                     "text": "man"

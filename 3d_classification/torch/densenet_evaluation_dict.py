@@ -31,7 +31,10 @@ def main():
     with open("ixi_datalist.json") as ixi_datalist:
         datalist = json.load(ixi_datalist)
     dirpath = os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1"])
-    images = [os.path.join(dirpath, datalist["entry"][i]["resource"]["content"]["url"]) for i in range(21, 30)]
+    images = list()
+    for i in range(21, 30):
+        filename = datalist["entry"][i]["resource"]["content"]["url"].split("//")[-1]
+        images.append(os.path.join(dirpath, filename))
     # 2 binary labels for gender classification: man and woman
     labels = [0 if datalist["entry"][i]["resource"]["note"]["text"] == "man" else 1 for i in range(21, 30)]
     labels = np.array(labels, dtype=np.int64)

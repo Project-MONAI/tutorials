@@ -5,7 +5,7 @@ This repository hosts the MONAI tutorials.
 Most of the examples and tutorials require
 [matplotlib](https://matplotlib.org/) and [Jupyter Notebook](https://jupyter.org/).
 
-These could be installed by:
+These can be installed with:
 
 ```bash
 python -m pip install -U pip
@@ -15,7 +15,7 @@ python -m pip install -U notebook
 
 Some of the examples may require optional dependencies. In case of any optional import errors,
 please install the relevant packages according to MONAI's [installation guide](https://docs.monai.io/en/latest/installation.html).
-Or install all optional requirements by:
+Or install all optional requirements with:
 
 ```bash
 pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/master/requirements-dev.txt
@@ -46,7 +46,7 @@ in a cell will verify this has worked and show you what kind of hardware you hav
 #### [mednist_tutorial](./2d_classification/mednist_tutorial.ipynb)
 This notebook shows how to easily integrate MONAI features into existing PyTorch programs.
 It's based on the MedNIST dataset which is very suitable for beginners as a tutorial.
-The content is also available as [a Colab tutorial](https://colab.research.google.com/drive/1wy8XUSnNWlhDNazFdvGBHLfdkGvOHBKe).
+This tutorial also makes use of MONAI's in-built occlusion sensitivity functionality.
 
 **2D segmentation**
 #### [torch examples](./2d_segmentation/torch)
@@ -120,6 +120,10 @@ Training and evaluation examples of 3D segmentation based on UNet3D and syntheti
 The examples are built with MONAI workflows, mainly contain: trainer/evaluator, handlers, post_transforms, etc.
 #### [3d_image_transforms](./modules/3d_image_transforms.ipynb)
 This notebook demonstrates the transformations on volumetric images.
+
+#### [autoencoder_mednist](./modules/autoencoder_mednist)
+This tutorial uses the MedNIST hand CT scan dataset to demonstrate MONAI's autoencoder class. The autoencoder is used with an identity encode/decode (i.e., what you put in is what you should get back), as well as demonstrating its usage for de-blurring and de-noising.
+
 #### [dynunet_tutorial](./modules/dynunet_tutorial.ipynb)
 This tutorial shows how to train 3D segmentation tasks on all the 10 decathlon datasets with the reimplementation of dynUNet in MONAI.
 #### [integrate_3rd_party_transforms](./modules/integrate_3rd_party_transforms.ipynb)

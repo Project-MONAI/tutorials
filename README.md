@@ -21,7 +21,7 @@ Or install all optional requirements with:
 pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/master/requirements-dev.txt
 ```
 
-#### 2. Run the notebooks from Colab
+#### Run the notebooks from Colab
 
 Most of the Jupyter Notebooks have an "Open in Colab" button.
 Please right-click on the button, and select "Open Link in New Tab" to start a Colab page with the corresponding notebook content.
@@ -41,7 +41,7 @@ Running:
 
 in a cell will verify this has worked and show you what kind of hardware you have access to.
 
-### 3. List of notebooks and examples
+### 2. List of notebooks and examples
 **2D classification**
 #### [mednist_tutorial](./2d_classification/mednist_tutorial.ipynb)
 This notebook shows how to easily integrate MONAI features into existing PyTorch programs.

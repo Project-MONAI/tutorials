@@ -114,9 +114,7 @@ This notebook is a quick demo for devices, run the Ignite trainer engine on CPU,
 Illustrate reading NIfTI files and test speed of different transforms on different devices.
 
 **modules**
-
 #### [engines](./modules/engines)
-
 Training and evaluation examples of 3D segmentation based on UNet3D and synthetic dataset with MONAI workflows, which contains engines, event-handlers, and post-transforms. And GAN training and evaluation example for a medical image generative adversarial network. Easy run training script uses `GanTrainer` to train a 2D CT scan reconstruction network. Evaluation script generates random samples from a trained network.
 
 The examples are built with MONAI workflows, mainly contain: trainer/evaluator, handlers, post_transforms, etc.
@@ -124,11 +122,9 @@ The examples are built with MONAI workflows, mainly contain: trainer/evaluator, 
 This notebook demonstrates the transformations on volumetric images.
 
 #### [autoencoder_mednist](./modules/autoencoder_mednist)
-
 This tutorial uses the MedNIST hand CT scan dataset to demonstrate MONAI's autoencoder class. The autoencoder is used with an identity encode/decode (i.e., what you put in is what you should get back), as well as demonstrating its usage for de-blurring and de-noising.
 
 #### [dynunet_tutorial](./modules/dynunet_tutorial.ipynb)
-
 This tutorial shows how to train 3D segmentation tasks on all the 10 decathlon datasets with the reimplementation of dynUNet in MONAI.
 #### [integrate_3rd_party_transforms](./modules/integrate_3rd_party_transforms.ipynb)
 This tutorial shows how to integrate 3rd party transforms into MONAI program.

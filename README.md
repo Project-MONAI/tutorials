@@ -112,6 +112,8 @@ This tutorial compares the training performance of pure PyTorch program and opti
 The optimization methods mainly include: `AMP`, `CacheDataset` and `Novograd`.
 #### [multi_gpu_test](./acceleration/multi_gpu_test.ipynb)
 This notebook is a quick demo for devices, run the Ignite trainer engine on CPU, GPU and multiple GPUs.
+#### [threadbuffer_performance](./acceleration/threadbuffer_performance.ipynb)
+Demonstrates the use of the `ThreadBuffer` class used to generate data batches during training in a separate thread.
 #### [transform_speed](./acceleration/transform_speed.ipynb)
 Illustrate reading NIfTI files and test speed of different transforms on different devices.
 

@@ -281,8 +281,8 @@ def infer(data_folder=".", model_folder="runs", prediction_folder="output"):
 if __name__ == "__main__":
     """
     Usage:
-        python run_net.py train --data_folder "Dataset_TrainValidation/Train" # run the training pipeline
-        python run_net.py infer --data_folder "Dataset_TrainValidation/Validation" # run the inference pipeline
+        python run_net.py train --data_folder "COVID-19-20_v2/Train" # run the training pipeline
+        python run_net.py infer --data_folder "COVID-19-20_v2/Validation" # run the inference pipeline
     """
     parser = argparse.ArgumentParser(description="Run a basic UNet segmentation baseline.")
     parser.add_argument(
@@ -297,10 +297,10 @@ if __name__ == "__main__":
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
     if args.mode == "train":
-        data_folder = args.data_folder or os.path.join("Dataset_TrainValidation", "Train")
+        data_folder = args.data_folder or os.path.join("COVID-19-20_v2", "Train")
         train(data_folder=data_folder, model_folder=args.model_folder)
     elif args.mode == "infer":
-        data_folder = args.data_folder or os.path.join("Dataset_TrainValidation", "Validation")
+        data_folder = args.data_folder or os.path.join("COVID-19-20_v2", "Validation")
         infer(data_folder=data_folder, model_folder=args.model_folder)
     else:
         raise ValueError("Unknown mode.")

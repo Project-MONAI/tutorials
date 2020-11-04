@@ -57,7 +57,7 @@ Download `run_net.py` to a local folder. The following instructions assume that 
 ### Training (and validation at every epoch)
 
 ```bash
-python run_net.py train --data_folder "Dataset_TrainValidation/Train" --model_folder "runs"
+python run_net.py train --data_folder "COVID-19-20_v2/Train" --model_folder "runs"
 ```
 
 During training, the top three models will be selected based on the per-epoch validation and stored at `--model_folders`.
@@ -92,7 +92,7 @@ Note that the evaluation scores from this inference pipeline is not computed at 
 ### Inference
 
 ```bash
-python run_net.py infer --data_folder "Dataset_TrainValidation/Validation" --model_folder "runs"
+python run_net.py infer --data_folder "COVID-19-20_v2/Validation" --model_folder "runs"
 ```
 
 This command will load the best validation model, run inference, and store the predictions at `./output`.

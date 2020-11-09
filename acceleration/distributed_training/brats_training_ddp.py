@@ -71,7 +71,9 @@ from monai.losses import DiceLoss
 from monai.metrics import DiceMetric
 from monai.networks.nets import SegResNet, UNet
 from monai.transforms import (
+    Activations,
     AsChannelFirstd,
+    AsDiscrete,
     CenterSpatialCropd,
     Compose,
     LoadNiftid,
@@ -344,29 +346,31 @@ def evaluate(model, data_loader, device):
 
     model.eval()
     with torch.no_grad():
-        dice_metric = DiceMetric(include_background=True, sigmoid=True, reduction="mean")
+        dice_metric = DiceMetric(include_background=True, reduction="mean")
+        post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
         for val_data in data_loader:
             val_inputs, val_labels = (
                 val_data["image"].to(device, non_blocking=True),
                 val_data["label"].to(device, non_blocking=True),
             )
             val_outputs = model(val_inputs)
+            val_outputs = post_trans(val_outputs)
             # compute overall mean dice
-            value = dice_metric(y_pred=val_outputs, y=val_labels).squeeze()
-            metric[0] += value * dice_metric.not_nans
-            metric[1] += dice_metric.not_nans
+            value, not_nans = dice_metric(y_pred=val_outputs, y=val_labels).squeeze()
+            metric[0] += value * not_nans
+            metric[1] += not_nans
             # compute mean dice for TC
-            value_tc = dice_metric(y_pred=val_outputs[:, 0:1], y=val_labels[:, 0:1]).squeeze()
-            metric[2] += value_tc * dice_metric.not_nans
-            metric[3] += dice_metric.not_nans
+            value_tc, not_nans = dice_metric(y_pred=val_outputs[:, 0:1], y=val_labels[:, 0:1]).squeeze()
+            metric[2] += value_tc * not_nans
+            metric[3] += not_nans
             # compute mean dice for WT
-            value_wt = dice_metric(y_pred=val_outputs[:, 1:2], y=val_labels[:, 1:2]).squeeze()
-            metric[4] += value_wt * dice_metric.not_nans
-            metric[5] += dice_metric.not_nans
+            value_wt, not_nans = dice_metric(y_pred=val_outputs[:, 1:2], y=val_labels[:, 1:2]).squeeze()
+            metric[4] += value_wt * not_nans
+            metric[5] += not_nans
             # compute mean dice for ET
-            value_et = dice_metric(y_pred=val_outputs[:, 2:3], y=val_labels[:, 2:3]).squeeze()
-            metric[6] += value_et * dice_metric.not_nans
-            metric[7] += dice_metric.not_nans
+            value_et, not_nans = dice_metric(y_pred=val_outputs[:, 2:3], y=val_labels[:, 2:3]).squeeze()
+            metric[6] += value_et * not_nans
+            metric[7] += not_nans
 
         # synchronizes all processes and reduce results
         dist.barrier()

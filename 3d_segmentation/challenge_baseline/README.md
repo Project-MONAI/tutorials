@@ -103,7 +103,7 @@ This command will load the best validation model, run inference, and store the p
 <img src="../../figures/curves.png" width="75%" alt='training curves'>
 </p>
 
-This baseline method achieves 0.7068 ± 0.1816 Dice score on the challenge validation set.
+This baseline method achieves 0.6904 ± 0.1801 Dice score on the challenge validation set.
 
 ### Further readings
 

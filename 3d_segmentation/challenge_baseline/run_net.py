@@ -25,6 +25,7 @@ import monai
 from monai.handlers import CheckpointSaver, MeanDice, StatsHandler, ValidationHandler
 from monai.transforms import (
     AddChanneld,
+    AsDiscreted,
     CastToTyped,
     LoadNiftid,
     Orientationd,
@@ -131,7 +132,6 @@ def train(data_folder=".", model_folder="runs"):
 
     amp = True  # auto. mixed precision
     keys = ("image", "label")
-    is_one_hot = False  # whether the label has multiple channels to represent  multiple class
     train_frac, val_frac = 0.8, 0.2
     n_train = int(train_frac * len(images)) + 1
     n_val = min(len(images) - n_train, int(val_frac * len(images)))
@@ -171,11 +171,8 @@ def train(data_folder=".", model_folder="runs"):
     opt = torch.optim.Adam(net.parameters(), lr=lr)
 
     # create evaluator (to be used to measure model quality during training
-    val_metric = MeanDice(
-        include_background=False,
-        to_onehot_y=not is_one_hot,
-        mutually_exclusive=True,
-        output_transform=lambda x: (x["pred"], x["label"]),
+    val_post_transform = monai.transforms.Compose(
+        [AsDiscreted(keys=("pred", "label"), argmax=(True, False), to_onehot=True, n_classes=2)]
     )
     val_handlers = [
         ProgressBar(),
@@ -186,7 +183,10 @@ def train(data_folder=".", model_folder="runs"):
         val_data_loader=val_loader,
         network=net,
         inferer=get_inferer(),
-        key_val_metric={"val_mean_dice": val_metric},
+        post_transform=val_post_transform,
+        key_val_metric={
+            "val_mean_dice": MeanDice(include_background=False, output_transform=lambda x: (x["pred"], x["label"]))
+        },
         val_handlers=val_handlers,
         amp=amp,
     )
@@ -271,7 +271,7 @@ def infer(data_folder=".", model_folder="runs", prediction_folder="output"):
     files = glob.glob(os.path.join(prediction_folder, "volume*", "*.nii.gz"))
     for f in files:
         new_name = os.path.basename(f)
-        new_name = new_name[len("volume-covid19-A-0"):]
+        new_name = new_name[len("volume-covid19-A-0") :]
         new_name = new_name[: -len("_ct_seg.nii.gz")] + ".nii.gz"
         to_name = os.path.join(submission_dir, new_name)
         shutil.copy(f, to_name)

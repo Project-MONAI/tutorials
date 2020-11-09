@@ -62,11 +62,10 @@ import numpy as np
 import torch
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel
-from torch.utils.data.distributed import DistributedSampler
 from torch.utils.tensorboard import SummaryWriter
 
 from monai.apps import DecathlonDataset
-from monai.data import DataLoader
+from monai.data import DataLoader, partition_dataset
 from monai.losses import DiceLoss
 from monai.metrics import DiceMetric
 from monai.networks.nets import SegResNet, UNet
@@ -113,26 +112,6 @@ class ConvertToMultiChannelBasedOnBratsClassesd(MapTransform):
         return d
 
 
-def partition_dataset(data, shuffle: bool = False, seed: int = 0):
-    """
-    Partition the dataset for distributed training, every rank process only train with its own data partition.
-    It can be useful for `CacheDataset` or `SmartCacheDataset`, because every rank process can only compute and
-    cache its own data.
-    Note that every rank process will shuffle data only in its own partition if set `shuffle=True` to DataLoader.
-    The alternative solution is to use `DistributedSampler`, which supports global shuffle before every epoch.
-    But if using `CacheDataset` or `SmartCacheDataset`, every rank process will cache duplicated data content and
-    raise system memory usage.
-    Args:
-        data: data list to partition, assumed to be of constant size.
-        shuffle: if true, will shuffle the indices of data list before partition.
-        seed: random seed to shuffle the indices if `shuffle=True`.
-            this number should be identical across all processes in the distributed group.
-    """
-    sampler: DistributedSampler = DistributedSampler(dataset=data, shuffle=shuffle)  # type: ignore
-    sampler.set_epoch(seed)
-    return [data[i] for i in sampler]
-
-
 class BratsCacheDataset(DecathlonDataset):
     def __init__(
         self,
@@ -160,7 +139,14 @@ class BratsCacheDataset(DecathlonDataset):
 
     def _generate_data_list(self, dataset_dir):
         data = super()._generate_data_list(dataset_dir)
-        return partition_dataset(data, shuffle=self.shuffle, seed=0)
+        return partition_dataset(
+            data=data,
+            num_partitons=dist.get_world_size(),
+            shuffle=self.shuffle,
+            seed=0,
+            drop_last=False,
+            even_divisible=self.shuffle,
+        )[dist.get_rank()]
 
 
 def main_worker(args):

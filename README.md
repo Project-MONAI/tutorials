@@ -41,6 +41,10 @@ Running:
 
 in a cell will verify this has worked and show you what kind of hardware you have access to.
 
+#### Data
+
+Some notebooks will require additional data. They can be downloaded by running the [runexamples.sh](./runexamples.sh) script.
+
 ### 2. List of notebooks and examples
 **2D classification**
 #### [mednist_tutorial](./2d_classification/mednist_tutorial.ipynb)

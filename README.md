@@ -5,7 +5,7 @@ This repository hosts the MONAI tutorials.
 Most of the examples and tutorials require
 [matplotlib](https://matplotlib.org/) and [Jupyter Notebook](https://jupyter.org/).
 
-These could be installed by:
+These can be installed with:
 
 ```bash
 python -m pip install -U pip
@@ -15,7 +15,7 @@ python -m pip install -U notebook
 
 Some of the examples may require optional dependencies. In case of any optional import errors,
 please install the relevant packages according to MONAI's [installation guide](https://docs.monai.io/en/latest/installation.html).
-Or install all optional requirements by:
+Or install all optional requirements with:
 
 ```bash
 pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/master/requirements-dev.txt
@@ -41,12 +41,16 @@ Running:
 
 in a cell will verify this has worked and show you what kind of hardware you have access to.
 
+#### Data
+
+Some notebooks will require additional data. They can be downloaded by running the [runexamples.sh](./runexamples.sh) script.
+
 ### 2. List of notebooks and examples
 **2D classification**
 #### [mednist_tutorial](./2d_classification/mednist_tutorial.ipynb)
 This notebook shows how to easily integrate MONAI features into existing PyTorch programs.
 It's based on the MedNIST dataset which is very suitable for beginners as a tutorial.
-The content is also available as [a Colab tutorial](https://colab.research.google.com/drive/1wy8XUSnNWlhDNazFdvGBHLfdkGvOHBKe).
+This tutorial also makes use of MONAI's in-built occlusion sensitivity functionality.
 
 **2D segmentation**
 #### [torch examples](./2d_segmentation/torch)
@@ -88,6 +92,8 @@ This notebook shows how MONAI may be used in conjunction with the [Catalyst](htt
 #### [unet_segmentation_3d_ignite](./3d_segmentation/unet_segmentation_3d_ignite.ipynb)
 This notebook is an end-to-end training & evaluation example of 3D segmentation based on synthetic dataset.
 The example is a PyTorch Ignite program and shows several key features of MONAI, especially with medical domain specific transforms and event handlers.
+#### [COVID 19-20 challenge baseline](./3d_segmentation/challenge_baseline)
+This folder provides a simple baseline method for training, validation, and inference for [COVID-19 LUNG CT LESION SEGMENTATION CHALLENGE - 2020](https://covid-segmentation.grand-challenge.org/COVID-19-20/) (a MICCAI Endorsed Event).
 
 **federated learning**
 #### [Substra](./federated_learning/substra)
@@ -110,6 +116,8 @@ This tutorial compares the training performance of pure PyTorch program and opti
 The optimization methods mainly include: `AMP`, `CacheDataset` and `Novograd`.
 #### [multi_gpu_test](./acceleration/multi_gpu_test.ipynb)
 This notebook is a quick demo for devices, run the Ignite trainer engine on CPU, GPU and multiple GPUs.
+#### [threadbuffer_performance](./acceleration/threadbuffer_performance.ipynb)
+Demonstrates the use of the `ThreadBuffer` class used to generate data batches during training in a separate thread.
 #### [transform_speed](./acceleration/transform_speed.ipynb)
 Illustrate reading NIfTI files and test speed of different transforms on different devices.
 
@@ -120,6 +128,10 @@ Training and evaluation examples of 3D segmentation based on UNet3D and syntheti
 The examples are built with MONAI workflows, mainly contain: trainer/evaluator, handlers, post_transforms, etc.
 #### [3d_image_transforms](./modules/3d_image_transforms.ipynb)
 This notebook demonstrates the transformations on volumetric images.
+
+#### [autoencoder_mednist](./modules/autoencoder_mednist)
+This tutorial uses the MedNIST hand CT scan dataset to demonstrate MONAI's autoencoder class. The autoencoder is used with an identity encode/decode (i.e., what you put in is what you should get back), as well as demonstrating its usage for de-blurring and de-noising.
+
 #### [dynunet_tutorial](./modules/dynunet_tutorial.ipynb)
 This tutorial shows how to train 3D segmentation tasks on all the 10 decathlon datasets with the reimplementation of dynUNet in MONAI.
 #### [integrate_3rd_party_transforms](./modules/integrate_3rd_party_transforms.ipynb)

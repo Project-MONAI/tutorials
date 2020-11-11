@@ -159,3 +159,6 @@ This notebook shows how to quickly set up training workflow based on `MedNISTDat
 #### [transforms_demo_2d](./modules/transforms_demo_2d.ipynb)
 This notebook demonstrates the image transformations on histology images using
 [the GlaS Contest dataset](https://warwick.ac.uk/fac/sci/dcs/research/tia/glascontest/download/).
+
+#### [varautoencoder_mednist](./modules/varautoencoder_mednist)
+This tutorial uses the MedNIST scan (or alternatively the MNIST) dataset to demonstrate MONAI's variational autoencoder class.

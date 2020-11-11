@@ -3,11 +3,12 @@ import torch
 
 import monai
 from monai.inferers import sliding_window_inference
-
+from monai.transforms import Activations, AsDiscrete
 
 class MonaiAlgo(tools.algo.Algo):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     loss_function = monai.losses.DiceLoss(sigmoid=True)
+    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
 
     def _get_model(self):
         model = monai.networks.nets.UNet(
@@ -58,6 +59,7 @@ class MonaiAlgo(tools.algo.Algo):
                 roi_size = (96, 96, 96)
                 sw_batch_size = 4
                 outputs = sliding_window_inference(inputs, roi_size, sw_batch_size, model)
+                outputs = post_trans(outputs)
                 y_pred.append((outputs, metadata))
         return y_pred
 

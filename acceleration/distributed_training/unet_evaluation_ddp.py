@@ -135,7 +135,8 @@ def evaluate(args):
             sw_batch_size = 4
             val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
             val_outputs = post_trans(val_outputs)
-            value, not_nans = dice_metric(y_pred=val_outputs, y=val_labels).squeeze()
+            value, not_nans = dice_metric(y_pred=val_outputs, y=val_labels)
+            value = value.squeeze()
             metric[0] += value * not_nans
             metric[1] += not_nans
         # synchronizes all processes and reduce results

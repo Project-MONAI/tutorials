@@ -143,7 +143,7 @@ class BratsCacheDataset(DecathlonDataset):
         data = super()._generate_data_list(dataset_dir)
         return partition_dataset(
             data=data,
-            num_partitons=dist.get_world_size(),
+            num_partitions=dist.get_world_size(),
             shuffle=self.shuffle,
             seed=0,
             drop_last=False,
@@ -342,19 +342,23 @@ def evaluate(model, data_loader, device):
             val_outputs = model(val_inputs)
             val_outputs = post_trans(val_outputs)
             # compute overall mean dice
-            value, not_nans = dice_metric(y_pred=val_outputs, y=val_labels).squeeze()
+            value, not_nans = dice_metric(y_pred=val_outputs, y=val_labels)
+            value = value.squeeze()
             metric[0] += value * not_nans
             metric[1] += not_nans
             # compute mean dice for TC
-            value_tc, not_nans = dice_metric(y_pred=val_outputs[:, 0:1], y=val_labels[:, 0:1]).squeeze()
+            value_tc, not_nans = dice_metric(y_pred=val_outputs[:, 0:1], y=val_labels[:, 0:1])
+            value_tc = value_tc.squeeze()
             metric[2] += value_tc * not_nans
             metric[3] += not_nans
             # compute mean dice for WT
-            value_wt, not_nans = dice_metric(y_pred=val_outputs[:, 1:2], y=val_labels[:, 1:2]).squeeze()
+            value_wt, not_nans = dice_metric(y_pred=val_outputs[:, 1:2], y=val_labels[:, 1:2])
+            value_wt = value_wt.squeeze()
             metric[4] += value_wt * not_nans
             metric[5] += not_nans
             # compute mean dice for ET
-            value_et, not_nans = dice_metric(y_pred=val_outputs[:, 2:3], y=val_labels[:, 2:3]).squeeze()
+            value_et, not_nans = dice_metric(y_pred=val_outputs[:, 2:3], y=val_labels[:, 2:3])
+            value_et = value_et.squeeze()
             metric[6] += value_et * not_nans
             metric[7] += not_nans
 

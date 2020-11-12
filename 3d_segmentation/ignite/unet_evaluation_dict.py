@@ -27,7 +27,7 @@ from monai.handlers import CheckpointLoader, MeanDice, SegmentationSaver, StatsH
 from monai.inferers import sliding_window_inference
 from monai.networks import predict_segmentation
 from monai.networks.nets import UNet
-from monai.transforms import AsChannelFirstd, Compose, LoadNiftid, ScaleIntensityd, ToTensord
+from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadNiftid, ScaleIntensityd, ToTensord
 
 
 def main(tempdir):
@@ -73,17 +73,20 @@ def main(tempdir):
     roi_size = (96, 96, 96)
     sw_batch_size = 4
 
+    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+
     def _sliding_window_processor(engine, batch):
         net.eval()
         with torch.no_grad():
             val_images, val_labels = batch["img"].to(device), batch["seg"].to(device)
             seg_probs = sliding_window_inference(val_images, roi_size, sw_batch_size, net)
+            seg_probs = post_trans(seg_probs)
             return seg_probs, val_labels
 
     evaluator = Engine(_sliding_window_processor)
 
     # add evaluation metric to the evaluator engine
-    MeanDice(sigmoid=True, to_onehot_y=False).attach(evaluator, "Mean_Dice")
+    MeanDice().attach(evaluator, "Mean_Dice")
 
     # StatsHandler prints loss at every iteration and print metrics at every epoch,
     # we don't need to print loss for evaluator, so just print metrics, user can also customize print functions

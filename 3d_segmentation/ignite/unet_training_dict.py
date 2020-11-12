@@ -33,7 +33,9 @@ from monai.handlers import (
 )
 from monai.networks import predict_segmentation
 from monai.transforms import (
+    Activations,
     AsChannelFirstd,
+    AsDiscrete,
     Compose,
     LoadNiftid,
     RandCropByPosNegLabeld,
@@ -152,11 +154,14 @@ def main(tempdir):
     # set parameters for validation
     metric_name = "Mean_Dice"
     # add evaluation metric to the evaluator engine
-    val_metrics = {metric_name: MeanDice(sigmoid=True, to_onehot_y=False)}
+    val_metrics = {metric_name: MeanDice()}
+
+    post_pred = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+    post_label = AsDiscrete(threshold_values=True)
 
     # Ignite evaluator expects batch=(img, seg) and returns output=(y_pred, y) at every iteration,
     # user can add output_transform to return other values
-    evaluator = create_supervised_evaluator(net, val_metrics, device, True, prepare_batch=prepare_batch)
+    evaluator = create_supervised_evaluator(net, val_metrics, device, True, output_transform=lambda x, y, y_pred: (post_pred(y_pred), post_label(y)), prepare_batch=prepare_batch)
 
     @trainer.on(Events.ITERATION_COMPLETED(every=validation_every_n_iters))
     def run_validation(engine):

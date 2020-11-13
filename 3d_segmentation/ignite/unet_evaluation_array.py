@@ -25,9 +25,8 @@ from monai import config
 from monai.data import NiftiDataset, create_test_image_3d
 from monai.handlers import CheckpointLoader, MeanDice, SegmentationSaver, StatsHandler
 from monai.inferers import sliding_window_inference
-from monai.networks import predict_segmentation
 from monai.networks.nets import UNet
-from monai.transforms import AddChannel, Compose, ScaleIntensity, ToTensor
+from monai.transforms import Activations, AddChannel, AsDiscrete, Compose, ScaleIntensity, ToTensor
 
 
 def main(tempdir):
@@ -66,17 +65,20 @@ def main(tempdir):
     roi_size = (96, 96, 96)
     sw_batch_size = 4
 
+    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+
     def _sliding_window_processor(engine, batch):
         net.eval()
         with torch.no_grad():
             val_images, val_labels = batch[0].to(device), batch[1].to(device)
             seg_probs = sliding_window_inference(val_images, roi_size, sw_batch_size, net)
+            seg_probs = post_trans(seg_probs)
             return seg_probs, val_labels
 
     evaluator = Engine(_sliding_window_processor)
 
     # add evaluation metric to the evaluator engine
-    MeanDice(sigmoid=True, to_onehot_y=False).attach(evaluator, "Mean_Dice")
+    MeanDice().attach(evaluator, "Mean_Dice")
 
     # StatsHandler prints loss at every iteration and print metrics at every epoch,
     # we don't need to print loss for evaluator, so just print metrics, user can also customize print functions
@@ -93,7 +95,7 @@ def main(tempdir):
         output_postfix="seg",
         name="evaluator",
         batch_transform=lambda x: x[2],
-        output_transform=lambda output: predict_segmentation(output[0]),
+        output_transform=lambda output: output[0],
     )
     file_saver.attach(evaluator)
 

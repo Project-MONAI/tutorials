@@ -63,7 +63,7 @@ import monai
 from monai.data import DataLoader, Dataset, create_test_image_3d
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
-from monai.transforms import AsChannelFirstd, Compose, LoadNiftid, ScaleIntensityd, ToTensord
+from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadNiftid, ScaleIntensityd, ToTensord
 
 
 def evaluate(args):
@@ -103,8 +103,8 @@ def evaluate(args):
     val_sampler = DistributedSampler(val_ds, shuffle=False)
     # sliding window inference need to input 1 image in every iteration
     val_loader = DataLoader(val_ds, batch_size=1, shuffle=False, num_workers=2, pin_memory=True, sampler=val_sampler)
-    dice_metric = DiceMetric(include_background=True, to_onehot_y=False, sigmoid=True, reduction="mean")
-
+    dice_metric = DiceMetric(include_background=True, reduction="mean")
+    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device(f"cuda:{args.local_rank}")
     torch.cuda.set_device(device)
@@ -134,9 +134,11 @@ def evaluate(args):
             roi_size = (96, 96, 96)
             sw_batch_size = 4
             val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
-            value = dice_metric(y_pred=val_outputs, y=val_labels).squeeze()
-            metric[0] += value * dice_metric.not_nans
-            metric[1] += dice_metric.not_nans
+            val_outputs = post_trans(val_outputs)
+            value, not_nans = dice_metric(y_pred=val_outputs, y=val_labels)
+            value = value.squeeze()
+            metric[0] += value * not_nans
+            metric[1] += not_nans
         # synchronizes all processes and reduce results
         dist.barrier()
         dist.all_reduce(metric, op=torch.distributed.ReduceOp.SUM)

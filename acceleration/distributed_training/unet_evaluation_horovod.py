@@ -56,7 +56,7 @@ import monai
 from monai.data import DataLoader, Dataset, create_test_image_3d
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
-from monai.transforms import AsChannelFirstd, Compose, LoadNiftid, ScaleIntensityd, ToTensord
+from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadNiftid, ScaleIntensityd, ToTensord
 
 
 def evaluate(args):
@@ -111,8 +111,8 @@ def evaluate(args):
         sampler=val_sampler,
         multiprocessing_context=multiprocessing_context,
     )
-    dice_metric = DiceMetric(include_background=True, to_onehot_y=False, sigmoid=True, reduction="mean")
-
+    dice_metric = DiceMetric(include_background=True, reduction="mean")
+    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device(f"cuda:{hvd.local_rank()}")
     torch.cuda.set_device(device)
@@ -141,9 +141,11 @@ def evaluate(args):
             roi_size = (96, 96, 96)
             sw_batch_size = 4
             val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
-            value = dice_metric(y_pred=val_outputs, y=val_labels).squeeze()
-            metric[0] += value * dice_metric.not_nans
-            metric[1] += dice_metric.not_nans
+            val_outputs = post_trans(val_outputs)
+            value, not_nans = dice_metric(y_pred=val_outputs, y=val_labels)
+            value = value.squeeze()
+            metric[0] += value * not_nans
+            metric[1] += not_nans
         # synchronizes all processes and reduce results
         print(f"metric in rank {hvd.rank()}: sum={metric[0].item()}, count={metric[1].item()}")
         avg_metric = hvd.allreduce(metric, name="mean_dice")

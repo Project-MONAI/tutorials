@@ -24,7 +24,7 @@ from monai.data import PNGSaver, create_test_image_2d, list_data_collate
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.networks.nets import UNet
-from monai.transforms import AddChanneld, Compose, LoadImaged, ScaleIntensityd, ToTensord
+from monai.transforms import Activations, AddChanneld, AsDiscrete, Compose, LoadImaged, ScaleIntensityd, ToTensord
 
 
 def main(tempdir):
@@ -53,8 +53,8 @@ def main(tempdir):
     val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
     # sliding window inference need to input 1 image in every iteration
     val_loader = DataLoader(val_ds, batch_size=1, num_workers=4, collate_fn=list_data_collate)
-    dice_metric = DiceMetric(include_background=True, to_onehot_y=False, sigmoid=True, reduction="mean")
-
+    dice_metric = DiceMetric(include_background=True, reduction="mean")
+    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = UNet(
         dimensions=2,
@@ -78,10 +78,10 @@ def main(tempdir):
             roi_size = (96, 96)
             sw_batch_size = 4
             val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
-            value = dice_metric(y_pred=val_outputs, y=val_labels)
+            val_outputs = post_trans(val_outputs)
+            value, _ = dice_metric(y_pred=val_outputs, y=val_labels)
             metric_count += len(value)
             metric_sum += value.item() * len(value)
-            val_outputs = val_outputs.sigmoid() >= 0.5
             saver.save_batch(val_outputs)
         metric = metric_sum / metric_count
         print("evaluation metric:", metric)

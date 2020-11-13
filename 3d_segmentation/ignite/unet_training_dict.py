@@ -18,7 +18,12 @@ from glob import glob
 import nibabel as nib
 import numpy as np
 import torch
-from ignite.engine import Events, _prepare_batch, create_supervised_evaluator, create_supervised_trainer
+from ignite.engine import (
+    Events,
+    _prepare_batch,
+    create_supervised_evaluator,
+    create_supervised_trainer,
+)
 from ignite.handlers import EarlyStopping, ModelCheckpoint
 from torch.utils.data import DataLoader
 
@@ -31,9 +36,10 @@ from monai.handlers import (
     TensorBoardStatsHandler,
     stopping_fn_from_metric,
 )
-from monai.networks import predict_segmentation
 from monai.transforms import (
+    Activations,
     AsChannelFirstd,
+    AsDiscrete,
     Compose,
     LoadNiftid,
     RandCropByPosNegLabeld,
@@ -70,7 +76,12 @@ def main(tempdir):
             AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
             ScaleIntensityd(keys="img"),
             RandCropByPosNegLabeld(
-                keys=["img", "seg"], label_key="seg", spatial_size=[96, 96, 96], pos=1, neg=1, num_samples=4
+                keys=["img", "seg"],
+                label_key="seg",
+                spatial_size=[96, 96, 96],
+                pos=1,
+                neg=1,
+                num_samples=4,
             ),
             RandRotate90d(keys=["img", "seg"], prob=0.5, spatial_axes=[0, 2]),
             ToTensord(keys=["img", "seg"]),
@@ -89,7 +100,11 @@ def main(tempdir):
     check_ds = monai.data.Dataset(data=train_files, transform=train_transforms)
     # use batch_size=2 to load images and use RandCropByPosNegLabeld to generate 2 x 4 images for network training
     check_loader = DataLoader(
-        check_ds, batch_size=2, num_workers=4, collate_fn=list_data_collate, pin_memory=torch.cuda.is_available()
+        check_ds,
+        batch_size=2,
+        num_workers=4,
+        collate_fn=list_data_collate,
+        pin_memory=torch.cuda.is_available(),
     )
     check_data = monai.utils.misc.first(check_loader)
     print(check_data["img"].shape, check_data["seg"].shape)
@@ -108,7 +123,11 @@ def main(tempdir):
     # create a validation data loader
     val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
     val_loader = DataLoader(
-        val_ds, batch_size=5, num_workers=8, collate_fn=list_data_collate, pin_memory=torch.cuda.is_available()
+        val_ds,
+        batch_size=5,
+        num_workers=8,
+        collate_fn=list_data_collate,
+        pin_memory=torch.cuda.is_available(),
     )
 
     # create UNet, DiceLoss and Adam optimizer
@@ -130,12 +149,18 @@ def main(tempdir):
     def prepare_batch(batch, device=None, non_blocking=False):
         return _prepare_batch((batch["img"], batch["seg"]), device, non_blocking)
 
-    trainer = create_supervised_trainer(net, opt, loss, device, False, prepare_batch=prepare_batch)
+    trainer = create_supervised_trainer(
+        net, opt, loss, device, False, prepare_batch=prepare_batch
+    )
 
     # adding checkpoint handler to save models (network params and optimizer stats) during training
-    checkpoint_handler = ModelCheckpoint("./runs_dict/", "net", n_saved=10, require_empty=False)
+    checkpoint_handler = ModelCheckpoint(
+        "./runs_dict/", "net", n_saved=10, require_empty=False
+    )
     trainer.add_event_handler(
-        event_name=Events.EPOCH_COMPLETED, handler=checkpoint_handler, to_save={"net": net, "opt": opt}
+        event_name=Events.EPOCH_COMPLETED,
+        handler=checkpoint_handler,
+        to_save={"net": net, "opt": opt},
     )
 
     # StatsHandler prints loss at every iteration and print metrics at every epoch,
@@ -152,19 +177,33 @@ def main(tempdir):
     # set parameters for validation
     metric_name = "Mean_Dice"
     # add evaluation metric to the evaluator engine
-    val_metrics = {metric_name: MeanDice(sigmoid=True, to_onehot_y=False)}
+    val_metrics = {metric_name: MeanDice()}
+
+    post_pred = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+    post_label = AsDiscrete(threshold_values=True)
 
     # Ignite evaluator expects batch=(img, seg) and returns output=(y_pred, y) at every iteration,
     # user can add output_transform to return other values
-    evaluator = create_supervised_evaluator(net, val_metrics, device, True, prepare_batch=prepare_batch)
+    evaluator = create_supervised_evaluator(
+        net,
+        val_metrics,
+        device,
+        True,
+        output_transform=lambda x, y, y_pred: (post_pred(y_pred), post_label(y)),
+        prepare_batch=prepare_batch,
+    )
 
     @trainer.on(Events.ITERATION_COMPLETED(every=validation_every_n_iters))
     def run_validation(engine):
         evaluator.run(val_loader)
 
     # add early stopping handler to evaluator
-    early_stopper = EarlyStopping(patience=4, score_function=stopping_fn_from_metric(metric_name), trainer=trainer)
-    evaluator.add_event_handler(event_name=Events.EPOCH_COMPLETED, handler=early_stopper)
+    early_stopper = EarlyStopping(
+        patience=4, score_function=stopping_fn_from_metric(metric_name), trainer=trainer
+    )
+    evaluator.add_event_handler(
+        event_name=Events.EPOCH_COMPLETED, handler=early_stopper
+    )
 
     # add stats event handler to print validation stats via evaluator
     val_stats_handler = StatsHandler(
@@ -185,10 +224,13 @@ def main(tempdir):
     # here we draw the 3D output as GIF format along the depth axis, every 2 validation iterations.
     val_tensorboard_image_handler = TensorBoardImageHandler(
         batch_transform=lambda batch: (batch["img"], batch["seg"]),
-        output_transform=lambda output: predict_segmentation(output[0]),
+        output_transform=lambda output: output[0],
         global_iter_transform=lambda x: trainer.state.epoch,
     )
-    evaluator.add_event_handler(event_name=Events.ITERATION_COMPLETED(every=2), handler=val_tensorboard_image_handler)
+    evaluator.add_event_handler(
+        event_name=Events.ITERATION_COMPLETED(every=2),
+        handler=val_tensorboard_image_handler,
+    )
 
     train_epochs = 5
     state = trainer.run(train_loader, train_epochs)

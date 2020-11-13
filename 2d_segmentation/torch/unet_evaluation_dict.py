@@ -82,7 +82,6 @@ def main(tempdir):
             value, _ = dice_metric(y_pred=val_outputs, y=val_labels)
             metric_count += len(value)
             metric_sum += value.item() * len(value)
-            val_outputs = val_outputs.sigmoid() >= 0.5
             saver.save_batch(val_outputs)
         metric = metric_sum / metric_count
         print("evaluation metric:", metric)

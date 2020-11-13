@@ -25,7 +25,6 @@ from monai import config
 from monai.data import NiftiDataset, create_test_image_3d
 from monai.handlers import CheckpointLoader, MeanDice, SegmentationSaver, StatsHandler
 from monai.inferers import sliding_window_inference
-from monai.networks import predict_segmentation
 from monai.networks.nets import UNet
 from monai.transforms import Activations, AddChannel, AsDiscrete, Compose, ScaleIntensity, ToTensor
 
@@ -96,7 +95,7 @@ def main(tempdir):
         output_postfix="seg",
         name="evaluator",
         batch_transform=lambda x: x[2],
-        output_transform=lambda output: predict_segmentation(output[0]),
+        output_transform=lambda output: output[0],
     )
     file_saver.attach(evaluator)
 

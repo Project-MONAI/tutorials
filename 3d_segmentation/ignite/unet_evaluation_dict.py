@@ -25,7 +25,6 @@ import monai
 from monai.data import create_test_image_3d, list_data_collate
 from monai.handlers import CheckpointLoader, MeanDice, SegmentationSaver, StatsHandler
 from monai.inferers import sliding_window_inference
-from monai.networks import predict_segmentation
 from monai.networks.nets import UNet
 from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadNiftid, ScaleIntensityd, ToTensord
 
@@ -103,7 +102,7 @@ def main(tempdir):
         output_postfix="seg",
         name="evaluator",
         batch_transform=lambda batch: batch["img_meta_dict"],
-        output_transform=lambda output: predict_segmentation(output[0]),
+        output_transform=lambda output: output[0],
     ).attach(evaluator)
     # the model was trained by "unet_training_dict" example
     CheckpointLoader(load_path="./runs_dict/net_checkpoint_50.pt", load_dict={"net": net}).attach(evaluator)

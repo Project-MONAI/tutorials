@@ -75,7 +75,7 @@ from monai.transforms import (
     AsDiscreted,
     Compose,
     KeepLargestConnectedComponentd,
-    LoadNiftid,
+    LoadImaged,
     RandCropByPosNegLabeld,
     RandRotate90d,
     ScaleIntensityd,
@@ -107,7 +107,7 @@ def train(args):
     # define transforms for image and segmentation
     train_transforms = Compose(
         [
-            LoadNiftid(keys=["image", "label"]),
+            LoadImaged(keys=["image", "label"]),
             AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
             ScaleIntensityd(keys="image"),
             RandCropByPosNegLabeld(

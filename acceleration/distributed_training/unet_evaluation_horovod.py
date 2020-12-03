@@ -56,7 +56,7 @@ import monai
 from monai.data import DataLoader, Dataset, create_test_image_3d
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
-from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadNiftid, ScaleIntensityd, ToTensord
+from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadImaged, ScaleIntensityd, ToTensord
 
 
 def evaluate(args):
@@ -85,7 +85,7 @@ def evaluate(args):
     # define transforms for image and segmentation
     val_transforms = Compose(
         [
-            LoadNiftid(keys=["img", "seg"]),
+            LoadImaged(keys=["img", "seg"]),
             AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
             ScaleIntensityd(keys="img"),
             ToTensord(keys=["img", "seg"]),

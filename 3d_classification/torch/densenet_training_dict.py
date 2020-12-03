@@ -20,7 +20,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 import monai
 from monai.metrics import compute_roc_auc
-from monai.transforms import AddChanneld, Compose, LoadNiftid, RandRotate90d, Resized, ScaleIntensityd, ToTensord
+from monai.transforms import AddChanneld, Compose, LoadImaged, RandRotate90d, Resized, ScaleIntensityd, ToTensord
 
 
 def main():
@@ -59,7 +59,7 @@ def main():
     # Define transforms for image
     train_transforms = Compose(
         [
-            LoadNiftid(keys=["img"]),
+            LoadImaged(keys=["img"]),
             AddChanneld(keys=["img"]),
             ScaleIntensityd(keys=["img"]),
             Resized(keys=["img"], spatial_size=(96, 96, 96)),
@@ -69,7 +69,7 @@ def main():
     )
     val_transforms = Compose(
         [
-            LoadNiftid(keys=["img"]),
+            LoadImaged(keys=["img"]),
             AddChanneld(keys=["img"]),
             ScaleIntensityd(keys=["img"]),
             Resized(keys=["img"], spatial_size=(96, 96, 96)),

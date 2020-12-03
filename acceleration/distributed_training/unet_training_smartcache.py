@@ -69,7 +69,7 @@ from monai.data import DataLoader, SmartCacheDataset, create_test_image_3d, part
 from monai.transforms import (
     AsChannelFirstd,
     Compose,
-    LoadNiftid,
+    LoadImaged,
     RandCropByPosNegLabeld,
     RandRotate90d,
     ScaleIntensityd,
@@ -105,7 +105,7 @@ def train(args):
     # define transforms for image and segmentation
     train_transforms = Compose(
         [
-            LoadNiftid(keys=["img", "seg"]),
+            LoadImaged(keys=["img", "seg"]),
             AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
             ScaleIntensityd(keys="img"),
             RandCropByPosNegLabeld(

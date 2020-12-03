@@ -24,7 +24,17 @@ import monai
 from monai.data import ArrayDataset, create_test_image_2d
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
-from monai.transforms import Activations, AddChannel, AsDiscrete, Compose, LoadImage, RandRotate90, RandSpatialCrop, ScaleIntensity, ToTensor
+from monai.transforms import (
+    Activations,
+    AddChannel,
+    AsDiscrete,
+    Compose,
+    LoadImage,
+    RandRotate90,
+    RandSpatialCrop,
+    ScaleIntensity,
+    ToTensor,
+)
 from monai.visualize import plot_2d_or_3d_image
 
 
@@ -41,8 +51,6 @@ def main(tempdir):
 
     images = sorted(glob(os.path.join(tempdir, "img*.png")))
     segs = sorted(glob(os.path.join(tempdir, "seg*.png")))
-    train_files = [{"img": img, "seg": seg} for img, seg in zip(images[:20], segs[:20])]
-    val_files = [{"img": img, "seg": seg} for img, seg in zip(images[-20:], segs[-20:])]
 
     # define transforms for image and segmentation
     train_imtrans = Compose(

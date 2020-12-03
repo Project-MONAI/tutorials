@@ -75,7 +75,7 @@ from monai.transforms import (
     AsDiscreted,
     Compose,
     KeepLargestConnectedComponentd,
-    LoadNiftid,
+    LoadImaged,
     ScaleIntensityd,
     ToTensord,
 )
@@ -105,7 +105,7 @@ def evaluate(args):
     # define transforms for image and segmentation
     val_transforms = Compose(
         [
-            LoadNiftid(keys=["image", "label"]),
+            LoadImaged(keys=["image", "label"]),
             AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
             ScaleIntensityd(keys="image"),
             ToTensord(keys=["image", "label"]),

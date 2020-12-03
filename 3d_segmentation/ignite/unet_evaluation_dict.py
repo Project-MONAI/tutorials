@@ -26,7 +26,7 @@ from monai.data import create_test_image_3d, list_data_collate
 from monai.handlers import CheckpointLoader, MeanDice, SegmentationSaver, StatsHandler
 from monai.inferers import sliding_window_inference
 from monai.networks.nets import UNet
-from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadNiftid, ScaleIntensityd, ToTensord
+from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadImaged, ScaleIntensityd, ToTensord
 
 
 def main(tempdir):
@@ -50,7 +50,7 @@ def main(tempdir):
     # define transforms for image and segmentation
     val_transforms = Compose(
         [
-            LoadNiftid(keys=["img", "seg"]),
+            LoadImaged(keys=["img", "seg"]),
             AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
             ScaleIntensityd(keys="img"),
             ToTensord(keys=["img", "seg"]),

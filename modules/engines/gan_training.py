@@ -38,7 +38,7 @@ from monai.networks.nets import Discriminator, Generator
 from monai.transforms import (
     AddChannelD,
     Compose,
-    LoadPNGD,
+    LoadImageD,
     RandFlipD,
     RandRotateD,
     RandZoomD,
@@ -66,7 +66,7 @@ def main():
     # define real data transforms
     train_transforms = Compose(
         [
-            LoadPNGD(keys=["hand"]),
+            LoadImageD(keys=["hand"]),
             AddChannelD(keys=["hand"]),
             ScaleIntensityD(keys=["hand"]),
             RandRotateD(keys=["hand"], range_x=np.pi / 12, prob=0.5, keep_size=True),

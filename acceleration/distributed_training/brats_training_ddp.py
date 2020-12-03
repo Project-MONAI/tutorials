@@ -75,7 +75,7 @@ from monai.transforms import (
     AsDiscrete,
     CenterSpatialCropd,
     Compose,
-    LoadNiftid,
+    LoadImaged,
     MapTransform,
     NormalizeIntensityd,
     Orientationd,
@@ -119,7 +119,7 @@ class BratsCacheDataset(DecathlonDataset):
         self,
         root_dir,
         section,
-        transform=LoadNiftid(["image", "label"]),
+        transform=LoadImaged(["image", "label"]),
         cache_rate=1.0,
         num_workers=0,
         shuffle=False,
@@ -166,7 +166,7 @@ def main_worker(args):
     train_transforms = Compose(
         [
             # load 4 Nifti images and stack them together
-            LoadNiftid(keys=["image", "label"]),
+            LoadImaged(keys=["image", "label"]),
             AsChannelFirstd(keys="image"),
             ConvertToMultiChannelBasedOnBratsClassesd(keys="label"),
             Spacingd(keys=["image", "label"], pixdim=(1.5, 1.5, 2.0), mode=("bilinear", "nearest")),
@@ -196,7 +196,7 @@ def main_worker(args):
     # validation transforms and dataset
     val_transforms = Compose(
         [
-            LoadNiftid(keys=["image", "label"]),
+            LoadImaged(keys=["image", "label"]),
             AsChannelFirstd(keys="image"),
             ConvertToMultiChannelBasedOnBratsClassesd(keys="label"),
             Spacingd(keys=["image", "label"], pixdim=(1.5, 1.5, 2.0), mode=("bilinear", "nearest")),

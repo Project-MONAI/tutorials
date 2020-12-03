@@ -30,7 +30,7 @@ from monai.transforms import (
     AsChannelFirstd,
     AsDiscrete,
     Compose,
-    LoadNiftid,
+    LoadImaged,
     RandCropByPosNegLabeld,
     RandRotate90d,
     ScaleIntensityd,
@@ -62,7 +62,7 @@ def main(tempdir):
     # define transforms for image and segmentation
     train_transforms = Compose(
         [
-            LoadNiftid(keys=["img", "seg"]),
+            LoadImaged(keys=["img", "seg"]),
             AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
             ScaleIntensityd(keys="img"),
             RandCropByPosNegLabeld(
@@ -74,7 +74,7 @@ def main(tempdir):
     )
     val_transforms = Compose(
         [
-            LoadNiftid(keys=["img", "seg"]),
+            LoadImaged(keys=["img", "seg"]),
             AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
             ScaleIntensityd(keys="img"),
             ToTensord(keys=["img", "seg"]),

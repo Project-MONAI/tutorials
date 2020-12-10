@@ -137,6 +137,8 @@ This tutorial shows how to train 3D segmentation tasks on all the 10 decathlon d
 #### [integrate_3rd_party_transforms](./modules/integrate_3rd_party_transforms.ipynb)
 This tutorial shows how to integrate 3rd party transforms into MONAI program.
 Mainly shows transforms from BatchGenerator, TorchIO, Rising and ITK.
+#### [layer wise learning rate](./modules/layer_wise_learning_rate.ipynb)
+This notebook demonstrates how to select or filter out expected network layers and set customized learning rate values.
 #### [load_medical_imagesl](./modules/load_medical_images.ipynb)
 This notebook introduces how to easily load different formats of medical images in MONAI and execute many additional operations.
 #### [mednist_GAN_tutorial](./modules/mednist_GAN_tutorial.ipynb)

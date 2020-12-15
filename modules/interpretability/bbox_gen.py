@@ -26,6 +26,7 @@ The original dataset could be downloaded via the MONAI API:
 
 import glob
 import os
+import sys
 
 import numpy as np
 import skimage.measure as measure
@@ -40,10 +41,17 @@ from monai.transforms import (
 )
 from monai.utils import set_determinism
 
+# optionally give folder
+folder = sys.argv[1] if len(sys.argv) > 1 else '.'
+# create output folder
+os.makedirs(folder+'/patch', exist_ok=True)
 set_determinism(0)
 
-image_names = sorted(glob.glob("./Task06_Lung/imagesTr/*"))
-label_names = sorted(glob.glob("./Task06_Lung/labelsTr/*"))
+image_names = sorted(glob.glob(folder+"/Task06_Lung/imagesTr/*"))
+label_names = sorted(glob.glob(folder+"/Task06_Lung/labelsTr/*"))
+if len(image_names) * len(label_names) == 0:
+    raise AssertionError('no images and/or labels found')
+
 data_names = [{"label": ll, "image": ii} for ll, ii in zip(label_names, image_names)]
 
 patch_size = (72, 72, 48)
@@ -73,8 +81,8 @@ for name in data_names:
         resize = Resized(keys, patch_size, mode=("trilinear", "nearest"))
         data_out = resize(data_out)
 
-        patch_out = f"patch/lesion_{s[0]}_{s[1]}_{s[2]}_{e[0]}_{e[1]}_{e[2]}_{name_id}"
-        label_out = f"patch/labels_{s[0]}_{s[1]}_{s[2]}_{e[0]}_{e[1]}_{e[2]}_{name_id}"
+        patch_out = f"{folder}/patch/lesion_{s[0]}_{s[1]}_{s[2]}_{e[0]}_{e[1]}_{e[2]}_{name_id}"
+        label_out = f"{folder}/patch/labels_{s[0]}_{s[1]}_{s[2]}_{e[0]}_{e[1]}_{e[2]}_{name_id}"
         write_nifti(data_out["image"][0], file_name=patch_out)
         write_nifti(data_out["label"][0], file_name=label_out)
 
@@ -88,4 +96,4 @@ for name in data_names:
         for idx, d in enumerate(rand_data_out):
             if np.sum(d["label"]) > 0:
                 continue
-            write_nifti(d["image"][0], file_name=f"patch/norm_{idx}_{name_id}")
+            write_nifti(d["image"][0], file_name=f"{folder}/patch/norm_{idx}_{name_id}")

@@ -45,7 +45,13 @@ in a cell will verify this has worked and show you what kind of hardware you hav
 
 Some notebooks will require additional data. They can be downloaded by running the [runexamples.sh](./runexamples.sh) script.
 
-### 2. List of notebooks and examples
+### 2. Questions and bugs
+
+- For questions relating to the use of MONAI, please us our [Discussions tab](https://github.com/Project-MONAI/MONAI/discussions) on the main repository of MONAI.
+- For bugs relating to MONAI functionality, please create an issue on the [main repository](https://github.com/Project-MONAI/MONAI/issues).
+- For bugs relating to the running of a tutorial, please create an issue in [this repository](https://github.com/Project-MONAI/Tutorials/issues).
+
+### 3. List of notebooks and examples
 **2D classification**
 #### [mednist_tutorial](./2d_classification/mednist_tutorial.ipynb)
 This notebook shows how to easily integrate MONAI features into existing PyTorch programs.

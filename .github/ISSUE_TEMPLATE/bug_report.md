@@ -8,7 +8,9 @@ assignees: ''
 ---
 
 **Describe the bug**
-A clear and concise description of what the bug is.
+A clear and concise description of what the bug is. 
+
+Please only create issues here relating to the functioning of the tutorials. If you believe have found a bug relating to how MONAI itself works, please create an issue on our [main repository](https://github.com/Project-MONAI/MONAI).
 
 **To Reproduce**
 Steps to reproduce the behavior:

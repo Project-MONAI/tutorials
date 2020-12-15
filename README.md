@@ -171,5 +171,5 @@ This notebook demonstrates the image transformations on histology images using
 #### [varautoencoder_mednist](./modules/varautoencoder_mednist)
 This tutorial uses the MedNIST scan (or alternatively the MNIST) dataset to demonstrate MONAI's variational autoencoder class.
 
-#### [class activation mapping](./modules/interpretability)
-This tutorial demonstrates model visualisation and interpretability features of MONAI, currently it consists of class activation mapping for 3D classification model visualisations and analysis.
+#### [interpretability](./modules/interpretability)
+Tutorials in this folder demonstrate model visualisation and interpretability features of MONAI. Currently, it consists of class activation mapping and occlusion sensitivity for 3D classification model visualisations and analysis.

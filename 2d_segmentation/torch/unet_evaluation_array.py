@@ -74,7 +74,7 @@ def main(tempdir):
             value, _ = dice_metric(y_pred=val_outputs, y=val_labels)
             metric_count += len(value)
             metric_sum += value.item() * len(value)
-            saver.save_batch(val_outputs)
+            saver.save_batch(val_outputs.to(dtype=torch.int))
         metric = metric_sum / metric_count
         print("evaluation metric:", metric)
 

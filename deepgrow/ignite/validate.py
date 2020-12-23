@@ -8,6 +8,8 @@ import time
 
 import torch
 
+import train
+from monai.apps.deepgrow.handler import DeepgrowStatsHandler, SegmentationSaver
 from monai.apps.deepgrow.interaction import Interaction
 from monai.engines import SupervisedEvaluator
 from monai.handlers import (
@@ -16,13 +18,6 @@ from monai.handlers import (
     MeanDice)
 from monai.inferers import SimpleInferer
 from monai.utils import set_determinism
-from .deepgrow_training_2d import (
-    get_network,
-    get_loaders,
-    get_pre_transforms,
-    get_click_transforms,
-    get_post_transforms
-)
 
 
 def create_validator(args, click):
@@ -30,33 +25,37 @@ def create_validator(args, click):
 
     device = torch.device("cuda" if args.use_gpu else "cpu")
 
-    pre_transforms = get_pre_transforms(json.loads(args.roi_size))
-    click_transforms = get_click_transforms(sigmoid=False)
-    post_transform = get_post_transforms(sigmoid=False)
+    pre_transforms = train.get_pre_transforms(json.loads(args.roi_size), json.loads(args.model_size), args.dimensions)
+    click_transforms = train.get_click_transforms(args.dimensions)
+    post_transform = train.get_post_transforms()
 
     # define training components
-    network = get_network(args).to(device)
+    network = train.get_network(args.network, args.channels, args.dimensions).to(device)
 
     logging.info('Loading Network...')
     map_location = {"cuda:0": "cuda:{}".format(args.local_rank)}
 
     checkpoint = torch.load(args.model_path, map_location=map_location)
-    for key in list(checkpoint.keys()):
-        if 'module.' in key:
-            checkpoint[key.replace('module.', '')] = checkpoint[key]
-            del checkpoint[key]
-
     network.load_state_dict(checkpoint)
+    network.eval()
 
     # define event-handlers for engine
-    _, val_loader = get_loaders(args, pre_transforms, train=False)
+    _, val_loader = train.get_loaders(args, pre_transforms, train=False)
     fold_size = int(len(val_loader.dataset) / args.batch / args.folds) if args.folds else 0
     logging.info('Using Fold-Size: {}'.format(fold_size))
 
     val_handlers = [
         StatsHandler(output_transform=lambda x: None),
         TensorBoardStatsHandler(log_dir=args.output, output_transform=lambda x: None),
+        DeepgrowStatsHandler(
+            log_dir=args.output,
+            tag_name=f'clicks_{click}_val_dice',
+            fold_size=int(len(val_loader.dataset) / args.batch / args.folds) if args.folds else 0,
+            add_stdev=False,
+        ),
     ]
+    if args.save_seg:
+        val_handlers.append(SegmentationSaver(output_dir=os.path.join(args.output, f'clicks_{click}_images')))
 
     evaluator = SupervisedEvaluator(
         device=device,
@@ -79,35 +78,7 @@ def create_validator(args, click):
     return evaluator
 
 
-def strtobool(val):
-    return bool(distutils.util.strtobool(val))
-
-
-def main():
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('-s', '--seed', type=int, default=42)
-
-    parser.add_argument('-n', '--network', default='bunet', choices=['native', 'bunet', 'foo'])
-    parser.add_argument('-z', '--net_size', type=int, default=64)
-    parser.add_argument('-f', '--folds', type=int, default=10)
-
-    parser.add_argument('-d', '--dataset_root', default='/workspace/data/52432')
-    parser.add_argument('-j', '--dataset_json', default='/workspace/data/52432/dataset.json')
-    parser.add_argument('-i', '--input', default='/workspace/data/52432/2D')
-    parser.add_argument('-o', '--output', default='output')
-
-    parser.add_argument('-g', '--use_gpu', type=strtobool, default='true')
-    parser.add_argument('-b', '--batch', type=int, default=1)
-    parser.add_argument('-t', '--limit', type=int, default=20)
-    parser.add_argument('-m', '--model_path', default="output/model.pt")
-    parser.add_argument('--roi_size', default="[128, 128]")
-
-    parser.add_argument('-iv', '--max_val_interactions', default="[1,2,5,10,15]")
-    parser.add_argument('--multi_gpu', type=strtobool, default='false')
-    parser.add_argument("--local_rank", type=int, default=0)
-
-    args = parser.parse_args()
+def run(args):
     if args.local_rank == 0:
         for arg in vars(args):
             logging.info('USING:: {} = {}'.format(arg, getattr(args, arg)))
@@ -129,6 +100,40 @@ def main():
         end_time = time.time()
 
         logging.info('Total Run Time {}'.format(end_time - start_time))
+
+
+def strtobool(val):
+    return bool(distutils.util.strtobool(val))
+
+
+def main():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-s', '--seed', type=int, default=42)
+    parser.add_argument('--dimensions', type=int, default=3)
+
+    parser.add_argument('-n', '--network', default='bunet', choices=['unet', 'bunet'])
+    parser.add_argument('-c', '--channels', type=int, default=32)
+    parser.add_argument('-f', '--folds', type=int, default=10)
+
+    parser.add_argument('-d', '--dataset_root', default='/workspace/data/52432')
+    parser.add_argument('-j', '--dataset_json', default='/workspace/data/52432/dataset.json')
+    parser.add_argument('-i', '--input', default='/workspace/data/52432/2D')
+    parser.add_argument('-o', '--output', default='eval')
+    parser.add_argument('--save_seg', type=strtobool, default='false')
+
+    parser.add_argument('-g', '--use_gpu', type=strtobool, default='true')
+    parser.add_argument('-b', '--batch', type=int, default=1)
+    parser.add_argument('-t', '--limit', type=int, default=20)
+    parser.add_argument('-m', '--model_path', default="output/model.pt")
+    parser.add_argument('--roi_size', default="[256, 256]")
+
+    parser.add_argument('-iv', '--max_val_interactions', default="[0,1,2,5,10,15]")
+    parser.add_argument('--multi_gpu', type=strtobool, default='false')
+    parser.add_argument("--local_rank", type=int, default=0)
+
+    args = parser.parse_args()
+    run(args)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,70 @@
+import argparse
+import distutils.util
+import logging
+import sys
+
+import train
+
+
+def strtobool(val):
+    return bool(distutils.util.strtobool(val))
+
+
+if __name__ == "__main__":
+    logging.basicConfig(
+        stream=sys.stdout,
+        level=logging.INFO,
+        format='[%(asctime)s.%(msecs)03d][%(levelname)5s](%(name)s) - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S')
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-s', '--seed', type=int, default=42)
+    parser.add_argument('--dimensions', type=int, default=3)
+
+    parser.add_argument('-n', '--network', default='bunet', choices=['unet', 'bunet'])
+    parser.add_argument('-c', '--channels', type=int, default=32)
+    parser.add_argument('-d', '--dataset_root', default='/workspace/data/52432')
+    parser.add_argument('-j', '--dataset_json', default='/workspace/data/52432/dataset.json')
+    parser.add_argument('-i', '--input', default='/workspace/data/52432/3D')
+    parser.add_argument('-o', '--output', default='output3D')
+
+    parser.add_argument('-g', '--use_gpu', type=strtobool, default='true')
+    parser.add_argument('-a', '--amp', type=strtobool, default='false')
+
+    parser.add_argument('-e', '--epochs', type=int, default=200)
+    parser.add_argument('-b', '--batch', type=int, default=1)
+    parser.add_argument('-x', '--split', type=float, default=0.9)
+    parser.add_argument('-t', '--limit', type=int, default=0)
+
+    parser.add_argument('-r', '--resume', type=strtobool, default='false')
+    parser.add_argument('-m', '--model_path', default="output3D/model.pt")
+    parser.add_argument('--roi_size', default="[256, 256, 256]")
+    parser.add_argument('--model_size', default="[128, 128, 128]")
+
+    parser.add_argument('-f', '--val_freq', type=int, default=1)
+    parser.add_argument('-lr', '--learning_rate', type=float, default=0.0001)
+    parser.add_argument('-it', '--max_train_interactions', type=int, default=15)
+    parser.add_argument('-iv', '--max_val_interactions', type=int, default=20)
+
+    parser.add_argument('--save_interval', type=int, default=10)
+    parser.add_argument('--image_interval', type=int, default=5)
+    parser.add_argument('--multi_gpu', type=strtobool, default='false')
+    parser.add_argument('--local_rank', type=int, default=0)
+    parser.add_argument('--export', type=strtobool, default='false')
+
+    args = parser.parse_args()
+    train.main(args)
+
+'''
+# Single GPU (it will also export)
+python train.py
+
+# Multi GPU (run export separate)
+python -m torch.distributed.launch \
+  --nproc_per_node=`nvidia-smi -L | wc -l` \
+  --nnodes=1 --node_rank=0 --master_addr="localhost" --master_port=1234 \
+  -m train --multi_gpu true -e 100
+
+python train.py --export
+'''

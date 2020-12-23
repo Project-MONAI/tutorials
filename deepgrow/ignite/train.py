@@ -10,6 +10,7 @@ import torch
 import torch.distributed as dist
 
 from monai.apps.deepgrow import (
+    SpatialCropForegroundd,
     AddInitialSeedPointd,
     FindDiscrepancyRegionsd,
     AddRandomGuidanced,
@@ -31,71 +32,80 @@ from monai.handlers import (
     MeanDice)
 from monai.inferers import SimpleInferer
 from monai.losses import DiceLoss
-from monai.networks.nets import BasicUNet
+from monai.networks.nets import BasicUNet, UNet, Norm
 from monai.transforms import (
     Compose,
     LoadNumpyd,
     AddChanneld,
-    ScaleIntensityRanged,
-    Resized,
+    NormalizeIntensityd,
     ToTensord,
     ToNumpyd,
     Activationsd,
     AsDiscreted,
-    CropForegroundd,
+    Resized,
 )
 from monai.utils import set_determinism
 
 
-def get_network(args):
-    features = (64, 128, 256, 512, 1024, 64) if args.channels == 64 else (32, 32, 64, 128, 256, 32)
-    logging.info('Using BasicUnet with features: {}'.format(features))
-    return BasicUNet(dimensions=2, in_channels=3, out_channels=1, features=features)
+def get_network(network, channels, dimensions):
+    if network == 'unet':
+        if channels == 16:
+            features = (16, 32, 64, 128, 256)
+        elif channels == 32:
+            features = (32, 64, 128, 256, 512)
+        else:
+            features = (64, 128, 256, 512, 1024)
+        logging.info('Using Unet with features: {}'.format(features))
+        network = UNet(dimensions=dimensions, in_channels=3, out_channels=1, channels=features, strides=[2, 2, 2, 2],
+                       norm=Norm.BATCH)
+    else:
+        if channels == 16:
+            features = (16, 32, 64, 128, 256, 16)
+        elif channels == 32:
+            features = (32, 64, 128, 256, 512, 32)
+        else:
+            features = (64, 128, 256, 512, 1024, 64)
+        logging.info('Using BasicUnet with features: {}'.format(features))
+        network = BasicUNet(dimensions=dimensions, in_channels=3, out_channels=1, features=features)
+    return network
 
 
-def get_pre_transforms(roi_size):
+def get_pre_transforms(roi_size, model_size, dimensions):
     return Compose([
         LoadNumpyd(keys=('image', 'label')),
         AddChanneld(keys=('image', 'label')),
-        ScaleIntensityRanged(keys='image', a_min=-1024, a_max=1024, b_min=-1.0, b_max=1.0, clip=True),
-        CropForegroundd(keys=('image', 'label'), source_key='label', margin=20),
-        Resized(keys=('image', 'label'), spatial_size=roi_size, mode=('area', 'nearest')),
-
-        AddInitialSeedPointd(label='label', guidance='guidance'),
-        AddGuidanceSignald(image='image', guidance='guidance'),
+        SpatialCropForegroundd(keys=('image', 'label'), source_key='label', spatial_size=roi_size),
+        Resized(keys=('image', 'label'), spatial_size=model_size, mode=('area', 'nearest')),
+        NormalizeIntensityd(keys='image', subtrahend=208.0, divisor=388.0),
+        AddInitialSeedPointd(label='label', guidance='guidance', dimensions=dimensions),
+        AddGuidanceSignald(image='image', guidance='guidance', dimensions=dimensions),
         ToTensord(keys=('image', 'label'))
     ])
 
 
-def get_click_transforms(sigmoid=True):
-    transforms = [
+def get_click_transforms(dimensions):
+    return Compose([
         Activationsd(keys='pred', sigmoid=True),
         ToNumpyd(keys=('image', 'label', 'pred', 'probability', 'guidance')),
         FindDiscrepancyRegionsd(label='label', pred='pred', discrepancy='discrepancy', batched=True),
-        AddRandomGuidanced(guidance='guidance', discrepancy='discrepancy', probability='probability', batched=True),
-        AddGuidanceSignald(image='image', guidance='guidance', batched=True),
+        AddRandomGuidanced(guidance='guidance', discrepancy='discrepancy', probability='probability',
+                           dimensions=dimensions, batched=True),
+        AddGuidanceSignald(image='image', guidance='guidance', dimensions=dimensions, batched=True),
         ToTensord(keys=('image', 'label'))
-    ]
-
-    if not sigmoid:
-        transforms.pop(0)
-    return Compose(transforms)
+    ])
 
 
-def get_post_transforms(sigmoid=True):
-    transforms = [
+def get_post_transforms():
+    return Compose([
         Activationsd(keys='pred', sigmoid=True),
         AsDiscreted(keys='pred', threshold_values=True, logit_thresh=0.5)
-    ]
-
-    if not sigmoid:
-        transforms.pop(0)
-    return Compose(transforms)
+    ])
 
 
 def get_loaders(args, pre_transforms, train=True):
     multi_gpu = args.multi_gpu
     local_rank = args.local_rank
+    dimensions = args.dimensions
 
     dataset_json = os.path.join(args.input, 'dataset.json')
     if not os.path.exists(dataset_json):
@@ -106,8 +116,8 @@ def get_loaders(args, pre_transforms, train=True):
             datalist=datalist['training'],
             base_dir=args.dataset_root,
             output_dir=os.path.join(args.input),
-            dimension=2,
-            pixdim=(1.0, 1.0)
+            dimension=dimensions,
+            pixdim=[1.0] * dimensions
         )
 
         with open(dataset_json, 'w') as fp:
@@ -165,14 +175,14 @@ def create_trainer(args):
     else:
         device = torch.device("cuda" if args.use_gpu else "cpu")
 
-    pre_transforms = get_pre_transforms(json.loads(args.roi_size))
-    click_transforms = get_click_transforms()
+    pre_transforms = get_pre_transforms(json.loads(args.roi_size), json.loads(args.model_size), args.dimensions)
+    click_transforms = get_click_transforms(args.dimensions)
     post_transform = get_post_transforms()
 
     train_loader, val_loader = get_loaders(args, pre_transforms)
 
     # define training components
-    network = get_network(args).to(device)
+    network = get_network(args.network, args.channels, args.dimensions).to(device)
     if multi_gpu:
         network = torch.nn.parallel.DistributedDataParallel(network, device_ids=[local_rank], output_device=local_rank)
 
@@ -249,44 +259,7 @@ def create_trainer(args):
     return trainer
 
 
-def strtobool(val):
-    return bool(distutils.util.strtobool(val))
-
-
-def main():
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('-s', '--seed', type=int, default=42)
-
-    parser.add_argument('-c', '--channels', type=int, default=64)
-    parser.add_argument('-d', '--dataset_root', default='/workspace/data/MSD_Spleen')
-    parser.add_argument('-j', '--dataset_json', default='/workspace/data/MSD_Spleen/dataset.json')
-    parser.add_argument('-i', '--input', default='/workspace/data/deepgrow/spleen/2D')
-    parser.add_argument('-o', '--output', default='output')
-
-    parser.add_argument('-g', '--use_gpu', type=strtobool, default='true')
-    parser.add_argument('-a', '--amp', type=strtobool, default='false')
-
-    parser.add_argument('-e', '--epochs', type=int, default=100)
-    parser.add_argument('-b', '--batch', type=int, default=16)
-    parser.add_argument('-x', '--split', type=float, default=0.8)
-    parser.add_argument('-t', '--limit', type=int, default=0)
-
-    parser.add_argument('-r', '--resume', type=strtobool, default='false')
-    parser.add_argument('-m', '--model_path', default="model/model.pt")
-    parser.add_argument('--roi_size', default="[128, 128]")
-
-    parser.add_argument('-f', '--val_freq', type=int, default=1)
-    parser.add_argument('-lr', '--learning_rate', type=float, default=0.0001)
-    parser.add_argument('-it', '--max_train_interactions', type=int, default=15)
-    parser.add_argument('-iv', '--max_val_interactions', type=int, default=5)
-
-    parser.add_argument('--save_interval', type=int, default=10)
-    parser.add_argument('--multi_gpu', type=strtobool, default='false')
-    parser.add_argument('--local_rank', type=int, default=0)
-    parser.add_argument('--export', type=strtobool, default='false')
-
-    args = parser.parse_args()
+def run(args):
     if args.local_rank == 0:
         for arg in vars(args):
             logging.info('USING:: {} = {}'.format(arg, getattr(args, arg)))
@@ -295,7 +268,7 @@ def main():
     if args.export:
         logging.info('{}:: Loading PT Model from: {}'.format(args.local_rank, args.input))
         device = torch.device("cuda" if args.use_gpu else "cpu")
-        network = get_network(args).to(device)
+        network = get_network(args.network, args.channels, args.dimensions).to(device)
 
         map_location = {"cuda:0": "cuda:{}".format(args.local_rank)}
         network.load_state_dict(torch.load(args.input, map_location=map_location))
@@ -329,6 +302,51 @@ def main():
         dist.destroy_process_group()
 
 
+def strtobool(val):
+    return bool(distutils.util.strtobool(val))
+
+
+def main():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-s', '--seed', type=int, default=42)
+    parser.add_argument('--dimensions', type=int, default=2)
+
+    parser.add_argument('-n', '--network', default='bunet', choices=['unet', 'bunet'])
+    parser.add_argument('-c', '--channels', type=int, default=32)
+    parser.add_argument('-d', '--dataset_root', default='/workspace/data/52432')
+    parser.add_argument('-j', '--dataset_json', default='/workspace/data/52432/dataset.json')
+    parser.add_argument('-i', '--input', default='/workspace/data/52432/2D')
+    parser.add_argument('-o', '--output', default='output')
+
+    parser.add_argument('-g', '--use_gpu', type=strtobool, default='true')
+    parser.add_argument('-a', '--amp', type=strtobool, default='false')
+
+    parser.add_argument('-e', '--epochs', type=int, default=100)
+    parser.add_argument('-b', '--batch', type=int, default=8)
+    parser.add_argument('-x', '--split', type=float, default=0.8)
+    parser.add_argument('-t', '--limit', type=int, default=0)
+
+    parser.add_argument('-r', '--resume', type=strtobool, default='false')
+    parser.add_argument('-m', '--model_path', default="output/model.pt")
+    parser.add_argument('--roi_size', default="[256, 256]")
+    parser.add_argument('--model_size', default="[256, 256]")
+
+    parser.add_argument('-f', '--val_freq', type=int, default=1)
+    parser.add_argument('-lr', '--learning_rate', type=float, default=0.0001)
+    parser.add_argument('-it', '--max_train_interactions', type=int, default=15)
+    parser.add_argument('-iv', '--max_val_interactions', type=int, default=5)
+
+    parser.add_argument('--save_interval', type=int, default=10)
+    parser.add_argument('--image_interval', type=int, default=1)
+    parser.add_argument('--multi_gpu', type=strtobool, default='false')
+    parser.add_argument('--local_rank', type=int, default=0)
+    parser.add_argument('--export', type=strtobool, default='false')
+
+    args = parser.parse_args()
+    run(args)
+
+
 if __name__ == "__main__":
     logging.basicConfig(
         stream=sys.stdout,
@@ -339,13 +357,13 @@ if __name__ == "__main__":
 
 '''
 # Single GPU (it will also export)
-python deepgrow_training_2d.py
+python train.py
 
 # Multi GPU (run export separate)
 python -m torch.distributed.launch \
   --nproc_per_node=`nvidia-smi -L | wc -l` \
   --nnodes=1 --node_rank=0 --master_addr="localhost" --master_port=1234 \
-  -m deepgrow_training_2d --multi_gpu true -e 100
+  -m train --multi_gpu true -e 100
 
-python deepgrow_training_2d.py --export
+python train.py --export
 '''

@@ -9,14 +9,15 @@ import time
 import torch
 import torch.distributed as dist
 
-from monai.apps.deepgrow import (
+from byoc.handler import DeepgrowStatsHandler
+from byoc.interaction import Interaction
+from byoc.transforms import (
     SpatialCropForegroundd,
     AddInitialSeedPointd,
     FindDiscrepancyRegionsd,
     AddRandomGuidanced,
     AddGuidanceSignald,
-    create_dataset,
-    Interaction
+    FindAllValidSlicesd,
 )
 from monai.data import partition_dataset
 from monai.data.dataloader import DataLoader
@@ -70,27 +71,27 @@ def get_network(network, channels, dimensions):
     return network
 
 
-def get_pre_transforms(roi_size, model_size, dimensions):
+def get_pre_transforms(roi_size, model_size):
     return Compose([
         LoadNumpyd(keys=('image', 'label')),
         AddChanneld(keys=('image', 'label')),
         SpatialCropForegroundd(keys=('image', 'label'), source_key='label', spatial_size=roi_size),
         Resized(keys=('image', 'label'), spatial_size=model_size, mode=('area', 'nearest')),
         NormalizeIntensityd(keys='image', subtrahend=208.0, divisor=388.0),
-        AddInitialSeedPointd(label='label', guidance='guidance', dimensions=dimensions),
-        AddGuidanceSignald(image='image', guidance='guidance', dimensions=dimensions),
+        FindAllValidSlicesd(label='label', sids='sids'),
+        AddInitialSeedPointd(label='label', guidance='guidance', sids='sids'),
+        AddGuidanceSignald(image='image', guidance='guidance'),
         ToTensord(keys=('image', 'label'))
     ])
 
 
-def get_click_transforms(dimensions):
+def get_click_transforms():
     return Compose([
         Activationsd(keys='pred', sigmoid=True),
         ToNumpyd(keys=('image', 'label', 'pred', 'probability', 'guidance')),
         FindDiscrepancyRegionsd(label='label', pred='pred', discrepancy='discrepancy', batched=True),
-        AddRandomGuidanced(guidance='guidance', discrepancy='discrepancy', probability='probability',
-                           dimensions=dimensions, batched=True),
-        AddGuidanceSignald(image='image', guidance='guidance', dimensions=dimensions, batched=True),
+        AddRandomGuidanced(guidance='guidance', discrepancy='discrepancy', probability='probability', batched=True),
+        AddGuidanceSignald(image='image', guidance='guidance', batched=True),
         ToTensord(keys=('image', 'label'))
     ])
 
@@ -105,30 +106,13 @@ def get_post_transforms():
 def get_loaders(args, pre_transforms, train=True):
     multi_gpu = args.multi_gpu
     local_rank = args.local_rank
-    dimensions = args.dimensions
 
-    dataset_json = os.path.join(args.input, 'dataset.json')
-    if not os.path.exists(dataset_json):
-        with open(os.path.join(args.dataset_json)) as f:
-            datalist = json.load(f)
-
-        datalist = create_dataset(
-            datalist=datalist['training'],
-            base_dir=args.dataset_root,
-            output_dir=os.path.join(args.input),
-            dimension=dimensions,
-            pixdim=[1.0] * dimensions
-        )
-
-        with open(dataset_json, 'w') as fp:
-            json.dump(datalist, fp, indent=2)
-
-    dataset_json = os.path.join(args.input, 'dataset.json')
+    dataset_json = os.path.join(args.input)
     with open(dataset_json) as f:
         datalist = json.load(f)
 
     total_d = len(datalist)
-    datalist = datalist[-args.limit:]
+    datalist = datalist[0:args.limit] if args.limit else datalist
     total_l = len(datalist)
 
     if multi_gpu:
@@ -141,9 +125,13 @@ def get_loaders(args, pre_transforms, train=True):
         )[local_rank]
 
     if train:
-        train_datalist, val_datalist = partition_dataset(datalist, ratios=[args.split, (1 - args.split)])
+        train_datalist, val_datalist = partition_dataset(
+            datalist,
+            ratios=[args.split, (1 - args.split)],
+            shuffle=True,
+            seed=args.seed)
 
-        train_ds = PersistentDataset(train_datalist, pre_transforms)
+        train_ds = PersistentDataset(train_datalist, pre_transforms, cache_dir=args.cache_dir)
         train_loader = DataLoader(
             train_ds,
             batch_size=args.batch,
@@ -155,7 +143,7 @@ def get_loaders(args, pre_transforms, train=True):
         train_loader = None
         val_datalist = datalist
 
-    val_ds = PersistentDataset(val_datalist, pre_transforms)
+    val_ds = PersistentDataset(val_datalist, pre_transforms, cache_dir=args.cache_dir)
     val_loader = DataLoader(val_ds, batch_size=args.batch, num_workers=8)
     logging.info('{}:: Total Records used for Validation is: {}/{}/{}'.format(
         local_rank, len(val_ds), total_l, total_d))
@@ -175,8 +163,8 @@ def create_trainer(args):
     else:
         device = torch.device("cuda" if args.use_gpu else "cpu")
 
-    pre_transforms = get_pre_transforms(json.loads(args.roi_size), json.loads(args.model_size), args.dimensions)
-    click_transforms = get_click_transforms(args.dimensions)
+    pre_transforms = get_pre_transforms(args.roi_size, args.model_size)
+    click_transforms = get_click_transforms()
     post_transform = get_post_transforms()
 
     train_loader, val_loader = get_loaders(args, pre_transforms)
@@ -195,10 +183,14 @@ def create_trainer(args):
     val_handlers = [
         StatsHandler(output_transform=lambda x: None),
         TensorBoardStatsHandler(log_dir=args.output, output_transform=lambda x: None),
+        DeepgrowStatsHandler(log_dir=args.output, tag_name='val_dice', image_interval=args.image_interval),
         CheckpointSaver(save_dir=args.output, save_dict={"net": network}, save_key_metric=True, save_final=True,
                         save_interval=args.save_interval, final_filename='model.pt')
     ]
-    val_handlers = val_handlers if local_rank == 0 else None
+    val_handlers = val_handlers if local_rank == 0 else None if args.dimensions == 2 else [
+        DeepgrowStatsHandler(log_dir=args.output, tag_name='val_dice', image_interval=args.image_interval)
+    ]
+
     evaluator = SupervisedEvaluator(
         device=device,
         val_data_loader=val_loader,
@@ -260,6 +252,9 @@ def create_trainer(args):
 
 
 def run(args):
+    args.roi_size = json.loads(args.roi_size)
+    args.model_size = json.loads(args.model_size)
+
     if args.local_rank == 0:
         for arg in vars(args):
             logging.info('USING:: {} = {}'.format(arg, getattr(args, arg)))
@@ -309,14 +304,12 @@ def strtobool(val):
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-s', '--seed', type=int, default=42)
+    parser.add_argument('-s', '--seed', type=int, default=23)
     parser.add_argument('--dimensions', type=int, default=2)
 
     parser.add_argument('-n', '--network', default='bunet', choices=['unet', 'bunet'])
     parser.add_argument('-c', '--channels', type=int, default=32)
-    parser.add_argument('-d', '--dataset_root', default='/workspace/data/52432')
-    parser.add_argument('-j', '--dataset_json', default='/workspace/data/52432/dataset.json')
-    parser.add_argument('-i', '--input', default='/workspace/data/52432/2D')
+    parser.add_argument('-i', '--input', default='/workspace/data/52432/2D/dataset.json')
     parser.add_argument('-o', '--output', default='output')
 
     parser.add_argument('-g', '--use_gpu', type=strtobool, default='true')
@@ -324,8 +317,9 @@ def main():
 
     parser.add_argument('-e', '--epochs', type=int, default=100)
     parser.add_argument('-b', '--batch', type=int, default=8)
-    parser.add_argument('-x', '--split', type=float, default=0.8)
+    parser.add_argument('-x', '--split', type=float, default=0.9)
     parser.add_argument('-t', '--limit', type=int, default=0)
+    parser.add_argument('--cache_dir', type=str, default=None)
 
     parser.add_argument('-r', '--resume', type=strtobool, default='false')
     parser.add_argument('-m', '--model_path', default="output/model.pt")
@@ -337,7 +331,7 @@ def main():
     parser.add_argument('-it', '--max_train_interactions', type=int, default=15)
     parser.add_argument('-iv', '--max_val_interactions', type=int, default=5)
 
-    parser.add_argument('--save_interval', type=int, default=10)
+    parser.add_argument('--save_interval', type=int, default=3)
     parser.add_argument('--image_interval', type=int, default=1)
     parser.add_argument('--multi_gpu', type=strtobool, default='false')
     parser.add_argument('--local_rank', type=int, default=0)

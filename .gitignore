@@ -130,3 +130,6 @@ tests/testing_data/*Hippocampus*
 
 # VSCode
 .vscode/
+
+# saved networks
+*.pth

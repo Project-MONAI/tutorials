@@ -25,8 +25,9 @@ files=()
 #files=("${files[@]}" modules/transforms_demo_2d.ipynb)
 #files=("${files[@]}" modules/nifti_read_example.ipynb)
 
-# Tested -- not working
-#files=("${files[@]}" modules/3d_image_transforms.ipynb)
+# Currently testing
+# files=("${files[@]}" modules/3d_image_transforms.ipynb)
+files=("${files[@]}" modules/post_transforms.ipynb)
 
 # Not tested
 # files=("${files[@]}" 2d_classification/mednist_tutorial.ipynb)
@@ -48,7 +49,6 @@ files=()
 # files=("${files[@]}" modules/mednist_GAN_workflow_array.ipynb)
 # files=("${files[@]}" modules/mednist_GAN_workflow_dict.ipynb)
 # files=("${files[@]}" modules/models_ensemble.ipynb)
-files=("${files[@]}" modules/post_transforms.ipynb)
 # files=("${files[@]}" modules/public_datasets.ipynb)
 # files=("${files[@]}" modules/varautoencoder_mednist.ipynb)
 # files=("${files[@]}" modules/dynunet_tutorial.ipynb
@@ -56,17 +56,25 @@ files=("${files[@]}" modules/post_transforms.ipynb)
 for file in "${files[@]}"; do
 	echo "Running $file"
 
+	notebook=$(cat "$file")
+
 	# Set number of epochs to 1
 	oldString="max_num_epochs\s*=\s*[0-9]\+"
 	newString="max_num_epochs = 1"
-	mod_notebook=$(cat "$file" | sed "s/$oldString/$newString/g")
+	echo -e "$notebook" | grep "$oldString"
+	notebook=$(echo "$notebook" | sed "s/$oldString/$newString/g")
+	echo -e "$notebook" | grep "$newString"
+
 	# Set validation interval to 1
 	oldString="val_interval\s*=\s*[0-9]\+"
 	newString="val_interval = 1"
-	mod_notebook=$(cat "$file" | sed "s/$oldString/$newString/g")
+	echo -e "$notebook" | grep "$oldString"
+	notebook=$(echo "$notebook" | sed "s/$oldString/$newString/g")
+	echo -e "$notebook" | grep "$newString"
 
 	# Run with nbconvert
-	out=$(echo "$mod_notebook" | jupyter nbconvert --execute --stdin --stdout --to notebook --ExecutePreprocessor.timeout=600)
+	# echo "$notebook" > debug_notebook.ipynb
+	echo "$notebook" | papermill --progress-bar --log-output
 	res=$?
 	if [ $res -ne 0 ]; then
 		echo -e $out

@@ -14,13 +14,27 @@
 # Exit on error
 set -e
 
-# Get original notebook and set number of epochs to 1
-orig_notebook=$(cat 2d_classification/mednist_tutorial.ipynb)
-oldString="max_num_epochs\s*=\s*[0-9]\+"
-newString="max_num_epochs = 1"
-mod_notebook=$(echo "$orig_notebook" | sed "s/$oldString/$newString/g")
+# TODO: replace this with:
+# find . -type f \( -name "*.ipynb" -and -not -iwholename "*.ipynb_checkpoints*" \)
+files=()
+files=("${files[@]}" modules/load_medical_images.ipynb)
+files=("${files[@]}" modules/autoencoder_mednist.ipynb)
+files=("${files[@]}" modules/integrate_3rd_party_transforms.ipynb)
+files=("${files[@]}" modules/3d_image_transforms.ipynb)
 
-# Run with nbconvert
-echo "$mod_notebook" > temp.ipynb
+for file in "${files[@]}"; do
+	echo "Running $file"
 
-echo "$mod_notebook" | jupyter nbconvert --execute --stdin --stdout --to notebook
+	# Get original notebook and set number of epochs to 1
+	oldString="max_num_epochs\s*=\s*[0-9]\+"
+	newString="max_num_epochs = 1"
+	mod_notebook=$(cat "$file" | sed "s/$oldString/$newString/g")
+
+	# Run with nbconvert
+	out=$(echo "$mod_notebook" | jupyter nbconvert --execute --stdin --stdout --to notebook --ExecutePreprocessor.timeout=600)
+	res=$?
+	if [ $res -ne 0 ]; then
+		echo -e $out
+		exit $res
+	fi
+done

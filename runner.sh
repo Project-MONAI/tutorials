@@ -17,17 +17,52 @@ set -e
 # TODO: replace this with:
 # find . -type f \( -name "*.ipynb" -and -not -iwholename "*.ipynb_checkpoints*" \)
 files=()
-files=("${files[@]}" modules/load_medical_images.ipynb)
-files=("${files[@]}" modules/autoencoder_mednist.ipynb)
-files=("${files[@]}" modules/integrate_3rd_party_transforms.ipynb)
-files=("${files[@]}" modules/3d_image_transforms.ipynb)
+
+# Tested -- working
+#files=("${files[@]}" modules/load_medical_images.ipynb)
+#files=("${files[@]}" modules/autoencoder_mednist.ipynb)
+#files=("${files[@]}" modules/integrate_3rd_party_transforms.ipynb)
+#files=("${files[@]}" modules/transforms_demo_2d.ipynb)
+#files=("${files[@]}" modules/nifti_read_example.ipynb)
+
+# Tested -- not working
+#files=("${files[@]}" modules/3d_image_transforms.ipynb)
+
+# Not tested
+# files=("${files[@]}" 2d_classification/mednist_tutorial.ipynb)
+# files=("${files[@]}" 3d_classification/torch/densenet_training_array.ipynb)
+# files=("${files[@]}" 3d_segmentation/brats_segmentation_3d.ipynb)
+# files=("${files[@]}" 3d_segmentation/spleen_segmentation_3d.ipynb)
+# files=("${files[@]}" 3d_segmentation/spleen_segmentation_3d_lightning.ipynb)
+# files=("${files[@]}" 3d_segmentation/unet_segmentation_3d_catalyst.ipynb)
+# files=("${files[@]}" 3d_segmentation/unet_segmentation_3d_ignite.ipynb)
+# files=("${files[@]}" acceleration/automatic_mixed_precision.ipynb)
+# files=("${files[@]}" acceleration/dataset_type_performance.ipynb)
+# files=("${files[@]}" acceleration/fast_training_tutorial.ipynb)
+# files=("${files[@]}" acceleration/multi_gpu_test.ipynb)
+# files=("${files[@]}" acceleration/threadbuffer_performance.ipynb)
+# files=("${files[@]}" acceleration/transform_speed.ipynb)
+# files=("${files[@]}" modules/layer_wise_learning_rate.ipynb)
+# files=("${files[@]}" modules/interpretability/class_lung_lesion.ipynb)
+# files=("${files[@]}" modules/mednist_GAN_tutorial.ipynb)
+# files=("${files[@]}" modules/mednist_GAN_workflow_array.ipynb)
+# files=("${files[@]}" modules/mednist_GAN_workflow_dict.ipynb)
+# files=("${files[@]}" modules/models_ensemble.ipynb)
+files=("${files[@]}" modules/post_transforms.ipynb)
+# files=("${files[@]}" modules/public_datasets.ipynb)
+# files=("${files[@]}" modules/varautoencoder_mednist.ipynb)
+# files=("${files[@]}" modules/dynunet_tutorial.ipynb
 
 for file in "${files[@]}"; do
 	echo "Running $file"
 
-	# Get original notebook and set number of epochs to 1
+	# Set number of epochs to 1
 	oldString="max_num_epochs\s*=\s*[0-9]\+"
 	newString="max_num_epochs = 1"
+	mod_notebook=$(cat "$file" | sed "s/$oldString/$newString/g")
+	# Set validation interval to 1
+	oldString="val_interval\s*=\s*[0-9]\+"
+	newString="val_interval = 1"
 	mod_notebook=$(cat "$file" | sed "s/$oldString/$newString/g")
 
 	# Run with nbconvert

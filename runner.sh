@@ -43,6 +43,10 @@ files=()
 # files=("${files[@]}" modules/models_ensemble.ipynb)
 
 # Currently testing
+files=("${files[@]}" modules/layer_wise_learning_rate.ipynb)
+
+# Tested -- requires update
+# files=("${files[@]}" modules/dynunet_tutorial.ipynb)
 
 # Not tested
 # files=("${files[@]}" 2d_classification/mednist_tutorial.ipynb)
@@ -58,12 +62,10 @@ files=()
 # files=("${files[@]}" acceleration/multi_gpu_test.ipynb)
 # files=("${files[@]}" acceleration/threadbuffer_performance.ipynb)
 # files=("${files[@]}" acceleration/transform_speed.ipynb)
-# files=("${files[@]}" modules/layer_wise_learning_rate.ipynb)
 # files=("${files[@]}" modules/interpretability/class_lung_lesion.ipynb)
 # files=("${files[@]}" modules/mednist_GAN_tutorial.ipynb)
 # files=("${files[@]}" modules/mednist_GAN_workflow_array.ipynb)
 # files=("${files[@]}" modules/mednist_GAN_workflow_dict.ipynb)
-# files=("${files[@]}" modules/dynunet_tutorial.ipynb
 
 for file in "${files[@]}"; do
 	echo -e "\nRunning $file"

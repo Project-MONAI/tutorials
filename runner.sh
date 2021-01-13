@@ -38,9 +38,10 @@ files=()
 # files=("${files[@]}" modules/nifti_read_example.ipynb)
 # files=("${files[@]}" modules/post_transforms.ipynb)
 # files=("${files[@]}" modules/3d_image_transforms.ipynb)
+# files=("${files[@]}" modules/public_datasets.ipynb)
+# files=("${files[@]}" modules/varautoencoder_mednist.ipynb)
 
 # Currently testing
-files=("${files[@]}" modules/public_datasets.ipynb)
 
 # Not tested
 # files=("${files[@]}" 2d_classification/mednist_tutorial.ipynb)
@@ -62,7 +63,6 @@ files=("${files[@]}" modules/public_datasets.ipynb)
 # files=("${files[@]}" modules/mednist_GAN_workflow_array.ipynb)
 # files=("${files[@]}" modules/mednist_GAN_workflow_dict.ipynb)
 # files=("${files[@]}" modules/models_ensemble.ipynb)
-# files=("${files[@]}" modules/varautoencoder_mednist.ipynb)
 # files=("${files[@]}" modules/dynunet_tutorial.ipynb
 
 for file in "${files[@]}"; do

@@ -45,15 +45,15 @@ files=()
 # files=("${files[@]}" modules/mednist_GAN_tutorial.ipynb)
 # files=("${files[@]}" modules/mednist_GAN_workflow_array.ipynb)
 # files=("${files[@]}" modules/mednist_GAN_workflow_dict.ipynb)
+# files=("${files[@]}" 2d_classification/mednist_tutorial.ipynb)
 
 # Currently testing
+files=("${files[@]}" 3d_classification/torch/densenet_training_array.ipynb)
 
 # Tested -- requires update
 # files=("${files[@]}" modules/dynunet_tutorial.ipynb)
 
 # Not tested
-# files=("${files[@]}" 2d_classification/mednist_tutorial.ipynb)
-# files=("${files[@]}" 3d_classification/torch/densenet_training_array.ipynb)
 # files=("${files[@]}" 3d_segmentation/brats_segmentation_3d.ipynb)
 # files=("${files[@]}" 3d_segmentation/spleen_segmentation_3d.ipynb)
 # files=("${files[@]}" 3d_segmentation/spleen_segmentation_3d_lightning.ipynb)

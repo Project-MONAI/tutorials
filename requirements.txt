@@ -1,2 +1,3 @@
 papermill
 autopep8
+jupytext

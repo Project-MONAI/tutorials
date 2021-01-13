@@ -29,9 +29,10 @@ fi
 
 doFlake8=true
 doRun=true
+autofix=false
 
 function print_usage {
-    echo "runtests.sh [--no-run] [--no-flake8] [--help] [--version]"
+    echo "runtests.sh [--no-run] [--no-flake8] [--autofix] [--help] [--version]"
     echo ""
     echo "MONAI tutorials testing utilities."
     echo ""
@@ -42,7 +43,8 @@ function print_usage {
     echo ""
     echo "Code style check options:"
     echo "    --no-run          : don't run notebooks"
-    echo "    --no-flake8        : don't run \"flake8\" code format checks"
+    echo "    --no-flake8       : don't run \"flake8\" code format checks"
+    echo "    --autofix         : autofix where possible"
     echo "    -h, --help        : show this help message and exit"
     echo "    -v, --version     : show MONAI and system version information and exit"
     echo ""
@@ -58,6 +60,7 @@ function print_version {
 
 function print_style_fail_msg() {
     echo "${red}Check failed!${noColor}"
+    echo "Try running with autofixes: ${green}--autofix${noColor}"
 }
 
 # parse arguments
@@ -70,6 +73,9 @@ do
         ;;
         --no-flake8)
             doFlake8=false
+        ;;
+        --autofix)
+            autofix=true
         ;;
         -h|--help)
             print_usage
@@ -159,13 +165,21 @@ for file in "${files[@]}"; do
 	#                                                                      #
 	########################################################################
 	if [ $doFlake8 = true ]; then
-		jupyter nbconvert "$filename" --stdout --to script | flake8 - --ignore=W391
+
+		if [ $autofix = true ]; then
+			jupytext "$filename" --pipe "autopep8"
+		fi
+		
+		# to check flake8, convert to python script, magic cells, don't check line
+		# length for comments (as this includes markdown), and then run flake8
+		jupytext "$filename" --to script -o - | \
+			sed 's/\(^\s*\)%/\1pass  # %/' | \
+			sed 's/\(^#.*\)$/\1  # noqa: E501/' | \
+			flake8 - --show-source --count --statistics
+
 		success=$?
 		if [ ${success} -ne 0 ]
 	    then
-	    	echo "${green}Look into \"jupyter autopep8\" for making your code pep8 compliant:${noColor}"
-	    	echo -e "${green}\tpip install jupyter_contrib_nbextensions${noColor}"
-	    	echo -e "${green}\tjupyter contrib nbextension install --user${noColor}"
 	        print_style_fail_msg
 	        exit ${success}
 	    else

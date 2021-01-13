@@ -27,25 +27,22 @@ then
     noColor="$(tput sgr0)"
 fi
 
-doAutopep8=true
+doFlake8=true
 doRun=true
-autofix=false
 
 function print_usage {
-    echo "runtests.sh [--no-run] [--no-autopep8] [--autofix] [--help] [--version]"
+    echo "runtests.sh [--no-run] [--no-flake8] [--help] [--version]"
     echo ""
     echo "MONAI tutorials testing utilities."
     echo ""
     echo "Examples:"
     echo "./runtests.sh                             # run full tests (${green}recommended before making pull requests${noColor})."
     echo "./runtests.sh --no-run                    # don't run the notebooks."
-    echo "./runtests.sh --no-autopep8               # don't run the autopep8."
-    echo "./runtests.sh --autofix                   # automatically fix autopep8 problems."
+    echo "./runtests.sh --no-flake8                 # don't run \"flake8\"."
     echo ""
     echo "Code style check options:"
     echo "    --no-run          : don't run notebooks"
-    echo "    --no-autopep8     : don't run \"autopep8\" code format checks"
-    echo "    --autofix         : automatically fix autopep8 problems"
+    echo "    --no-flake8        : don't run \"flake8\" code format checks"
     echo "    -h, --help        : show this help message and exit"
     echo "    -v, --version     : show MONAI and system version information and exit"
     echo ""
@@ -61,7 +58,6 @@ function print_version {
 
 function print_style_fail_msg() {
     echo "${red}Check failed!${noColor}"
-    echo "Please run auto style fixes: ${green}./runner.sh --autofix${noColor}"
 }
 
 # parse arguments
@@ -72,11 +68,8 @@ do
         --no-run)
             doRun=false
         ;;
-        --no-autopep8)
-            doAutopep8=false
-        ;;
-        --autofix)
-            autofix=true
+        --no-flake8)
+            doFlake8=false
         ;;
         -h|--help)
             print_usage
@@ -162,23 +155,17 @@ for file in "${files[@]}"; do
 
 	########################################################################
 	#                                                                      #
-	#  autopep8                                                            #
+	#  flake8                                                              #
 	#                                                                      #
 	########################################################################
-	if [ $doAutopep8 = true ]; then
-		if [ $autofix = false ]; then
-			out=$(autopep8 --list-fixes "$filename")
-			if [ -n "$out" ]; then
-				echo "$out"
-				success=1
-			fi
-		else
-			autopep8 -i "$filename"
-			success=$?
-		fi
-
-	    if [ ${success} -ne 0 ]
+	if [ $doFlake8 = true ]; then
+		jupyter nbconvert "$filename" --stdout --to script | flake8 - --ignore=W391
+		success=$?
+		if [ ${success} -ne 0 ]
 	    then
+	    	echo "${green}Look into \"jupyter autopep8\" for making your code pep8 compliant:${noColor}"
+	    	echo -e "${green}\tpip install jupyter_contrib_nbextensions${noColor}"
+	    	echo -e "${green}\tjupyter contrib nbextension install --user${noColor}"
 	        print_style_fail_msg
 	        exit ${success}
 	    else

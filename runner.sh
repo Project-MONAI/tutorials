@@ -40,6 +40,7 @@ files=()
 # files=("${files[@]}" modules/3d_image_transforms.ipynb)
 # files=("${files[@]}" modules/public_datasets.ipynb)
 # files=("${files[@]}" modules/varautoencoder_mednist.ipynb)
+# files=("${files[@]}" modules/models_ensemble.ipynb)
 
 # Currently testing
 
@@ -62,7 +63,6 @@ files=()
 # files=("${files[@]}" modules/mednist_GAN_tutorial.ipynb)
 # files=("${files[@]}" modules/mednist_GAN_workflow_array.ipynb)
 # files=("${files[@]}" modules/mednist_GAN_workflow_dict.ipynb)
-# files=("${files[@]}" modules/models_ensemble.ipynb)
 # files=("${files[@]}" modules/dynunet_tutorial.ipynb
 
 for file in "${files[@]}"; do
@@ -75,7 +75,7 @@ for file in "${files[@]}"; do
 	notebook=$(cat "$filename")
 
 	# Set some variables to 1 to speed up proceedings
-	strings_to_replace=("max_num_epochs" "max_epochs" "val_interval")
+	strings_to_replace=(max_num_epochs max_epochs val_interval)
 	for s in "${strings_to_replace[@]}"; do
 		replace_text
 	done

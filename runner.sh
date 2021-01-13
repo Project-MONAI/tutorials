@@ -41,9 +41,12 @@ files=()
 # files=("${files[@]}" modules/public_datasets.ipynb)
 # files=("${files[@]}" modules/varautoencoder_mednist.ipynb)
 # files=("${files[@]}" modules/models_ensemble.ipynb)
+# files=("${files[@]}" modules/layer_wise_learning_rate.ipynb)
+# files=("${files[@]}" modules/mednist_GAN_tutorial.ipynb)
+# files=("${files[@]}" modules/mednist_GAN_workflow_array.ipynb)
+# files=("${files[@]}" modules/mednist_GAN_workflow_dict.ipynb)
 
 # Currently testing
-files=("${files[@]}" modules/layer_wise_learning_rate.ipynb)
 
 # Tested -- requires update
 # files=("${files[@]}" modules/dynunet_tutorial.ipynb)
@@ -63,9 +66,6 @@ files=("${files[@]}" modules/layer_wise_learning_rate.ipynb)
 # files=("${files[@]}" acceleration/threadbuffer_performance.ipynb)
 # files=("${files[@]}" acceleration/transform_speed.ipynb)
 # files=("${files[@]}" modules/interpretability/class_lung_lesion.ipynb)
-# files=("${files[@]}" modules/mednist_GAN_tutorial.ipynb)
-# files=("${files[@]}" modules/mednist_GAN_workflow_array.ipynb)
-# files=("${files[@]}" modules/mednist_GAN_workflow_dict.ipynb)
 
 for file in "${files[@]}"; do
 	echo -e "\nRunning $file"
@@ -77,7 +77,7 @@ for file in "${files[@]}"; do
 	notebook=$(cat "$filename")
 
 	# Set some variables to 1 to speed up proceedings
-	strings_to_replace=(max_num_epochs max_epochs val_interval)
+	strings_to_replace=(max_num_epochs max_epochs val_interval disc_train_interval disc_train_steps)
 	for s in "${strings_to_replace[@]}"; do
 		replace_text
 	done

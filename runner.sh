@@ -46,17 +46,20 @@ files=()
 # files=("${files[@]}" modules/mednist_GAN_workflow_array.ipynb)
 # files=("${files[@]}" modules/mednist_GAN_workflow_dict.ipynb)
 # files=("${files[@]}" 2d_classification/mednist_tutorial.ipynb)
+# files=("${files[@]}" 3d_classification/torch/densenet_training_array.ipynb)
+# files=("${files[@]}" 3d_segmentation/spleen_segmentation_3d.ipynb)
+# files=("${files[@]}" 3d_segmentation/spleen_segmentation_3d_lightning.ipynb)
 
 # Currently testing
-files=("${files[@]}" 3d_classification/torch/densenet_training_array.ipynb)
 
 # Tested -- requires update
 # files=("${files[@]}" modules/dynunet_tutorial.ipynb)
 
+# Tested -- not working
+# files=("${files[@]}" acceleration/transform_speed.ipynb)
+
 # Not tested
 # files=("${files[@]}" 3d_segmentation/brats_segmentation_3d.ipynb)
-# files=("${files[@]}" 3d_segmentation/spleen_segmentation_3d.ipynb)
-# files=("${files[@]}" 3d_segmentation/spleen_segmentation_3d_lightning.ipynb)
 # files=("${files[@]}" 3d_segmentation/unet_segmentation_3d_catalyst.ipynb)
 # files=("${files[@]}" 3d_segmentation/unet_segmentation_3d_ignite.ipynb)
 # files=("${files[@]}" acceleration/automatic_mixed_precision.ipynb)
@@ -64,7 +67,6 @@ files=("${files[@]}" 3d_classification/torch/densenet_training_array.ipynb)
 # files=("${files[@]}" acceleration/fast_training_tutorial.ipynb)
 # files=("${files[@]}" acceleration/multi_gpu_test.ipynb)
 # files=("${files[@]}" acceleration/threadbuffer_performance.ipynb)
-# files=("${files[@]}" acceleration/transform_speed.ipynb)
 # files=("${files[@]}" modules/interpretability/class_lung_lesion.ipynb)
 
 for file in "${files[@]}"; do
@@ -82,12 +84,14 @@ for file in "${files[@]}"; do
 		replace_text
 	done
 
+	jupyter nbconvert "$filename" --stdout --to script | flake8 -  #--ignore=W391
+
 	# Run with nbconvert
 	# echo "$notebook" > "${base_path}/debug_notebook.ipynb"
-	out=$(echo "$notebook" | papermill --progress-bar)
-	res=$?
-	if [ $res -ne 0 ]; then
-		echo -e $out
-		exit $res
-	fi
+	# out=$(echo "$notebook" | papermill --progress-bar)
+	# res=$?
+	# if [ $res -ne 0 ]; then
+	# 	echo -e $out
+	# 	exit $res
+	# fi
 done

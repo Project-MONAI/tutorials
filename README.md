@@ -53,7 +53,7 @@ Some notebooks will require additional data. They can be downloaded by running t
 
 ### 3. Note to developers
 
-During integration testing, we run these notebooks. To save time, we modify variables to avoid unecessary `for` loop iterations. Hence, during training please use the variables `max_num_epochs` and `val_interval` for the number of training epochs and validation interval, respectively.
+During integration testing, we run these notebooks. To save time, we modify variables to avoid unecessary `for` loop iterations. Hence, during training please use the variables `max_epochs` and `val_interval` for the number of training epochs and validation interval, respectively.
 
 ### 4. List of notebooks and examples
 **2D classification**

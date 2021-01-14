@@ -195,7 +195,7 @@ for file in "${files[@]}"; do
 	if [ $doRun = true ]; then
 
 		# Set some variables to 1 to speed up proceedings
-		strings_to_replace=(max_num_epochs max_epochs val_interval disc_train_interval disc_train_steps)
+		strings_to_replace=(max_epochs val_interval disc_train_interval disc_train_steps)
 		for s in "${strings_to_replace[@]}"; do
 			replace_text
 		done

@@ -37,7 +37,7 @@ autofix=false
 function print_usage {
     echo "runtests.sh [--no-run] [--no-flake8] [--autofix] [--help] [--version]"
     echo ""
-    echo "MONAI tutorials testing utilities."
+    echo "MONAI tutorials testing utilities. When running the notebooks, we first search for variables, such as `max_epochs` and set them to 1 to reduce testing time."
     echo ""
     echo "Examples:"
     echo "./runtests.sh                             # run full tests (${green}recommended before making pull requests${noColor})."
@@ -58,7 +58,6 @@ function print_usage {
 
 function print_style_fail_msg() {
     echo "${red}Check failed!${noColor}"
-    echo "Try running with autofixes: ${green}--autofix${noColor}"
 }
 
 # parse arguments
@@ -138,24 +137,24 @@ function replace_text {
 files=()
 
 # Tested -- working
-files=("${files[@]}" modules/load_medical_images.ipynb)
-files=("${files[@]}" modules/autoencoder_mednist.ipynb)
-files=("${files[@]}" modules/integrate_3rd_party_transforms.ipynb)
-files=("${files[@]}" modules/transforms_demo_2d.ipynb)
-files=("${files[@]}" modules/nifti_read_example.ipynb)
-files=("${files[@]}" modules/post_transforms.ipynb)
-files=("${files[@]}" modules/3d_image_transforms.ipynb)
-files=("${files[@]}" modules/public_datasets.ipynb)
-files=("${files[@]}" modules/varautoencoder_mednist.ipynb)
-files=("${files[@]}" modules/models_ensemble.ipynb)
-files=("${files[@]}" modules/layer_wise_learning_rate.ipynb)
-files=("${files[@]}" modules/mednist_GAN_tutorial.ipynb)
-files=("${files[@]}" modules/mednist_GAN_workflow_array.ipynb)
-files=("${files[@]}" modules/mednist_GAN_workflow_dict.ipynb)
-files=("${files[@]}" 2d_classification/mednist_tutorial.ipynb)
-files=("${files[@]}" 3d_classification/torch/densenet_training_array.ipynb)
-files=("${files[@]}" 3d_segmentation/spleen_segmentation_3d.ipynb)
-files=("${files[@]}" 3d_segmentation/spleen_segmentation_3d_lightning.ipynb)
+# files=("${files[@]}" modules/load_medical_images.ipynb)
+# files=("${files[@]}" modules/autoencoder_mednist.ipynb)
+# files=("${files[@]}" modules/integrate_3rd_party_transforms.ipynb)
+# files=("${files[@]}" modules/transforms_demo_2d.ipynb)
+# files=("${files[@]}" modules/nifti_read_example.ipynb)
+# files=("${files[@]}" modules/post_transforms.ipynb)
+# files=("${files[@]}" modules/3d_image_transforms.ipynb)
+# files=("${files[@]}" modules/public_datasets.ipynb)
+# files=("${files[@]}" modules/varautoencoder_mednist.ipynb)
+# files=("${files[@]}" modules/models_ensemble.ipynb)
+# files=("${files[@]}" modules/layer_wise_learning_rate.ipynb)
+# files=("${files[@]}" modules/mednist_GAN_tutorial.ipynb)
+# files=("${files[@]}" modules/mednist_GAN_workflow_array.ipynb)
+# files=("${files[@]}" modules/mednist_GAN_workflow_dict.ipynb)
+# files=("${files[@]}" 2d_classification/mednist_tutorial.ipynb)
+# files=("${files[@]}" 3d_classification/torch/densenet_training_array.ipynb)
+# files=("${files[@]}" 3d_segmentation/spleen_segmentation_3d.ipynb)
+# files=("${files[@]}" 3d_segmentation/spleen_segmentation_3d_lightning.ipynb)
 files=("${files[@]}" acceleration/transform_speed.ipynb)
 
 # Currently testing
@@ -213,6 +212,7 @@ for file in "${files[@]}"; do
 		success=$?
 		if [ ${success} -ne 0 ]
 	    then
+	    	echo "Try running with autofixes: ${green}--autofix${noColor}"
 	        print_style_fail_msg
 	        exit ${success}
 	    fi
@@ -243,7 +243,7 @@ for file in "${files[@]}"; do
 		fi
 
 		# Set some variables to 1 to speed up proceedings
-		strings_to_replace=(max_epochs val_interval disc_train_interval disc_train_steps)
+		strings_to_replace=(max_epochs val_interval disc_train_interval disc_train_steps n_timeit_loops)
 		for s in "${strings_to_replace[@]}"; do
 			replace_text
 		done
@@ -251,8 +251,7 @@ for file in "${files[@]}"; do
 		# echo "$notebook" > "${base_path}/debug_notebook.ipynb"
 		out=$(echo "$notebook" | papermill --progress-bar)
 		success=$?
-	    if [ ${success} -ne 0 ]
-	    then
+	    if [[ ${success} -ne 0 || "$out" =~ "\"status\": \"failed\"" ]]; then
 	        print_style_fail_msg
 	        exit ${success}
 	    fi

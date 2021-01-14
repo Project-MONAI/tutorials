@@ -134,3 +134,6 @@ tests/testing_data/*Hippocampus*
 
 # saved networks
 *.pth
+
+# Ignore torch saves
+*/torch/runs

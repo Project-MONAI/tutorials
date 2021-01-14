@@ -194,6 +194,7 @@ for file in "${files[@]}"; do
 	if [ $doChecks = true ]; then
 
 		if [ $autofix = true ]; then
+			echo Applying autofixes...
 			jupytext "$filename" \
 				--pipe "autoflake --in-place --remove-unused-variables --imports numpy,monai,matplotlib,torch,ignite {}" \
 				--pipe "isort -" \
@@ -204,6 +205,7 @@ for file in "${files[@]}"; do
 		# to check flake8, convert to python script, don't check
 		# magic cells, and don't check line length for comment
 		# lines (as this includes markdown), and then run flake8
+		echo Checking PEP8 compliance...
 		jupytext "$filename" --to script -o - | \
 			sed 's/\(^\s*\)%/\1pass  # %/' | \
 			sed 's/\(^#.*\)$/\1  # noqa: E501/' | \
@@ -235,7 +237,7 @@ for file in "${files[@]}"; do
 			continue
 		fi
 
-
+		echo Running notebook...
 		notebook=$(cat "$filename")
 
 		# if compulsory keyword, max_epochs, missing...

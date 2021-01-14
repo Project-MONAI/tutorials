@@ -225,8 +225,6 @@ for file in "${files[@]}"; do
 	    then
 	        print_style_fail_msg
 	        exit ${success}
-	    else
-	        echo "${green}passed!${noColor}"
 	    fi
 	fi
 
@@ -265,4 +263,6 @@ for file in "${files[@]}"; do
 	        echo "${green}passed!${noColor}"
 	    fi
 	fi
+
+	echo "${green}passed!${noColor}"
 done

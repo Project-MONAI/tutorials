@@ -14,6 +14,27 @@
 # Stop on error
 set -e
 
+
+
+########################################################################
+#                                                                      #
+#  append to these arrays if notebook should be run or doesn't         #
+#                   use the notion of epochs                           #
+########################################################################
+# Not working
+not_working=()
+not_working=("${not_working[@]}" dynunet_tutorial.ipynb)
+not_working=("${not_working[@]}" unet_segmentation_3d_catalyst.ipynb)
+# These files don't loop across epochs
+doesnt_contain_max_epochs=()
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" load_medical_images.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" integrate_3rd_party_transforms.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" transform_speed.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" transforms_demo_2d.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" nifti_read_example.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 3d_image_transforms.ipynb)
+
+
 # output formatting
 separator=""
 blue=""
@@ -30,24 +51,25 @@ then
     noColor="$(tput sgr0)"
 fi
 
-doFlake8=true
+doChecks=true
 doRun=true
 autofix=false
 
 function print_usage {
-    echo "runtests.sh [--no-run] [--no-flake8] [--autofix] [--help] [--version]"
+    echo "runtests.sh [--no-run] [--no-checks] [--autofix] [--file <filename>] [--help] [--version]"
     echo ""
     echo "MONAI tutorials testing utilities. When running the notebooks, we first search for variables, such as `max_epochs` and set them to 1 to reduce testing time."
     echo ""
     echo "Examples:"
     echo "./runtests.sh                             # run full tests (${green}recommended before making pull requests${noColor})."
     echo "./runtests.sh --no-run                    # don't run the notebooks."
-    echo "./runtests.sh --no-flake8                 # don't run \"flake8\"."
+    echo "./runtests.sh --no-checks                 # don't run code checks."
     echo ""
     echo "Code style check options:"
     echo "    --no-run          : don't run notebooks"
-    echo "    --no-flake8       : don't run \"flake8\" code format checks"
+    echo "    --no-checks       : don't run code checks"
     echo "    --autofix         : autofix where possible"
+    echo "    --file            : only run on specified file(s). use as many times as desired"
     echo "    -h, --help        : show this help message and exit"
     echo "    -v, --version     : show MONAI and system version information and exit"
     echo ""
@@ -59,6 +81,12 @@ function print_usage {
 function print_style_fail_msg() {
     echo "${red}Check failed!${noColor}"
 }
+function print_error_msg() {
+    echo "${red}Error: $1.${noColor}"
+    echo ""
+}
+
+files=()
 
 # parse arguments
 while [[ $# -gt 0 ]]
@@ -68,11 +96,15 @@ do
         --no-run)
             doRun=false
         ;;
-        --no-flake8)
-            doFlake8=false
+        --no-checks)
+            doChecks=false
         ;;
         --autofix)
             autofix=true
+        ;;
+        --file)
+            files=("${files[@]}" "$2")
+            shift
         ;;
         -h|--help)
             print_usage
@@ -106,11 +138,14 @@ function check_installed {
 if [ $doRun = true ]; then
 	check_installed papermill
 fi
-if [ $doFlake8 = true ]; then
+if [ $doChecks = true ]; then
 	check_installed jupytext
 	check_installed flake8
 	if [ $autofix = true ]; then
 		check_installed autopep8
+        check_installed autoflake
+		check_installed isort
+		check_installed black
 	fi
 fi
 
@@ -132,58 +167,17 @@ function replace_text {
 	set -e
 }
 
-# TODO: replace this with:
-# find . -type f \( -name "*.ipynb" -and -not -iwholename "*.ipynb_checkpoints*" \)
-files=()
+# If files haven't been added individually, get all
+if [ -z ${files+x} ]; then
+	files=($(find . -type f \( -name "*.ipynb" -and -not -iwholename "*.ipynb_checkpoints*" \)))
+fi
 
-# Tested -- working
-# files=("${files[@]}" modules/load_medical_images.ipynb)
-# files=("${files[@]}" modules/autoencoder_mednist.ipynb)
-# files=("${files[@]}" modules/integrate_3rd_party_transforms.ipynb)
-# files=("${files[@]}" modules/transforms_demo_2d.ipynb)
-# files=("${files[@]}" modules/nifti_read_example.ipynb)
-# files=("${files[@]}" modules/post_transforms.ipynb)
-# files=("${files[@]}" modules/3d_image_transforms.ipynb)
-# files=("${files[@]}" modules/public_datasets.ipynb)
-# files=("${files[@]}" modules/varautoencoder_mednist.ipynb)
-# files=("${files[@]}" modules/models_ensemble.ipynb)
-# files=("${files[@]}" modules/layer_wise_learning_rate.ipynb)
-# files=("${files[@]}" modules/mednist_GAN_tutorial.ipynb)
-# files=("${files[@]}" modules/mednist_GAN_workflow_array.ipynb)
-# files=("${files[@]}" modules/mednist_GAN_workflow_dict.ipynb)
-# files=("${files[@]}" 2d_classification/mednist_tutorial.ipynb)
-# files=("${files[@]}" 3d_classification/torch/densenet_training_array.ipynb)
-# files=("${files[@]}" 3d_segmentation/spleen_segmentation_3d.ipynb)
-# files=("${files[@]}" 3d_segmentation/spleen_segmentation_3d_lightning.ipynb)
-# files=("${files[@]}" acceleration/transform_speed.ipynb)
-# files=("${files[@]}" acceleration/automatic_mixed_precision.ipynb)
-# files=("${files[@]}" acceleration/dataset_type_performance.ipynb)
-# files=("${files[@]}" acceleration/fast_training_tutorial.ipynb)
-# files=("${files[@]}" acceleration/multi_gpu_test.ipynb)
-# files=("${files[@]}" acceleration/threadbuffer_performance.ipynb)
-# files=("${files[@]}" modules/interpretability/class_lung_lesion.ipynb)
-# files=("${files[@]}" 3d_segmentation/unet_segmentation_3d_ignite.ipynb)
 
-# Currently testing
-files=("${files[@]}" 3d_segmentation/brats_segmentation_3d.ipynb)
-
-# Tested -- requires update
-# files=("${files[@]}" modules/dynunet_tutorial.ipynb)
-
-# Not currently working
-# files=("${files[@]}" 3d_segmentation/unet_segmentation_3d_catalyst.ipynb)
-
-# Not tested
-
-# These files don't loop across epochs
-doesnt_contain_max_epochs=()
-doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" modules/load_medical_images.ipynb)
-doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" modules/integrate_3rd_party_transforms.ipynb)
-doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" acceleration/transform_speed.ipynb)
-doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" modules/transforms_demo_2d.ipynb)
-doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" modules/nifti_read_example.ipynb)
-doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" modules/3d_image_transforms.ipynb)
-
+########################################################################
+#                                                                      #
+#  loop over files                                                     #
+#                                                                      #
+########################################################################
 for file in "${files[@]}"; do
 	echo "${separator}${blue}Running $file${noColor}"
 
@@ -194,14 +188,14 @@ for file in "${files[@]}"; do
 
 	########################################################################
 	#                                                                      #
-	#  flake8                                                              #
+	#  code checks                                                         #
 	#                                                                      #
 	########################################################################
-	if [ $doFlake8 = true ]; then
+	if [ $doChecks = true ]; then
 
 		if [ $autofix = true ]; then
 			jupytext "$filename" \
-				--pipe "autoflake --in-place --remove-unused-variables --imports numpy,monai,matplotlib,torch {}" \
+				--pipe "autoflake --in-place --remove-unused-variables --imports numpy,monai,matplotlib,torch,ignite {}" \
 				--pipe "isort -" \
 				--pipe "black -l 79 -" \
 				--pipe autopep8
@@ -231,6 +225,17 @@ for file in "${files[@]}"; do
 	########################################################################
 	if [ $doRun = true ]; then
 
+		# Skip if known to not be working
+		skip_as_not_working=false
+		for e in "${not_working[@]}"; do 
+			[[ "$e" == "$filename" ]] && skip_as_not_working=true && break
+		done
+		if [[ $skip_as_not_working == true ]]; then
+			echo "Skipping notebook execution as known to not be working"
+			continue
+		fi
+
+
 		notebook=$(cat "$filename")
 
 		# if compulsory keyword, max_epochs, missing...
@@ -238,7 +243,7 @@ for file in "${files[@]}"; do
 			# and notebook isn't in list of those expected to not have that keyword...
 			should_contain_max_epochs=true
 			for e in "${doesnt_contain_max_epochs[@]}"; do 
-				[[ "$e" == "$file" ]] && should_contain_max_epochs=false && break
+				[[ "$e" == "$filename" ]] && should_contain_max_epochs=false && break
 			done
 			# then error
 			if [[ $should_contain_max_epochs == true ]]; then

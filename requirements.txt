@@ -1,3 +1,6 @@
 papermill
 autopep8
 jupytext
+autoflake
+isort
+black

@@ -162,9 +162,9 @@ files=()
 # files=("${files[@]}" acceleration/multi_gpu_test.ipynb)
 # files=("${files[@]}" acceleration/threadbuffer_performance.ipynb)
 # files=("${files[@]}" modules/interpretability/class_lung_lesion.ipynb)
+# files=("${files[@]}" 3d_segmentation/unet_segmentation_3d_ignite.ipynb)
 
 # Currently testing
-files=("${files[@]}" 3d_segmentation/unet_segmentation_3d_ignite.ipynb)
 files=("${files[@]}" 3d_segmentation/brats_segmentation_3d.ipynb)
 
 # Tested -- requires update

@@ -54,11 +54,6 @@ function print_usage {
     echo "${separator}For bug reports, questions, and discussions, please file an issue at:"
     echo "    https://github.com/Project-MONAI/MONAI/issues/new/choose"
     echo ""
-    exit 1
-}
-
-function print_version {
-    ${cmdPrefix}${PY_EXE} -c 'import monai; monai.config.print_config()'
 }
 
 function print_style_fail_msg() {
@@ -82,6 +77,7 @@ do
         ;;
         -h|--help)
             print_usage
+            exit 0
         ;;
         -v|--version)
             print_version
@@ -90,13 +86,14 @@ do
         *)
             print_error_msg "Incorrect commandline provided, invalid key: $key"
             print_usage
+            exit 1
         ;;
     esac
     shift
 done
 
 function check_installed {
-	set +e
+	set +e  # don't want immediate error
 	command -v $1 &>/dev/null
 	success=$?
 	if [ ${success} -ne 0 ]; then
@@ -122,6 +119,7 @@ fi
 base_path="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 function replace_text {
+	set +e  # otherwise blank grep causes error
 	oldString="${s}\s*=\s*[0-9]\+"
 	newString="${s} = 1"
 
@@ -132,6 +130,7 @@ function replace_text {
 	
 	after=$(echo "$notebook" | grep "$newString")
 	[ ! -z "$after"  ] && echo After: && echo "$after"
+	set -e
 }
 
 # TODO: replace this with:
@@ -139,8 +138,8 @@ function replace_text {
 files=()
 
 # Tested -- working
-files=("${files[@]}" modules/load_medical_images.ipynb)
-files=("${files[@]}" modules/autoencoder_mednist.ipynb)
+# files=("${files[@]}" modules/load_medical_images.ipynb)
+# files=("${files[@]}" modules/autoencoder_mednist.ipynb)
 files=("${files[@]}" modules/integrate_3rd_party_transforms.ipynb)
 files=("${files[@]}" modules/transforms_demo_2d.ipynb)
 files=("${files[@]}" modules/nifti_read_example.ipynb)
@@ -184,14 +183,6 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" modules/transforms_
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" modules/nifti_read_example.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" modules/3d_image_transforms.ipynb)
 
-contains_element () {
-  local e match="$1"
-  shift
-  contained=false
-  for e; do [[ "$e" == "$match" ]] && contained=true; done
-  echo $contained
-}
-
 for file in "${files[@]}"; do
 	echo "${separator}${blue}Running $file${noColor}"
 
@@ -211,12 +202,11 @@ for file in "${files[@]}"; do
 			jupytext "$filename" --pipe "autopep8"
 		fi
 		
-		# to check flake8, convert to python script, don't check magic cells,
-		# indented import monai (to check if installed), or line length for
-		# comment lines (as this includes markdown), and then run flake8
+		# to check flake8, convert to python script, don't check
+		# magic cells, and don't check line length for comment
+		# lines (as this includes markdown), and then run flake8
 		jupytext "$filename" --to script -o - | \
 			sed 's/\(^\s*\)%/\1pass  # %/' | \
-			sed 's/    import monai/    pass/' | \
 			sed 's/\(^#.*\)$/\1  # noqa: E501/' | \
 			flake8 - --show-source
 
@@ -237,9 +227,15 @@ for file in "${files[@]}"; do
 
 		notebook=$(cat "$filename")
 
-		# check that it contains the keyword max_epochs (unless expected not to)
+		# if compulsory keyword, max_epochs, missing...
 		if [[ ! "$notebook" =~ "max_epochs" ]]; then
-			if [[ $(contains_element "$file" "${doesnt_contain_max_epochs[@]}") == false ]]; then
+			# and notebook isn't in list of those expected to not have that keyword...
+			should_contain_max_epochs=true
+			for e in "${doesnt_contain_max_epochs[@]}"; do 
+				[[ "$e" == "$file" ]] && should_contain_max_epochs=false && break
+			done
+			# then error
+			if [[ $should_contain_max_epochs == true ]]; then
 				echo "Couldn't find the keyword \"max_epochs\", and the notebook wasn't on the list of expected exemptions (\"doesnt_contain_max_epochs\")."
 				print_style_fail_msg
 				exit 1
@@ -259,8 +255,6 @@ for file in "${files[@]}"; do
 	    then
 	        print_style_fail_msg
 	        exit ${success}
-	    else
-	        echo "${green}passed!${noColor}"
 	    fi
 	fi
 

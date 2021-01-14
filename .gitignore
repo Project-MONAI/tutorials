@@ -110,6 +110,7 @@ temp/
 .idea/
 
 *~
+._*
 
 # Remove .pyre temporary config files
 .pyre

@@ -161,9 +161,11 @@ files=()
 # files=("${files[@]}" acceleration/fast_training_tutorial.ipynb)
 # files=("${files[@]}" acceleration/multi_gpu_test.ipynb)
 # files=("${files[@]}" acceleration/threadbuffer_performance.ipynb)
+# files=("${files[@]}" modules/interpretability/class_lung_lesion.ipynb)
 
 # Currently testing
-files=("${files[@]}" modules/interpretability/class_lung_lesion.ipynb)
+files=("${files[@]}" 3d_segmentation/unet_segmentation_3d_ignite.ipynb)
+files=("${files[@]}" 3d_segmentation/brats_segmentation_3d.ipynb)
 
 # Tested -- requires update
 # files=("${files[@]}" modules/dynunet_tutorial.ipynb)
@@ -172,8 +174,6 @@ files=("${files[@]}" modules/interpretability/class_lung_lesion.ipynb)
 # files=("${files[@]}" 3d_segmentation/unet_segmentation_3d_catalyst.ipynb)
 
 # Not tested
-# files=("${files[@]}" 3d_segmentation/brats_segmentation_3d.ipynb)
-# files=("${files[@]}" 3d_segmentation/unet_segmentation_3d_ignite.ipynb)
 
 # These files don't loop across epochs
 doesnt_contain_max_epochs=()

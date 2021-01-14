@@ -211,10 +211,12 @@ for file in "${files[@]}"; do
 			jupytext "$filename" --pipe "autopep8"
 		fi
 		
-		# to check flake8, convert to python script, comment magic cells, don't check
-		# line length for comments (as this includes markdown), and then run flake8
+		# to check flake8, convert to python script, don't check magic cells,
+		# indented import monai (to check if installed), or line length for
+		# comment lines (as this includes markdown), and then run flake8
 		jupytext "$filename" --to script -o - | \
 			sed 's/\(^\s*\)%/\1pass  # %/' | \
+			sed 's/    import monai/    pass/' | \
 			sed 's/\(^#.*\)$/\1  # noqa: E501/' | \
 			flake8 - --show-source
 

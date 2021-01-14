@@ -137,3 +137,4 @@ tests/testing_data/*Hippocampus*
 
 # Ignore torch saves
 */torch/runs
+logs

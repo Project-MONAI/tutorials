@@ -115,24 +115,24 @@ files=()
 
 # Tested -- working
 files=("${files[@]}" modules/load_medical_images.ipynb)
-# files=("${files[@]}" modules/autoencoder_mednist.ipynb)
-# files=("${files[@]}" modules/integrate_3rd_party_transforms.ipynb)
-# files=("${files[@]}" modules/transforms_demo_2d.ipynb)
-# files=("${files[@]}" modules/nifti_read_example.ipynb)
-# files=("${files[@]}" modules/post_transforms.ipynb)
-# files=("${files[@]}" modules/3d_image_transforms.ipynb)
-# files=("${files[@]}" modules/public_datasets.ipynb)
-# files=("${files[@]}" modules/varautoencoder_mednist.ipynb)
-# files=("${files[@]}" modules/models_ensemble.ipynb)
-# files=("${files[@]}" modules/layer_wise_learning_rate.ipynb)
-# files=("${files[@]}" modules/mednist_GAN_tutorial.ipynb)
-# files=("${files[@]}" modules/mednist_GAN_workflow_array.ipynb)
-# files=("${files[@]}" modules/mednist_GAN_workflow_dict.ipynb)
-# files=("${files[@]}" 2d_classification/mednist_tutorial.ipynb)
-# files=("${files[@]}" 3d_classification/torch/densenet_training_array.ipynb)
-# files=("${files[@]}" 3d_segmentation/spleen_segmentation_3d.ipynb)
-# files=("${files[@]}" 3d_segmentation/spleen_segmentation_3d_lightning.ipynb)
-# files=("${files[@]}" acceleration/transform_speed.ipynb)
+files=("${files[@]}" modules/autoencoder_mednist.ipynb)
+files=("${files[@]}" modules/integrate_3rd_party_transforms.ipynb)
+files=("${files[@]}" modules/transforms_demo_2d.ipynb)
+files=("${files[@]}" modules/nifti_read_example.ipynb)
+files=("${files[@]}" modules/post_transforms.ipynb)
+files=("${files[@]}" modules/3d_image_transforms.ipynb)
+files=("${files[@]}" modules/public_datasets.ipynb)
+files=("${files[@]}" modules/varautoencoder_mednist.ipynb)
+files=("${files[@]}" modules/models_ensemble.ipynb)
+files=("${files[@]}" modules/layer_wise_learning_rate.ipynb)
+files=("${files[@]}" modules/mednist_GAN_tutorial.ipynb)
+files=("${files[@]}" modules/mednist_GAN_workflow_array.ipynb)
+files=("${files[@]}" modules/mednist_GAN_workflow_dict.ipynb)
+files=("${files[@]}" 2d_classification/mednist_tutorial.ipynb)
+files=("${files[@]}" 3d_classification/torch/densenet_training_array.ipynb)
+files=("${files[@]}" 3d_segmentation/spleen_segmentation_3d.ipynb)
+files=("${files[@]}" 3d_segmentation/spleen_segmentation_3d_lightning.ipynb)
+files=("${files[@]}" acceleration/transform_speed.ipynb)
 
 # Currently testing
 # files=("${files[@]}" acceleration/automatic_mixed_precision.ipynb)
@@ -150,6 +150,23 @@ files=("${files[@]}" modules/load_medical_images.ipynb)
 # files=("${files[@]}" acceleration/threadbuffer_performance.ipynb)
 # files=("${files[@]}" modules/interpretability/class_lung_lesion.ipynb)
 
+# These files don't loop across epochs
+doesnt_contain_max_epochs=()
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" modules/load_medical_images.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" modules/integrate_3rd_party_transforms.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" acceleration/transform_speed.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" modules/transforms_demo_2d.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" modules/nifti_read_example.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" modules/3d_image_transforms.ipynb)
+
+contains_element () {
+  local e match="$1"
+  shift
+  contained=false
+  for e; do [[ "$e" == "$match" ]] && contained=true; done
+  echo $contained
+}
+
 for file in "${files[@]}"; do
 	echo "${separator}${blue}Running $file${noColor}"
 
@@ -157,7 +174,6 @@ for file in "${files[@]}"; do
 	path="$(dirname "${file}")"
 	filename="$(basename "${file}")"
 	cd ${base_path}/${path}
-	notebook=$(cat "$filename")
 
 	########################################################################
 	#                                                                      #
@@ -194,21 +210,32 @@ for file in "${files[@]}"; do
 	########################################################################
 	if [ $doRun = true ]; then
 
-		# Set some variables to 1 to speed up proceedings
-		strings_to_replace=(max_epochs val_interval disc_train_interval disc_train_steps)
-		for s in "${strings_to_replace[@]}"; do
-			replace_text
-		done
+		notebook=$(cat "$filename")
+
+		# check that it contains the keyword max_epochs (unless expected not to)
+		if [[ ! "$notebook" =~ "max_epochs" ]]; then
+			if [[ $(contains_element "$file" "${doesnt_contain_max_epochs[@]}") == false ]]; then
+				echo "Couldn't find the keyword \"max_epochs\", and the notebook wasn't on the list of expected exemptions (\"doesnt_contain_max_epochs\")."
+				print_style_fail_msg
+				exit 1
+			fi
+		fi
+
+		# # Set some variables to 1 to speed up proceedings
+		# strings_to_replace=(max_epochs val_interval disc_train_interval disc_train_steps)
+		# for s in "${strings_to_replace[@]}"; do
+		# 	replace_text
+		# done
 		
-		# echo "$notebook" > "${base_path}/debug_notebook.ipynb"
-		out=$(echo "$notebook" | papermill --progress-bar)
-		success=$?
-	    if [ ${success} -ne 0 ]
-	    then
-	        print_style_fail_msg
-	        exit ${success}
-	    else
-	        echo "${green}passed!${noColor}"
-	    fi
+		# # echo "$notebook" > "${base_path}/debug_notebook.ipynb"
+		# out=$(echo "$notebook" | papermill --progress-bar)
+		# success=$?
+	 #    if [ ${success} -ne 0 ]
+	 #    then
+	 #        print_style_fail_msg
+	 #        exit ${success}
+	 #    else
+	 #        echo "${green}passed!${noColor}"
+	 #    fi
 	fi
 done

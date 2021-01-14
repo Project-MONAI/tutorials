@@ -138,8 +138,8 @@ function replace_text {
 files=()
 
 # Tested -- working
-# files=("${files[@]}" modules/load_medical_images.ipynb)
-# files=("${files[@]}" modules/autoencoder_mednist.ipynb)
+files=("${files[@]}" modules/load_medical_images.ipynb)
+files=("${files[@]}" modules/autoencoder_mednist.ipynb)
 files=("${files[@]}" modules/integrate_3rd_party_transforms.ipynb)
 files=("${files[@]}" modules/transforms_demo_2d.ipynb)
 files=("${files[@]}" modules/nifti_read_example.ipynb)

@@ -155,21 +155,23 @@ files=()
 # files=("${files[@]}" 3d_classification/torch/densenet_training_array.ipynb)
 # files=("${files[@]}" 3d_segmentation/spleen_segmentation_3d.ipynb)
 # files=("${files[@]}" 3d_segmentation/spleen_segmentation_3d_lightning.ipynb)
-files=("${files[@]}" acceleration/transform_speed.ipynb)
+# files=("${files[@]}" acceleration/transform_speed.ipynb)
+# files=("${files[@]}" acceleration/automatic_mixed_precision.ipynb)
+# files=("${files[@]}" acceleration/dataset_type_performance.ipynb)
+# files=("${files[@]}" acceleration/fast_training_tutorial.ipynb)
 
 # Currently testing
-# files=("${files[@]}" acceleration/automatic_mixed_precision.ipynb)
+files=("${files[@]}" acceleration/multi_gpu_test.ipynb)
 
 # Tested -- requires update
 # files=("${files[@]}" modules/dynunet_tutorial.ipynb)
 
+# Not currently working
+# files=("${files[@]}" 3d_segmentation/unet_segmentation_3d_catalyst.ipynb)
+
 # Not tested
 # files=("${files[@]}" 3d_segmentation/brats_segmentation_3d.ipynb)
-# files=("${files[@]}" 3d_segmentation/unet_segmentation_3d_catalyst.ipynb)
 # files=("${files[@]}" 3d_segmentation/unet_segmentation_3d_ignite.ipynb)
-# files=("${files[@]}" acceleration/dataset_type_performance.ipynb)
-# files=("${files[@]}" acceleration/fast_training_tutorial.ipynb)
-# files=("${files[@]}" acceleration/multi_gpu_test.ipynb)
 # files=("${files[@]}" acceleration/threadbuffer_performance.ipynb)
 # files=("${files[@]}" modules/interpretability/class_lung_lesion.ipynb)
 
@@ -198,7 +200,11 @@ for file in "${files[@]}"; do
 	if [ $doFlake8 = true ]; then
 
 		if [ $autofix = true ]; then
-			jupytext "$filename" --pipe "autopep8"
+			jupytext "$filename" \
+				--pipe "autoflake --in-place --remove-unused-variables --imports numpy,monai,matplotlib,torch {}" \
+				--pipe "isort -" \
+				--pipe "black -l 79 -" \
+				--pipe autopep8
 		fi
 		
 		# to check flake8, convert to python script, don't check
@@ -243,7 +249,7 @@ for file in "${files[@]}"; do
 		fi
 
 		# Set some variables to 1 to speed up proceedings
-		strings_to_replace=(max_epochs val_interval disc_train_interval disc_train_steps n_timeit_loops)
+		strings_to_replace=(num_epochs max_epochs val_interval disc_train_interval disc_train_steps n_timeit_loops)
 		for s in "${strings_to_replace[@]}"; do
 			replace_text
 		done

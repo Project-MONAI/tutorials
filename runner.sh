@@ -11,6 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Stop on error
+set -e
+
 # output formatting
 separator=""
 blue=""
@@ -92,6 +95,28 @@ do
     shift
 done
 
+function check_installed {
+	set +e
+	command -v $1 &>/dev/null
+	success=$?
+	if [ ${success} -ne 0 ]; then
+		echo "${red}Missing package: $1 (try pip install -r requirements.txt)${noColor}"
+		exit $success
+	fi
+	set -e
+}
+
+# check that packages are installed
+if [ $doRun = true ]; then
+	check_installed papermill
+fi
+if [ $doFlake8 = true ]; then
+	check_installed jupytext
+	check_installed flake8
+	if [ $autofix = true ]; then
+		check_installed autopep8
+	fi
+fi
 
 
 base_path="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
@@ -186,12 +211,12 @@ for file in "${files[@]}"; do
 			jupytext "$filename" --pipe "autopep8"
 		fi
 		
-		# to check flake8, convert to python script, magic cells, don't check line
-		# length for comments (as this includes markdown), and then run flake8
+		# to check flake8, convert to python script, comment magic cells, don't check
+		# line length for comments (as this includes markdown), and then run flake8
 		jupytext "$filename" --to script -o - | \
 			sed 's/\(^\s*\)%/\1pass  # %/' | \
 			sed 's/\(^#.*\)$/\1  # noqa: E501/' | \
-			flake8 - --show-source --count --statistics
+			flake8 - --show-source
 
 		success=$?
 		if [ ${success} -ne 0 ]

@@ -221,21 +221,21 @@ for file in "${files[@]}"; do
 			fi
 		fi
 
-		# # Set some variables to 1 to speed up proceedings
-		# strings_to_replace=(max_epochs val_interval disc_train_interval disc_train_steps)
-		# for s in "${strings_to_replace[@]}"; do
-		# 	replace_text
-		# done
+		# Set some variables to 1 to speed up proceedings
+		strings_to_replace=(max_epochs val_interval disc_train_interval disc_train_steps)
+		for s in "${strings_to_replace[@]}"; do
+			replace_text
+		done
 		
-		# # echo "$notebook" > "${base_path}/debug_notebook.ipynb"
-		# out=$(echo "$notebook" | papermill --progress-bar)
-		# success=$?
-	 #    if [ ${success} -ne 0 ]
-	 #    then
-	 #        print_style_fail_msg
-	 #        exit ${success}
-	 #    else
-	 #        echo "${green}passed!${noColor}"
-	 #    fi
+		# echo "$notebook" > "${base_path}/debug_notebook.ipynb"
+		out=$(echo "$notebook" | papermill --progress-bar)
+		success=$?
+	    if [ ${success} -ne 0 ]
+	    then
+	        print_style_fail_msg
+	        exit ${success}
+	    else
+	        echo "${green}passed!${noColor}"
+	    fi
 	fi
 done

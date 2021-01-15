@@ -199,7 +199,8 @@ for file in "${files[@]}"; do
 				--pipe "autoflake --in-place --remove-unused-variables --imports numpy,monai,matplotlib,torch,ignite {}" \
 				--pipe "isort -" \
 				--pipe "black -l 79 -" \
-				--pipe autopep8
+				--pipe autopep8 \
+				--pipe "sed 's/ = list()/ = []/'"
 		fi
 		
 		# to check flake8, convert to python script, don't check

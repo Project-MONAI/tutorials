@@ -9,9 +9,9 @@ import time
 import torch
 import torch.distributed as dist
 
-from byoc.handler import DeepgrowStatsHandler
-from byoc.interaction import Interaction
-from byoc.transforms import (
+from monai.apps.deepgrow.handler import DeepgrowStatsHandler
+from monai.apps.deepgrow.interaction import Interaction
+from monai.apps.deepgrow.transforms import (
     SpatialCropForegroundd,
     AddInitialSeedPointd,
     FindDiscrepancyRegionsd,
@@ -33,10 +33,11 @@ from monai.handlers import (
     MeanDice)
 from monai.inferers import SimpleInferer
 from monai.losses import DiceLoss
-from monai.networks.nets import BasicUNet, UNet, Norm
+from monai.networks.layers import Norm
+from monai.networks.nets import BasicUNet, UNet
 from monai.transforms import (
     Compose,
-    LoadNumpyd,
+    LoadImaged,
     AddChanneld,
     NormalizeIntensityd,
     ToTensord,
@@ -73,7 +74,7 @@ def get_network(network, channels, dimensions):
 
 def get_pre_transforms(roi_size, model_size):
     return Compose([
-        LoadNumpyd(keys=('image', 'label')),
+        LoadImaged(keys=('image', 'label')),
         AddChanneld(keys=('image', 'label')),
         SpatialCropForegroundd(keys=('image', 'label'), source_key='label', spatial_size=roi_size),
         Resized(keys=('image', 'label'), spatial_size=model_size, mode=('area', 'nearest')),
@@ -187,9 +188,7 @@ def create_trainer(args):
         CheckpointSaver(save_dir=args.output, save_dict={"net": network}, save_key_metric=True, save_final=True,
                         save_interval=args.save_interval, final_filename='model.pt')
     ]
-    val_handlers = val_handlers if local_rank == 0 else None if args.dimensions == 2 else [
-        DeepgrowStatsHandler(log_dir=args.output, tag_name='val_dice', image_interval=args.image_interval)
-    ]
+    val_handlers = val_handlers if local_rank == 0 else None
 
     evaluator = SupervisedEvaluator(
         device=device,

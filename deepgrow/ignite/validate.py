@@ -9,8 +9,8 @@ import time
 import torch
 
 import train
-from byoc.handler import DeepgrowStatsHandler, SegmentationSaver
-from byoc.interaction import Interaction
+from monai.apps.deepgrow.handler import DeepgrowStatsHandler, SegmentationSaver
+from monai.apps.deepgrow.interaction import Interaction
 from monai.engines import SupervisedEvaluator
 from monai.handlers import (
     StatsHandler,
@@ -25,7 +25,7 @@ def create_validator(args, click):
 
     device = torch.device("cuda" if args.use_gpu else "cpu")
 
-    pre_transforms = train.get_pre_transforms(json.loads(args.roi_size), json.loads(args.model_size))
+    pre_transforms = train.get_pre_transforms(args.roi_size, args.model_size)
     click_transforms = train.get_click_transforms()
     post_transform = train.get_post_transforms()
 
@@ -78,6 +78,9 @@ def create_validator(args, click):
 
 
 def run(args):
+    args.roi_size = json.loads(args.roi_size)
+    args.model_size = json.loads(args.model_size)
+
     if args.local_rank == 0:
         for arg in vars(args):
             logging.info('USING:: {} = {}'.format(arg, getattr(args, arg)))
@@ -118,6 +121,7 @@ def main():
     parser.add_argument('-i', '--input', default='/workspace/data/52432/2D/dataset.json')
     parser.add_argument('-o', '--output', default='eval')
     parser.add_argument('--save_seg', type=strtobool, default='false')
+    parser.add_argument('--cache_dir', type=str, default=None)
 
     parser.add_argument('-g', '--use_gpu', type=strtobool, default='true')
     parser.add_argument('-b', '--batch', type=int, default=1)

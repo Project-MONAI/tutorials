@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
     parser.add_argument('-n', '--network', default='bunet', choices=['unet', 'bunet'])
     parser.add_argument('-c', '--channels', type=int, default=32)
-    parser.add_argument('-i', '--input', default='/workspace/data/52432/3D/flatten/dataset.json')
+    parser.add_argument('-i', '--input', default='/workspace/data/52432/3D/dataset.json')
     parser.add_argument('-o', '--output', default='output3D')
 
     parser.add_argument('-g', '--use_gpu', type=strtobool, default='true')
@@ -38,13 +38,13 @@ if __name__ == "__main__":
 
     parser.add_argument('-r', '--resume', type=strtobool, default='false')
     parser.add_argument('-m', '--model_path', default="output3D/model.pt")
-    parser.add_argument('--roi_size', default="[128, 256, 256]")
+    parser.add_argument('--roi_size', default="[128, 192, 192]")
     parser.add_argument('--model_size', default="[128, 192, 192]")
 
     parser.add_argument('-f', '--val_freq', type=int, default=1)
     parser.add_argument('-lr', '--learning_rate', type=float, default=0.0001)
     parser.add_argument('-it', '--max_train_interactions', type=int, default=15)
-    parser.add_argument('-iv', '--max_val_interactions', type=int, default=10)
+    parser.add_argument('-iv', '--max_val_interactions', type=int, default=20)
 
     parser.add_argument('--save_interval', type=int, default=20)
     parser.add_argument('--image_interval', type=int, default=5)

@@ -23,6 +23,7 @@ def main():
     parser.add_argument('-i', '--input', default='/workspace/data/52432/3D/dataset.json')
     parser.add_argument('-o', '--output', default='eval3D')
     parser.add_argument('--save_seg', type=strtobool, default='false')
+    parser.add_argument('--cache_dir', type=str, default=None)
 
     parser.add_argument('-g', '--use_gpu', type=strtobool, default='true')
     parser.add_argument('-b', '--batch', type=int, default=1)

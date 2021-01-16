@@ -5,7 +5,7 @@ import logging
 import os
 import sys
 
-from byoc.dataset import create_dataset
+from monai.apps.deepgrow.dataset import create_dataset
 from monai.data import partition_dataset
 
 

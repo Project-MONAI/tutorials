@@ -23,7 +23,6 @@ set -e
 ########################################################################
 # Not working
 not_working=()
-not_working=("${not_working[@]}" dynunet_tutorial.ipynb)
 not_working=("${not_working[@]}" unet_segmentation_3d_catalyst.ipynb)
 # These files don't loop across epochs
 doesnt_contain_max_epochs=()

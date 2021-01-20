@@ -18,12 +18,9 @@ set -e
 
 ########################################################################
 #                                                                      #
-#  append to these arrays if notebook should be run or doesn't         #
-#                   use the notion of epochs                           #
+#                 append to this array if notebook                     #
+#                 doesn't use the notion of epochs                     #
 ########################################################################
-# Not working
-not_working=()
-not_working=("${not_working[@]}" unet_segmentation_3d_catalyst.ipynb)
 # These files don't loop across epochs
 doesnt_contain_max_epochs=()
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" load_medical_images.ipynb)
@@ -160,7 +157,7 @@ function replace_text {
 	[ ! -z "$before" ] && echo Before: && echo "$before"
 
 	notebook=$(echo "$notebook" | sed "s/$oldString/$newString/g")
-	
+
 	after=$(echo "$notebook" | grep "$newString")
 	[ ! -z "$after"  ] && echo After: && echo "$after"
 	set -e
@@ -201,7 +198,7 @@ for file in "${files[@]}"; do
 				--pipe autopep8 \
 				--pipe "sed 's/ = list()/ = []/'"
 		fi
-		
+
 		# to check flake8, convert to python script, don't check
 		# magic cells, and don't check line length for comment
 		# lines (as this includes markdown), and then run flake8
@@ -227,16 +224,6 @@ for file in "${files[@]}"; do
 	########################################################################
 	if [ $doRun = true ]; then
 
-		# Skip if known to not be working
-		skip_as_not_working=false
-		for e in "${not_working[@]}"; do 
-			[[ "$e" == "$filename" ]] && skip_as_not_working=true && break
-		done
-		if [[ $skip_as_not_working == true ]]; then
-			echo "Skipping notebook execution as known to not be working"
-			continue
-		fi
-
 		echo Running notebook...
 		notebook=$(cat "$filename")
 
@@ -244,7 +231,7 @@ for file in "${files[@]}"; do
 		if [[ ! "$notebook" =~ "max_epochs" ]]; then
 			# and notebook isn't in list of those expected to not have that keyword...
 			should_contain_max_epochs=true
-			for e in "${doesnt_contain_max_epochs[@]}"; do 
+			for e in "${doesnt_contain_max_epochs[@]}"; do
 				[[ "$e" == "$filename" ]] && should_contain_max_epochs=false && break
 			done
 			# then error
@@ -256,11 +243,11 @@ for file in "${files[@]}"; do
 		fi
 
 		# Set some variables to 1 to speed up proceedings
-		strings_to_replace=(num_epochs max_epochs val_interval disc_train_interval disc_train_steps n_timeit_loops)
+		strings_to_replace=(max_epochs val_interval disc_train_interval disc_train_steps)
 		for s in "${strings_to_replace[@]}"; do
 			replace_text
 		done
-		
+
 		# echo "$notebook" > "${base_path}/debug_notebook.ipynb"
 		out=$(echo "$notebook" | papermill --progress-bar)
 		success=$?

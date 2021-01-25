@@ -135,7 +135,7 @@ The examples are built with MONAI workflows, mainly contain: trainer/evaluator, 
 #### [3d_image_transforms](./modules/3d_image_transforms.ipynb)
 This notebook demonstrates the transformations on volumetric images.
 
-#### [autoencoder_mednist](./modules/autoencoder_mednist)
+#### [autoencoder_mednist](./modules/autoencoder_mednist.ipynb)
 This tutorial uses the MedNIST hand CT scan dataset to demonstrate MONAI's autoencoder class. The autoencoder is used with an identity encode/decode (i.e., what you put in is what you should get back), as well as demonstrating its usage for de-blurring and de-noising.
 
 #### [dynunet_tutorial](./modules/dynunet_tutorial.ipynb)
@@ -168,7 +168,7 @@ This notebook shows how to quickly set up training workflow based on `MedNISTDat
 This notebook demonstrates the image transformations on histology images using
 [the GlaS Contest dataset](https://warwick.ac.uk/fac/sci/dcs/research/tia/glascontest/download/).
 
-#### [varautoencoder_mednist](./modules/varautoencoder_mednist)
+#### [varautoencoder_mednist](./modules/varautoencoder_mednist.ipynb)
 This tutorial uses the MedNIST scan (or alternatively the MNIST) dataset to demonstrate MONAI's variational autoencoder class.
 
 #### [interpretability](./modules/interpretability)

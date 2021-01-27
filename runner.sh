@@ -255,3 +255,5 @@ for file in "${files[@]}"; do
 
 	echo "${green}passed!${noColor}"
 done
+
+echo -e "\a"

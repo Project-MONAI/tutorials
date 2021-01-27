@@ -34,9 +34,15 @@ jobs:
         python -m pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/master/requirements-dev.txt
     - name: PEP8 check
       run: |
-        $(pwd)/runner.sh --no-run
+        git diff --name-only master | \
+          while read line; do 
+            [[ $line == *.ipynb ]] && ./runner.sh --file "$line" --no-run
+          done
     - name: Run changed files
       run: |
         python -c "import torch; print(torch.cuda.is_available())"
         git fetch origin master:master
-        git diff --name-only master | while read line; do [[ $line == *.ipynb ]] && ./runner.sh --file "$line" --no-checks; done
+        git diff --name-only master | \
+          while read line; do
+            [[ $line == *.ipynb ]] && ./runner.sh --file "$line" --no-checks
+          done

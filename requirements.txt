@@ -1,3 +1,4 @@
+flake8
 papermill
 autopep8
 jupytext

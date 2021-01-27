@@ -30,6 +30,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip wheel
         python -m pip install -r requirements.txt
+        python -m pip install monai-weekly
         python -m pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/master/requirements.txt
         python -m pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/master/requirements-dev.txt
     - name: PEP8 check

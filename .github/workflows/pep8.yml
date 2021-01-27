@@ -12,7 +12,7 @@ jobs:
   #   - docker-20-03-py3-pip- (shared)
   #   - ubuntu py37 pip-
   #   - os-latest-pip- (shared)
-  flake8-py3:
+  pep8:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2

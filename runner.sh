@@ -14,7 +14,8 @@
 # Stop on error
 set -e
 
-
+# Notification on finish
+trap 'echo -e "\a"' EXIT
 
 ########################################################################
 #                                                                      #
@@ -255,5 +256,3 @@ for file in "${files[@]}"; do
 
 	echo "${green}passed!${noColor}"
 done
-
-echo -e "\a"

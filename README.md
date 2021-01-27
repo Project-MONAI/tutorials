@@ -51,7 +51,15 @@ Some notebooks will require additional data. They can be downloaded by running t
 - For bugs relating to MONAI functionality, please create an issue on the [main repository](https://github.com/Project-MONAI/MONAI/issues).
 - For bugs relating to the running of a tutorial, please create an issue in [this repository](https://github.com/Project-MONAI/Tutorials/issues).
 
-### 3. List of notebooks and examples
+### 3. Note to developers
+
+During integration testing, we run these notebooks. To save time, we modify variables to avoid unecessary `for` loop iterations. Hence, during training please use the variables `max_epochs` and `val_interval` for the number of training epochs and validation interval, respectively.
+
+If your notebook doesn't use the idea of epochs, then please add it to the variable `doesnt_contain_max_epochs` in `runner.sh`. This lets the runner know that it's not a problem if it doesn't find `max_epochs`.
+
+If you have any other variables that would benefit by setting them to `1` during testing, add them to `strings_to_replace` in `runner.sh`.
+
+### 4. List of notebooks and examples
 **2D classification**
 #### [mednist_tutorial](./2d_classification/mednist_tutorial.ipynb)
 This notebook shows how to easily integrate MONAI features into existing PyTorch programs.
@@ -135,7 +143,7 @@ The examples are built with MONAI workflows, mainly contain: trainer/evaluator, 
 #### [3d_image_transforms](./modules/3d_image_transforms.ipynb)
 This notebook demonstrates the transformations on volumetric images.
 
-#### [autoencoder_mednist](./modules/autoencoder_mednist)
+#### [autoencoder_mednist](./modules/autoencoder_mednist.ipynb)
 This tutorial uses the MedNIST hand CT scan dataset to demonstrate MONAI's autoencoder class. The autoencoder is used with an identity encode/decode (i.e., what you put in is what you should get back), as well as demonstrating its usage for de-blurring and de-noising.
 
 #### [dynunet_tutorial](./modules/dynunet_tutorial.ipynb)
@@ -168,7 +176,7 @@ This notebook shows how to quickly set up training workflow based on `MedNISTDat
 This notebook demonstrates the image transformations on histology images using
 [the GlaS Contest dataset](https://warwick.ac.uk/fac/sci/dcs/research/tia/glascontest/download/).
 
-#### [varautoencoder_mednist](./modules/varautoencoder_mednist)
+#### [varautoencoder_mednist](./modules/varautoencoder_mednist.ipynb)
 This tutorial uses the MedNIST scan (or alternatively the MNIST) dataset to demonstrate MONAI's variational autoencoder class.
 
 #### [interpretability](./modules/interpretability)

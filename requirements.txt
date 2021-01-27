@@ -3,3 +3,4 @@ papermill
 autopep8
 jupytext
 autoflake
+ipykernel

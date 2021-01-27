@@ -139,9 +139,7 @@ if [ $doChecks = true ]; then
 	check_installed flake8
 	if [ $autofix = true ]; then
 		check_installed autopep8
-        check_installed autoflake
-		check_installed isort
-		check_installed black
+		check_installed autoflake
 	fi
 fi
 
@@ -193,8 +191,6 @@ for file in "${files[@]}"; do
 			echo Applying autofixes...
 			jupytext "$filename" \
 				--pipe "autoflake --in-place --remove-unused-variables --imports numpy,monai,matplotlib,torch,ignite {}" \
-				--pipe "isort -" \
-				--pipe "black -l 79 -" \
 				--pipe "autopep8 - --ignore W291" \
 				--pipe "sed 's/ = list()/ = []/'"
 		fi

@@ -192,7 +192,7 @@ for file in "${files[@]}"; do
 			echo Applying autofixes...
 			jupytext "$filename" \
 				--pipe "autoflake --in-place --remove-unused-variables --imports numpy,monai,matplotlib,torch,ignite {}" \
-				--pipe "autopep8 - --ignore W291" \
+				--pipe "autopep8 - --ignore W291" --max-line-length 120\
 				--pipe "sed 's/ = list()/ = []/'"
 		fi
 

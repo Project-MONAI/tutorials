@@ -9,7 +9,6 @@ import time
 import torch
 import torch.distributed as dist
 
-from monai.apps.deepgrow.handler import DeepgrowStatsHandler
 from monai.apps.deepgrow.interaction import Interaction
 from monai.apps.deepgrow.transforms import (
     SpatialCropForegroundd,
@@ -184,7 +183,6 @@ def create_trainer(args):
     val_handlers = [
         StatsHandler(output_transform=lambda x: None),
         TensorBoardStatsHandler(log_dir=args.output, output_transform=lambda x: None),
-        DeepgrowStatsHandler(log_dir=args.output, tag_name='val_dice', image_interval=args.image_interval),
         CheckpointSaver(save_dir=args.output, save_dict={"net": network}, save_key_metric=True, save_final=True,
                         save_interval=args.save_interval, final_filename='model.pt')
     ]

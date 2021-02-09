@@ -177,7 +177,7 @@ def evaluate(args):
         additional_metrics={"val_acc": Accuracy(output_transform=lambda x: (x["pred"], x["label"]), device=device)},
         val_handlers=val_handlers,
         # if no FP16 support in GPU or PyTorch version < 1.6, will not enable AMP evaluation
-        amp=True if monai.config.get_torch_version_tuple() >= (1, 6) else False,
+        amp=True if monai.utils.get_torch_version_tuple() >= (1, 6) else False,
     )
     evaluator.run()
     dist.destroy_process_group()

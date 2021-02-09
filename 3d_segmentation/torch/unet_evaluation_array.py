@@ -21,7 +21,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from monai import config
-from monai.data import NiftiDataset, NiftiSaver, create_test_image_3d
+from monai.data import ImageDataset, NiftiSaver, create_test_image_3d
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.networks.nets import UNet
@@ -48,7 +48,7 @@ def main(tempdir):
     # define transforms for image and segmentation
     imtrans = Compose([ScaleIntensity(), AddChannel(), ToTensor()])
     segtrans = Compose([AddChannel(), ToTensor()])
-    val_ds = NiftiDataset(images, segs, transform=imtrans, seg_transform=segtrans, image_only=False)
+    val_ds = ImageDataset(images, segs, transform=imtrans, seg_transform=segtrans, image_only=False)
     # sliding window inference for one image at every iteration
     val_loader = DataLoader(val_ds, batch_size=1, num_workers=1, pin_memory=torch.cuda.is_available())
     dice_metric = DiceMetric(include_background=True, reduction="mean")

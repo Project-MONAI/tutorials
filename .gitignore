@@ -110,6 +110,7 @@ temp/
 .idea/
 
 *~
+._*
 
 # Remove .pyre temporary config files
 .pyre
@@ -130,3 +131,10 @@ tests/testing_data/*Hippocampus*
 
 # VSCode
 .vscode/
+
+# saved networks
+*.pth
+
+# Ignore torch saves
+*/torch/runs
+logs

@@ -19,7 +19,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 import monai
-from monai.data import NiftiDataset
+from monai.data import ImageDataset
 from monai.transforms import AddChannel, Compose, RandRotate90, Resize, ScaleIntensity, ToTensor
 
 
@@ -58,18 +58,18 @@ def main():
     train_transforms = Compose([ScaleIntensity(), AddChannel(), Resize((96, 96, 96)), RandRotate90(), ToTensor()])
     val_transforms = Compose([ScaleIntensity(), AddChannel(), Resize((96, 96, 96)), ToTensor()])
 
-    # Define nifti dataset, data loader
-    check_ds = NiftiDataset(image_files=images, labels=labels, transform=train_transforms)
+    # Define image dataset, data loader
+    check_ds = ImageDataset(image_files=images, labels=labels, transform=train_transforms)
     check_loader = DataLoader(check_ds, batch_size=2, num_workers=2, pin_memory=torch.cuda.is_available())
     im, label = monai.utils.misc.first(check_loader)
     print(type(im), im.shape, label)
 
     # create a training data loader
-    train_ds = NiftiDataset(image_files=images[:10], labels=labels[:10], transform=train_transforms)
+    train_ds = ImageDataset(image_files=images[:10], labels=labels[:10], transform=train_transforms)
     train_loader = DataLoader(train_ds, batch_size=2, shuffle=True, num_workers=2, pin_memory=torch.cuda.is_available())
 
     # create a validation data loader
-    val_ds = NiftiDataset(image_files=images[-10:], labels=labels[-10:], transform=val_transforms)
+    val_ds = ImageDataset(image_files=images[-10:], labels=labels[-10:], transform=val_transforms)
     val_loader = DataLoader(val_ds, batch_size=2, num_workers=2, pin_memory=torch.cuda.is_available())
 
     # Create DenseNet121, CrossEntropyLoss and Adam optimizer

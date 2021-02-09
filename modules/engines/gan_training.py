@@ -82,11 +82,11 @@ def main():
     real_dataloader = DataLoader(real_dataset, batch_size=batch_size, shuffle=True, num_workers=10)
 
     # define function to process batchdata for input into discriminator
-    def prepare_batch(batchdata):
+    def prepare_batch(batchdata, device=None, non_blocking=False):
         """
         Process Dataloader batchdata dict object and return image tensors for D Inferer
         """
-        return batchdata["hand"]
+        return batchdata["hand"].to(device=device, non_blocking=non_blocking)
 
     # define networks
     disc_net = Discriminator(

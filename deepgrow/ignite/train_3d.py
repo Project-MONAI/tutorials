@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
     parser.add_argument('-n', '--network', default='bunet', choices=['unet', 'bunet'])
     parser.add_argument('-c', '--channels', type=int, default=32)
-    parser.add_argument('-i', '--input', default='/workspace/data/52432/3D/dataset.json')
+    parser.add_argument('-i', '--input', default='/workspace/data/deepgrow/3D/MSD_Task09_Spleen/dataset.json')
     parser.add_argument('-o', '--output', default='output3D')
 
     parser.add_argument('-g', '--use_gpu', type=strtobool, default='true')
@@ -57,13 +57,13 @@ if __name__ == "__main__":
 
 '''
 # Single GPU (it will also export)
-python train.py
+python train_3d.py
 
 # Multi GPU (run export separate)
 python -m torch.distributed.launch \
   --nproc_per_node=`nvidia-smi -L | wc -l` \
   --nnodes=1 --node_rank=0 --master_addr="localhost" --master_port=1234 \
-  -m train --multi_gpu true -e 100
+  -m train_3d --multi_gpu true -e 100
 
 python train.py --export
 '''

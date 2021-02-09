@@ -9,6 +9,7 @@ import time
 import torch
 
 import train
+from handler import DeepgrowStatsHandler, SegmentationSaver
 from monai.apps.deepgrow.interaction import Interaction
 from monai.engines import SupervisedEvaluator
 from monai.handlers import (
@@ -24,7 +25,7 @@ def create_validator(args, click):
 
     device = torch.device("cuda" if args.use_gpu else "cpu")
 
-    pre_transforms = train.get_pre_transforms(args.roi_size, args.model_size)
+    pre_transforms = train.get_pre_transforms(args.roi_size, args.model_size, args.dimensions)
     click_transforms = train.get_click_transforms()
     post_transform = train.get_post_transforms()
 
@@ -45,8 +46,15 @@ def create_validator(args, click):
 
     val_handlers = [
         StatsHandler(output_transform=lambda x: None),
-        TensorBoardStatsHandler(log_dir=args.output, output_transform=lambda x: None)
+        TensorBoardStatsHandler(log_dir=args.output, output_transform=lambda x: None),
+        DeepgrowStatsHandler(
+            log_dir=args.output,
+            tag_name=f'clicks_{click}_val_dice',
+            fold_size=int(len(val_loader.dataset) / args.batch / args.folds) if args.folds else 0
+        ),
     ]
+    if args.save_seg:
+        val_handlers.append(SegmentationSaver(output_dir=os.path.join(args.output, f'clicks_{click}_images')))
 
     evaluator = SupervisedEvaluator(
         device=device,
@@ -110,8 +118,9 @@ def main():
     parser.add_argument('-c', '--channels', type=int, default=32)
     parser.add_argument('-f', '--folds', type=int, default=10)
 
-    parser.add_argument('-i', '--input', default='/workspace/data/52432/2D/dataset.json')
+    parser.add_argument('-i', '--input', default='/workspace/data/deepgrow/2D/MSD_Task09_Spleen/dataset.json')
     parser.add_argument('-o', '--output', default='eval')
+    parser.add_argument('--save_seg', type=strtobool, default='false')
     parser.add_argument('--cache_dir', type=str, default=None)
 
     parser.add_argument('-g', '--use_gpu', type=strtobool, default='true')

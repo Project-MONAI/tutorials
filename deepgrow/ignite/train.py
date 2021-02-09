@@ -46,6 +46,7 @@ from monai.transforms import (
     Resized,
 )
 from monai.utils import set_determinism
+from handler import DeepgrowStatsHandler
 
 
 def get_network(network, channels, dimensions):
@@ -71,18 +72,22 @@ def get_network(network, channels, dimensions):
     return network
 
 
-def get_pre_transforms(roi_size, model_size):
-    return Compose([
+def get_pre_transforms(roi_size, model_size, dimensions):
+    t = [
         LoadImaged(keys=('image', 'label')),
         AddChanneld(keys=('image', 'label')),
         SpatialCropForegroundd(keys=('image', 'label'), source_key='label', spatial_size=roi_size),
         Resized(keys=('image', 'label'), spatial_size=model_size, mode=('area', 'nearest')),
-        NormalizeIntensityd(keys='image', subtrahend=208.0, divisor=388.0),
-        FindAllValidSlicesd(label='label', sids='sids'),
+        NormalizeIntensityd(keys='image', subtrahend=208.0, divisor=388.0)
+    ]
+    if dimensions == 3:
+        t.append(FindAllValidSlicesd(label='label', sids='sids'))
+    t.extend([
         AddInitialSeedPointd(label='label', guidance='guidance', sids='sids'),
         AddGuidanceSignald(image='image', guidance='guidance'),
         ToTensord(keys=('image', 'label'))
     ])
+    return Compose(t)
 
 
 def get_click_transforms():
@@ -163,7 +168,7 @@ def create_trainer(args):
     else:
         device = torch.device("cuda" if args.use_gpu else "cpu")
 
-    pre_transforms = get_pre_transforms(args.roi_size, args.model_size)
+    pre_transforms = get_pre_transforms(args.roi_size, args.model_size, args.dimensions)
     click_transforms = get_click_transforms()
     post_transform = get_post_transforms()
 
@@ -183,6 +188,7 @@ def create_trainer(args):
     val_handlers = [
         StatsHandler(output_transform=lambda x: None),
         TensorBoardStatsHandler(log_dir=args.output, output_transform=lambda x: None),
+        DeepgrowStatsHandler(log_dir=args.output, tag_name='val_dice', image_interval=args.image_interval),
         CheckpointSaver(save_dir=args.output, save_dict={"net": network}, save_key_metric=True, save_final=True,
                         save_interval=args.save_interval, final_filename='model.pt')
     ]
@@ -306,7 +312,7 @@ def main():
 
     parser.add_argument('-n', '--network', default='bunet', choices=['unet', 'bunet'])
     parser.add_argument('-c', '--channels', type=int, default=32)
-    parser.add_argument('-i', '--input', default='/workspace/data/52432/2D/dataset.json')
+    parser.add_argument('-i', '--input', default='/workspace/data/deepgrow/2D/MSD_Task09_Spleen/dataset.json')
     parser.add_argument('-o', '--output', default='output')
 
     parser.add_argument('-g', '--use_gpu', type=strtobool, default='true')

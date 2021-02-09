@@ -20,7 +20,7 @@ def main():
     parser.add_argument('-c', '--channels', type=int, default=32)
     parser.add_argument('-f', '--folds', type=int, default=10)
 
-    parser.add_argument('-i', '--input', default='/workspace/data/52432/3D/dataset.json')
+    parser.add_argument('-i', '--input', default='/workspace/data/deepgrow/3D/MSD_Task09_Spleen/dataset.json')
     parser.add_argument('-o', '--output', default='eval3D')
     parser.add_argument('--save_seg', type=strtobool, default='false')
     parser.add_argument('--cache_dir', type=str, default=None)

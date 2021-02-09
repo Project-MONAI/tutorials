@@ -6,7 +6,6 @@ import os
 import sys
 
 from monai.apps.deepgrow.dataset import create_dataset
-from monai.data import partition_dataset
 
 
 def prepare_datalist(args):
@@ -39,15 +38,6 @@ def prepare_datalist(args):
     logging.info('+++ Total Records: {}'.format(len(datalist)))
     logging.info('')
 
-    train_ds, val_ds = partition_dataset(datalist, ratios=[args.split, (1 - args.split)], shuffle=True, seed=args.seed)
-    dataset_json = os.path.join(args.output, 'dataset-0.json')
-    with open(dataset_json, 'w') as fp:
-        json.dump({'training': train_ds, 'validation': val_ds}, fp, indent=2)
-
-    logging.info('*** Dataset File: {}'.format(dataset_json))
-    logging.info('*** Total Records for Training: {}'.format(len(train_ds)))
-    logging.info('*** Total Records for Validation: {}'.format(len(val_ds)))
-
 
 def run(args):
     for arg in vars(args):
@@ -70,12 +60,11 @@ def main():
     parser.add_argument('-s', '--seed', type=int, default=42)
     parser.add_argument('-dims', '--dimensions', type=int, default=2)
 
-    parser.add_argument('-d', '--dataset_root', default='/workspace/data/52432')
-    parser.add_argument('-j', '--dataset_json', default='/workspace/data/52432/dataset.json')
+    parser.add_argument('-d', '--dataset_root', default='/workspace/data/MSD_Task09_Spleen')
+    parser.add_argument('-j', '--dataset_json', default='/workspace/data/MSD_Task09_Spleen/dataset.json')
     parser.add_argument('-k', '--datalist_key', default='training')
 
-    parser.add_argument('-o', '--output', default='/workspace/data/52432/2D')
-    parser.add_argument('-x', '--split', type=float, default=0.9)
+    parser.add_argument('-o', '--output', default='/workspace/data/deepgrow/2D/MSD_Task09_Spleen')
     parser.add_argument('-t', '--limit', type=int, default=0)
     parser.add_argument('-r', '--relative_path', type=strtobool, default='false')
 

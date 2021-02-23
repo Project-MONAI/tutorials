@@ -20,7 +20,7 @@ from ignite.metrics import Accuracy
 from torch.utils.data import DataLoader
 
 import monai
-from monai.data import NiftiDataset
+from monai.data import ImageDataset
 from monai.handlers import CheckpointLoader, ClassificationSaver, StatsHandler
 from monai.transforms import AddChannel, Compose, Resize, ScaleIntensity, ToTensor
 
@@ -48,8 +48,8 @@ def main():
 
     # define transforms for image
     val_transforms = Compose([ScaleIntensity(), AddChannel(), Resize((96, 96, 96)), ToTensor()])
-    # define nifti dataset
-    val_ds = NiftiDataset(image_files=images, labels=labels, transform=val_transforms, image_only=False)
+    # define image dataset
+    val_ds = ImageDataset(image_files=images, labels=labels, transform=val_transforms, image_only=False)
     # create DenseNet121
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     net = monai.networks.nets.densenet.densenet121(spatial_dims=3, in_channels=1, out_channels=2).to(device)

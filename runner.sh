@@ -192,7 +192,7 @@ for file in "${files[@]}"; do
 			echo Applying autofixes...
 			jupytext "$filename" \
 				--pipe "autoflake --in-place --remove-unused-variables --imports numpy,monai,matplotlib,torch,ignite {}" \
-				--pipe "autopep8 - --ignore W291" \
+				--pipe "autopep8 - --ignore W291 --max-line-length 120"\
 				--pipe "sed 's/ = list()/ = []/'"
 		fi
 
@@ -203,7 +203,7 @@ for file in "${files[@]}"; do
 		jupytext "$filename" --to script -o - | \
 			sed 's/\(^\s*\)%/\1pass  # %/' | \
 			sed 's/\(^#.*\)$/\1  # noqa: E501/' | \
-			flake8 - --show-source
+			flake8 - --show-source --max-line-length 120
 
 		success=$?
 		if [ ${success} -ne 0 ]

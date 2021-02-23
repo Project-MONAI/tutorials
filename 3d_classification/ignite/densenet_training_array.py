@@ -21,7 +21,7 @@ from ignite.metrics import Accuracy
 from torch.utils.data import DataLoader
 
 import monai
-from monai.data import NiftiDataset
+from monai.data import ImageDataset
 from monai.handlers import StatsHandler, TensorBoardStatsHandler, stopping_fn_from_metric
 from monai.transforms import AddChannel, Compose, RandRotate90, Resize, ScaleIntensity, ToTensor
 
@@ -61,8 +61,8 @@ def main():
     train_transforms = Compose([ScaleIntensity(), AddChannel(), Resize((96, 96, 96)), RandRotate90(), ToTensor()])
     val_transforms = Compose([ScaleIntensity(), AddChannel(), Resize((96, 96, 96)), ToTensor()])
 
-    # define nifti dataset, data loader
-    check_ds = NiftiDataset(image_files=images, labels=labels, transform=train_transforms)
+    # define image dataset, data loader
+    check_ds = ImageDataset(image_files=images, labels=labels, transform=train_transforms)
     check_loader = DataLoader(check_ds, batch_size=2, num_workers=2, pin_memory=torch.cuda.is_available())
     im, label = monai.utils.misc.first(check_loader)
     print(type(im), im.shape, label)
@@ -124,7 +124,7 @@ def main():
     evaluator.add_event_handler(event_name=Events.EPOCH_COMPLETED, handler=early_stopper)
 
     # create a validation data loader
-    val_ds = NiftiDataset(image_files=images[-10:], labels=labels[-10:], transform=val_transforms)
+    val_ds = ImageDataset(image_files=images[-10:], labels=labels[-10:], transform=val_transforms)
     val_loader = DataLoader(val_ds, batch_size=2, num_workers=2, pin_memory=torch.cuda.is_available())
 
     @trainer.on(Events.EPOCH_COMPLETED(every=validation_every_n_epochs))
@@ -132,7 +132,7 @@ def main():
         evaluator.run(val_loader)
 
     # create a training data loader
-    train_ds = NiftiDataset(image_files=images[:10], labels=labels[:10], transform=train_transforms)
+    train_ds = ImageDataset(image_files=images[:10], labels=labels[:10], transform=train_transforms)
     train_loader = DataLoader(train_ds, batch_size=2, shuffle=True, num_workers=2, pin_memory=torch.cuda.is_available())
 
     train_epochs = 30

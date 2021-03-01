@@ -28,7 +28,7 @@ def get_kernels_strides(task_id):
     return kernels, strides
 
 
-def get_network(device, properties, task_id, pretrain_path, checkpoint=None):
+def get_network(properties, task_id, pretrain_path, checkpoint=None):
     n_class = len(properties["labels"])
     in_channels = len(properties["modality"])
     kernels, strides = get_kernels_strides(task_id)
@@ -43,7 +43,7 @@ def get_network(device, properties, task_id, pretrain_path, checkpoint=None):
         norm_name="instance",
         deep_supervision=True,
         deep_supr_num=deep_supr_num[task_id],
-    ).to(device)
+    )
 
     if checkpoint is not None:
         pretrain_path = os.path.join(pretrain_path, checkpoint)

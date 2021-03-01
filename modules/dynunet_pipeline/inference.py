@@ -1,29 +1,20 @@
 import os
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 
-import nibabel as nib
-import numpy as np
 import torch
-import torch.nn as nn
-from monai.apps import DecathlonDataset
-from monai.data import DataLoader
-from monai.data.utils import to_affine_nd
+import torch.distributed as dist
 from monai.inferers import SlidingWindowInferer
-from monai.networks.nets import DynUNet
-from monai.transforms import AsDiscrete
+from torch.nn.parallel import DistributedDataParallel
 
-from create_network import get_kernels_strides, get_network
+from create_dataset import get_data
+from create_network import get_network
 from inferrer import DynUNetInferrer
-from task_params import (deep_supr_num, patch_size,
-                         task_name)
-from transforms import get_task_transforms, recovery_prediction
+from task_params import patch_size, task_name
 
 
 def inference(args):
     # load hyper parameters
-    root_dir = args.root_dir
     task_id = args.task_id
-    val_num_workers = args.val_num_workers
     checkpoint = args.checkpoint
     val_output_dir = "./runs_{}_fold{}_{}/".format(
         args.task_id, args.fold, args.expr_name
@@ -34,30 +25,28 @@ def inference(args):
     eval_overlap = args.eval_overlap
     amp = args.amp
     tta_val = args.tta_val
+    multi_gpu_flag = args.multi_gpu
+    local_rank = args.local_rank
 
     if not os.path.exists(infer_output_dir):
         os.makedirs(infer_output_dir)
 
-    transform_params = (args.pos_sample_num, args.neg_sample_num, args.num_samples)
-    test_transform = get_task_transforms("test", task_id, *transform_params)
+    if multi_gpu_flag:
+        dist.init_process_group(backend="nccl", init_method="env://")
+        device = torch.device(f"cuda:{local_rank}")
+        torch.cuda.set_device(device)
+    else:
+        device = torch.device("cuda")
 
-    test_ds = DecathlonDataset(
-        root_dir=root_dir,
-        task=task_name[task_id],
-        transform=test_transform,
-        section="test",
-        download=False,
-        num_workers=4,
-    )
+    properties, test_loader = get_data(args, mode="test")
 
-    test_loader = DataLoader(
-        test_ds, batch_size=1, shuffle=False, num_workers=val_num_workers
-    )
-    # produce the network
-    device = torch.device("cuda:0")
-    properties = test_ds.get_properties(keys=["labels", "modality"])
-    n_classes = len(properties["labels"])
-    net = get_network(device, properties, task_id, val_output_dir, checkpoint)
+    net = get_network(properties, task_id, val_output_dir, checkpoint)
+    net = net.to(device)
+
+    if multi_gpu_flag:
+        net = DistributedDataParallel(
+            module=net, device_ids=[device], find_unused_parameters=True
+        )
 
     net.eval()
 
@@ -66,7 +55,7 @@ def inference(args):
         val_data_loader=test_loader,
         network=net,
         output_dir=val_output_dir,
-        n_classes=n_classes,
+        n_classes=len(properties["labels"]),
         inferer=SlidingWindowInferer(
             roi_size=patch_size[task_id],
             sw_batch_size=sw_batch_size,
@@ -99,6 +88,12 @@ if __name__ == "__main__":
         type=str,
         default="expr",
         help="the suffix of the experiment's folder",
+    )
+    parser.add_argument(
+        "-datalist_path",
+        "--datalist_path",
+        type=str,
+        default="config/",
     )
     parser.add_argument(
         "-train_num_workers",
@@ -178,7 +173,6 @@ if __name__ == "__main__":
         default=None,
         help="the filename of weights.",
     )
-    parser.add_argument("-multi_gpu", "--multi_gpu", type=bool, default=False)
     parser.add_argument(
         "-amp",
         "--amp",
@@ -193,6 +187,13 @@ if __name__ == "__main__":
         default=False,
         help="whether to use test time augmentation.",
     )
-
+    parser.add_argument(
+        "-multi_gpu",
+        "--multi_gpu",
+        type=bool,
+        default=False,
+        help="whether to use multiple GPUs for training.",
+    )
+    parser.add_argument("-local_rank", "--local_rank", type=int, default=0)
     args = parser.parse_args()
     inference(args)

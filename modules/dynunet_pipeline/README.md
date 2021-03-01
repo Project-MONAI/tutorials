@@ -8,7 +8,7 @@ After getting the dataset, please run `create_datalist.py` to get the datalists 
 
 ## Training
 Please run `train.py` for training. Please modify the command line arguments according
-to the actual situation.
+to the actual situation, such as `determinism_flag` for deterministic training, `amp` for automatic mixed precision.
 
 ## Validation
 Please run `train.py` and set the argument `mode` to `val` for validation.
@@ -23,6 +23,7 @@ There are some examples in `commands/` and train on task 04 (fold 0 for validati
 - `finetune_task04.sh` is used for finetuning.
 - `val_task04.sh` is used for validation.
 - `infer_task04.sh` is used for inference.
+- If you need to use multiple GPUs, please run scripts that contain `multi_gpu`.
 
 # References
 [1] Isensee F, Jäger P F, Kohl S A A, et al. Automated design of deep learning methods for biomedical image segmentation[J]. arXiv preprint arXiv:1904.08128, 2019.

@@ -3,10 +3,13 @@ import os
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 
 import torch
+import torch.distributed as dist
 from monai.handlers import (CheckpointSaver, LrScheduleHandler, MeanDice,
                             StatsHandler, ValidationHandler)
 from monai.inferers import SimpleInferer, SlidingWindowInferer
 from monai.losses import DiceCELoss
+from monai.utils import set_determinism
+from torch.nn.parallel import DistributedDataParallel
 
 from create_dataset import get_data
 from create_network import get_network
@@ -22,15 +25,31 @@ def validation(args):
     tta_val = args.tta_val
     window_mode = args.window_mode
     eval_overlap = args.eval_overlap
+    multi_gpu_flag = args.multi_gpu
+    local_rank = args.local_rank
     amp = args.amp
 
-    properties, val_loader = get_data(args, mode="validation")
-    n_classes = len(properties["labels"])
     # produce the network
     checkpoint = args.checkpoint
     val_output_dir = "./runs_{}_fold{}_{}/".format(task_id, args.fold, args.expr_name)
-    device = torch.device("cuda:0")
-    net = get_network(device, properties, task_id, val_output_dir, checkpoint)
+
+    if multi_gpu_flag:
+        dist.init_process_group(backend="nccl", init_method="env://")
+        device = torch.device(f"cuda:{local_rank}")
+        torch.cuda.set_device(device)
+    else:
+        device = torch.device("cuda")
+
+    properties, val_loader = get_data(args, mode="validation")
+    net = get_network(properties, task_id, val_output_dir, checkpoint)
+    net = net.to(device)
+
+    if multi_gpu_flag:
+        net = DistributedDataParallel(
+            module=net, device_ids=[device], find_unused_parameters=True
+        )
+
+    n_classes = len(properties["labels"])
 
     net.eval()
 
@@ -58,11 +77,14 @@ def validation(args):
     )
 
     evaluator.run()
-    print(evaluator.state.metrics)
-    results = evaluator.state.metric_details["val_mean_dice"]
-    if n_classes > 2:
-        for i in range(n_classes - 1):
-            print("mean dice for label {} is {}".format(i + 1, results[:, i].mean()))
+    if local_rank == 0:
+        print(evaluator.state.metrics)
+        results = evaluator.state.metric_details["val_mean_dice"]
+        if n_classes > 2:
+            for i in range(n_classes - 1):
+                print(
+                    "mean dice for label {} is {}".format(i + 1, results[:, i].mean())
+                )
 
 
 def train(args):
@@ -75,6 +97,7 @@ def train(args):
     interval = args.interval
     learning_rate = args.learning_rate
     max_epochs = args.max_epochs
+    multi_gpu_flag = args.multi_gpu
     amp_flag = args.amp
     lr_decay_flag = args.lr_decay
     sw_batch_size = args.sw_batch_size
@@ -82,17 +105,36 @@ def train(args):
     batch_dice = args.batch_dice
     window_mode = args.window_mode
     eval_overlap = args.eval_overlap
+    local_rank = args.local_rank
+    determinism_flag = args.determinism_flag
+    determinism_seed = args.determinism_seed
+    if determinism_flag:
+        set_determinism(seed=determinism_seed)
+        if local_rank == 0:
+            print("Using deterministic training.")
 
     # transforms
     train_batch_size = data_loader_params[task_id]["batch_size"]
+    if multi_gpu_flag:
+        dist.init_process_group(backend="nccl", init_method="env://")
+
+        device = torch.device(f"cuda:{local_rank}")
+        torch.cuda.set_device(device)
+    else:
+        device = torch.device("cuda")
 
     properties, val_loader = get_data(args, mode="validation")
     _, train_loader = get_data(args, batch_size=train_batch_size, mode="train")
 
     # produce the network
-    device = torch.device("cuda:0")
     checkpoint = args.checkpoint
-    net = get_network(device, properties, task_id, val_output_dir, checkpoint)
+    net = get_network(properties, task_id, val_output_dir, checkpoint)
+    net = net.to(device)
+
+    if multi_gpu_flag:
+        net = DistributedDataParallel(
+            module=net, device_ids=[device], find_unused_parameters=True
+        )
 
     optimizer = torch.optim.SGD(
         net.parameters(),
@@ -178,16 +220,10 @@ def train(args):
     chandler.setFormatter(formatter)
 
     # Add both handlers
-    logger.addHandler(fhandler)
-    logger.addHandler(chandler)
-    logger.setLevel(logging.INFO)
-
-    # Show the handlers
-    logger.handlers
-
-    # Log Something
-    logger.info("Test info")
-    logger.debug("Test debug")
+    if local_rank == 0:
+        logger.addHandler(fhandler)
+        logger.addHandler(chandler)
+        logger.setLevel(logging.INFO)
 
     trainer.run()
 
@@ -335,7 +371,24 @@ if __name__ == "__main__":
         default=False,
         help="the batch parameter of DiceCELoss.",
     )
-
+    parser.add_argument(
+        "-determinism_flag", "--determinism_flag", type=bool, default=False
+    )
+    parser.add_argument(
+        "-determinism_seed",
+        "--determinism_seed",
+        type=int,
+        default=0,
+        help="the seed used in deterministic training",
+    )
+    parser.add_argument(
+        "-multi_gpu",
+        "--multi_gpu",
+        type=bool,
+        default=False,
+        help="whether to use multiple GPUs for training.",
+    )
+    parser.add_argument("-local_rank", "--local_rank", type=int, default=0)
     args = parser.parse_args()
 
     if args.mode == "train":

@@ -3,15 +3,20 @@ import os
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 
 import torch
-from monai.handlers import (CheckpointSaver, LrScheduleHandler, MeanDice,
-                            StatsHandler, ValidationHandler)
+from monai.handlers import (
+    CheckpointSaver,
+    LrScheduleHandler,
+    MeanDice,
+    StatsHandler,
+    ValidationHandler,
+)
 from monai.inferers import SimpleInferer, SlidingWindowInferer
 from monai.losses import DiceCELoss
 
-from task_params import data_loader_params, patch_size
 from create_dataset import get_data
 from create_network import get_network
 from evaluator import DynUNetEvaluator
+from task_params import data_loader_params, patch_size
 from trainer import DynUNetTrainer
 
 
@@ -62,7 +67,7 @@ def validation(args):
     results = evaluator.state.metric_details["val_mean_dice"]
     if n_classes > 2:
         for i in range(n_classes - 1):
-            print("mean dice for label {} is {}".format(i+1, results[:, i].mean()))
+            print("mean dice for label {} is {}".format(i + 1, results[:, i].mean()))
 
 
 def train(args):
@@ -205,39 +210,136 @@ if __name__ == "__main__":
         default="/workspace/data/medical/",
         help="dataset path",
     )
-    parser.add_argument("-expr_name", "--expr_name", type=str, default="expr", help="the suffix of the experiment's folder")
     parser.add_argument(
-        "-datalist_path", "--datalist_path", type=str, default="config/",
+        "-expr_name",
+        "--expr_name",
+        type=str,
+        default="expr",
+        help="the suffix of the experiment's folder",
     )
     parser.add_argument(
-        "-train_num_workers", "--train_num_workers", type=int, default=4, help="the num_workers parameter of training dataloader."
+        "-datalist_path",
+        "--datalist_path",
+        type=str,
+        default="config/",
     )
-    parser.add_argument("-val_num_workers", "--val_num_workers", type=int, default=1, help="the num_workers parameter of validation dataloader.")
-    parser.add_argument("-interval", "--interval", type=int, default=5, help="the validation interval under epoch level.")
-    parser.add_argument("-eval_overlap", "--eval_overlap", type=float, default=0.5, help="the overlap parameter of SlidingWindowInferer.")
-    parser.add_argument("-sw_batch_size", "--sw_batch_size", type=int, default=4, help="the sw_batch_size parameter of SlidingWindowInferer.")
+    parser.add_argument(
+        "-train_num_workers",
+        "--train_num_workers",
+        type=int,
+        default=4,
+        help="the num_workers parameter of training dataloader.",
+    )
+    parser.add_argument(
+        "-val_num_workers",
+        "--val_num_workers",
+        type=int,
+        default=1,
+        help="the num_workers parameter of validation dataloader.",
+    )
+    parser.add_argument(
+        "-interval",
+        "--interval",
+        type=int,
+        default=5,
+        help="the validation interval under epoch level.",
+    )
+    parser.add_argument(
+        "-eval_overlap",
+        "--eval_overlap",
+        type=float,
+        default=0.5,
+        help="the overlap parameter of SlidingWindowInferer.",
+    )
+    parser.add_argument(
+        "-sw_batch_size",
+        "--sw_batch_size",
+        type=int,
+        default=4,
+        help="the sw_batch_size parameter of SlidingWindowInferer.",
+    )
     parser.add_argument(
         "-window_mode",
         "--window_mode",
         type=str,
         default="gaussian",
         choices=["constant", "gaussian"],
-        help="the mode parameter for SlidingWindowInferer."
+        help="the mode parameter for SlidingWindowInferer.",
     )
-    parser.add_argument("-num_samples", "--num_samples", type=int, default=3, help="the num_samples parameter of RandCropByPosNegLabeld.")
-    parser.add_argument("-pos_sample_num", "--pos_sample_num", type=int, default=1, help="the pos parameter of RandCropByPosNegLabeld.")
-    parser.add_argument("-neg_sample_num", "--neg_sample_num", type=int, default=1, help="the neg parameter of RandCropByPosNegLabeld.")
-    parser.add_argument("-cache_rate", "--cache_rate", type=float, default=1.0, help="the cache_rate parameter of CacheDataset.")
+    parser.add_argument(
+        "-num_samples",
+        "--num_samples",
+        type=int,
+        default=3,
+        help="the num_samples parameter of RandCropByPosNegLabeld.",
+    )
+    parser.add_argument(
+        "-pos_sample_num",
+        "--pos_sample_num",
+        type=int,
+        default=1,
+        help="the pos parameter of RandCropByPosNegLabeld.",
+    )
+    parser.add_argument(
+        "-neg_sample_num",
+        "--neg_sample_num",
+        type=int,
+        default=1,
+        help="the neg parameter of RandCropByPosNegLabeld.",
+    )
+    parser.add_argument(
+        "-cache_rate",
+        "--cache_rate",
+        type=float,
+        default=1.0,
+        help="the cache_rate parameter of CacheDataset.",
+    )
     parser.add_argument("-learning_rate", "--learning_rate", type=float, default=1e-2)
-    parser.add_argument("-max_epochs", "--max_epochs", type=int, default=1000, help="number of epochs of training.")
+    parser.add_argument(
+        "-max_epochs",
+        "--max_epochs",
+        type=int,
+        default=1000,
+        help="number of epochs of training.",
+    )
     parser.add_argument(
         "-mode", "--mode", type=str, default="train", choices=["train", "val"]
     )
-    parser.add_argument("-checkpoint", "--checkpoint", type=str, default=None, help="the filename of weights.")
-    parser.add_argument("-amp", "--amp", type=bool, default=False, help="whether to use automatic mixed precision.")
-    parser.add_argument("-lr_decay", "--lr_decay", type=bool, default=False, help="whether to use learning rate decay.")
-    parser.add_argument("-tta_val", "--tta_val", type=bool, default=False, help="whether to use test time augmentation.")
-    parser.add_argument("-batch_dice", "--batch_dice", type=bool, default=False, help="the batch parameter of DiceCELoss.")
+    parser.add_argument(
+        "-checkpoint",
+        "--checkpoint",
+        type=str,
+        default=None,
+        help="the filename of weights.",
+    )
+    parser.add_argument(
+        "-amp",
+        "--amp",
+        type=bool,
+        default=False,
+        help="whether to use automatic mixed precision.",
+    )
+    parser.add_argument(
+        "-lr_decay",
+        "--lr_decay",
+        type=bool,
+        default=False,
+        help="whether to use learning rate decay.",
+    )
+    parser.add_argument(
+        "-tta_val",
+        "--tta_val",
+        type=bool,
+        default=False,
+        help="whether to use test time augmentation.",
+    )
+    parser.add_argument(
+        "-batch_dice",
+        "--batch_dice",
+        type=bool,
+        default=False,
+        help="the batch parameter of DiceCELoss.",
+    )
 
     args = parser.parse_args()
 
@@ -245,4 +347,3 @@ if __name__ == "__main__":
         train(args)
     elif args.mode == "val":
         validation(args)
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        

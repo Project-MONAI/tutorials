@@ -245,11 +245,13 @@ def recovery_prediction(prediction, shape, anisotrophy_flag):
 
 
 class PreprocessAnisotropic(MapTransform):
-"""
-    This transform class takes NNUNet's preprocessing method for reference.
-    That code is in:
-    https://github.com/MIC-DKFZ/nnUNet/blob/master/nnunet/preprocessing/preprocessing.py
-"""
+    """
+        This transform class takes NNUNet's preprocessing method for reference.
+        That code is in:
+        https://github.com/MIC-DKFZ/nnUNet/blob/master/nnunet/preprocessing/preprocessing.py
+
+    """
+
     def __init__(
         self,
         keys,

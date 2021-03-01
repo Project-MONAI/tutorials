@@ -1,11 +1,7 @@
 import os
 
-from monai.data import (
-    CacheDataset,
-    DataLoader,
-    load_decathlon_datalist,
-    load_decathlon_properties,
-)
+from monai.data import (CacheDataset, DataLoader, load_decathlon_datalist,
+                        load_decathlon_properties)
 
 from task_params import task_name
 from transforms import get_task_transforms

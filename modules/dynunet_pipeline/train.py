@@ -3,13 +3,8 @@ import os
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 
 import torch
-from monai.handlers import (
-    CheckpointSaver,
-    LrScheduleHandler,
-    MeanDice,
-    StatsHandler,
-    ValidationHandler,
-)
+from monai.handlers import (CheckpointSaver, LrScheduleHandler, MeanDice,
+                            StatsHandler, ValidationHandler)
 from monai.inferers import SimpleInferer, SlidingWindowInferer
 from monai.losses import DiceCELoss
 
@@ -201,7 +196,7 @@ if __name__ == "__main__":
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument("-fold", "--fold", type=int, default=0, help="0-5")
     parser.add_argument(
-        "-task_id", "--task_id", type=str, default="02", help="task 01 to 10"
+        "-task_id", "--task_id", type=str, default="04", help="task 01 to 10"
     )
     parser.add_argument(
         "-root_dir",

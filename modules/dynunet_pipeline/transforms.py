@@ -1,22 +1,10 @@
 import numpy as np
-from monai.transforms import (
-    AddChanneld,
-    AsChannelFirstd,
-    CastToTyped,
-    Compose,
-    CropForegroundd,
-    LoadImaged,
-    NormalizeIntensity,
-    RandCropByPosNegLabeld,
-    RandFlipd,
-    RandGaussianNoised,
-    RandGaussianSmoothd,
-    RandScaleIntensityd,
-    RandZoomd,
-    SpatialCrop,
-    SpatialPadd,
-    ToTensord,
-)
+from monai.transforms import (AddChanneld, AsChannelFirstd, CastToTyped,
+                              Compose, CropForegroundd, LoadImaged,
+                              NormalizeIntensity, RandCropByPosNegLabeld,
+                              RandFlipd, RandGaussianNoised,
+                              RandGaussianSmoothd, RandScaleIntensityd,
+                              RandZoomd, SpatialCrop, SpatialPadd, ToTensord)
 from monai.transforms.compose import MapTransform
 from monai.transforms.utils import generate_spatial_bounding_box
 from skimage.transform import resize

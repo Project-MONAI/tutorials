@@ -109,6 +109,10 @@ The example is a PyTorch Ignite program and shows several key features of MONAI,
 #### [COVID 19-20 challenge baseline](./3d_segmentation/challenge_baseline)
 This folder provides a simple baseline method for training, validation, and inference for [COVID-19 LUNG CT LESION SEGMENTATION CHALLENGE - 2020](https://covid-segmentation.grand-challenge.org/COVID-19-20/) (a MICCAI Endorsed Event).
 
+**deepgrow**
+#### [Deepgrow](./deepgrow)
+The example show how to train/validate a 2D/3D deepgrow model.  It also demonstrates running an inference for trained deepgrow models.
+
 **federated learning**
 #### [Substra](./federated_learning/substra)
 The example show how to execute the 3d segmentation torch tutorial on a federated learning platform, Substra.

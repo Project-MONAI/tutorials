@@ -17,12 +17,13 @@ Please run `train.py` and set the argument `mode` to `val` for validation.
 Please run `inference.py` for inference.
 
 ## Examples
-There are some examples in `commands/` and train on task 04 (fold 0 for validation):
+There are some examples in `commands/` and based on task 04 (fold 0 for validation).
+For instance:
 
-- `train_task04.sh` is used for training.
-- `finetune_task04.sh` is used for finetuning.
-- `val_task04.sh` is used for validation.
-- `infer_task04.sh` is used for inference.
+- `train.sh` is used for training.
+- `finetune.sh` is used for finetuning.
+- `val.sh` is used for validation.
+- `infer.sh` is used for inference.
 - If you need to use multiple GPUs, please run scripts that contain `multi_gpu`.
 
 # References

@@ -1,6 +1,6 @@
 import numpy as np
-from monai.transforms import (AddChanneld, AsChannelFirstd, CastToTyped,
-                              Compose, CropForegroundd, LoadImaged,
+from monai.transforms import (CastToTyped,
+                              Compose, CropForegroundd, EnsureChannelFirstd, LoadImaged,
                               NormalizeIntensity, RandCropByPosNegLabeld,
                               RandFlipd, RandGaussianNoised,
                               RandGaussianSmoothd, RandScaleIntensityd,
@@ -13,33 +13,19 @@ from task_params import clip_values, normalize_values, patch_size, spacing
 
 
 def get_task_transforms(mode, task_id, pos_sample_num, neg_sample_num, num_samples):
-
-    # 1. loading for different formats
     if mode != "test":
-        load_keys = ["image", "label"]
+        keys = ["image", "label"]
     else:
-        load_keys = ["image"]
+        keys = ["image"]
 
-    if task_id in ["01", "05"]:
-        load_transforms = [
-            LoadImaged(keys=load_keys),
-            AsChannelFirstd(keys="image"),
-        ]
-        if mode != "test":
-            load_transforms.append(AddChanneld(keys=["label"]))
-    else:
-        load_transforms = [
-            LoadImaged(keys=load_keys),
-            AddChanneld(keys=load_keys),
-        ]
+    load_transforms = [
+        LoadImaged(keys=keys),
+        EnsureChannelFirstd(keys=keys),
+    ]
     # 2. sampling
-    if mode != "test":
-        sample_keys = ["image", "label"]
-    else:
-        sample_keys = ["image"]
     sample_transforms = [
         PreprocessAnisotropic(
-            keys=sample_keys,
+            keys=keys,
             clip_values=clip_values[task_id],
             pixdim=spacing[task_id],
             normalize_values=normalize_values[task_id],

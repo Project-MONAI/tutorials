@@ -26,6 +26,11 @@ For instance:
 - `infer.sh` is used for inference.
 - If you need to use multiple GPUs, please run scripts that contain `multi_gpu`.
 
+With the default settings in `train.sh` and `finetune.sh`, after training and finetuning, you can get around:
+
+- 0.9007447957992554 for label 1
+- 0.8834863305091858 for label 2
+
 # References
 [1] Isensee F, Jäger P F, Kohl S A A, et al. Automated design of deep learning methods for biomedical image segmentation[J]. arXiv preprint arXiv:1904.08128, 2019.
 

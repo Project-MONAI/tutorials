@@ -1,5 +1,5 @@
 # Overview
-This pipeline is modified from NNUnet [1,2] which wins the "Medical Segmentation Decathlon Challenge 2018" and open sourced from https://github.com/MIC-DKFZ/nnUNet.
+This pipeline is modified from NNUnet [1][2] which wins the "Medical Segmentation Decathlon Challenge 2018" and open sourced from https://github.com/MIC-DKFZ/nnUNet.
 
 ## Data
 The source decathlon datasets can be found from http://medicaldecathlon.com/.
@@ -26,10 +26,15 @@ For instance:
 - `infer.sh` is used for inference.
 - If you need to use multiple GPUs, please run scripts that contain `multi_gpu`.
 
-With the default settings in `train.sh` and `finetune.sh`, after training and finetuning, you can get around:
+With the default settings in `train.sh` and `finetune.sh`, you can get around the following validation results:
 
-- 0.9007447957992554 for label 1
-- 0.8834863305091858 for label 2
+|         | 0      | 1      | 2      | 3      | 4      | Mean   | NNUNet val |
+|---------|--------|--------|--------|--------|--------|--------|------------|
+| class 1 | 0.9007 | 0.8930 | 0.8985 | 0.8979 | 0.9015 | 0.8983 | 0.8975     |
+| class 2 | 0.8835 | 0.8774 | 0.8826 | 0.8818 | 0.8828 | 0.8816 | 0.8807     |
+
+Comments:
+- The results of NNUNet come from `3D_fullres` version, which is also the DynUNet used version. The scores are gotten from [1].
 
 # References
 [1] Isensee F, Jäger P F, Kohl S A A, et al. Automated design of deep learning methods for biomedical image segmentation[J]. arXiv preprint arXiv:1904.08128, 2019.

@@ -1,13 +1,12 @@
 import os
 from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Union
 
-import nibabel as nib
 import numpy as np
 import torch
 import torch.nn as nn
 from ignite.engine import Engine
 from ignite.metrics import Metric
-from monai.data.utils import to_affine_nd
+from monai.data.nifti_writer import write_nifti
 from monai.engines import SupervisedEvaluator
 from monai.engines.utils import IterationEvents, default_prepare_batch
 from monai.inferers import Inferer
@@ -150,7 +149,7 @@ class DynUNetInferrer(SupervisedEvaluator):
         inputs = inputs.cpu()
         predictions = self.post_pred(predictions)
 
-        target_affine = batchdata["image_meta_dict"]["affine"].numpy()[0]
+        affine = batchdata["image_meta_dict"]["affine"].numpy()[0]
         resample_flag = batchdata["resample_flag"]
         anisotrophy_flag = batchdata["anisotrophy_flag"]
         crop_shape = batchdata["crop_shape"][0].tolist()
@@ -182,11 +181,12 @@ class DynUNetInferrer(SupervisedEvaluator):
                 filename, predictions_org.shape, predictions_org.mean()
             )
         )
-        results_img = nib.Nifti1Image(
-            predictions_org.astype(np.uint8), to_affine_nd(3, target_affine)
+        write_nifti(
+            data=predictions_org,
+            file_name=os.path.join(self.output_dir, filename),
+            affine=affine,
+            resample=False,
+            output_dtype=np.uint8,
         )
-        del predictions_org
-        nib.save(results_img, os.path.join(self.output_dir, filename))
-
         engine.fire_event(IterationEvents.FORWARD_COMPLETED)
-        return {"pred": results_img}
+        return {"pred": predictions_org}

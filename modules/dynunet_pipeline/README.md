@@ -6,6 +6,14 @@ The source decathlon datasets can be found from http://medicaldecathlon.com/.
 
 After getting the dataset, please run `create_datalist.py` to get the datalists (please check the command line arguments first). The default seed can help to get the same 5 folds data splits as NNUnet has, and the created datalist will be in `config/`
 
+My running environment:
+
+- OS: Ubuntu 20.04.1 LTS
+- Python: 3.8.5
+- Pytorch: 1.8.0
+
+To prevent the inconsistency, all json files are included in `config/` already.
+
 ## Training
 Please run `train.py` for training. Please modify the command line arguments according
 to the actual situation, such as `determinism_flag` for deterministic training, `amp` for automatic mixed precision.

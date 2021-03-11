@@ -43,7 +43,7 @@ The devices I used for training for all tasks are shown as follow:
 |   9  |                   1                   |
 |  10  |                   1                   |
 
-I used these scripts and trained for all 5 folds for all 10 tasks. As for the testset, I did the ensemble by average the 5 feature maps (coming from 5 folds' models) before the `argmax` manipulation (for task 03, since the feature maps are very large, I just did voting for 5 final predictions). By submitting the ensembled results to the Decathlon Challenge's Leaderboard, I got the following results:
+I used these scripts and trained for all 5 folds for all 10 tasks. As for the test set, I did the ensemble by average the 5 feature maps (coming from 5 folds' models) before the `argmax` manipulation (for task 03, since the feature maps are very large, I just did voting for 5 final predictions). By submitting the ensembled results to the Decathlon Challenge's Leaderboard, I got the following results:
 
 |         | DynUNet class 1 |   2  |   3  | NNUNet class 1 |   2  |   3  |
 |:-------:|:---------------:|:----:|:----:|:--------------:|:----:|:----:|

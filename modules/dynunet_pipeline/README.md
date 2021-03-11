@@ -26,7 +26,7 @@ For instance:
 - `infer.sh` is used for inference.
 - If you need to use multiple GPUs, please run scripts that contain `multi_gpu`.
 
-You can task task 04's scripts for reference since for other tasks, only the training parts are included. A task folder that contains `train.sh` means it only need to use 1 GPU for training, and `train_multi_gpu.sh` means it need at least 2 GPUs for training.
+You can take task 04's scripts for reference since for other tasks, only the training parts are included. A task folder that contains `train.sh` means it only needs to use 1 GPU for training, and `train_multi_gpu.sh` means it needs at least 2 GPUs for training.
 
 The devices I used for training for all tasks are shown as follow:
 

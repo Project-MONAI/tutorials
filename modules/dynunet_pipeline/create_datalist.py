@@ -32,7 +32,6 @@ def create_datalist(
 
     with open(dataset_file_path, "r") as f:
         dataset = json.load(f)
-        f.close()
 
     dataset_with_folds = dataset.copy()
 

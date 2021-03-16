@@ -53,14 +53,14 @@ doRun=true
 autofix=false
 
 function print_usage {
-    echo "runtests.sh [--no-run] [--no-checks] [--autofix] [--file <filename>] [--help] [--version]"
+    echo "runner.sh [--no-run] [--no-checks] [--autofix] [--file <filename>] [--help] [--version]"
     echo ""
     echo "MONAI tutorials testing utilities. When running the notebooks, we first search for variables, such as `max_epochs` and set them to 1 to reduce testing time."
     echo ""
     echo "Examples:"
-    echo "./runtests.sh                             # run full tests (${green}recommended before making pull requests${noColor})."
-    echo "./runtests.sh --no-run                    # don't run the notebooks."
-    echo "./runtests.sh --no-checks                 # don't run code checks."
+    echo "./runner.sh                             # run full tests (${green}recommended before making pull requests${noColor})."
+    echo "./runner.sh --no-run                    # don't run the notebooks."
+    echo "./runner.sh --no-checks                 # don't run code checks."
     echo ""
     echo "Code style check options:"
     echo "    --no-run          : don't run notebooks"

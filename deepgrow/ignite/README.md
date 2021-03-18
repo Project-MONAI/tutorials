@@ -1,6 +1,14 @@
 # Deepgrow Examples
 This folder contains examples to run train and validate a deepgrow 2D/3D model.
 It also has notebooks to run inference over trained model.
+<p align="center">
+  <img src="../../figures/image_deepgrow_scheme.png" alt="deepgrow scheme")
+</p>
+
+implementation based on:
+
+Sakinis et al., Interactive segmentation of medical images through
+fully convolutional neural networks. (2019) https://arxiv.org/abs/1903.08205
 
 ### 1. Data
 

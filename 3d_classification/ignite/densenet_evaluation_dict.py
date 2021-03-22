@@ -59,7 +59,7 @@ def main():
 
     # create DenseNet121
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    net = monai.networks.nets.densenet.densenet121(spatial_dims=3, in_channels=1, out_channels=2).to(device)
+    net = monai.networks.nets.DenseNet121(spatial_dims=3, in_channels=1, out_channels=2).to(device)
 
     def prepare_batch(batch, device=None, non_blocking=False):
         return _prepare_batch((batch["img"], batch["label"]), device, non_blocking)

@@ -87,7 +87,7 @@ def main():
 
     # create DenseNet121, CrossEntropyLoss and Adam optimizer
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    net = monai.networks.nets.densenet.densenet121(spatial_dims=3, in_channels=1, out_channels=2).to(device)
+    net = monai.networks.nets.DenseNet121(spatial_dims=3, in_channels=1, out_channels=2).to(device)
     loss = torch.nn.CrossEntropyLoss()
     lr = 1e-5
     opt = torch.optim.Adam(net.parameters(), lr)

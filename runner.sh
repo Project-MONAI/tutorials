@@ -52,6 +52,7 @@ doChecks=true
 doRun=true
 autofix=false
 failfast=false
+pattern="."
 
 function print_usage {
     echo "runner.sh [--no-run] [--no-checks] [--autofix] [-f/--failfast] [-p/--pattern <regex pattern>] [-h/--help] [-v/--version]"
@@ -176,18 +177,14 @@ function replace_text {
 	[ ! -z "$after"  ] && echo After: && echo "$after"
 }
 
-# Get notebooks (pattern is * unless user specifies otherwise)
-files=$(find . -type f -name "*.ipynb" -and ! -wholename "*.ipynb_checkpoints*")
-if [ -n ${pattern+x} ]; then
-	echo "Matching files with pattern: ${pattern}"
-	files=$(echo -e "$files" | grep -E "${pattern}")
-fi
+# Get notebooks (pattern is . unless user specifies otherwise)
+files=($(find . -type f -name "*.ipynb" -and ! -wholename "*.ipynb_checkpoints*" | grep -E "${pattern}"))
 if [[ $files == "" ]]; then 
 	print_error_msg "No files match pattern"
 	exit 1
 fi
 echo "Files to be tested:"
-for i in $files; do echo $i; done
+for i in "${files[@]}"; do echo $i; done
 
 # After setup, don't want immediate error
 set +e

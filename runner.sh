@@ -14,9 +14,6 @@
 # During setup, stop on error
 set -e
 
-# Notification on finish
-trap 'echo -e "\a"' EXIT
-
 ########################################################################
 #                                                                      #
 #                 append to this array if notebook                     #
@@ -87,8 +84,6 @@ function print_error_msg() {
     echo ""
 }
 
-files=()
-
 # parse arguments
 while [[ $# -gt 0 ]]
 do
@@ -127,14 +122,13 @@ do
     shift
 done
 
-# Initially set exit code to 0. If any tests fail, set to 1
-exit_code=0
-
-# if failfast, exit returning code. else set exit code to 1 and continue
+# if failfast, exit returning code. else increment number of failed tests and continue
 function test_fail {
 	print_style_fail_msg
-	if [ $failfast = true ]; then exit $1; fi
-	exit_code=1
+	if [ $failfast = true ]; then
+		exit $1
+	fi
+	current_test_successful=1
 }
 
 function check_installed {
@@ -186,7 +180,23 @@ fi
 echo "Files to be tested:"
 for i in "${files[@]}"; do echo $i; done
 
-# After setup, don't want immediate error
+# Keep track of number of passed tests. Use a trap to print results on exit
+num_successful_tests=0
+num_tested=0
+# on finish
+function finish {
+  	if [[ ${num_successful_tests} -eq ${num_tested} ]]; then 
+		echo -e "\n\n\n${green}Testing finished. All ${num_tested} executed tests passed!${noColor}"
+	else
+		echo -e "\n\n\n${red}Testing finished. ${num_successful_tests} of ${num_tested} executed tests passed!${noColor}"
+	fi
+	# notification
+	echo -e "\a"
+	exit $((num_tested - num_successful_tests))
+}
+trap finish EXIT
+
+# After setup, don't want to exit immediately after error
 set +e
 
 ########################################################################
@@ -195,6 +205,8 @@ set +e
 #                                                                      #
 ########################################################################
 for file in "${files[@]}"; do
+	current_test_successful=0
+
 	echo "${separator}${blue}Running $file${noColor}"
 
 	# Get to file's folder and get file contents
@@ -270,11 +282,9 @@ for file in "${files[@]}"; do
 	        test_fail ${success}
 	    fi
 	fi
-done
 
-if [[ ${exit_code} -eq 0 ]]; then 
-	echo "${green}passed!${noColor}"
-else
-	echo "${red}failed!${noColor}"
-fi
-exit ${exit_code}
+	num_tested=$((num_tested + 1))
+	if [[ ${current_test_successful} -eq 0 ]]; then
+		num_successful_tests=$((num_successful_tests + 1))
+	fi
+done

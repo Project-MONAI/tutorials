@@ -52,7 +52,7 @@ def main():
     val_ds = ImageDataset(image_files=images, labels=labels, transform=val_transforms, image_only=False)
     # create DenseNet121
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    net = monai.networks.nets.densenet.densenet121(spatial_dims=3, in_channels=1, out_channels=2).to(device)
+    net = monai.networks.nets.DenseNet121(spatial_dims=3, in_channels=1, out_channels=2).to(device)
 
     metric_name = "Accuracy"
     # add evaluation metric to the evaluator engine

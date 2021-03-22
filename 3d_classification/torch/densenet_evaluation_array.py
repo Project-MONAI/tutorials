@@ -53,7 +53,7 @@ def main():
 
     # Create DenseNet121
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = monai.networks.nets.densenet.densenet121(spatial_dims=3, in_channels=1, out_channels=2).to(device)
+    model = monai.networks.nets.DenseNet121(spatial_dims=3, in_channels=1, out_channels=2).to(device)
 
     model.load_state_dict(torch.load("best_metric_model_classification3d_array.pth"))
     model.eval()

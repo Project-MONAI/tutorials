@@ -20,7 +20,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 import monai
 from monai.metrics import compute_roc_auc
-from monai.transforms import AddChanneld, Compose, LoadImaged, RandRotate90d, Resized, ScaleIntensityd, ToTensord
+from monai.transforms import Activations, AddChanneld, AsDiscrete, Compose, LoadImaged, RandRotate90d, Resized, ScaleIntensityd, ToTensord
 
 
 def main():
@@ -76,6 +76,8 @@ def main():
             ToTensord(keys=["img"]),
         ]
     )
+    act = Activations(softmax=True)
+    to_onehot = AsDiscrete(to_onehot=True, n_classes=2)
 
     # Define dataset, data loader
     check_ds = monai.data.Dataset(data=train_files, transform=train_transforms)
@@ -135,7 +137,10 @@ def main():
 
                 acc_value = torch.eq(y_pred.argmax(dim=1), y)
                 acc_metric = acc_value.sum().item() / len(acc_value)
-                auc_metric = compute_roc_auc(y_pred, y, to_onehot_y=True, softmax=True)
+                y_onehot = to_onehot(y)
+                y_pred_act = act(y_pred)
+                auc_metric = compute_roc_auc(y_pred_act, y_onehot)
+                del y_pred_act, y_onehot
                 if acc_metric > best_metric:
                     best_metric = acc_metric
                     best_metric_epoch = epoch + 1

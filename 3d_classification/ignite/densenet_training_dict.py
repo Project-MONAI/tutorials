@@ -22,7 +22,7 @@ from torch.utils.data import DataLoader
 
 import monai
 from monai.handlers import ROCAUC, StatsHandler, TensorBoardStatsHandler, stopping_fn_from_metric
-from monai.transforms import AddChanneld, Compose, LoadImaged, RandRotate90d, Resized, ScaleIntensityd, ToTensord
+from monai.transforms import Activations, AddChanneld, AsDiscrete, Compose, LoadImaged, RandRotate90d, Resized, ScaleIntensityd, ToTensord
 
 
 def main():
@@ -121,10 +121,13 @@ def main():
 
     metric_name = "Accuracy"
     # add evaluation metric to the evaluator engine
-    val_metrics = {metric_name: Accuracy(), "AUC": ROCAUC(to_onehot_y=True, softmax=True)}
+    val_metrics = {metric_name: Accuracy(), "AUC": ROCAUC()}
+
+    post_label = AsDiscrete(to_onehot=True, n_classes=2)
+    post_pred = Activations(softmax=True)
     # Ignite evaluator expects batch=(img, label) and returns output=(y_pred, y) at every iteration,
     # user can add output_transform to return other values
-    evaluator = create_supervised_evaluator(net, val_metrics, device, True, prepare_batch=prepare_batch)
+    evaluator = create_supervised_evaluator(net, val_metrics, device, True, prepare_batch=prepare_batch, output_transform=lambda x, y, y_pred: (post_pred(y_pred), post_label(y))
 
     # add stats event handler to print validation stats via evaluator
     val_stats_handler = StatsHandler(

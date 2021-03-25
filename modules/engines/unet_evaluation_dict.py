@@ -31,7 +31,7 @@ from monai.transforms import (
     AsDiscreted,
     Compose,
     KeepLargestConnectedComponentd,
-    LoadNiftid,
+    LoadImaged,
     ScaleIntensityd,
     ToTensord,
 )
@@ -60,7 +60,7 @@ def main(tempdir):
     # define transforms for image and segmentation
     val_transforms = Compose(
         [
-            LoadNiftid(keys=["image", "label"]),
+            LoadImaged(keys=["image", "label"]),
             AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
             ScaleIntensityd(keys="image"),
             ToTensord(keys=["image", "label"]),
@@ -111,7 +111,7 @@ def main(tempdir):
         additional_metrics={"val_acc": Accuracy(output_transform=lambda x: (x["pred"], x["label"]))},
         val_handlers=val_handlers,
         # if no FP16 support in GPU or PyTorch version < 1.6, will not enable AMP evaluation
-        amp=True if monai.config.get_torch_version_tuple() >= (1, 6) else False,
+        amp=True if monai.utils.get_torch_version_tuple() >= (1, 6) else False,
     )
     evaluator.run()
 

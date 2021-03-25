@@ -5,7 +5,7 @@ from monai.metrics import DiceMetric
 
 
 class MonaiMetrics(tools.Metrics):
-    dice_metric = DiceMetric(include_background=True, to_onehot_y=False, sigmoid=True, reduction="mean")
+    dice_metric = DiceMetric(include_background=True, reduction="mean")
 
     def score(self, y_true, y_pred):
         metric_sum = 0.0

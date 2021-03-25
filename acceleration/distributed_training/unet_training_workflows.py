@@ -75,7 +75,7 @@ from monai.transforms import (
     AsDiscreted,
     Compose,
     KeepLargestConnectedComponentd,
-    LoadNiftid,
+    LoadImaged,
     RandCropByPosNegLabeld,
     RandRotate90d,
     ScaleIntensityd,
@@ -107,7 +107,7 @@ def train(args):
     # define transforms for image and segmentation
     train_transforms = Compose(
         [
-            LoadNiftid(keys=["image", "label"]),
+            LoadImaged(keys=["image", "label"]),
             AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
             ScaleIntensityd(keys="image"),
             RandCropByPosNegLabeld(
@@ -177,7 +177,7 @@ def train(args):
         loss_function=loss,
         inferer=SimpleInferer(),
         # if no FP16 support in GPU or PyTorch version < 1.6, will not enable AMP evaluation
-        amp=True if monai.config.get_torch_version_tuple() >= (1, 6) else False,
+        amp=True if monai.utils.get_torch_version_tuple() >= (1, 6) else False,
         post_transform=train_post_transforms,
         key_train_metric={"train_acc": Accuracy(output_transform=lambda x: (x["pred"], x["label"]), device=device)},
         train_handlers=train_handlers,

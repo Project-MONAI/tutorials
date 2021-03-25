@@ -64,7 +64,7 @@ During training, the top three models will be selected based on the per-epoch va
 
 The training uses convenient file loading modules and a few intensity and spatial random augmentations using [MONAI](https://github.com/Project-MONAI/MONAI):
 
-- `LoadNiftid`, `AddChanneld`, `Orientationd`, `Spacingd`, `ScaleIntensityRanged`
+- `LoadImaged`, `AddChanneld`, `Orientationd`, `Spacingd`, `ScaleIntensityRanged`
 
 Load the image data into the LPS orientation (Left to right, Posterior to anterior, Superior to inferior), with a resolution of 1.25mm x 1.25mm x 5.00mm, and intensity between [-1000.0, 500.0] scaled to [0.0, 1.0].
 
@@ -103,7 +103,7 @@ This command will load the best validation model, run inference, and store the p
 <img src="../../figures/curves.png" width="75%" alt='training curves'>
 </p>
 
-This baseline method achieves 0.7068 ± 0.1816 Dice score on the challenge validation set.
+This baseline method achieves 0.6904 ± 0.1801 Dice score on the challenge validation set.
 
 ### Further readings
 

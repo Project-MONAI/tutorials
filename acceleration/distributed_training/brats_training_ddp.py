@@ -62,19 +62,20 @@ import numpy as np
 import torch
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel
-from torch.utils.data.distributed import DistributedSampler
 from torch.utils.tensorboard import SummaryWriter
 
 from monai.apps import DecathlonDataset
-from monai.data import DataLoader
+from monai.data import DataLoader, partition_dataset
 from monai.losses import DiceLoss
 from monai.metrics import DiceMetric
 from monai.networks.nets import SegResNet, UNet
 from monai.transforms import (
+    Activations,
     AsChannelFirstd,
+    AsDiscrete,
     CenterSpatialCropd,
     Compose,
-    LoadNiftid,
+    LoadImaged,
     MapTransform,
     NormalizeIntensityd,
     Orientationd,
@@ -113,32 +114,12 @@ class ConvertToMultiChannelBasedOnBratsClassesd(MapTransform):
         return d
 
 
-def partition_dataset(data, shuffle: bool = False, seed: int = 0):
-    """
-    Partition the dataset for distributed training, every rank process only train with its own data partition.
-    It can be useful for `CacheDataset` or `SmartCacheDataset`, because every rank process can only compute and
-    cache its own data.
-    Note that every rank process will shuffle data only in its own partition if set `shuffle=True` to DataLoader.
-    The alternative solution is to use `DistributedSampler`, which supports global shuffle before every epoch.
-    But if using `CacheDataset` or `SmartCacheDataset`, every rank process will cache duplicated data content and
-    raise system memory usage.
-    Args:
-        data: data list to partition, assumed to be of constant size.
-        shuffle: if true, will shuffle the indices of data list before partition.
-        seed: random seed to shuffle the indices if `shuffle=True`.
-            this number should be identical across all processes in the distributed group.
-    """
-    sampler: DistributedSampler = DistributedSampler(dataset=data, shuffle=shuffle)  # type: ignore
-    sampler.set_epoch(seed)
-    return [data[i] for i in sampler]
-
-
 class BratsCacheDataset(DecathlonDataset):
     def __init__(
         self,
         root_dir,
         section,
-        transform=LoadNiftid(["image", "label"]),
+        transform=LoadImaged(["image", "label"]),
         cache_rate=1.0,
         num_workers=0,
         shuffle=False,
@@ -160,7 +141,14 @@ class BratsCacheDataset(DecathlonDataset):
 
     def _generate_data_list(self, dataset_dir):
         data = super()._generate_data_list(dataset_dir)
-        return partition_dataset(data, shuffle=self.shuffle, seed=0)
+        return partition_dataset(
+            data=data,
+            num_partitions=dist.get_world_size(),
+            shuffle=self.shuffle,
+            seed=0,
+            drop_last=False,
+            even_divisible=self.shuffle,
+        )[dist.get_rank()]
 
 
 def main_worker(args):
@@ -178,7 +166,7 @@ def main_worker(args):
     train_transforms = Compose(
         [
             # load 4 Nifti images and stack them together
-            LoadNiftid(keys=["image", "label"]),
+            LoadImaged(keys=["image", "label"]),
             AsChannelFirstd(keys="image"),
             ConvertToMultiChannelBasedOnBratsClassesd(keys="label"),
             Spacingd(keys=["image", "label"], pixdim=(1.5, 1.5, 2.0), mode=("bilinear", "nearest")),
@@ -208,7 +196,7 @@ def main_worker(args):
     # validation transforms and dataset
     val_transforms = Compose(
         [
-            LoadNiftid(keys=["image", "label"]),
+            LoadImaged(keys=["image", "label"]),
             AsChannelFirstd(keys="image"),
             ConvertToMultiChannelBasedOnBratsClassesd(keys="label"),
             Spacingd(keys=["image", "label"], pixdim=(1.5, 1.5, 2.0), mode=("bilinear", "nearest")),
@@ -344,29 +332,35 @@ def evaluate(model, data_loader, device):
 
     model.eval()
     with torch.no_grad():
-        dice_metric = DiceMetric(include_background=True, sigmoid=True, reduction="mean")
+        dice_metric = DiceMetric(include_background=True, reduction="mean")
+        post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
         for val_data in data_loader:
             val_inputs, val_labels = (
                 val_data["image"].to(device, non_blocking=True),
                 val_data["label"].to(device, non_blocking=True),
             )
             val_outputs = model(val_inputs)
+            val_outputs = post_trans(val_outputs)
             # compute overall mean dice
-            value = dice_metric(y_pred=val_outputs, y=val_labels).squeeze()
-            metric[0] += value * dice_metric.not_nans
-            metric[1] += dice_metric.not_nans
+            value, not_nans = dice_metric(y_pred=val_outputs, y=val_labels)
+            value = value.squeeze()
+            metric[0] += value * not_nans
+            metric[1] += not_nans
             # compute mean dice for TC
-            value_tc = dice_metric(y_pred=val_outputs[:, 0:1], y=val_labels[:, 0:1]).squeeze()
-            metric[2] += value_tc * dice_metric.not_nans
-            metric[3] += dice_metric.not_nans
+            value_tc, not_nans = dice_metric(y_pred=val_outputs[:, 0:1], y=val_labels[:, 0:1])
+            value_tc = value_tc.squeeze()
+            metric[2] += value_tc * not_nans
+            metric[3] += not_nans
             # compute mean dice for WT
-            value_wt = dice_metric(y_pred=val_outputs[:, 1:2], y=val_labels[:, 1:2]).squeeze()
-            metric[4] += value_wt * dice_metric.not_nans
-            metric[5] += dice_metric.not_nans
+            value_wt, not_nans = dice_metric(y_pred=val_outputs[:, 1:2], y=val_labels[:, 1:2])
+            value_wt = value_wt.squeeze()
+            metric[4] += value_wt * not_nans
+            metric[5] += not_nans
             # compute mean dice for ET
-            value_et = dice_metric(y_pred=val_outputs[:, 2:3], y=val_labels[:, 2:3]).squeeze()
-            metric[6] += value_et * dice_metric.not_nans
-            metric[7] += dice_metric.not_nans
+            value_et, not_nans = dice_metric(y_pred=val_outputs[:, 2:3], y=val_labels[:, 2:3])
+            value_et = value_et.squeeze()
+            metric[6] += value_et * not_nans
+            metric[7] += not_nans
 
         # synchronizes all processes and reduce results
         dist.barrier()

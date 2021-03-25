@@ -25,7 +25,7 @@ import os
 import sys
 
 import torch
-
+import numpy as np
 import monai
 from monai.apps.utils import download_and_extract
 from monai.data import CacheDataset, DataLoader, png_writer
@@ -38,7 +38,7 @@ from monai.networks.nets import Discriminator, Generator
 from monai.transforms import (
     AddChannelD,
     Compose,
-    LoadPNGD,
+    LoadImageD,
     RandFlipD,
     RandRotateD,
     RandZoomD,
@@ -66,10 +66,10 @@ def main():
     # define real data transforms
     train_transforms = Compose(
         [
-            LoadPNGD(keys=["hand"]),
+            LoadImageD(keys=["hand"]),
             AddChannelD(keys=["hand"]),
             ScaleIntensityD(keys=["hand"]),
-            RandRotateD(keys=["hand"], range_x=15, prob=0.5, keep_size=True),
+            RandRotateD(keys=["hand"], range_x=np.pi / 12, prob=0.5, keep_size=True),
             RandFlipD(keys=["hand"], spatial_axis=0, prob=0.5),
             RandZoomD(keys=["hand"], min_zoom=0.9, max_zoom=1.1, prob=0.5),
             ToTensorD(keys=["hand"]),
@@ -82,11 +82,11 @@ def main():
     real_dataloader = DataLoader(real_dataset, batch_size=batch_size, shuffle=True, num_workers=10)
 
     # define function to process batchdata for input into discriminator
-    def prepare_batch(batchdata):
+    def prepare_batch(batchdata, device=None, non_blocking=False):
         """
         Process Dataloader batchdata dict object and return image tensors for D Inferer
         """
-        return batchdata["hand"]
+        return batchdata["hand"].to(device=device, non_blocking=non_blocking)
 
     # define networks
     disc_net = Discriminator(

@@ -23,7 +23,7 @@ from ignite.handlers import EarlyStopping, ModelCheckpoint
 from torch.utils.data import DataLoader
 
 import monai
-from monai.data import NiftiDataset, create_test_image_3d
+from monai.data import ImageDataset, create_test_image_3d
 from monai.handlers import (
     MeanDice,
     StatsHandler,
@@ -78,8 +78,8 @@ def main(tempdir):
     )
     val_segtrans = Compose([AddChannel(), Resize((96, 96, 96)), ToTensor()])
 
-    # define nifti dataset, data loader
-    check_ds = NiftiDataset(
+    # define image dataset, data loader
+    check_ds = ImageDataset(
         images, segs, transform=train_imtrans, seg_transform=train_segtrans
     )
     check_loader = DataLoader(
@@ -89,7 +89,7 @@ def main(tempdir):
     print(im.shape, seg.shape)
 
     # create a training data loader
-    train_ds = NiftiDataset(
+    train_ds = ImageDataset(
         images[:20], segs[:20], transform=train_imtrans, seg_transform=train_segtrans
     )
     train_loader = DataLoader(
@@ -100,7 +100,7 @@ def main(tempdir):
         pin_memory=torch.cuda.is_available(),
     )
     # create a validation data loader
-    val_ds = NiftiDataset(
+    val_ds = ImageDataset(
         images[-20:], segs[-20:], transform=val_imtrans, seg_transform=val_segtrans
     )
     val_loader = DataLoader(

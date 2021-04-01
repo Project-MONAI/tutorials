@@ -223,7 +223,7 @@ for file in "${files[@]}"; do
 
 		if [ $autofix = true ]; then
 			echo Applying autofixes...
-			jupytext "$filename" \
+			jupytext "$filename" --opt custom_cell_magics="writefile" \
 				--pipe "autoflake --in-place --remove-unused-variables --imports numpy,monai,matplotlib,torch,ignite {}" \
 				--pipe "autopep8 - --ignore W291 --max-line-length 120" \
 				--pipe "sed 's/ = list()/ = []/'"
@@ -233,7 +233,7 @@ for file in "${files[@]}"; do
 		# magic cells, and don't check line length for comment
 		# lines (as this includes markdown), and then run flake8
 		echo Checking PEP8 compliance...
-		jupytext "$filename" -w --to script -o - | \
+		jupytext "$filename" --opt custom_cell_magics="writefile" -w --to script -o - | \
 			sed 's/\(^\s*\)%/\1pass  # %/' | \
 			sed 's/\(^#.*\)$/\1  # noqa: E501/' | \
 			flake8 - --show-source --max-line-length 120

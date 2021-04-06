@@ -276,7 +276,7 @@ for file in "${files[@]}"; do
 		done
 
 		# echo "$notebook" > "${base_path}/debug_notebook.ipynb"
-		time out=$(echo "$notebook" | papermill --progress-bar)
+		time out=$(echo "$notebook" | papermill --progress-bar -k python3)
 		success=$?
 	    if [[ ${success} -ne 0 || "$out" =~ "\"status\": \"failed\"" ]]; then
 	        test_fail ${success}

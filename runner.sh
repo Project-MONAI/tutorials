@@ -132,8 +132,9 @@ function test_fail {
 }
 
 function check_installed {
-	
+	set +e
 	command -v $1 &>/dev/null
+	set -e
 	success=$?
 	if [ ${success} -ne 0 ]; then
 		print_error_msg "Missing package: $1 (try pip install -r requirements.txt)"

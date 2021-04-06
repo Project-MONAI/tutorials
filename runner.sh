@@ -27,6 +27,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" transform_speed.ipy
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" transforms_demo_2d.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" nifti_read_example.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 3d_image_transforms.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" mednist_classifier_ray.ipynb)
 
 
 # output formatting

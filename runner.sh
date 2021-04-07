@@ -11,11 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Stop on error
+# During setup, stop on error
 set -e
-
-# Notification on finish
-trap 'echo -e "\a"' EXIT
 
 ########################################################################
 #                                                                      #
@@ -30,6 +27,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" transform_speed.ipy
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" transforms_demo_2d.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" nifti_read_example.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 3d_image_transforms.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" mednist_classifier_ray.ipynb)
 
 
 # output formatting
@@ -51,22 +49,28 @@ fi
 doChecks=true
 doRun=true
 autofix=false
+failfast=false
+pattern="."
+kernelspec="python3"
 
 function print_usage {
-    echo "runtests.sh [--no-run] [--no-checks] [--autofix] [--file <filename>] [--help] [--version]"
+    echo "runner.sh [--no-run] [--no-checks] [--autofix] [-f/--failfast] [-p/--pattern <regex pattern>] [-h/--help] [-v/--version]"
     echo ""
-    echo "MONAI tutorials testing utilities. When running the notebooks, we first search for variables, such as `max_epochs` and set them to 1 to reduce testing time."
+    echo "MONAI tutorials testing utilities. When running the notebooks, we first search for variables, such as max_epochs and set them to 1 to reduce testing time."
     echo ""
     echo "Examples:"
-    echo "./runtests.sh                             # run full tests (${green}recommended before making pull requests${noColor})."
-    echo "./runtests.sh --no-run                    # don't run the notebooks."
-    echo "./runtests.sh --no-checks                 # don't run code checks."
+    echo "./runner.sh                             # run full tests (${green}recommended before making pull requests${noColor})."
+    echo "./runner.sh --no-run                    # don't run the notebooks."
+    echo "./runner.sh --no-checks                 # don't run code checks."
+    echo "./runner.sh --pattern \"read|load\"   # check files with \"read\" or \"load\" in path."
+    echo "./runner.sh --kernelspec \"kernel\"   # Set the kernelspec value used to run notebooks, default is \"python3\"."
     echo ""
     echo "Code style check options:"
     echo "    --no-run          : don't run notebooks"
     echo "    --no-checks       : don't run code checks"
     echo "    --autofix         : autofix where possible"
-    echo "    --file            : only run on specified file(s). use as many times as desired"
+    echo "    -f, --failfast    : stop on first error"
+    echo "    -p, --pattern     : pattern of files to be run (with grep -E \"<pattern>\"). Added on top of: \"*.ipynb\" and not \".ipynb_checkpoints\""
     echo "    -h, --help        : show this help message and exit"
     echo "    -v, --version     : show MONAI and system version information and exit"
     echo ""
@@ -83,8 +87,6 @@ function print_error_msg() {
     echo ""
 }
 
-files=()
-
 # parse arguments
 while [[ $# -gt 0 ]]
 do
@@ -99,8 +101,15 @@ do
         --autofix)
             autofix=true
         ;;
-        --file)
-            files=("${files[@]}" "$2")
+        -f|--failfast)
+            failfast=true
+        ;;
+        -p|--pattern)
+            pattern="$2"
+            shift
+        ;;
+        -k|--kernelspec)
+            kernelspec="$2"
             shift
         ;;
         -h|--help)
@@ -120,15 +129,24 @@ do
     shift
 done
 
+# if failfast, exit returning code. else increment number of failed tests and continue
+function test_fail {
+	print_style_fail_msg
+	if [ $failfast = true ]; then
+		exit $1
+	fi
+	current_test_successful=1
+}
+
 function check_installed {
-	set +e  # don't want immediate error
+	set +e
 	command -v $1 &>/dev/null
+	set -e
 	success=$?
 	if [ ${success} -ne 0 ]; then
-		echo "${red}Missing package: $1 (try pip install -r requirements.txt)${noColor}"
+		print_error_msg "Missing package: $1 (try pip install -r requirements.txt)"
 		exit $success
 	fi
-	set -e
 }
 
 # check that packages are installed
@@ -146,9 +164,9 @@ fi
 
 
 base_path="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+cd "${base_path}"
 
 function replace_text {
-	set +e  # otherwise blank grep causes error
 	oldString="${s}\s*=\s*[0-9]\+"
 	newString="${s} = 1"
 
@@ -159,14 +177,35 @@ function replace_text {
 
 	after=$(echo "$notebook" | grep "$newString")
 	[ ! -z "$after"  ] && echo After: && echo "$after"
-	set -e
 }
 
-# If files haven't been added individually, get all
-if [ -z ${files+x} ]; then
-	files=($(find . -type f \( -name "*.ipynb" -and -not -iwholename "*.ipynb_checkpoints*" \)))
+# Get notebooks (pattern is . unless user specifies otherwise)
+files=($(find . -type f -name "*.ipynb" -and ! -wholename "*.ipynb_checkpoints*" | grep -E "${pattern}"))
+if [[ $files == "" ]]; then 
+	print_error_msg "No files match pattern"
+	exit 1
 fi
+echo "Files to be tested:"
+for i in "${files[@]}"; do echo $i; done
 
+# Keep track of number of passed tests. Use a trap to print results on exit
+num_successful_tests=0
+num_tested=0
+# on finish
+function finish {
+  	if [[ ${num_successful_tests} -eq ${num_tested} ]]; then 
+		echo -e "\n\n\n${green}Testing finished. All ${num_tested} executed tests passed!${noColor}"
+	else
+		echo -e "\n\n\n${red}Testing finished. ${num_successful_tests} of ${num_tested} executed tests passed!${noColor}"
+	fi
+	# notification
+	echo -e "\a"
+	exit $((num_tested - num_successful_tests))
+}
+trap finish EXIT
+
+# After setup, don't want to exit immediately after error
+set +e
 
 ########################################################################
 #                                                                      #
@@ -174,6 +213,8 @@ fi
 #                                                                      #
 ########################################################################
 for file in "${files[@]}"; do
+	current_test_successful=0
+
 	echo "${separator}${blue}Running $file${noColor}"
 
 	# Get to file's folder and get file contents
@@ -190,9 +231,9 @@ for file in "${files[@]}"; do
 
 		if [ $autofix = true ]; then
 			echo Applying autofixes...
-			jupytext "$filename" \
+			jupytext "$filename" --opt custom_cell_magics="writefile" \
 				--pipe "autoflake --in-place --remove-unused-variables --imports numpy,monai,matplotlib,torch,ignite {}" \
-				--pipe "autopep8 - --ignore W291 --max-line-length 120"\
+				--pipe "autopep8 - --ignore W291 --max-line-length 120" \
 				--pipe "sed 's/ = list()/ = []/'"
 		fi
 
@@ -200,17 +241,15 @@ for file in "${files[@]}"; do
 		# magic cells, and don't check line length for comment
 		# lines (as this includes markdown), and then run flake8
 		echo Checking PEP8 compliance...
-		jupytext "$filename" --to script -o - | \
+		jupytext "$filename" --opt custom_cell_magics="writefile" -w --to script -o - | \
 			sed 's/\(^\s*\)%/\1pass  # %/' | \
 			sed 's/\(^#.*\)$/\1  # noqa: E501/' | \
 			flake8 - --show-source --max-line-length 120
-
 		success=$?
 		if [ ${success} -ne 0 ]
 	    then
-	    	echo "Try running with autofixes: ${green}--autofix${noColor}"
-	        print_style_fail_msg
-	        exit ${success}
+	    	print_error_msg "Try running with autofixes: ${green}--autofix${noColor}"
+	        test_fail ${success}
 	    fi
 	fi
 
@@ -233,9 +272,8 @@ for file in "${files[@]}"; do
 			done
 			# then error
 			if [[ $should_contain_max_epochs == true ]]; then
-				echo "Couldn't find the keyword \"max_epochs\", and the notebook wasn't on the list of expected exemptions (\"doesnt_contain_max_epochs\")."
-				print_style_fail_msg
-				exit 1
+				print_error_msg "Couldn't find the keyword \"max_epochs\", and the notebook wasn't on the list of expected exemptions (\"doesnt_contain_max_epochs\")."
+				test_fail 1
 			fi
 		fi
 
@@ -246,13 +284,15 @@ for file in "${files[@]}"; do
 		done
 
 		# echo "$notebook" > "${base_path}/debug_notebook.ipynb"
-		out=$(echo "$notebook" | papermill --progress-bar)
+		time out=$(echo "$notebook" | papermill --progress-bar -k "$kernelspec")
 		success=$?
 	    if [[ ${success} -ne 0 || "$out" =~ "\"status\": \"failed\"" ]]; then
-	        print_style_fail_msg
-	        exit ${success}
+	        test_fail ${success}
 	    fi
 	fi
 
-	echo "${green}passed!${noColor}"
+	num_tested=$((num_tested + 1))
+	if [[ ${current_test_successful} -eq 0 ]]; then
+		num_successful_tests=$((num_successful_tests + 1))
+	fi
 done

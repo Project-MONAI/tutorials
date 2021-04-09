@@ -150,13 +150,17 @@ This notebook demonstrates the transformations on volumetric images.
 #### [autoencoder_mednist](./modules/autoencoder_mednist.ipynb)
 This tutorial uses the MedNIST hand CT scan dataset to demonstrate MONAI's autoencoder class. The autoencoder is used with an identity encode/decode (i.e., what you put in is what you should get back), as well as demonstrating its usage for de-blurring and de-noising.
 
-#### [dynunet_tutorial](./modules/dynunet_tutorial.ipynb)
+#### [dynunet_tutorial](./modules/dyunet_pipeline)
 This tutorial shows how to train 3D segmentation tasks on all the 10 decathlon datasets with the reimplementation of dynUNet in MONAI.
 #### [integrate_3rd_party_transforms](./modules/integrate_3rd_party_transforms.ipynb)
 This tutorial shows how to integrate 3rd party transforms into MONAI program.
 Mainly shows transforms from BatchGenerator, TorchIO, Rising and ITK.
+#### [inverse transformations and test-time augmentations](./modules/inverse_transforms_and_test_time_augmentations.ipynb)
+This notebook demonstrates the use of invertible transforms, and then leveraging inverse transformations to perform test-time augmentations.
 #### [layer wise learning rate](./modules/layer_wise_learning_rate.ipynb)
 This notebook demonstrates how to select or filter out expected network layers and set customized learning rate values.
+#### [learning rate finder](./modules/learning_rate.ipynb)
+This notebook demonstrates how to use `LearningRateFinder` API to tune the learning rate values for the network.
 #### [load_medical_imagesl](./modules/load_medical_images.ipynb)
 This notebook introduces how to easily load different formats of medical images in MONAI and execute many additional operations.
 #### [mednist_GAN_tutorial](./modules/mednist_GAN_tutorial.ipynb)
@@ -170,8 +174,6 @@ This notebook shows the `GanTrainer`, a MONAI workflow engine for modularized ad
 This tutorial shows how to leverage `EnsembleEvaluator`, `MeanEnsemble` and `VoteEnsemble` modules in MONAI to set up ensemble program.
 #### [nifti_read_example](./modules/nifti_read_example.ipynb)
 Illustrate reading NIfTI files and iterating over image patches of the volumes loaded from them.
-#### [dynunet_tutorial](./modules/dynunet_tutorial.ipynb)
-This tutorial shows how to train 3D segmentation tasks on all the 10 decathlon datasets with the reimplementation of dynUNet in MONAI.
 #### [post_transforms](./modules/post_transforms.ipynb)
 This notebook shows the usage of several post transforms based on the model output of spleen segmentation task.
 #### [public_datasets](./modules/public_datasets.ipynb)

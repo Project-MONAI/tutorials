@@ -18,7 +18,7 @@ import torch
 from torch.utils.data import DataLoader
 
 import monai
-from monai.data import CSVSaver, NiftiDataset
+from monai.data import CSVSaver, ImageDataset
 from monai.transforms import AddChannel, Compose, Resize, ScaleIntensity, ToTensor
 
 
@@ -46,14 +46,14 @@ def main():
     # Define transforms for image
     val_transforms = Compose([ScaleIntensity(), AddChannel(), Resize((96, 96, 96)), ToTensor()])
 
-    # Define nifti dataset
-    val_ds = NiftiDataset(image_files=images, labels=labels, transform=val_transforms, image_only=False)
+    # Define image dataset
+    val_ds = ImageDataset(image_files=images, labels=labels, transform=val_transforms, image_only=False)
     # create a validation data loader
     val_loader = DataLoader(val_ds, batch_size=2, num_workers=4, pin_memory=torch.cuda.is_available())
 
     # Create DenseNet121
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = monai.networks.nets.densenet.densenet121(spatial_dims=3, in_channels=1, out_channels=2).to(device)
+    model = monai.networks.nets.DenseNet121(spatial_dims=3, in_channels=1, out_channels=2).to(device)
 
     model.load_state_dict(torch.load("best_metric_model_classification3d_array.pth"))
     model.eval()

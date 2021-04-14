@@ -42,19 +42,19 @@ class DynUNetTrainer(SupervisedTrainer):
         else:
             inputs, targets, args, kwargs = batch
         # put iteration outputs into engine.state
-        engine.state.output = output = {Keys.IMAGE: inputs, Keys.LABEL: targets}
+        engine.state.output = {Keys.IMAGE: inputs, Keys.LABEL: targets}
 
         def _compute_pred_loss():
             preds = self.inferer(inputs, self.network, *args, **kwargs)
             if len(preds.size()) - len(targets.size()) == 1:
                 # deep supervision mode, need to unbind feature maps first.
                 preds = torch.unbind(preds, dim=1)
-            output[Keys.PRED] = preds
+            engine.state.output[Keys.PRED] = preds
             del preds
             engine.fire_event(IterationEvents.FORWARD_COMPLETED)
-            output[Keys.LOSS] = sum(
+            engine.state.output[Keys.LOSS] = sum(
                 0.5 ** i * self.loss_function.forward(p, targets)
-                for i, p in enumerate(output[Keys.PRED])
+                for i, p in enumerate(engine.state.output[Keys.PRED])
             )
             engine.fire_event(IterationEvents.LOSS_COMPLETED)
 
@@ -63,7 +63,7 @@ class DynUNetTrainer(SupervisedTrainer):
         if self.amp and self.scaler is not None:
             with torch.cuda.amp.autocast():
                 _compute_pred_loss()
-            self.scaler.scale(output[Keys.LOSS]).backward()
+            self.scaler.scale(engine.state.output[Keys.LOSS]).backward()
             self.scaler.unscale_(self.optimizer)
             if isinstance(self.network, DistributedDataParallel):
                 torch.nn.utils.clip_grad_norm_(self.network.module.parameters(), 12)
@@ -73,13 +73,13 @@ class DynUNetTrainer(SupervisedTrainer):
             self.scaler.update()
         else:
             _compute_pred_loss()
-            output[Keys.LOSS].backward()
+            engine.state.output[Keys.LOSS].backward()
             engine.fire_event(IterationEvents.BACKWARD_COMPLETED)
             if isinstance(self.network, DistributedDataParallel):
                 torch.nn.utils.clip_grad_norm_(self.network.module.parameters(), 12)
             else:
                 torch.nn.utils.clip_grad_norm_(self.network.parameters(), 12)
             self.optimizer.step()
-            engine.fire_event(IterationEvents.OPTIMIZER_COMPLETED)
+            engine.fire_event(IterationEvents.MODEL_COMPLETED)
 
-        return output
+        return engine.state.output

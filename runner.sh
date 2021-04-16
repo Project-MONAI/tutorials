@@ -27,6 +27,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" transform_speed.ipy
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" transforms_demo_2d.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" nifti_read_example.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 3d_image_transforms.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" mednist_classifier_ray.ipynb)
 
 
 # output formatting
@@ -50,6 +51,7 @@ doRun=true
 autofix=false
 failfast=false
 pattern="."
+kernelspec="python3"
 
 function print_usage {
     echo "runner.sh [--no-run] [--no-checks] [--autofix] [-f/--failfast] [-p/--pattern <regex pattern>] [-h/--help] [-v/--version]"
@@ -60,7 +62,8 @@ function print_usage {
     echo "./runner.sh                             # run full tests (${green}recommended before making pull requests${noColor})."
     echo "./runner.sh --no-run                    # don't run the notebooks."
     echo "./runner.sh --no-checks                 # don't run code checks."
-    echo "./runner.sh --pattern \"read|load\"     # check files with \"read\" or \"load\" in path."
+    echo "./runner.sh --pattern \"read|load\"   # check files with \"read\" or \"load\" in path."
+    echo "./runner.sh --kernelspec \"kernel\"   # Set the kernelspec value used to run notebooks, default is \"python3\"."
     echo ""
     echo "Code style check options:"
     echo "    --no-run          : don't run notebooks"
@@ -105,6 +108,10 @@ do
             pattern="$2"
             shift
         ;;
+        -k|--kernelspec)
+            kernelspec="$2"
+            shift
+        ;;
         -h|--help)
             print_usage
             exit 0
@@ -132,8 +139,9 @@ function test_fail {
 }
 
 function check_installed {
-	
+	set +e
 	command -v $1 &>/dev/null
+	set -e
 	success=$?
 	if [ ${success} -ne 0 ]; then
 		print_error_msg "Missing package: $1 (try pip install -r requirements.txt)"
@@ -223,7 +231,7 @@ for file in "${files[@]}"; do
 
 		if [ $autofix = true ]; then
 			echo Applying autofixes...
-			jupytext "$filename" \
+			jupytext "$filename" --opt custom_cell_magics="writefile" \
 				--pipe "autoflake --in-place --remove-unused-variables --imports numpy,monai,matplotlib,torch,ignite {}" \
 				--pipe "autopep8 - --ignore W291 --max-line-length 120" \
 				--pipe "sed 's/ = list()/ = []/'"
@@ -233,7 +241,7 @@ for file in "${files[@]}"; do
 		# magic cells, and don't check line length for comment
 		# lines (as this includes markdown), and then run flake8
 		echo Checking PEP8 compliance...
-		jupytext "$filename" -w --to script -o - | \
+		jupytext "$filename" --opt custom_cell_magics="writefile" -w --to script -o - | \
 			sed 's/\(^\s*\)%/\1pass  # %/' | \
 			sed 's/\(^#.*\)$/\1  # noqa: E501/' | \
 			flake8 - --show-source --max-line-length 120
@@ -276,7 +284,7 @@ for file in "${files[@]}"; do
 		done
 
 		# echo "$notebook" > "${base_path}/debug_notebook.ipynb"
-		time out=$(echo "$notebook" | papermill --progress-bar)
+		time out=$(echo "$notebook" | papermill --progress-bar -k "$kernelspec")
 		success=$?
 	    if [[ ${success} -ne 0 || "$out" =~ "\"status\": \"failed\"" ]]; then
 	        test_fail ${success}

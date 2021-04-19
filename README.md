@@ -109,6 +109,10 @@ The example is a PyTorch Ignite program and shows several key features of MONAI,
 #### [COVID 19-20 challenge baseline](./3d_segmentation/challenge_baseline)
 This folder provides a simple baseline method for training, validation, and inference for [COVID-19 LUNG CT LESION SEGMENTATION CHALLENGE - 2020](https://covid-segmentation.grand-challenge.org/COVID-19-20/) (a MICCAI Endorsed Event).
 
+**2D registration**
+#### [registration using mednist](./2d_registration/registration_mednist.ipynb)
+This notebook shows a quick demo for learning based affine registration of `64 x 64` X-Ray hands.
+
 **deepgrow**
 #### [Deepgrow](./deepgrow)
 The example show how to train/validate a 2D/3D deepgrow model.  It also demonstrates running an inference for trained deepgrow models.

@@ -113,6 +113,10 @@ This folder provides a simple baseline method for training, validation, and infe
 #### [registration using mednist](./2d_registration/registration_mednist.ipynb)
 This notebook shows a quick demo for learning based affine registration of `64 x 64` X-Ray hands.
 
+**3D registration**
+#### [3D registration using paired lung CT](./3d_registration/paired_lung_ct.ipynb)
+This tutorial shows how to use MONAI to register lung CT volumes acquired at different time points for a single patient.
+
 **deepgrow**
 #### [Deepgrow](./deepgrow)
 The example show how to train/validate a 2D/3D deepgrow model.  It also demonstrates running an inference for trained deepgrow models.

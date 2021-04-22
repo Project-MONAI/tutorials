@@ -225,6 +225,13 @@ def train(args):
     fhandler.setFormatter(formatter)
 
     logger.addHandler(fhandler)
+
+    if not multi_gpu_flag:
+        chandler = logging.StreamHandler()
+        chandler.setLevel(logging.INFO)
+        chandler.setFormatter(formatter)
+        logger.addHandler(chandler)
+
     logger.setLevel(logging.INFO)
 
     trainer.run()

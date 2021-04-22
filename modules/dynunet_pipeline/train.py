@@ -183,6 +183,7 @@ def train(args):
         amp=amp_flag,
         tta_val=tta_val,
     )
+
     # produce trainer
     loss = DiceCELoss(to_onehot_y=True, softmax=True, batch=batch_dice)
     train_handlers = []
@@ -208,7 +209,10 @@ def train(args):
         amp=amp_flag,
     )
 
-    # run
+    if local_rank > 0:
+        evaluator.logger.setLevel(logging.WARNING)
+        trainer.logger.setLevel(logging.WARNING)
+
     logger = logging.getLogger()
 
     formatter = logging.Formatter(
@@ -220,16 +224,15 @@ def train(args):
     fhandler.setLevel(logging.INFO)
     fhandler.setFormatter(formatter)
 
-    # Configure stream handler for the cells
-    chandler = logging.StreamHandler()
-    chandler.setLevel(logging.INFO)
-    chandler.setFormatter(formatter)
+    logger.addHandler(fhandler)
 
-    # Add both handlers
-    if local_rank == 0:
-        logger.addHandler(fhandler)
+    if not multi_gpu_flag:
+        chandler = logging.StreamHandler()
+        chandler.setLevel(logging.INFO)
+        chandler.setFormatter(formatter)
         logger.addHandler(chandler)
-        logger.setLevel(logging.INFO)
+
+    logger.setLevel(logging.INFO)
 
     trainer.run()
 
@@ -397,7 +400,8 @@ if __name__ == "__main__":
     )
     parser.add_argument("-local_rank", "--local_rank", type=int, default=0)
     args = parser.parse_args()
-
+    if args.local_rank == 0:
+        print_config()
     if args.mode == "train":
         train(args)
     elif args.mode == "val":

@@ -57,10 +57,9 @@ import numpy as np
 import torch
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel
-from torch.utils.data.distributed import DistributedSampler
 
 import monai
-from monai.data import DataLoader, Dataset, create_test_image_3d
+from monai.data import DataLoader, Dataset, create_test_image_3d, DistributedSampler
 from monai.transforms import (
     AsChannelFirstd,
     Compose,
@@ -114,7 +113,7 @@ def train(args):
     # create a training data loader
     train_ds = Dataset(data=train_files, transform=train_transforms)
     # create a training data sampler
-    train_sampler = DistributedSampler(train_ds)
+    train_sampler = DistributedSampler(dataset=train_ds, even_divisible=True, shuffle=True)
     # use batch_size=2 to load images and use RandCropByPosNegLabeld to generate 2 x 4 images for network training
     train_loader = DataLoader(
         train_ds,

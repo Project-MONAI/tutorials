@@ -4,8 +4,14 @@ from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 
 import torch
 import torch.distributed as dist
-from monai.handlers import (CheckpointSaver, LrScheduleHandler, MeanDice,
-                            StatsHandler, ValidationHandler)
+from monai.config import print_config
+from monai.handlers import (
+    CheckpointSaver,
+    LrScheduleHandler,
+    MeanDice,
+    StatsHandler,
+    ValidationHandler,
+)
 from monai.inferers import SimpleInferer, SlidingWindowInferer
 from monai.losses import DiceCELoss
 from monai.utils import set_determinism
@@ -229,6 +235,7 @@ def train(args):
 
 
 if __name__ == "__main__":
+    print_config()
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument("-fold", "--fold", type=int, default=0, help="0-5")
     parser.add_argument(

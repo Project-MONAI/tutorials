@@ -57,10 +57,9 @@ import numpy as np
 import torch
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel
-from torch.utils.data.distributed import DistributedSampler
 
 import monai
-from monai.data import DataLoader, Dataset, create_test_image_3d
+from monai.data import DataLoader, Dataset, create_test_image_3d, DistributedSampler
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadImaged, ScaleIntensityd, ToTensord
@@ -100,7 +99,7 @@ def evaluate(args):
     # create a evaluation data loader
     val_ds = Dataset(data=val_files, transform=val_transforms)
     # create a evaluation data sampler
-    val_sampler = DistributedSampler(val_ds, shuffle=False)
+    val_sampler = DistributedSampler(dataset=val_ds, even_divisible=False, shuffle=False)
     # sliding window inference need to input 1 image in every iteration
     val_loader = DataLoader(val_ds, batch_size=1, shuffle=False, num_workers=2, pin_memory=True, sampler=val_sampler)
     dice_metric = DiceMetric(include_background=True, reduction="mean")

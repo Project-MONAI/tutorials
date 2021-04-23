@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 
 import torch
@@ -39,7 +40,8 @@ from torch.nn.parallel import DistributedDataParallel
 
 class TrainConfiger:
     """
-    This class is used to config the necessary components for trainer and evaluator.
+    This class is used to config the necessary components of train and evaluate engines
+    for MONAI trainer.
     Please check the implementation of `SupervisedEvaluator` and `SupervisedTrainer`
     from `monai.engines` and determine which components can be used.
 
@@ -80,7 +82,6 @@ class TrainConfiger:
         self.device = device
 
     def configure(self):
-        # hard coded now, to be modified via using parser
         self.set_device()
         network = UNet(
             dimensions=3,
@@ -90,15 +91,14 @@ class TrainConfiger:
             strides=(2, 2, 2, 2),
             num_res_units=2,
             norm=Norm.BATCH,
-        )
-        network = network.to(self.device)
+        ).to(self.device)
         if self.multi_gpu:
             network = DistributedDataParallel(
                 module=network,
                 device_ids=[self.device],
                 find_unused_parameters=False,
             )
-        network = network.eval()
+
         train_transforms = Compose(
             [
                 LoadImaged(keys=("image", "label")),
@@ -192,6 +192,7 @@ class TrainConfiger:
             "val_mean_dice": MeanDice(
                 include_background=False,
                 output_transform=lambda x: (x["pred"], x["label"]),
+                device=self.device,
             )
         }
         val_handlers = [
@@ -205,7 +206,7 @@ class TrainConfiger:
                 log_dir=self.ckpt_dir, output_transform=lambda x: None
             ),
         ]
-        self.evaluator = SupervisedEvaluator(
+        self.eval_engine = SupervisedEvaluator(
             device=self.device,
             val_data_loader=val_data_loader,
             network=network,
@@ -228,7 +229,7 @@ class TrainConfiger:
         train_handlers = [
             LrScheduleHandler(lr_scheduler=lr_scheduler, print_lr=True),
             ValidationHandler(
-                validator=self.evaluator, interval=self.val_interval, epoch_level=True
+                validator=self.eval_engine, interval=self.val_interval, epoch_level=True
             ),
             StatsHandler(tag_name="train_loss", output_transform=lambda x: x["loss"]),
             TensorBoardStatsHandler(
@@ -238,7 +239,7 @@ class TrainConfiger:
             ),
         ]
 
-        self.trainer = SupervisedTrainer(
+        self.train_engine = SupervisedTrainer(
             device=self.device,
             max_epochs=self.max_epochs,
             train_data_loader=train_data_loader,
@@ -251,3 +252,7 @@ class TrainConfiger:
             train_handlers=train_handlers,
             amp=self.amp,
         )
+
+        if self.local_rank > 0:
+            self.train_engine.logger.setLevel(logging.WARNING)
+            self.eval_engine.logger.setLevel(logging.WARNING)

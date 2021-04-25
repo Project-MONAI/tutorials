@@ -149,6 +149,9 @@ class MONAITrainer(Trainer):
         self.train_ctx.iter_of_start_time = self.train_engine.state.iteration
         # execute validation at the beginning of every round
         self.eval_engine.run(self.train_engine.state.epoch + 1)
+        self.train_ctx.fl_init_validation_metric = self.eval_engine.state.metrics.get(
+            self.eval_engine.state.key_metric_name, -1
+        )
         # record iteration and epoch data before training
         starting_iters = self.train_engine.state.iteration
         starting_epochs = self.train_engine.state.epoch

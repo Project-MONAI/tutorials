@@ -34,7 +34,6 @@ class TrainContext:
         needed to be shared.
         """
         self.current_learning_rate = get_lr_values(train_engine.optimizer)
-        self.fl_init_validation_metric = eval_engine.state.best_metric
 
 
 class MONAIModelManager:

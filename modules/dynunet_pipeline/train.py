@@ -238,7 +238,6 @@ def train(args):
 
 
 if __name__ == "__main__":
-    print_config()
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument("-fold", "--fold", type=int, default=0, help="0-5")
     parser.add_argument(

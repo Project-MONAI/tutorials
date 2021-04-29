@@ -141,6 +141,8 @@ class BratsCacheDataset(DecathlonDataset):
 
     def _generate_data_list(self, dataset_dir):
         data = super()._generate_data_list(dataset_dir)
+        # partition dataset based on current rank number, every rank trains with its own data
+        # it can avoid duplicated caching content in each rank, but will not do global shuffle before every epoch
         return partition_dataset(
             data=data,
             num_partitions=dist.get_world_size(),

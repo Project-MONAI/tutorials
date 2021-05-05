@@ -18,7 +18,7 @@ please install the relevant packages according to MONAI's [installation guide](h
 Or install all optional requirements with:
 
 ```bash
-pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/master/requirements-dev.txt
+pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/dev/requirements-dev.txt
 ```
 
 #### Run the notebooks from Colab

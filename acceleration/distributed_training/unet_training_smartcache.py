@@ -117,6 +117,7 @@ def train(args):
     )
 
     # partition dataset based on current rank number, every rank trains with its own data
+    # it can avoid duplicated caching content in each rank, but will not do global shuffle before every epoch
     data_part = partition_dataset(
         data=train_files,
         num_partitions=dist.get_world_size(),

@@ -18,7 +18,7 @@ please install the relevant packages according to MONAI's [installation guide](h
 Or install all optional requirements with:
 
 ```bash
-pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/master/requirements-dev.txt
+pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/dev/requirements-dev.txt
 ```
 
 #### Run the notebooks from Colab
@@ -109,9 +109,23 @@ The example is a PyTorch Ignite program and shows several key features of MONAI,
 #### [COVID 19-20 challenge baseline](./3d_segmentation/challenge_baseline)
 This folder provides a simple baseline method for training, validation, and inference for [COVID-19 LUNG CT LESION SEGMENTATION CHALLENGE - 2020](https://covid-segmentation.grand-challenge.org/COVID-19-20/) (a MICCAI Endorsed Event).
 
+**2D registration**
+#### [registration using mednist](./2d_registration/registration_mednist.ipynb)
+This notebook shows a quick demo for learning based affine registration of `64 x 64` X-Ray hands.
+
+**3D registration**
+#### [3D registration using paired lung CT](./3d_registration/paired_lung_ct.ipynb)
+This tutorial shows how to use MONAI to register lung CT volumes acquired at different time points for a single patient.
+
 **deepgrow**
 #### [Deepgrow](./deepgrow)
 The example show how to train/validate a 2D/3D deepgrow model.  It also demonstrates running an inference for trained deepgrow models.
+
+**deployment**
+#### [BentoML](./deployment/bentoml)
+This is a simple example of training and deploying a MONAI network with [BentoML](https://www.bentoml.ai/) as a web server, either locally using the BentoML respository or as a containerized service.
+#### [Ray](./deployment/ray)
+This uses the previous notebook's trained network to demonstrate deployment a web server using [Ray](https://docs.ray.io/en/master/serve/index.html#rayserve).
 
 **federated learning**
 #### [Substra](./federated_learning/substra)
@@ -150,13 +164,17 @@ This notebook demonstrates the transformations on volumetric images.
 #### [autoencoder_mednist](./modules/autoencoder_mednist.ipynb)
 This tutorial uses the MedNIST hand CT scan dataset to demonstrate MONAI's autoencoder class. The autoencoder is used with an identity encode/decode (i.e., what you put in is what you should get back), as well as demonstrating its usage for de-blurring and de-noising.
 
-#### [dynunet_tutorial](./modules/dynunet_tutorial.ipynb)
+#### [dynunet_tutorial](./modules/dyunet_pipeline)
 This tutorial shows how to train 3D segmentation tasks on all the 10 decathlon datasets with the reimplementation of dynUNet in MONAI.
 #### [integrate_3rd_party_transforms](./modules/integrate_3rd_party_transforms.ipynb)
 This tutorial shows how to integrate 3rd party transforms into MONAI program.
 Mainly shows transforms from BatchGenerator, TorchIO, Rising and ITK.
+#### [inverse transformations and test-time augmentations](./modules/inverse_transforms_and_test_time_augmentations.ipynb)
+This notebook demonstrates the use of invertible transforms, and then leveraging inverse transformations to perform test-time augmentations.
 #### [layer wise learning rate](./modules/layer_wise_learning_rate.ipynb)
 This notebook demonstrates how to select or filter out expected network layers and set customized learning rate values.
+#### [learning rate finder](./modules/learning_rate.ipynb)
+This notebook demonstrates how to use `LearningRateFinder` API to tune the learning rate values for the network.
 #### [load_medical_imagesl](./modules/load_medical_images.ipynb)
 This notebook introduces how to easily load different formats of medical images in MONAI and execute many additional operations.
 #### [mednist_GAN_tutorial](./modules/mednist_GAN_tutorial.ipynb)
@@ -170,8 +188,6 @@ This notebook shows the `GanTrainer`, a MONAI workflow engine for modularized ad
 This tutorial shows how to leverage `EnsembleEvaluator`, `MeanEnsemble` and `VoteEnsemble` modules in MONAI to set up ensemble program.
 #### [nifti_read_example](./modules/nifti_read_example.ipynb)
 Illustrate reading NIfTI files and iterating over image patches of the volumes loaded from them.
-#### [dynunet_tutorial](./modules/dynunet_tutorial.ipynb)
-This tutorial shows how to train 3D segmentation tasks on all the 10 decathlon datasets with the reimplementation of dynUNet in MONAI.
 #### [post_transforms](./modules/post_transforms.ipynb)
 This notebook shows the usage of several post transforms based on the model output of spleen segmentation task.
 #### [public_datasets](./modules/public_datasets.ipynb)

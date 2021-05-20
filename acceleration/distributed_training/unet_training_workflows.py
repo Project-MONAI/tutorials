@@ -84,6 +84,7 @@ from monai.transforms import (
 
 
 def train(args):
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     if args.local_rank == 0 and not os.path.exists(args.dir):
         # create 40 random image, mask paris for training
         print(f"generating synthetic data to {args.dir} (this may take a while)")
@@ -160,7 +161,6 @@ def train(args):
         LrScheduleHandler(lr_scheduler=lr_scheduler, print_lr=True),
     ]
     if dist.get_rank() == 0:
-        logging.basicConfig(stream=sys.stdout, level=logging.INFO)
         train_handlers.extend(
             [
                 StatsHandler(tag_name="train_loss", output_transform=lambda x: x["loss"]),

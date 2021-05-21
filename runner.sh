@@ -50,29 +50,33 @@ doChecks=true
 doRun=true
 autofix=false
 failfast=false
-pattern="."
+pattern="-name \"*\""
 kernelspec="python3"
 
 function print_usage {
-    echo "runner.sh [--no-run] [--no-checks] [--autofix] [-f/--failfast] [-p/--pattern <regex pattern>] [-h/--help] [-v/--version]"
+    echo "runner.sh [--no-run] [--no-checks] [--autofix] [-f/--failfast] [-p/--pattern <find pattern>] [-h/--help]"
+    echo            "[-v/--version]"
     echo ""
-    echo "MONAI tutorials testing utilities. When running the notebooks, we first search for variables, such as max_epochs and set them to 1 to reduce testing time."
-    echo ""
-    echo "Examples:"
-    echo "./runner.sh                             # run full tests (${green}recommended before making pull requests${noColor})."
-    echo "./runner.sh --no-run                    # don't run the notebooks."
-    echo "./runner.sh --no-checks                 # don't run code checks."
-    echo "./runner.sh --pattern \"read|load\"   # check files with \"read\" or \"load\" in path."
-    echo "./runner.sh --kernelspec \"kernel\"   # Set the kernelspec value used to run notebooks, default is \"python3\"."
+    echo "MONAI tutorials testing utilities. When running the notebooks, we first search for variables, such as"
+    echo "\"max_epochs\" and set them to 1 to reduce testing time."
     echo ""
     echo "Code style check options:"
     echo "    --no-run          : don't run notebooks"
     echo "    --no-checks       : don't run code checks"
     echo "    --autofix         : autofix where possible"
     echo "    -f, --failfast    : stop on first error"
-    echo "    -p, --pattern     : pattern of files to be run (with grep -E \"<pattern>\"). Added on top of: \"*.ipynb\" and not \".ipynb_checkpoints\""
+    echo "    -p, --pattern     : pattern of files to be run (added to \`find . -type f -name *.ipynb -and ! -wholename *.ipynb_checkpoints*\`)"
     echo "    -h, --help        : show this help message and exit"
     echo "    -v, --version     : show MONAI and system version information and exit"
+    echo ""
+    echo "Examples:"
+    echo "./runner.sh                             # run full tests (${green}recommended before making pull requests${noColor})."
+    echo "./runner.sh --no-run                    # don't run the notebooks."
+    echo "./runner.sh --no-checks                 # don't run code checks."
+    echo "./runner.sh --pattern \"-and \( -name '*read*' -or -name '*load*' \) -and ! -wholename '*acceleration*'\""
+    echo "                                        # check filenames containing \"read\" or \"load\", but not if the"
+    echo "                                          whole path contains \"deepgrow\"."
+    echo "./runner.sh --kernelspec \"kernel\"       # Set the kernelspec value used to run notebooks, default is \"python3\"."
     echo ""
     echo "${separator}For bug reports, questions, and discussions, please file an issue at:"
     echo "    https://github.com/Project-MONAI/MONAI/issues/new/choose"
@@ -179,8 +183,8 @@ function replace_text {
 	[ ! -z "$after"  ] && echo After: && echo "$after"
 }
 
-# Get notebooks (pattern is . unless user specifies otherwise)
-files=($(find . -type f -name "*.ipynb" -and ! -wholename "*.ipynb_checkpoints*" | grep -E "${pattern}"))
+# Get notebooks (pattern is -name "*" unless user specifies otherwise)
+files=($(echo $pattern | xargs find . -type f -name "*.ipynb" -and ! -wholename "*.ipynb_checkpoints*"))
 if [[ $files == "" ]]; then 
 	print_error_msg "No files match pattern"
 	exit 1

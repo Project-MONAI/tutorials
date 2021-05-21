@@ -107,6 +107,12 @@ do
     python "$file"
 done
 
+# run inference files in 3d_segmentation/torch
+for file in "3d_segmentation/torch"/*inference*
+do
+    python "$file"
+done
+
 
 # run training files in 3d_segmentation/ignite
 for file in "3d_segmentation/ignite"/*train*

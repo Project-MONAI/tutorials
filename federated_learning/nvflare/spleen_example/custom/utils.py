@@ -4,10 +4,10 @@ from typing import Dict
 
 import numpy as np
 import torch
-from flare.apis.fl_constant import FLConstants, ShareableKey, ShareableValue
-from flare.apis.fl_context import FLContext
-from flare.apis.shareable import Shareable
 from ignite.engine import Engine, Events
+from nvflare.apis.fl_constant import FLConstants, ShareableKey, ShareableValue
+from nvflare.apis.fl_context import FLContext
+from nvflare.apis.shareable import Shareable
 from torch.optim import Optimizer
 
 
@@ -69,7 +69,7 @@ class MONAIModelManager:
 
     def extract_model(self, fl_ctx: FLContext) -> Dict[str, np.ndarray]:
         """
-        This function is used to extract weights of the netwrok saved in FL
+        This function is used to extract weights of the network saved in FL
         context.
         The extracted weights will be converted into a numpy array based dict.
         """

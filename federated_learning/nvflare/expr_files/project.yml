@@ -1,0 +1,83 @@
+# org is to describe each participant's organization
+# schema change: org is now mandatory
+
+# the name of this project
+name: example_project
+
+# homomorphic encryption
+he:
+  lib: tenseal 
+  config:
+    poly_modulus_degree: 8192
+    coeff_mod_bit_sizes: [60, 40, 40]
+    scale_bits: 40
+    scheme: CKKS
+
+config_folder: config
+
+server:
+  org: nvidia
+
+  # set cn to the server's fully qualified domain name
+  # never set it to example.com
+  cn: localhost
+
+  # replace the number with that all clients can reach out to, and that the server can open to listen to
+  fed_learn_port: 8002
+
+  # again, replace the number with that all clients can reach out to, and that the server can open to listen to
+  # the value must be different from fed_learn_port
+  admin_port: 8003
+
+  # admin_storage is the mmar upload folder name on the server
+  admin_storage: transfer
+
+  min_num_clients: 1
+  max_num_clients: 100
+
+  # Server enforcing role-based rights on admin users. false means all admin users are in role "super"
+  auth: true
+
+  # The configuration validator class path.
+  # Server does not load configuration validator when it's set to empty.
+  # For example:
+  #  config_validator:
+  #
+  # When it's commented out, the default will be used (medl.apps.fed_learn.server.mmar_validator.MMARValidator)
+  #
+  # Users can specifiy their own validator.  For example:
+  # config_validator:
+  #  hello.world.BestValdator
+  #
+  # User can also provide args for their own validator.  For example:
+  #  config_validator:
+  #    hello.world.BestValidator:
+  #      arg1: abc
+  #      arg2: 123
+
+  config_validator:
+
+# The following values under fl_clients and admin_clients are for demo purpose only.
+# Please change them according to the information of actual project.
+fl_clients:
+  # client_name must be unique
+  # email is optional
+  - org: org1
+    client_name: org1-a
+  - org: org1
+    client_name: org1-b
+  - org: org2
+    client_name: org2
+
+admin_clients:
+  # email is the user name for admin authentication.  Hence, it must be unique within the project
+  - org: nvidia
+    email: admin@nvidia.com
+  - org: nvidia
+    email: researcher@nvidia.com
+  - org: org1
+    email: researcher@org1.com
+  - org: org2
+    email: researcher@org2.com
+  - org: org2
+    email: it@org2.com

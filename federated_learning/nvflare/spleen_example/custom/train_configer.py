@@ -30,9 +30,10 @@ from monai.transforms import (
     CropForegroundd,
     EnsureChannelFirstd,
     LoadImaged,
+    Orientationd,
     RandCropByPosNegLabeld,
-    RandShiftIntensityd,
     ScaleIntensityRanged,
+    Spacingd,
     ToTensord,
 )
 from torch.nn.parallel import DistributedDataParallel
@@ -60,12 +61,26 @@ class TrainConfiger:
             wf_config = json.load(file)
 
         self.wf_config = wf_config
+        """
+        config Args:
+            max_epochs: the total epoch number for trainer to run.
+            learning_rate: the learning rate for optimizer.
+            data_list_file_path: the path of the dataset list json file. For this
+                example, we prepared `dataset_part1.json` and `dataset_part2.json`.
+                These two files have same validation set but totally different
+                training set. The default setting uses `dataset_part1.json`.
+            val_interval: the interval (number of epochs) to do validation.
+            ckpt_dir: the directory to save the checkpoint.
+            amp: whether to enable auto-mixed-precision training.
+            use_gpu: whether to use GPU in training.
+            multi_gpu: whether to use multiple GPUs for distributed training.
+
+        """
         self.max_epochs = wf_config["max_epochs"]
         self.learning_rate = wf_config["learning_rate"]
         self.data_list_file_path = wf_config["data_list_file_path"]
         self.val_interval = wf_config["val_interval"]
         self.ckpt_dir = wf_config["ckpt_dir"]
-        self.save_interval = wf_config["save_interval"]
         self.amp = wf_config["amp"]
         self.use_gpu = wf_config["use_gpu"]
         self.multi_gpu = wf_config["multi_gpu"]
@@ -103,6 +118,12 @@ class TrainConfiger:
             [
                 LoadImaged(keys=("image", "label")),
                 EnsureChannelFirstd(keys=("image", "label")),
+                Spacingd(
+                    keys=["image", "label"],
+                    pixdim=(1.5, 1.5, 2.0),
+                    mode=("bilinear", "nearest"),
+                ),
+                Orientationd(keys=["image", "label"], axcodes="RAS"),
                 ScaleIntensityRanged(
                     keys="image",
                     a_min=-57,
@@ -115,19 +136,28 @@ class TrainConfiger:
                 RandCropByPosNegLabeld(
                     keys=("image", "label"),
                     label_key="label",
-                    spatial_size=(96, 96, 96),
+                    spatial_size=(64, 64, 64),
                     pos=1,
                     neg=1,
                     num_samples=4,
                     image_key="image",
                     image_threshold=0,
                 ),
-                RandShiftIntensityd(keys="image", offsets=0.1, prob=0.5),
                 ToTensord(keys=("image", "label")),
             ]
         )
+        # set datalist
         train_datalist = load_decathlon_datalist(
-            self.data_list_file_path, True, "training"
+            self.data_list_file_path,
+            is_segmentation=True,
+            data_list_key="training",
+            base_dir="/data/Task09_Spleen/",
+        )
+        val_datalist = load_decathlon_datalist(
+            self.data_list_file_path,
+            is_segmentation=True,
+            data_list_key="validation",
+            base_dir="/data/Task09_Spleen/",
         )
         if self.multi_gpu:
             train_datalist = partition_dataset(
@@ -139,7 +169,6 @@ class TrainConfiger:
         train_ds = CacheDataset(
             data=train_datalist,
             transform=train_transforms,
-            cache_num=32,
             cache_rate=1.0,
             num_workers=4,
         )
@@ -153,6 +182,12 @@ class TrainConfiger:
             [
                 LoadImaged(keys=("image", "label")),
                 EnsureChannelFirstd(keys=("image", "label")),
+                Spacingd(
+                    keys=["image", "label"],
+                    pixdim=(1.5, 1.5, 2.0),
+                    mode=("bilinear", "nearest"),
+                ),
+                Orientationd(keys=["image", "label"], axcodes="RAS"),
                 ScaleIntensityRanged(
                     keys="image",
                     a_min=-57,
@@ -166,10 +201,9 @@ class TrainConfiger:
             ]
         )
 
-        val_datalist = load_decathlon_datalist(
-            self.data_list_file_path, True, "validation"
+        val_ds = CacheDataset(
+            data=val_datalist, transform=val_transforms, cache_rate=0.0, num_workers=4
         )
-        val_ds = CacheDataset(val_datalist, val_transforms, 9, 0.0, 4)
         val_data_loader = DataLoader(
             val_ds,
             batch_size=1,

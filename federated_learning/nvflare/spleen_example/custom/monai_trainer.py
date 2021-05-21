@@ -1,16 +1,16 @@
 import logging
 
 import torch.distributed as dist
-from flare.apis.event_type import EventType
-from flare.apis.fl_constant import FLConstants, ShareableKey
-from flare.apis.fl_context import FLContext
-from flare.apis.shareable import Shareable
-from flare.apis.trainer import Trainer
-from flare.common.signal import Signal
-from flare.utils.fed_utils import generate_failure
+from nvflare.apis.event_type import EventType
+from nvflare.apis.fl_constant import FLConstants, ShareableKey
+from nvflare.apis.fl_context import FLContext
+from nvflare.apis.shareable import Shareable
+from nvflare.apis.trainer import Trainer
+from nvflare.common.signal import Signal
+from nvflare.utils.fed_utils import generate_failure
 
-from .train_configer import TrainConfiger
-from .utils import (
+from train_configer import TrainConfiger
+from utils import (
     IterAggregateHandler,
     MONAIModelManager,
     TrainContext,

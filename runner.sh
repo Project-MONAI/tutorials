@@ -50,7 +50,7 @@ doChecks=true
 doRun=true
 autofix=false
 failfast=false
-pattern="-name \"*\""
+pattern="-and -name '*' -and ! -wholename '*federated_learning*'"
 kernelspec="python3"
 
 function print_usage {
@@ -183,9 +183,10 @@ function replace_text {
 	[ ! -z "$after"  ] && echo After: && echo "$after"
 }
 
-# Get notebooks (pattern is -name "*" unless user specifies otherwise)
+# Get notebooks (pattern is "-and -name '*' -and ! -wholename '*federated_learning*'"
+# unless user specifies otherwise)
 files=($(echo $pattern | xargs find . -type f -name "*.ipynb" -and ! -wholename "*.ipynb_checkpoints*"))
-if [[ $files == "" ]]; then 
+if [[ $files == "" ]]; then
 	print_error_msg "No files match pattern"
 	exit 1
 fi
@@ -197,7 +198,7 @@ num_successful_tests=0
 num_tested=0
 # on finish
 function finish {
-  	if [[ ${num_successful_tests} -eq ${num_tested} ]]; then 
+  	if [[ ${num_successful_tests} -eq ${num_tested} ]]; then
 		echo -e "\n\n\n${green}Testing finished. All ${num_tested} executed tests passed!${noColor}"
 	else
 		echo -e "\n\n\n${red}Testing finished. ${num_successful_tests} of ${num_tested} executed tests passed!${noColor}"

@@ -128,6 +128,9 @@ This is a simple example of training and deploying a MONAI network with [BentoML
 This uses the previous notebook's trained network to demonstrate deployment a web server using [Ray](https://docs.ray.io/en/master/serve/index.html#rayserve).
 
 **federated learning**
+#### [NVFlare](./federated_learning/nvflare)
+The example show how to train a federated learning model with [NVFlare](https://pypi.org/project/nvflare/) and the MONAI trainers.
+
 #### [Substra](./federated_learning/substra)
 The example show how to execute the 3d segmentation torch tutorial on a federated learning platform, Substra.
 

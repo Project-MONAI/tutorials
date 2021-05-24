@@ -1,5 +1,5 @@
 # set fl docker image name
-export FL_DOCKER_IMAGE="projectmonai/monaiwfl:0.1"
+export FL_DOCKER_IMAGE="monai_nvflare:latest"
 DOCKER_PROVISION_PATH=/opt/conda/lib/python3.8/site-packages/provision
 DEMO_PROVISION_PATH="expr_files"
 provision -p $DEMO_PROVISION_PATH/project.yml -a $DEMO_PROVISION_PATH/authz_config.json -o $DEMO_PROVISION_PATH

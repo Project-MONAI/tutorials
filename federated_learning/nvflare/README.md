@@ -9,7 +9,7 @@ Inside this folder:
 - `demo_figs` is a folder containing all refered example figures in the notebooks.
 - `spleen_example` is the experiment config folder. Some of the experiment related hyperparameters are set in `spleen_example/config/config_train.json`. You
 may need to modify `download_dataset` and some other parameters. Please check the doc strings in `spleen_example/config/train_configer.py` for more details.
-- `build_environment.sh` is the script to build the docker image and do provision.
+- `build_docker_provision.sh` is the script to build the docker image and do provision.
 - `docker_files` is a folder containing all files to build the docker image.
 - `expr_files` is a folder containing all files to be used for the experiment.
 
@@ -40,8 +40,8 @@ Please ensure that you have installed JupyterLab (https://jupyterlab.readthedocs
 python3 -m venv venv/fl_startup
 source venv/fl_startup/bin/activate
 pip install --upgrade pip
-pip install --no-cache-dir wheel
-pip install --no-cache-dir jupyterlab
+pip install wheel
+pip install jupyterlab
 ```
 
 Please run the following command:
@@ -50,4 +50,4 @@ Please run the following command:
 
 The link is: `http://localhost:8888/?token=MONAIFLExample`
 
-Then run `Startup.ipynb`. You should follow the steps in the notebook, which will guide you through the process of building an FL experiment based on 2 clients and 1 server.
+Then run `1-Startup.ipynb`. You should follow the steps in the notebook, which will guide you through the process of building an FL experiment based on 2 clients and 1 server.

@@ -1,9 +1,9 @@
 #!/bin/bash
 
-DOCKER_IMAGE=projectmonai/monaiwfl:0.1
+DOCKER_IMAGE=monai_nvflare
 
 # check if image exist, if not build it
-docker images |grep ${DOCKER_IMAGE%:*} # remove the :0.1
+docker images |grep ${DOCKER_IMAGE}
 dockerNameExist=$?
 if ((${dockerNameExist}==0)) ;then
   echo --- docker image ${DOCKER_Run_Name} exist

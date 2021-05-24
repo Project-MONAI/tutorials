@@ -82,6 +82,7 @@ from monai.transforms import (
 
 
 def evaluate(args):
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     if args.local_rank == 0 and not os.path.exists(args.dir):
         # create 16 random image, mask paris for evaluation
         print(f"generating synthetic data to {args.dir} (this may take a while)")
@@ -149,7 +150,6 @@ def evaluate(args):
         ),
     ]
     if dist.get_rank() == 0:
-        logging.basicConfig(stream=sys.stdout, level=logging.INFO)
         val_handlers.extend(
             [
                 StatsHandler(output_transform=lambda x: None),

@@ -1,8 +1,8 @@
-# FL example with MONAI
+# Federated Learning with MONAI using NVFLare
 
 ## Brief Introduction
 
-This repository contains an end-to-end FL training example based on MONAI trainers.
+This repository contains an end-to-end Federated training example based on MONAI trainers and [NVFlare](https://pypi.org/project/nvflare/).
 
 Inside this folder:
 - All Jupiter notebooks are used to build an FL experiment step-by-step.

@@ -5,23 +5,23 @@
 This repository contains an end-to-end FL training example based on MONAI trainers.
 
 Inside this folder:
-- All jupyter notebooks are used to build an FL experiment step-by-step.
-- `demo_figs` is a folder containing all refered example figures in the notebooks.
+- All Jupiter notebooks are used to build an FL experiment step-by-step.
+- `demo_figs` is a folder containing all referred example figures in the notebooks.
 - `spleen_example` is the experiment config folder. Some of the experiment related hyperparameters are set in `spleen_example/config/config_train.json`. You
-may need to modify `download_dataset` and some other parameters. Please check the doc strings in `spleen_example/config/train_configer.py` for more details.
+may need to modify `download_dataset` and some other parameters. Please check the docstrings in `spleen_example/config/train_configer.py` for more details.
 - `build_docker_provision.sh` is the script to build the docker image and do provision.
 - `docker_files` is a folder containing all files to build the docker image.
 - `expr_files` is a folder containing all files to be used for the experiment.
 
 Inside `expr_files`:
 
-`project.yml` is the project yml file to describe the FL project, it defines project name, participants, server name and other settings. You can keep the default settings, but may need to change the `cn` name to the server name as:
+`project.yml` is the project yml file to describe the FL project, it defines project name, participants, server name and othe settings. You can keep the default settings, but may need to change the `cn` name to the server name as:
 ```
 server:
   cn: <your server name >
 ```
 `authz_config.json` is the authorization configuration json file, it defines groups, roles and rights for all users, organizations and sites. If you modified `project.yml`, please change this file to keep the consistency.
-`prerpare_expr_files.sh` is the script to do provision and (optional) download the Decathlon Spleen dataset for this experiment. 
+`prerpare_expr_files.sh` is the script to do provision and (optional) download the Decathlon Spleen dataset for this experiment.
 
 
 ## Provision Package Preparation

@@ -76,10 +76,8 @@ class TrainConfiger:
         config Args:
             max_epochs: the total epoch number for trainer to run.
             learning_rate: the learning rate for optimizer.
-            data_list_file_path: the path of the dataset list json file. For this
-                example, we prepared `dataset_part1.json` and `dataset_part2.json`.
-                These two files have same validation set but totally different
-                training set. The default setting uses `dataset_part1.json`.
+            data_list_base_dir: the directory containing the data list json file.
+            data_list_json_file: the data list json file.
             val_interval: the interval (number of epochs) to do validation.
             ckpt_dir: the directory to save the checkpoint.
             amp: whether to enable auto-mixed-precision training.
@@ -89,7 +87,8 @@ class TrainConfiger:
         """
         self.max_epochs = wf_config["max_epochs"]
         self.learning_rate = wf_config["learning_rate"]
-        self.data_list_file_path = wf_config["data_list_file_path"]
+        self.data_list_base_dir = wf_config["data_list_base_dir"]
+        self.data_list_json_file = wf_config["data_list_json_file"]
         self.val_interval = wf_config["val_interval"]
         self.ckpt_dir = wf_config["ckpt_dir"]
         self.amp = wf_config["amp"]
@@ -159,16 +158,16 @@ class TrainConfiger:
         )
         # set datalist
         train_datalist = load_decathlon_datalist(
-            self.data_list_file_path,
+            os.path.join(self.data_list_base_dir, self.data_list_json_file),
             is_segmentation=True,
             data_list_key="training",
-            base_dir="/data/Task09_Spleen/",
+            base_dir=self.data_list_base_dir,
         )
         val_datalist = load_decathlon_datalist(
-            self.data_list_file_path,
+            os.path.join(self.data_list_base_dir, self.data_list_json_file),
             is_segmentation=True,
             data_list_key="validation",
-            base_dir="/data/Task09_Spleen/",
+            base_dir=self.data_list_base_dir,
         )
         if self.multi_gpu:
             train_datalist = partition_dataset(

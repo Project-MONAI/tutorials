@@ -13,7 +13,7 @@ else
   echo ----------- docker image ${DOCKER_Run_Name} built
 fi
 # using the built docker image to provision
-cmd2run="bash expr_files/prerpare_expr_files.sh"
+cmd2run="bash expr_files/prepare_expr_files.sh"
 docker run \
   --rm \
   --shm-size 1G \

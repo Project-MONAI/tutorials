@@ -74,11 +74,13 @@ def main(tempdir):
             orig_keys="img",  # get the previously applied pre_transforms information on the `img` data field,
                               # then invert `pred` based on this information. we can use same info
                               # for multiple fields, also support different orig_keys for different fields
-            meta_keys="pred_meta_dict",  # key field to save inverted meta data, evey item maps to `keys`
-            orig_meta_keys=["img_meta_dict"],  # get the meta data from `img_meta_dict` field when inverting,
-                                               # for example, may need the `affine` to invert `Spacingd` transform
+            meta_keys="pred_meta_dict",  # key field to save inverted meta data, every item maps to `keys`
+            orig_meta_keys="img_meta_dict",  # get the meta data from `img_meta_dict` field when inverting,
+                                             # for example, may need the `affine` to invert `Spacingd` transform,
+                                             # multiple fields can use the same meta data to invert
             meta_key_postfix="meta_dict",  # if `meta_keys=None`, use "{keys}_{meta_key_postfix}" as the meta key,
-                                           # if `orig_meta_keys=None`, use "{orig_keys}_{meta_key_postfix}"
+                                           # if `orig_meta_keys=None`, use "{orig_keys}_{meta_key_postfix}",
+                                           # otherwise, no need this arg during inverting
             nearest_interp=True,  # change to use "nearest" mode in interpolation when inverting
             to_tensor=True,  # convert to PyTorch Tensor after inverting
         ),

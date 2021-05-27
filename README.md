@@ -199,6 +199,9 @@ This notebook shows how to quickly set up training workflow based on `MedNISTDat
 This notebook demonstrates the image transformations on histology images using
 [the GlaS Contest dataset](https://warwick.ac.uk/fac/sci/dcs/research/tia/glascontest/download/).
 
+#### [TorchIO, MONAI, PyTorch Lightning](./modules/TorchIO_MONAI_PyTorch_Lightning.ipynb)
+This notebook demonstrates how the three libraries from the official PyTorch Ecosystem can be used together to segment the hippocampus on brain MRIs from the Medical Segmentation Decathlon.
+
 #### [varautoencoder_mednist](./modules/varautoencoder_mednist.ipynb)
 This tutorial uses the MedNIST scan (or alternatively the MNIST) dataset to demonstrate MONAI's variational autoencoder class.
 

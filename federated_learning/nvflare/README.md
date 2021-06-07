@@ -8,7 +8,7 @@ Inside this folder:
 - All Jupiter notebooks are used to build an FL experiment step-by-step.
 - `demo_figs` is a folder containing all referred example figures in the notebooks.
 - `spleen_example` is the experiment config folder. Some of the experiment related hyperparameters are set in `spleen_example/config/config_train.json`. You
-may need to modify `download_dataset` and some other parameters. Please check the docstrings in `spleen_example/config/train_configer.py` for more details.
+may need to modify `multi_gpu` and some other parameters. Please check the docstrings in `spleen_example/custom/train_configer.py` for more details.
 - `build_docker_provision.sh` is the script to build the docker image and do provision.
 - `docker_files` is a folder containing all files to build the docker image.
 - `expr_files` is a folder containing all files to be used for the experiment.

@@ -29,6 +29,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" nifti_read_example.
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 3d_image_transforms.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" mednist_classifier_ray.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" TorchIO_MONAI_PyTorch_Lightning.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" image_dataset.ipynb)
 
 
 # output formatting

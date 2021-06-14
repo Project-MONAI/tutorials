@@ -22,11 +22,12 @@ Main steps to set up the distributed evaluation:
   `--master_addr="192.168.1.1"`
   `--master_port=1234`
   For more details, refer to https://github.com/pytorch/pytorch/blob/master/torch/distributed/launch.py.
-  Alternatively, we can also use `torch.multiprocessing.spawn` to start program, but it that case, need to handle
+  Alternatively, we can also use `torch.multiprocessing.spawn` to start program, but in that case, need to handle
   all the above parameters and compute `rank` manually, then set to `init_process_group`, etc.
   `torch.distributed.launch` is even more efficient than `torch.multiprocessing.spawn`.
 - Use `init_process_group` to initialize every process, every GPU runs in a separate process with unique rank.
   Here we use `NVIDIA NCCL` as the backend and must set `init_method="env://"` if use `torch.distributed.launch`.
+- We need the `--use_env` to avoid args.local_rank, ignite.distributed will handle that for us.
 - Wrap the model with `DistributedDataParallel` after moving to expected device.
 - Put model file on every node, then load and map to expected GPU device in every process.
 - Wrap Dataset with `DistributedSampler`, disable the `shuffle` in sampler and DataLoader.
@@ -41,7 +42,7 @@ Note:
     Example script to execute this program on every node:
     python -m torch.distributed.launch --nproc_per_node=NUM_GPUS_PER_NODE
            --nnodes=NUM_NODES --node_rank=INDEX_CURRENT_NODE
-           --master_addr="192.168.1.1" --master_port=1234
+           --master_addr="192.168.1.1" --master_port=1234 --use_env
            unet_evaluation_workflows.py -d DIR_OF_TESTDATA
 
     This example was tested with [Ubuntu 16.04/20.04], [NCCL 2.6.3].
@@ -60,6 +61,7 @@ import nibabel as nib
 import numpy as np
 import torch
 import torch.distributed as dist
+import ignite.distributed as idist
 from ignite.metrics import Accuracy
 from torch.nn.parallel import DistributedDataParallel
 from torch.utils.data.distributed import DistributedSampler
@@ -83,7 +85,10 @@ from monai.transforms import (
 
 def evaluate(args):
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    if args.local_rank == 0 and not os.path.exists(args.dir):
+    # initialize the distributed evaluation process, every GPU runs in a process
+    dist.init_process_group(backend="nccl", init_method="env://")
+
+    if idist.get_local_rank() == 0 and not os.path.exists(args.dir):
         # create 16 random image, mask paris for evaluation
         print(f"generating synthetic data to {args.dir} (this may take a while)")
         os.makedirs(args.dir)
@@ -95,9 +100,7 @@ def evaluate(args):
             nib.save(n, os.path.join(args.dir, f"img{i:d}.nii.gz"))
             n = nib.Nifti1Image(seg, np.eye(4))
             nib.save(n, os.path.join(args.dir, f"seg{i:d}.nii.gz"))
-
-    # initialize the distributed evaluation process, every GPU runs in a process
-    dist.init_process_group(backend="nccl", init_method="env://")
+    idist.barrier()
 
     images = sorted(glob(os.path.join(args.dir, "img*.nii.gz")))
     segs = sorted(glob(os.path.join(args.dir, "seg*.nii.gz")))
@@ -121,7 +124,7 @@ def evaluate(args):
     val_loader = DataLoader(val_ds, batch_size=1, shuffle=False, num_workers=2, pin_memory=True, sampler=val_sampler)
 
     # create UNet, DiceLoss and Adam optimizer
-    device = torch.device(f"cuda:{args.local_rank}")
+    device = torch.device(f"cuda:{idist.get_local_rank()}")
     torch.cuda.set_device(device)
     net = monai.networks.nets.UNet(
         dimensions=3,
@@ -146,10 +149,10 @@ def evaluate(args):
             load_path="./runs/checkpoint_epoch=4.pt",
             load_dict={"net": net},
             # config mapping to expected GPU device
-            map_location={"cuda:0": f"cuda:{args.local_rank}"},
+            map_location={"cuda:0": f"cuda:{idist.get_local_rank()}"},
         ),
     ]
-    if dist.get_rank() == 0:
+    if idist.get_rank() == 0:
         val_handlers.extend(
             [
                 StatsHandler(output_transform=lambda x: None),
@@ -186,18 +189,15 @@ def evaluate(args):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--dir", default="./testdata", type=str, help="directory to create random data")
-    # must parse the command-line argument: ``--local_rank=LOCAL_PROCESS_RANK``, which will be provided by DDP
-    parser.add_argument("--local_rank", type=int)
     args = parser.parse_args()
 
     evaluate(args=args)
 
 
-# usage example(refer to https://github.com/pytorch/pytorch/blob/master/torch/distributed/launch.py):
-
 # python -m torch.distributed.launch --nproc_per_node=NUM_GPUS_PER_NODE
 #        --nnodes=NUM_NODES --node_rank=INDEX_CURRENT_NODE
 #        --master_addr="192.168.1.1" --master_port=1234
+#        --use_env
 #        unet_evaluation_workflows.py -d DIR_OF_TESTDATA
 
 if __name__ == "__main__":

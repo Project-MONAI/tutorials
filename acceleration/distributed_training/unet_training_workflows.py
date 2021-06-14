@@ -194,7 +194,8 @@ def main():
     parser.add_argument("-d", "--dir", default="./testdata", type=str, help="directory to create random data")
     args = parser.parse_args()
 
-    train(args)
+    train(args=args)
+
 
 
 # python -m torch.distributed.launch --nproc_per_node=NUM_GPUS_PER_NODE

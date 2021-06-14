@@ -22,9 +22,12 @@ Main steps to set up the distributed training:
   `--master_addr="192.168.1.1"`
   `--master_port=1234`
   For more details, refer to https://github.com/pytorch/pytorch/blob/master/torch/distributed/launch.py.
+  Alternatively, we can also use `torch.multiprocessing.spawn` to start program, but it that case, need to handle
+  all the above parameters and compute `rank` manually, then set to `init_process_group`, etc.
+  `torch.distributed.launch` is even more efficient than `torch.multiprocessing.spawn` during training.
 - Use `init_process_group` to initialize every process, every GPU runs in a separate process with unique rank.
   Here we use `NVIDIA NCCL` as the backend and must set `init_method="env://"` if use `torch.distributed.launch`.
-- We need the `--use_env` to avoid args.local_rank, ignite.distributed will handle that for us
+- We need the `--use_env` to avoid args.local_rank, ignite.distributed will handle that for us.
 - Wrap the model with `DistributedDataParallel` after moving to expected device.
 - Wrap Dataset with `DistributedSampler`, and disable the `shuffle` in DataLoader.
   Instead, `SupervisedTrainer` shuffles data by `train_sampler.set_epoch(epoch)` before every epoch.

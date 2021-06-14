@@ -22,7 +22,7 @@ Main steps to set up the distributed evaluation:
   `--master_addr="192.168.1.1"`
   `--master_port=1234`
   For more details, refer to https://github.com/pytorch/pytorch/blob/master/torch/distributed/launch.py.
-  Alternatively, we can also use `torch.multiprocessing.spawn` to start program, but it that case, need to handle
+  Alternatively, we can also use `torch.multiprocessing.spawn` to start program, but in that case, need to handle
   all the above parameters and compute `rank` manually, then set to `init_process_group`, etc.
   `torch.distributed.launch` is even more efficient than `torch.multiprocessing.spawn`.
 - Use `init_process_group` to initialize every process, every GPU runs in a separate process with unique rank.

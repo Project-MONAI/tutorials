@@ -96,19 +96,21 @@ def compute(args):
     # compute metrics for current process
     metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
     metric(y_pred=[i["pred"] for i in data_part], y=[i["label"] for i in data_part])
+    filenames = [item["pred_meta_dict"]["filename_or_obj"] for item in data_part]
     # all-gather results from all the processes and reduce for final result
     result = metric.aggregate().item()
+    filenames = string_list_all_gather(strings=filenames)
+
     if args.local_rank == 0:
         print("mean dice: ", result)
-    # generate metric report
-    filenames = [item["pred_meta_dict"]["filename_or_obj"] for item in data_part]
-    write_metrics_reports(
-        save_dir="./output",
-        images=string_list_all_gather(strings=filenames),
-        metrics={"mean_dice": result},
-        metric_details={"mean_dice": metric.get_buffer()},
-        summary_ops="*",
-    )
+        # generate metric report
+        write_metrics_reports(
+            save_dir="./output",
+            images=filenames,
+            metrics={"mean_dice": result},
+            metric_details={"mean_dice": metric.get_buffer()},
+            summary_ops="*",
+        )
 
     metric.reset()
 

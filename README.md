@@ -84,7 +84,7 @@ The examples are standard PyTorch programs and have both dictionary-based and ar
 Training and evaluation examples of 3D segmentation based on UNet3D and synthetic dataset.
 The examples are PyTorch Ignite programs and have both dictionary-base and array-based transformations.
 #### [torch examples](./3d_segmentation/torch)
-Training and evaluation examples of 3D segmentation based on UNet3D and synthetic dataset.
+Training, evaluation, inference and metrics computation examples of 3D segmentation based on UNet3D and synthetic dataset.
 The examples are standard PyTorch programs and have both dictionary-based and array-based versions.
 #### [brats_segmentation_3d](./3d_segmentation/brats_segmentation_3d.ipynb)
 This tutorial shows how to construct a training workflow of multi-labels segmentation task based on [MSD Brain Tumor dataset](http://medicaldecathlon.com).

@@ -58,16 +58,20 @@ from torch.nn.parallel import DistributedDataParallel
 
 import monai
 from monai.data import DataLoader, Dataset, partition_dataset
+from monai.handlers import write_metrics_reports
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.transforms import EnsureChannelFirstd, Compose, LoadImaged, ToTensord
+from monai.utils import string_list_all_gather
 
 
 def compute(args):
     # initialize the distributed evaluation process, every GPU runs in a process
     dist.init_process_group(backend="nccl", init_method="env://")
+    device = torch.device(f"cuda:{args.local_rank}")
+    torch.cuda.set_device(device)
 
-    preds = sorted(glob(os.path.join(args.dir, "img*", "img*.nii.gz")))
+    preds = sorted(glob(os.path.join(args.dir, "im*", "im*_seg.nii.gz")))
     labels = sorted(glob(os.path.join(args.dir, "seg*.nii.gz")))
     datalist = [{"pred": pred, "label": label} for pred, label in zip(preds, labels)]
 
@@ -90,10 +94,22 @@ def compute(args):
     data_part = [transforms(item) for item in data_part]
 
     # compute metrics for current process
-    metric = DiceMetric(ignore_background=True, reduction="mean")
-    metric(y_pred=data_part["pred"], y=data_part["label"])
+    metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
+    metric(y_pred=[i["pred"] for i in data_part], y=[i["label"] for i in data_part])
     # all-gather results from all the processes and reduce for final result
-    print("mean dice: ", metric.aggregate().item())
+    result = metric.aggregate().item()
+    if args.local_rank == 0:
+        print("mean dice: ", result)
+    # generate metric report
+    filenames = [item["pred_meta_dict"]["filename_or_obj"] for item in data_part]
+    write_metrics_reports(
+        save_dir="./output",
+        images=string_list_all_gather(strings=filenames),
+        metrics={"mean_dice": result},
+        metric_details={"mean_dice": metric.get_buffer()},
+        summary_ops="*",
+    )
+
     metric.reset()
 
     dist.destroy_process_group()

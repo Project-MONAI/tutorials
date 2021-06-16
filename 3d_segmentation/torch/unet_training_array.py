@@ -80,7 +80,7 @@ def main(tempdir):
     # create a validation data loader
     val_ds = ImageDataset(images[-20:], segs[-20:], transform=val_imtrans, seg_transform=val_segtrans)
     val_loader = DataLoader(val_ds, batch_size=1, num_workers=4, pin_memory=torch.cuda.is_available())
-    dice_metric = DiceMetric(include_background=True, reduction="mean")
+    dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
     post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
 
     # create UNet, DiceLoss and Adam optimizer
@@ -128,8 +128,6 @@ def main(tempdir):
         if (epoch + 1) % val_interval == 0:
             model.eval()
             with torch.no_grad():
-                metric_sum = 0.0
-                metric_count = 0
                 val_images = None
                 val_labels = None
                 val_outputs = None
@@ -139,10 +137,9 @@ def main(tempdir):
                     sw_batch_size = 4
                     val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
                     val_outputs = post_trans(val_outputs)
-                    value, _ = dice_metric(y_pred=val_outputs, y=val_labels)
-                    metric_count += len(value)
-                    metric_sum += value.item() * len(value)
-                metric = metric_sum / metric_count
+                    dice_metric(y_pred=val_outputs, y=val_labels)
+                metric = dice_metric.aggregate().item()
+                dice_metric.reset()
                 metric_values.append(metric)
                 if metric > best_metric:
                     best_metric = metric

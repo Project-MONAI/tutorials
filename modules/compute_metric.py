@@ -58,29 +58,37 @@ import torch.distributed as dist
 from monai.data import create_test_image_3d, partition_dataset
 from monai.handlers import write_metrics_reports
 from monai.metrics import DiceMetric
-from monai.transforms import EnsureChannelFirstd, Compose, LoadImaged, ToTensord
+from monai.transforms import (
+    AsDiscreted,
+    EnsureChannelFirstd,
+    Compose,
+    KeepLargestConnectedComponentd,
+    LoadImaged,
+    ScaleIntensityd,
+    ToTensord,
+)
 from monai.utils import string_list_all_gather
 
 
 def compute(args):
-    # initialize the distributed evaluation process, every GPU runs in a process
-    dist.init_process_group(backend="nccl", init_method="env://")
-    device = torch.device(f"cuda:{args.local_rank}")
-    torch.cuda.set_device(device)
-
     # generate synthetic data for the example
     if args.local_rank == 0 and not os.path.exists(args.dir):
-        # create 16 random image, mask paris for evaluation
+        # create 16 random pred, label paris for evaluation
         print(f"generating synthetic data to {args.dir} (this may take a while)")
         os.makedirs(args.dir)
         # if have multiple nodes, set random seed to generate same random data for every node
         np.random.seed(seed=0)
         for i in range(16):
-            pred, label = create_test_image_3d(128, 128, 128, num_seg_classes=1, channel_dim=-1)
+            pred, label = create_test_image_3d(128, 128, 128, num_seg_classes=1, channel_dim=-1, noise_max=0.5)
             n = nib.Nifti1Image(pred, np.eye(4))
             nib.save(n, os.path.join(args.dir, f"pred{i:d}.nii.gz"))
             n = nib.Nifti1Image(label, np.eye(4))
             nib.save(n, os.path.join(args.dir, f"label{i:d}.nii.gz"))
+
+    # initialize the distributed evaluation process, every GPU runs in a process
+    dist.init_process_group(backend="nccl", init_method="env://")
+    device = torch.device(f"cuda:{args.local_rank}")
+    torch.cuda.set_device(device)
 
     preds = sorted(glob(os.path.join(args.dir, "pred*.nii.gz")))
     labels = sorted(glob(os.path.join(args.dir, "label*.nii.gz")))
@@ -99,7 +107,10 @@ def compute(args):
         [
             LoadImaged(keys=["pred", "label"]),
             EnsureChannelFirstd(keys=["pred", "label"]),
+            ScaleIntensityd(keys="pred"),
             ToTensord(keys=["pred", "label"]),
+            AsDiscreted(keys="pred", threshold_values=True),
+            KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
         ]
     )
     data_part = [transforms(item) for item in data_part]

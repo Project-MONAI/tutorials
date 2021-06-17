@@ -9,7 +9,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
 import logging
 import os
 import sys
@@ -99,15 +98,5 @@ def main(tempdir):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-s", "--save_synthetic_data", default=False, type=bool, help="whether to save generated images and labels."
-    )
-    args = parser.parse_args()
-    if args.save_synthetic_data:
-        output_dir = "./output"
-        os.makedirs(output_dir, exist_ok=True)
-        main(output_dir)
-    else:
-        with tempfile.TemporaryDirectory() as tempdir:
-            main(tempdir)
+    with tempfile.TemporaryDirectory() as tempdir:
+        main(tempdir)

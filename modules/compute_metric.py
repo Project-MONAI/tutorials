@@ -50,16 +50,11 @@ import argparse
 import os
 from glob import glob
 
-import nibabel as nib
-import numpy as np
 import torch
 import torch.distributed as dist
-from torch.nn.parallel import DistributedDataParallel
 
-import monai
-from monai.data import DataLoader, Dataset, partition_dataset
+from monai.data import partition_dataset
 from monai.handlers import write_metrics_reports
-from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.transforms import EnsureChannelFirstd, Compose, LoadImaged, ToTensord
 from monai.utils import string_list_all_gather

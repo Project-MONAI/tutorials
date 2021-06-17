@@ -50,10 +50,12 @@ import argparse
 import os
 from glob import glob
 
+import nibabel as nib
+import numpy as np
 import torch
 import torch.distributed as dist
 
-from monai.data import partition_dataset
+from monai.data import create_test_image_3d, partition_dataset
 from monai.handlers import write_metrics_reports
 from monai.metrics import DiceMetric
 from monai.transforms import EnsureChannelFirstd, Compose, LoadImaged, ToTensord
@@ -66,8 +68,22 @@ def compute(args):
     device = torch.device(f"cuda:{args.local_rank}")
     torch.cuda.set_device(device)
 
-    preds = sorted(glob(os.path.join(args.dir, "im*", "im*_seg.nii.gz")))
-    labels = sorted(glob(os.path.join(args.dir, "seg*.nii.gz")))
+    # generate synthetic data for the example
+    if args.local_rank == 0 and not os.path.exists(args.dir):
+        # create 16 random image, mask paris for evaluation
+        print(f"generating synthetic data to {args.dir} (this may take a while)")
+        os.makedirs(args.dir)
+        # if have multiple nodes, set random seed to generate same random data for every node
+        np.random.seed(seed=0)
+        for i in range(16):
+            pred, label = create_test_image_3d(128, 128, 128, num_seg_classes=1, channel_dim=-1)
+            n = nib.Nifti1Image(pred, np.eye(4))
+            nib.save(n, os.path.join(args.dir, f"pred{i:d}.nii.gz"))
+            n = nib.Nifti1Image(label, np.eye(4))
+            nib.save(n, os.path.join(args.dir, f"label{i:d}.nii.gz"))
+
+    preds = sorted(glob(os.path.join(args.dir, "pred*.nii.gz")))
+    labels = sorted(glob(os.path.join(args.dir, "label*.nii.gz")))
     datalist = [{"pred": pred, "label": label} for pred, label in zip(preds, labels)]
 
     # split data for every subprocess, for example, 16 processes compute in parallel

@@ -10,7 +10,8 @@
 # limitations under the License.
 
 """
-This example shows how to compute metric in multi-processing based on PyTorch native `DistributedDataParallel` module.
+This example shows how to efficiently compute Dice scores for pairs of segmentation prediction
+and references in multi-processing based on MONAI's metrics API.
 It can even run on multi-nodes.
 Main steps to set up the distributed data parallel:
 
@@ -32,8 +33,7 @@ Main steps to set up the distributed data parallel:
 Note:
     `torch.distributed.launch` will launch `nnodes * nproc_per_node = world_size` processes in total.
     Example script to execute this program on a single node with 2 processes:
-    python -m torch.distributed.launch --nproc_per_node=2 --nnodes=1 --node_rank=0
-           --master_addr="localhost" --master_port=1234 compute_metric.py
+    `python -m torch.distributed.launch --nproc_per_node=2 compute_metric.py`
 
 Referring to: https://pytorch.org/tutorials/intermediate/ddp_tutorial.html
 
@@ -115,7 +115,7 @@ def compute(args):
 
     if args.local_rank == 0:
         print("mean dice: ", result)
-        # generate metric report
+        # generate metrics reports at: output/mean_dice_raw.csv, output/mean_dice_summary.csv, output/metrics.csv
         write_metrics_reports(
             save_dir="./output",
             images=filenames,

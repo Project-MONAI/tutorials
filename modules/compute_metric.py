@@ -11,12 +11,12 @@
 
 """
 This example shows how to compute metric in multi-processing based on PyTorch native `DistributedDataParallel` module.
-It can run on several nodes with multiple GPU devices on every node.
+It can even run on multi-nodes.
 Main steps to set up the distributed data parallel:
 
-- Execute `torch.distributed.launch` to create processes on every node for every GPU.
+- Execute `torch.distributed.launch` to create processes on every node for every process.
   It receives parameters as below:
-  `--nproc_per_node=NUM_GPUS_PER_NODE`
+  `--nproc_per_node=NUM_PROCESSES_PER_NODE`
   `--nnodes=NUM_NODES`
   `--node_rank=INDEX_CURRENT_NODE`
   `--master_addr="localhost"`
@@ -25,22 +25,15 @@ Main steps to set up the distributed data parallel:
   Alternatively, we can also use `torch.multiprocessing.spawn` to start program, but it that case, need to handle
   all the above parameters and compute `rank` manually, then set to `init_process_group`, etc.
   `torch.distributed.launch` is even more efficient than `torch.multiprocessing.spawn`.
-- Use `init_process_group` to initialize every process, every GPU runs in a separate process with unique rank.
-  Here we use `NVIDIA NCCL` as the backend and must set `init_method="env://"` if use `torch.distributed.launch`.
+- Use `init_process_group` to initialize every process.
 - Partition the saved predictions and labels into ranks for parallel computation.
 - Compute `Dice Metric` on every process, reduce the results after synchronization.
 
 Note:
     `torch.distributed.launch` will launch `nnodes * nproc_per_node = world_size` processes in total.
-    Suggest setting exactly the same software environment for every node, especially `PyTorch`, `nccl`, etc.
-    A good practice is to use the same MONAI docker image for all nodes directly.
-    Example script to execute this program on every node:
-    python -m torch.distributed.launch --nproc_per_node=NUM_GPUS_PER_NODE
-           --nnodes=NUM_NODES --node_rank=INDEX_CURRENT_NODE
-           --master_addr="localhost" --master_port=1234
-           compute_metric.py
-
-    This example was tested with [Ubuntu 16.04/20.04], [NCCL 2.6.3].
+    Example script to execute this program on a single node with 2 processes:
+    python -m torch.distributed.launch --nproc_per_node=2 --nnodes=1 --node_rank=0
+           --master_addr="localhost" --master_port=1234 compute_metric.py
 
 Referring to: https://pytorch.org/tutorials/intermediate/ddp_tutorial.html
 
@@ -52,7 +45,6 @@ from glob import glob
 
 import nibabel as nib
 import numpy as np
-import torch
 import torch.distributed as dist
 
 from monai.data import create_test_image_3d, partition_dataset
@@ -85,10 +77,8 @@ def compute(args):
             n = nib.Nifti1Image(label, np.eye(4))
             nib.save(n, os.path.join(args.dir, f"label{i:d}.nii.gz"))
 
-    # initialize the distributed evaluation process, every GPU runs in a process
-    dist.init_process_group(backend="nccl", init_method="env://")
-    device = torch.device(f"cuda:{args.local_rank}")
-    torch.cuda.set_device(device)
+    # initialize the distributed evaluation process, change to NCCL backend if computing on GPU
+    dist.init_process_group(backend="gloo", init_method="env://")
 
     preds = sorted(glob(os.path.join(args.dir, "pred*.nii.gz")))
     labels = sorted(glob(os.path.join(args.dir, "label*.nii.gz")))

@@ -84,7 +84,7 @@ The examples are standard PyTorch programs and have both dictionary-based and ar
 Training and evaluation examples of 3D segmentation based on UNet3D and synthetic dataset.
 The examples are PyTorch Ignite programs and have both dictionary-base and array-based transformations.
 #### [torch examples](./3d_segmentation/torch)
-Training and evaluation examples of 3D segmentation based on UNet3D and synthetic dataset.
+Training, evaluation and inference examples of 3D segmentation based on UNet3D and synthetic dataset.
 The examples are standard PyTorch programs and have both dictionary-based and array-based versions.
 #### [brats_segmentation_3d](./3d_segmentation/brats_segmentation_3d.ipynb)
 This tutorial shows how to construct a training workflow of multi-labels segmentation task based on [MSD Brain Tumor dataset](http://medicaldecathlon.com).
@@ -167,6 +167,8 @@ This notebook demonstrates the transformations on volumetric images.
 #### [autoencoder_mednist](./modules/autoencoder_mednist.ipynb)
 This tutorial uses the MedNIST hand CT scan dataset to demonstrate MONAI's autoencoder class. The autoencoder is used with an identity encode/decode (i.e., what you put in is what you should get back), as well as demonstrating its usage for de-blurring and de-noising.
 
+#### [compute_metric](./modules/compute_metric.py)
+Example shows how to compute metrics from saved predictions and labels with PyTorch multi-processing support.
 #### [dynunet_tutorial](./modules/dynunet_pipeline)
 This tutorial shows how to train 3D segmentation tasks on all the 10 decathlon datasets with the reimplementation of dynUNet in MONAI.
 #### [integrate_3rd_party_transforms](./modules/integrate_3rd_party_transforms.ipynb)

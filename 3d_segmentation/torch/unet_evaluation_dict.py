@@ -59,7 +59,7 @@ def main(tempdir):
     val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
     # sliding window inference need to input 1 image in every iteration
     val_loader = DataLoader(val_ds, batch_size=1, num_workers=4, collate_fn=list_data_collate)
-    dice_metric = DiceMetric(include_background=True, reduction="mean")
+    dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
     post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
     # try to use all the available GPUs
     devices = get_devices_spec(None)
@@ -80,8 +80,6 @@ def main(tempdir):
 
     model.eval()
     with torch.no_grad():
-        metric_sum = 0.0
-        metric_count = 0
         saver = NiftiSaver(output_dir="./output")
         for val_data in val_loader:
             val_images, val_labels = val_data["img"].to(devices[0]), val_data["seg"].to(devices[0])
@@ -90,12 +88,13 @@ def main(tempdir):
             sw_batch_size = 4
             val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
             val_outputs = post_trans(val_outputs)
-            value, _ = dice_metric(y_pred=val_outputs, y=val_labels)
-            metric_count += len(value)
-            metric_sum += value.item() * len(value)
             saver.save_batch(val_outputs, val_data["img_meta_dict"])
-        metric = metric_sum / metric_count
-        print("evaluation metric:", metric)
+            # compute metric for current iteration
+            dice_metric(y_pred=val_outputs, y=val_labels)
+        # aggregate the final mean dice result
+        print("evaluation metric:", dice_metric.aggregate().item())
+        # reset the status
+        dice_metric.reset()
 
 
 if __name__ == "__main__":

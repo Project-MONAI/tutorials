@@ -193,8 +193,8 @@ This notebook shows the `GanTrainer`, a MONAI workflow engine for modularized ad
 This tutorial shows how to leverage `EnsembleEvaluator`, `MeanEnsemble` and `VoteEnsemble` modules in MONAI to set up ensemble program.
 #### [nifti_read_example](./modules/nifti_read_example.ipynb)
 Illustrate reading NIfTI files and iterating over image patches of the volumes loaded from them.
-#### [post_transforms](./modules/post_transforms.ipynb)
-This notebook shows the usage of several post transforms based on the model output of spleen segmentation task.
+#### [postprocessing_transforms](./modules/postprocessing_transforms.ipynb)
+This notebook shows the usage of several postprocessing transforms based on the model output of spleen segmentation task.
 #### [public_datasets](./modules/public_datasets.ipynb)
 This notebook shows how to quickly set up training workflow based on `MedNISTDataset` and `DecathlonDataset`, and how to create a new dataset.
 #### [transforms_demo_2d](./modules/transforms_demo_2d.ipynb)

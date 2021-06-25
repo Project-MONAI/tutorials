@@ -169,6 +169,10 @@ This tutorial uses the MedNIST hand CT scan dataset to demonstrate MONAI's autoe
 
 #### [compute_metric](./modules/compute_metric.py)
 Example shows how to compute metrics from saved predictions and labels with PyTorch multi-processing support.
+#### [csv_datasets](./modules/csv_datasets.py)
+Tutorial show the usage of `CSVDataset` and `CSVIterableDataset`, load multiple CSV files and execute postprocessing logic.
+#### [image_dataset](./modules/image_dataset.py)
+Notebook introduces basic usages of `monai.data.ImageDataset` module.
 #### [dynunet_tutorial](./modules/dynunet_pipeline)
 This tutorial shows how to train 3D segmentation tasks on all the 10 decathlon datasets with the reimplementation of dynUNet in MONAI.
 #### [integrate_3rd_party_transforms](./modules/integrate_3rd_party_transforms.ipynb)

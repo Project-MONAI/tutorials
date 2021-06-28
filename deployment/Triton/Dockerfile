@@ -41,6 +41,7 @@ FROM nvcr.io/nvidia/tritonserver:21.04-py3
 
 # create model directory in container
 RUN mkdir -p /models/monai_covid/1
+RUN mkdir -p /models/monai_covid/
 
 # install project-specific dependencies
 COPY requirements.txt .
@@ -52,5 +53,5 @@ COPY models/monai_covid/config.pbtxt /models/monai_covid
 COPY models/monai_covid/1/model.py /models/monai_covid/1
 COPY models/monai_covid/1/covid19_model.ts /models/monai_covid/1
 
-ENTRYPOINT [ "tritonserver", "--model-repository=/models"]
-#ENTRYPOINT [ "tritonserver", "--model-repository=/models", "--log-verbose=1"]
+#ENTRYPOINT [ "tritonserver", "--model-repository=/models"]
+ENTRYPOINT [ "tritonserver", "--model-repository=/models", "--log-verbose=1"]

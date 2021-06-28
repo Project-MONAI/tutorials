@@ -47,8 +47,10 @@ import sys
 import time
 from uuid import uuid4
 
-model_name = "monai_covid"
+from monai.apps import download_and_extract
 
+model_name = "monai_covid"
+gdrive_path = "https://drive.google.com/drive/folders/1gcW6UaXrcatnV_QPU0AH0HGIOZQzMH3_?usp=sharing"
 
 def open_nifti_files(input_path):
 
@@ -74,6 +76,8 @@ if __name__ == "__main__":
 
     nifti_files = []
     if os.path.isdir(args.input):
+        # Grab files from Google Drive and place in directory
+        download_and_extract(gdrive_path,args.input)
         nifti_files = open_nifti_files(args.input)
     elif os.path.isfile(args.input):
         nifti_files = [args.input]

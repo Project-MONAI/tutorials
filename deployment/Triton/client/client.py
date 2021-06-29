@@ -46,22 +46,19 @@ import os
 import sys
 import time
 from uuid import uuid4
+import glob
 
-from monai.apps import download_and_extract
+from monai.apps.utils import download_and_extract
 
 model_name = "monai_covid"
-gdrive_path = "https://drive.google.com/drive/folders/1gcW6UaXrcatnV_QPU0AH0HGIOZQzMH3_?usp=sharing"
+gdrive_path = "https://drive.google.com/uc?id=1GYvHGU2jES0m_msin-FFQnmTOaHkl0LN"
+covid19_filename = "covid19_compress.tar.gz"
+md5_check = "cadd79d5ca9ccdee2b49cd0c8a3e6217"
+
 
 def open_nifti_files(input_path):
+    return sorted(glob.glob(os.path.join(input_path, "*.nii*")))
 
-    nifti_file_names = []
-
-    for root, dirs, files in os.walk(input_path):
-        for file in files:
-            if file.endswith('.nii') or file.endswith('.nii.gz'):
-                nifti_file_names.append(os.path.join(input_path, file))
-
-    return nifti_file_names
 
 
 if __name__ == "__main__":
@@ -75,9 +72,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     nifti_files = []
+    extract_dir = "./client/test_data"
+    tar_save_path = os.path.join(extract_dir, covid19_filename)
     if os.path.isdir(args.input):
         # Grab files from Google Drive and place in directory
-        download_and_extract(gdrive_path,args.input)
+        download_and_extract(gdrive_path, tar_save_path, output_dir=extract_dir, hash_val=md5_check, hash_type="md5")
         nifti_files = open_nifti_files(args.input)
     elif os.path.isfile(args.input):
         nifti_files = [args.input]

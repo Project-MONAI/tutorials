@@ -33,6 +33,7 @@ from tempfile import NamedTemporaryFile
 import torch
 import torch.backends.cudnn as cudnn
 
+from monai.apps.utils import download_and_extract
 from monai.inferers.inferer import SimpleInferer
 from monai.transforms import Compose
 from monai.transforms import (Activations,
@@ -50,6 +51,9 @@ import triton_python_backend_utils as pb_utils
 
 
 logger = logging.getLogger(__name__)
+gdrive_url = "https://drive.google.com/uc?id=1U9Oaw47SWMJeDkg1FSTY1W__tQOY1nAZ"
+model_filename = "covid19_model.tar.gz"
+md5_check = "571046a25659515bf7abee4266f14435"
 
 
 class TritonPythonModel:
@@ -65,6 +69,10 @@ class TritonPythonModel:
         the model to intialize any state associated with this model.
         """
 
+        # Pull model from google drive
+        extract_dir = "/models/monai_covid/1"
+        tar_save_path = os.path.join(extract_dir, model_filename)
+        download_and_extract(gdrive_url, tar_save_path, output_dir=extract_dir, hash_val=md5_check, hash_type="md5")
         # load model configuration
         self.model_config = json.loads(args['model_config'])
 

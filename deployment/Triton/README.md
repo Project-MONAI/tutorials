@@ -90,7 +90,7 @@ The client environment should have Python 3 installed and should have the necess
 ```
 $ python3 -m pip install -r requirements.txt
 ```
-4. Other dependent libraries for the Python Triton client are available as a Python package than can installed using pip
+4. Other dependent libraries for the Python Triton client are available as a Python packages
 ```
 $ pip install nvidia-pyindex
 $ pip install tritonclient[all]
@@ -122,17 +122,16 @@ RUN rm requirements.txt
 # copy contents of model project into model repo in container image
 COPY models/monai_covid/config.pbtxt /models/monai_covid
 COPY models/monai_covid/1/model.py /models/monai_covid/1
-COPY models/monai_covid/1/covid19_model.ts /models/monai_covid/1
+
 
 ENTRYPOINT [ "tritonserver", "--model-repository=/models"]
-#ENTRYPOINT [ "tritonserver", "--model-repository=/models", "--log-verbose=1"]
 ```
 Note: The Triton service expects a certain directory structure discussed in [Model Config File](#model-config-file) to load the model definitions.
 
-2. Next, the container with the Triton Service is run as a service (in background or separate terminal for demo).  In this example, the ports used by the Triton Service are set to `8090` for client communications.
+2. Next, the container with the Triton Service runs as a service (in background or separate terminal for demo).  In this example, the ports used by the Triton Service are set to `8000` for client communications.
 ```Dockerfile:
 demo_app_image_name="monai_triton:demo"
-docker run --shm-size=128G --rm -p 127.0.0.1:8090:8000 -p 127.0.0.1:8091:8001 -p 127.0.0.1:8092:8002 ${demo_app_image_name}
+docker run --shm-size=128G --rm -p 127.0.0.1:8000:8000 -p 127.0.0.1:8001:8001 -p 127.0.0.1:8090:8002 ${demo_app_image_name}
 ```
 3. See [Model Config File](#model-config-file) to see the expected file structure for Triton.
 - Modify the models/monai_prostrate/1/model.py file to satisfy any model configuration requirements while keeping the required components in the model definition. See the * [Usage](#usage) section for background. 
@@ -157,24 +156,24 @@ instance_group [
 ```
 Also, other configurations like dynamic batching and corresponding sizes can be configured. See the [Triton Service Documentation model configurations](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md) documentation for more information.
  
-- Finally, be sure to include you Tensors or Torchscript definition *.ts files in the directory structure. In this example,a prostate segmentation model based in PyTorch is used. 
+- Finally, be sure to include Tensors or Torchscript definition *.ts files in the directory structure. In this example, a COVID19 classificatiion model based in PyTorch is used. 
 ```
-prostate_model.ts
+covid19_model.ts
 ```
-The Dockerfile will copy the model definition structure into the  Triton container Service.  So the container should be rebuilt after any modifications to the GPU or model configurations for the example.
+The Dockerfile will copy the model definition structure into the Triton container Service.  When the container is run, the python backend implementation will pull the covid19_model.ts file from a Google Drive for the demo.  So the container should be rebuilt after any modifications to the GPU configuration or model configurations for the example.
 
 4. A Python [client](./client/client.py) program configures the model and makes an http request to Triton as a Service. Note: Triton supports other interfaces like gRPC.
 The client reads an input image converted from Nifti to a byte array for classification. 
 
-- In this example, a model trained to detect COVID-19 is provide an image with COVID or without.    
+- In this example, a model trained to detect COVID-19 is provided an image with COVID or without.    
 ```python:
 filename = 'client/test_data/volume-covid19-A-0000.nii.gz'
 ```
 - The client calls the Triton Service using the external port configured previously.
 ```python:
-with httpclient.InferenceServerClient("localhost:8090") as client:
+with httpclient.InferenceServerClient("localhost:8000") as client:
 ```
-- The Triton inference request is returned in the response 
+- The Triton inference response is returned :
 ```python:
 response = client.infer(model_name,
     inputs,
@@ -185,105 +184,8 @@ result = response.get_response()
 ```
 -------
 ## Usage
-
-In order to use the Python backend, you need to create a Python file that
-has a structure with the three components descibed below.
-
-Every Python backend can implement three main functions:
-
-### `initialize`
-
-`initialize` is called once the model is being loaded. Implementing
-`initialize` is optional. `initialize` allows you to do any necessary
-initializations before execution. In the `initialize` function, you are given
-an `args` variable. `args` is a Python dictionary. Both keys and
-values for this Python dictionary are strings. You can find the available
-keys in the `args` dictionary along with their description in the table
-below:
-
-| key                      | description                                      |
-| ------------------------ | ------------------------------------------------ |
-| model_config             | A JSON string containing the model configuration |
-| model_instance_kind      | A string containing model instance kind          |
-| model_instance_device_id | A string containing model instance device ID     |
-| model_repository         | Model repository path                            |
-| model_version            | Model version                                    |
-| model_name               | Model name                                       |
-
-### `execute`
-
-`execute` function is called whenever an inference request is made. Every Python
-model must implement `execute` function. In the `execute` function you are given
-a list of `InferenceRequest` objects. In this function, your `execute` function
-must return a list of `InferenceResponse` objects that has the same length as
-`requests`.
-
-In case one of the inputs has an error, you can use the `TritonError` object
-to set the error message for that specific request. Below is an example of
-setting errors for an `InferenceResponse` object:
-
-```python
-import triton_python_backend_utils as pb_utils
-
-
-class TritonPythonModel:
-    ...
-
-    def execute(self, requests):
-        responses = []
-
-        for request in requests:
-            if an_error_occurred:
-              # If there is an error, the output_tensors are ignored
-              responses.append(pb_utils.InferenceResponse(
-                output_tensors=[], error=pb_utils.TritonError("An Error Occurred")))
-
-        return responses
-```
-
-### `finalize`
-
-Implementing `finalize` is optional. This function allows you to do any clean
-ups necessary before the model is unloaded from Triton server.
-
-You can look at the [add_sub example](examples/add_sub.py) which contains
-a complete example of implementing all these functions for a Python model
-that adds and subtracts the inputs given to it. After implementing all the
-necessary functions, you should save this file as `model.py`.
-
-
-## Model Config File
-
-Every Python Triton model must provide a `config.pbtxt` file describing
-the model configuration. In order to use this backend you must set the `backend`
-field of your model `config.pbtxt` file to `python`. You shouldn't set
-`platform` field of the configuration.
-
-Your models directory should look like below:
-```
-models
-└── add_sub
-    ├── 1
-    │   └── model.py
-    └── config.pbtxt
-```
-
+[See Triton Inference Server/python_backend documentation](https://github.com/triton-inference-server/python_backend#usage)
+## Model Config
+[See Triton Inference Server/python_backend documentation](https://github.com/triton-inference-server/python_backend#model-config-file)
 ## Error Handling
-
-If there is an error that affects the `initialize`, `execute`, or `finalize`
-function of the Python model you can use `TritonInferenceException`.
-Example below shows how you can do error handling in `finalize`:
-
-```python
-import triton_python_backend_utils as pb_utils
-
-
-class TritonPythonModel:
-    ...
-
-    def finalize(self):
-      if error_during_finalize:
-        raise pb_utils.TritonModelException("An error occurred during finalize.")
-```
-
-
+[See Triton Inference Server/python_backend documentation](https://github.com/triton-inference-server/python_backend#error-handling)

@@ -1,0 +1,5 @@
+.venv
+__pycache__
+#  Ignore Pipenv files
+Pipfile
+Pipfile.loc

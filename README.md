@@ -18,7 +18,7 @@ please install the relevant packages according to MONAI's [installation guide](h
 Or install all optional requirements with:
 
 ```bash
-pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/master/requirements-dev.txt
+pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/dev/requirements-dev.txt
 ```
 
 #### Run the notebooks from Colab
@@ -84,7 +84,7 @@ The examples are standard PyTorch programs and have both dictionary-based and ar
 Training and evaluation examples of 3D segmentation based on UNet3D and synthetic dataset.
 The examples are PyTorch Ignite programs and have both dictionary-base and array-based transformations.
 #### [torch examples](./3d_segmentation/torch)
-Training and evaluation examples of 3D segmentation based on UNet3D and synthetic dataset.
+Training, evaluation and inference examples of 3D segmentation based on UNet3D and synthetic dataset.
 The examples are standard PyTorch programs and have both dictionary-based and array-based versions.
 #### [brats_segmentation_3d](./3d_segmentation/brats_segmentation_3d.ipynb)
 This tutorial shows how to construct a training workflow of multi-labels segmentation task based on [MSD Brain Tumor dataset](http://medicaldecathlon.com).
@@ -128,6 +128,9 @@ This is a simple example of training and deploying a MONAI network with [BentoML
 This uses the previous notebook's trained network to demonstrate deployment a web server using [Ray](https://docs.ray.io/en/master/serve/index.html#rayserve).
 
 **federated learning**
+#### [NVFlare](./federated_learning/nvflare)
+The example show how to train a federated learning model with [NVFlare](https://pypi.org/project/nvflare/) and the MONAI trainers.
+
 #### [Substra](./federated_learning/substra)
 The example show how to execute the 3d segmentation torch tutorial on a federated learning platform, Substra.
 
@@ -164,7 +167,13 @@ This notebook demonstrates the transformations on volumetric images.
 #### [autoencoder_mednist](./modules/autoencoder_mednist.ipynb)
 This tutorial uses the MedNIST hand CT scan dataset to demonstrate MONAI's autoencoder class. The autoencoder is used with an identity encode/decode (i.e., what you put in is what you should get back), as well as demonstrating its usage for de-blurring and de-noising.
 
-#### [dynunet_tutorial](./modules/dyunet_pipeline)
+#### [compute_metric](./modules/compute_metric.py)
+Example shows how to compute metrics from saved predictions and labels with PyTorch multi-processing support.
+#### [csv_datasets](./modules/csv_datasets.py)
+Tutorial show the usage of `CSVDataset` and `CSVIterableDataset`, load multiple CSV files and execute postprocessing logic.
+#### [image_dataset](./modules/image_dataset.py)
+Notebook introduces basic usages of `monai.data.ImageDataset` module.
+#### [dynunet_tutorial](./modules/dynunet_pipeline)
 This tutorial shows how to train 3D segmentation tasks on all the 10 decathlon datasets with the reimplementation of dynUNet in MONAI.
 #### [integrate_3rd_party_transforms](./modules/integrate_3rd_party_transforms.ipynb)
 This tutorial shows how to integrate 3rd party transforms into MONAI program.
@@ -188,13 +197,16 @@ This notebook shows the `GanTrainer`, a MONAI workflow engine for modularized ad
 This tutorial shows how to leverage `EnsembleEvaluator`, `MeanEnsemble` and `VoteEnsemble` modules in MONAI to set up ensemble program.
 #### [nifti_read_example](./modules/nifti_read_example.ipynb)
 Illustrate reading NIfTI files and iterating over image patches of the volumes loaded from them.
-#### [post_transforms](./modules/post_transforms.ipynb)
-This notebook shows the usage of several post transforms based on the model output of spleen segmentation task.
+#### [postprocessing_transforms](./modules/postprocessing_transforms.ipynb)
+This notebook shows the usage of several postprocessing transforms based on the model output of spleen segmentation task.
 #### [public_datasets](./modules/public_datasets.ipynb)
 This notebook shows how to quickly set up training workflow based on `MedNISTDataset` and `DecathlonDataset`, and how to create a new dataset.
 #### [transforms_demo_2d](./modules/transforms_demo_2d.ipynb)
 This notebook demonstrates the image transformations on histology images using
 [the GlaS Contest dataset](https://warwick.ac.uk/fac/sci/dcs/research/tia/glascontest/download/).
+
+#### [TorchIO, MONAI, PyTorch Lightning](./modules/TorchIO_MONAI_PyTorch_Lightning.ipynb)
+This notebook demonstrates how the three libraries from the official PyTorch Ecosystem can be used together to segment the hippocampus on brain MRIs from the Medical Segmentation Decathlon.
 
 #### [varautoencoder_mednist](./modules/varautoencoder_mednist.ipynb)
 This tutorial uses the MedNIST scan (or alternatively the MNIST) dataset to demonstrate MONAI's variational autoencoder class.

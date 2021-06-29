@@ -51,7 +51,7 @@ def main(tempdir):
     val_ds = ImageDataset(images, segs, transform=imtrans, seg_transform=segtrans, image_only=False)
     # sliding window inference for one image at every iteration
     val_loader = DataLoader(val_ds, batch_size=1, num_workers=1, pin_memory=torch.cuda.is_available())
-    dice_metric = DiceMetric(include_background=True, reduction="mean")
+    dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
     post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = UNet(
@@ -66,8 +66,6 @@ def main(tempdir):
     model.load_state_dict(torch.load("best_metric_model_segmentation3d_array.pth"))
     model.eval()
     with torch.no_grad():
-        metric_sum = 0.0
-        metric_count = 0
         saver = NiftiSaver(output_dir="./output")
         for val_data in val_loader:
             val_images, val_labels = val_data[0].to(device), val_data[1].to(device)
@@ -76,12 +74,9 @@ def main(tempdir):
             sw_batch_size = 4
             val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
             val_outputs = post_trans(val_outputs)
-            value, _ = dice_metric(y_pred=val_outputs, y=val_labels)
-            metric_count += len(value)
-            metric_sum += value.item() * len(value)
             saver.save_batch(val_outputs, val_data[2])
-        metric = metric_sum / metric_count
-        print("evaluation metric:", metric)
+            dice_metric(y_pred=val_outputs, y=val_labels)
+        print("evaluation metric:", dice_metric.aggregate().item())
 
 
 if __name__ == "__main__":

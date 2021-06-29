@@ -1,0 +1,17 @@
+{
+  "format_version": 1,
+
+  "client": {
+        "outbound_filters": [
+        ],
+        "inbound_filters": [
+        ]
+    },
+  "client_trainer": {
+    "path": "monai_trainer.MONAITrainer",
+    "args": {
+        "aggregation_epochs": 5,
+        "aggregation_iters": 0
+    }
+  }
+}

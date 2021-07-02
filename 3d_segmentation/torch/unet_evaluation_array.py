@@ -21,7 +21,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from monai import config
-from monai.data import ImageDataset, NiftiSaver, create_test_image_3d
+from monai.data import ImageDataset, NiftiSaver, create_test_image_3d, decollate_batch
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.networks.nets import UNet
@@ -73,10 +73,14 @@ def main(tempdir):
             roi_size = (96, 96, 96)
             sw_batch_size = 4
             val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
-            val_outputs = post_trans(val_outputs)
+            val_outputs = torch.stack([post_trans(i) for i in decollate_batch(val_outputs)])
             saver.save_batch(val_outputs, val_data[2])
+            # compute metric for current iteration
             dice_metric(y_pred=val_outputs, y=val_labels)
+        # aggregate the final mean dice result
         print("evaluation metric:", dice_metric.aggregate().item())
+        # reset the status
+        dice_metric.reset()
 
 
 if __name__ == "__main__":

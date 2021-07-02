@@ -28,7 +28,7 @@ from ignite.handlers import EarlyStopping, ModelCheckpoint
 from torch.utils.data import DataLoader
 
 import monai
-from monai.data import create_test_image_3d, list_data_collate
+from monai.data import create_test_image_3d, list_data_collate, decollate_batch
 from monai.handlers import (
     MeanDice,
     StatsHandler,
@@ -166,11 +166,11 @@ def main(tempdir):
     # StatsHandler prints loss at every iteration and print metrics at every epoch,
     # we don't set metrics for trainer here, so just print loss, user can also customize print functions
     # and can use output_transform to convert engine.state.output if it's not loss value
-    train_stats_handler = StatsHandler(name="trainer")
+    train_stats_handler = StatsHandler(name="trainer", output_transform=lambda x: x)
     train_stats_handler.attach(trainer)
 
     # TensorBoardStatsHandler plots loss at every iteration and plots metrics at every epoch, same as StatsHandler
-    train_tensorboard_stats_handler = TensorBoardStatsHandler()
+    train_tensorboard_stats_handler = TensorBoardStatsHandler(output_transform=lambda x: x)
     train_tensorboard_stats_handler.attach(trainer)
 
     validation_every_n_iters = 5
@@ -189,7 +189,7 @@ def main(tempdir):
         val_metrics,
         device,
         True,
-        output_transform=lambda x, y, y_pred: (post_pred(y_pred), post_label(y)),
+        output_transform=lambda x, y, y_pred: (torch.stack([post_pred(i) for i in decollate_batch(y_pred)]), torch.stack([post_label(i) for i in decollate_batch(y)])),
         prepare_batch=prepare_batch,
     )
 

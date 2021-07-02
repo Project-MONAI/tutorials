@@ -21,7 +21,7 @@ import torch
 from torch.utils.data import DataLoader
 
 import monai
-from monai.data import NiftiSaver, create_test_image_3d, list_data_collate
+from monai.data import NiftiSaver, create_test_image_3d, list_data_collate, decollate_batch
 from monai.engines import get_devices_spec
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
@@ -87,7 +87,7 @@ def main(tempdir):
             roi_size = (96, 96, 96)
             sw_batch_size = 4
             val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
-            val_outputs = post_trans(val_outputs)
+            val_outputs = torch.stack([post_trans(i) for i in decollate_batch(val_outputs)])
             saver.save_batch(val_outputs, val_data["img_meta_dict"])
             # compute metric for current iteration
             dice_metric(y_pred=val_outputs, y=val_labels)

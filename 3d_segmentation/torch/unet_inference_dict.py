@@ -20,13 +20,14 @@ import numpy as np
 import torch
 
 from monai.config import print_config
-from monai.data import Dataset, DataLoader, create_test_image_3d
+from monai.data import Dataset, DataLoader, create_test_image_3d, decollate_batch
 from monai.inferers import sliding_window_inference
 from monai.networks.nets import UNet
 from monai.transforms import (
     Activationsd,
     AsDiscreted,
     Compose,
+    Decollated,
     EnsureChannelFirstd,
     Invertd,
     LoadImaged,
@@ -65,12 +66,12 @@ def main(tempdir):
     dataloader = DataLoader(dataset, batch_size=2, num_workers=4)
     # define post transforms
     post_transforms = Compose([
+        Decollated(),
         Activationsd(keys="pred", sigmoid=True),
         AsDiscreted(keys="pred", threshold_values=True),
         Invertd(
             keys="pred",  # invert the `pred` data field, also support multiple fields
             transform=pre_transforms,
-            loader=dataloader,
             orig_keys="img",  # get the previously applied pre_transforms information on the `img` data field,
                               # then invert `pred` based on this information. we can use same info
                               # for multiple fields, also support different orig_keys for different fields

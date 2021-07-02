@@ -22,7 +22,7 @@ from ignite.engine import Engine
 from torch.utils.data import DataLoader
 
 import monai
-from monai.data import create_test_image_3d, list_data_collate
+from monai.data import create_test_image_3d, list_data_collate, decollate_batch
 from monai.handlers import CheckpointLoader, MeanDice, SegmentationSaver, StatsHandler
 from monai.inferers import sliding_window_inference
 from monai.networks.nets import UNet
@@ -79,7 +79,7 @@ def main(tempdir):
         with torch.no_grad():
             val_images, val_labels = batch["img"].to(device), batch["seg"].to(device)
             seg_probs = sliding_window_inference(val_images, roi_size, sw_batch_size, net)
-            seg_probs = post_trans(seg_probs)
+            seg_probs = torch.stack([post_trans(i) for i in decollate_batch(seg_probs)])
             return seg_probs, val_labels
 
     evaluator = Engine(_sliding_window_processor)

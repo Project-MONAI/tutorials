@@ -16,8 +16,8 @@ Main steps to set up the distributed evaluation:
 
 - Install Horovod referring to the guide: https://github.com/horovod/horovod/blob/master/docs/gpus.rst
   If using MONAI docker, which already has NCCL and MPI, can quickly install Horovod with command:
-  `HOROVOD_NCCL_INCLUDE=/usr/include HOROVOD_NCCL_LIB=/usr/lib/x86_64-linux-gnu HOROVOD_GPU_OPERATIONS=NCCL \
-  pip install --no-cache-dir horovod`
+  `HOROVOD_NCCL_INCLUDE=/usr/include HOROVOD_NCCL_LIB=/usr/lib/x86_64-linux-gnu HOROVOD_NCCL_LINK=SHARED \
+  HOROVOD_GPU_OPERATIONS=NCCL pip install --no-cache-dir horovod`
 - Set SSH permissions for root login without password at all nodes except master, referring to:
   http://www.linuxproblem.org/art_9.html
 - Run `hvd.init()` to initialize Horovod.

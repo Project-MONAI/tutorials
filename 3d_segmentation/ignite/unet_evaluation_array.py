@@ -65,7 +65,7 @@ def main(tempdir):
     roi_size = (96, 96, 96)
     sw_batch_size = 4
 
-    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+    post_trans = Compose([ToTensor(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
 
     def _sliding_window_processor(engine, batch):
         net.eval()

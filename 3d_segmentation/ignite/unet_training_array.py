@@ -151,8 +151,8 @@ def main(tempdir):
     # add evaluation metric to the evaluator engine
     val_metrics = {metric_name: MeanDice()}
 
-    post_pred = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
-    post_label = AsDiscrete(threshold_values=True)
+    post_pred = Compose([ToTensor(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+    post_label = Compose([ToTensor(), AsDiscrete(threshold_values=True)])
 
     # Ignite evaluator expects batch=(img, seg) and returns output=(y_pred, y) at every iteration,
     # user can add output_transform to return other values

@@ -24,7 +24,7 @@ from monai.data import PNGSaver, create_test_image_2d, list_data_collate, decoll
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.networks.nets import UNet
-from monai.transforms import Activations, AddChanneld, AsDiscrete, Compose, LoadImaged, ScaleIntensityd, ToTensord
+from monai.transforms import Activations, AddChanneld, AsDiscrete, Compose, LoadImaged, ScaleIntensityd, ToTensord, ToTensor
 
 
 def main(tempdir):
@@ -54,7 +54,7 @@ def main(tempdir):
     # sliding window inference need to input 1 image in every iteration
     val_loader = DataLoader(val_ds, batch_size=1, num_workers=4, collate_fn=list_data_collate)
     dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
-    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+    post_trans = Compose([ToTensor(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = UNet(
         dimensions=2,

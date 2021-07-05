@@ -67,6 +67,7 @@ def main(tempdir):
     # define post transforms
     post_transforms = Compose([
         Decollated(),
+        ToTensord(keys="pred"), 
         Activationsd(keys="pred", sigmoid=True),
         AsDiscreted(keys="pred", threshold_values=True),
         Invertd(

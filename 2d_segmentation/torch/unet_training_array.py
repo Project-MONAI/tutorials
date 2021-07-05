@@ -88,7 +88,7 @@ def main(tempdir):
     val_ds = ArrayDataset(images[-20:], val_imtrans, segs[-20:], val_segtrans)
     val_loader = DataLoader(val_ds, batch_size=1, num_workers=4, pin_memory=torch.cuda.is_available())
     dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
-    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+    post_trans = Compose([ToTensor(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = monai.networks.nets.UNet(

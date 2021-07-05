@@ -26,7 +26,7 @@ from monai.data import create_test_image_3d, list_data_collate, decollate_batch
 from monai.handlers import CheckpointLoader, MeanDice, SegmentationSaver, StatsHandler
 from monai.inferers import sliding_window_inference
 from monai.networks.nets import UNet
-from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadImaged, ScaleIntensityd, ToTensord
+from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadImaged, ScaleIntensityd, ToTensord, ToTensor
 
 
 def main(tempdir):
@@ -72,7 +72,7 @@ def main(tempdir):
     roi_size = (96, 96, 96)
     sw_batch_size = 4
 
-    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+    post_trans = Compose([ToTensor(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
 
     def _sliding_window_processor(engine, batch):
         net.eval()

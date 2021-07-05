@@ -20,7 +20,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 import monai
 from monai.metrics import compute_roc_auc
-from monai.transforms import Activations, AddChanneld, AsDiscrete, Compose, LoadImaged, RandRotate90d, Resized, ScaleIntensityd, ToTensord
+from monai.transforms import Activations, AddChanneld, AsDiscrete, Compose, LoadImaged, RandRotate90d, Resized, ScaleIntensityd, ToTensord, ToTensor
 
 
 def main():
@@ -79,8 +79,8 @@ def main():
             ToTensord(keys=["img"]),
         ]
     )
-    act = Activations(softmax=True)
-    to_onehot = AsDiscrete(to_onehot=True, n_classes=2)
+    post_pred = Compose([ToTensor(), Activations(softmax=True)])
+    post_label = Compose([ToTensor(), AsDiscrete(to_onehot=True, n_classes=2)])
 
     # Define dataset, data loader
     check_ds = monai.data.Dataset(data=train_files, transform=train_transforms)
@@ -140,8 +140,8 @@ def main():
 
                 acc_value = torch.eq(y_pred.argmax(dim=1), y)
                 acc_metric = acc_value.sum().item() / len(acc_value)
-                y_onehot = torch.stack([to_onehot(i) for i in y])
-                y_pred_act = torch.stack([act(i) for i in y_pred])
+                y_onehot = torch.stack([post_label(i) for i in y])
+                y_pred_act = torch.stack([post_pred(i) for i in y_pred])
                 auc_metric = compute_roc_auc(y_pred_act, y_onehot)
                 del y_pred_act, y_onehot
                 if acc_metric > best_metric:

@@ -69,7 +69,7 @@ from torch.utils.data.distributed import DistributedSampler
 import monai
 from monai.data import DataLoader, Dataset, create_test_image_3d
 from monai.engines import SupervisedTrainer
-from monai.handlers import CheckpointSaver, LrScheduleHandler, StatsHandler
+from monai.handlers import CheckpointSaver, LrScheduleHandler, StatsHandler, from_engine
 from monai.inferers import SimpleInferer
 from monai.transforms import (
     Activationsd,
@@ -167,7 +167,7 @@ def train(args):
     if idist.get_rank() == 0:
         train_handlers.extend(
             [
-                StatsHandler(tag_name="train_loss", output_transform=lambda x: x[0]["loss"]),
+                StatsHandler(tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
                 CheckpointSaver(save_dir="./runs/", save_dict={"net": net, "opt": opt}, save_interval=2),
             ]
         )
@@ -183,7 +183,7 @@ def train(args):
         # if no FP16 support in GPU or PyTorch version < 1.6, will not enable AMP evaluation
         amp=True if monai.utils.get_torch_version_tuple() >= (1, 6) else False,
         postprocessing=train_post_transforms,
-        key_train_metric={"train_acc": Accuracy(output_transform=lambda x: (x[0]["pred"], x[0]["label"]), device=device)},
+        key_train_metric={"train_acc": Accuracy(output_transform=from_engine(["pred", "label"]), device=device)},
         train_handlers=train_handlers,
     )
     trainer.run()

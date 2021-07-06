@@ -130,7 +130,7 @@ def main():
     post_pred = Compose([ToTensor(), Activations(softmax=True)])
     # Ignite evaluator expects batch=(img, label) and returns output=(y_pred, y) at every iteration,
     # user can add output_transform to return other values
-    evaluator = create_supervised_evaluator(net, val_metrics, device, True, prepare_batch=prepare_batch, output_transform=lambda x, y, y_pred: (torch.stack([post_pred(i) for i in y_pred]), torch.stack([post_label(i) for i in y])))
+    evaluator = create_supervised_evaluator(net, val_metrics, device, True, prepare_batch=prepare_batch, output_transform=lambda x, y, y_pred: ([post_pred(i) for i in y_pred], [post_label(i) for i in y]))
 
     # add stats event handler to print validation stats via evaluator
     val_stats_handler = StatsHandler(

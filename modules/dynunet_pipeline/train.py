@@ -11,6 +11,7 @@ from monai.handlers import (
     MeanDice,
     StatsHandler,
     ValidationHandler,
+    from_engine,
 )
 from monai.inferers import SimpleInferer, SlidingWindowInferer
 from monai.losses import DiceCELoss
@@ -70,11 +71,11 @@ def validation(args):
             overlap=eval_overlap,
             mode=window_mode,
         ),
-        post_transform=None,
+        postprocessing=None,
         key_val_metric={
             "val_mean_dice": MeanDice(
                 include_background=False,
-                output_transform=lambda x: (x["pred"], x["label"]),
+                output_transform=from_engine(["pred", "label"]),
             )
         },
         additional_metrics=None,
@@ -172,11 +173,11 @@ def train(args):
             overlap=eval_overlap,
             mode=window_mode,
         ),
-        post_transform=None,
+        postprocessing=None,
         key_val_metric={
             "val_mean_dice": MeanDice(
                 include_background=False,
-                output_transform=lambda x: (x["pred"], x["label"]),
+                output_transform=from_engine(["pred", "label"]),
             )
         },
         val_handlers=val_handlers,
@@ -192,7 +193,7 @@ def train(args):
 
     train_handlers += [
         ValidationHandler(validator=evaluator, interval=interval, epoch_level=True),
-        StatsHandler(tag_name="train_loss", output_transform=lambda x: x["loss"]),
+        StatsHandler(tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
     ]
 
     trainer = DynUNetTrainer(
@@ -203,7 +204,7 @@ def train(args):
         optimizer=optimizer,
         loss_function=loss,
         inferer=SimpleInferer(),
-        post_transform=None,
+        postprocessing=None,
         key_train_metric=None,
         train_handlers=train_handlers,
         amp=amp_flag,

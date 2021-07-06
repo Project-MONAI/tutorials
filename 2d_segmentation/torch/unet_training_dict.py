@@ -153,7 +153,7 @@ def main(tempdir):
                     roi_size = (96, 96)
                     sw_batch_size = 4
                     val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
-                    val_outputs = torch.stack([post_trans(i) for i in decollate_batch(val_outputs)])
+                    val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
                     # compute metric for current iteration
                     dice_metric(y_pred=val_outputs, y=val_labels)
                 # aggregate the final mean dice result

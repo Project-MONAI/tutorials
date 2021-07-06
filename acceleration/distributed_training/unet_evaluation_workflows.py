@@ -69,7 +69,7 @@ from torch.utils.data.distributed import DistributedSampler
 import monai
 from monai.data import DataLoader, Dataset, create_test_image_3d
 from monai.engines import SupervisedEvaluator
-from monai.handlers import CheckpointLoader, MeanDice, StatsHandler
+from monai.handlers import CheckpointLoader, MeanDice, StatsHandler, from_engine
 from monai.inferers import SlidingWindowInferer
 from monai.transforms import (
     Activationsd,
@@ -170,10 +170,10 @@ def evaluate(args):
         key_val_metric={
             "val_mean_dice": MeanDice(
                 include_background=True,
-                output_transform=lambda x: (x[0]["pred"], x[0]["label"]),
+                output_transform=from_engine(["pred", "label"]),
             )
         },
-        additional_metrics={"val_acc": Accuracy(output_transform=lambda x: (x[0]["pred"], x[0]["label"]), device=device)},
+        additional_metrics={"val_acc": Accuracy(output_transform=from_engine(["pred", "label"]), device=device)},
         val_handlers=val_handlers,
         # if no FP16 support in GPU or PyTorch version < 1.6, will not enable AMP evaluation
         amp=True if monai.utils.get_torch_version_tuple() >= (1, 6) else False,

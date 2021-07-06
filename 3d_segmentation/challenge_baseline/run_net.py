@@ -194,7 +194,7 @@ def train(data_folder=".", model_folder="runs"):
     # evaluator as an event handler of the trainer
     train_handlers = [
         ValidationHandler(validator=evaluator, interval=1, epoch_level=True),
-        StatsHandler(tag_name="train_loss", output_transform=lambda x: x[0]["loss"]),
+        StatsHandler(tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
     ]
     trainer = monai.engines.SupervisedTrainer(
         device=device,

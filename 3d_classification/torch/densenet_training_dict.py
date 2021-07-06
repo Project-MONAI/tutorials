@@ -19,7 +19,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 import monai
-from monai.metrics import compute_roc_auc
+from monai.metrics import ROCAUCMetric
 from monai.transforms import Activations, AddChanneld, AsDiscrete, Compose, LoadImaged, RandRotate90d, Resized, ScaleIntensityd, ToTensord, ToTensor
 
 
@@ -101,6 +101,7 @@ def main():
     model = monai.networks.nets.DenseNet121(spatial_dims=3, in_channels=1, out_channels=2).to(device)
     loss_function = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), 1e-5)
+    auc_metric = ROCAUCMetric()
 
     # start a typical PyTorch training
     val_interval = 2
@@ -140,9 +141,11 @@ def main():
 
                 acc_value = torch.eq(y_pred.argmax(dim=1), y)
                 acc_metric = acc_value.sum().item() / len(acc_value)
-                y_onehot = torch.stack([post_label(i) for i in y])
-                y_pred_act = torch.stack([post_pred(i) for i in y_pred])
-                auc_metric = compute_roc_auc(y_pred_act, y_onehot)
+                y_onehot = [post_label(i) for i in y]
+                y_pred_act = [post_pred(i) for i in y_pred]
+                auc_metric(y_pred_act, y_onehot)
+                auc_result = auc_metric.aggregate()
+                auc_metric.reset()
                 del y_pred_act, y_onehot
                 if acc_metric > best_metric:
                     best_metric = acc_metric
@@ -151,7 +154,7 @@ def main():
                     print("saved new best metric model")
                 print(
                     "current epoch: {} current accuracy: {:.4f} current AUC: {:.4f} best accuracy: {:.4f} at epoch {}".format(
-                        epoch + 1, acc_metric, auc_metric, best_metric, best_metric_epoch
+                        epoch + 1, acc_metric, auc_result, best_metric, best_metric_epoch
                     )
                 )
                 writer.add_scalar("val_accuracy", acc_metric, epoch + 1)

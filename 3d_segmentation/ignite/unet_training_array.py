@@ -161,7 +161,7 @@ def main(tempdir):
         val_metrics,
         device,
         True,
-        output_transform=lambda x, y, y_pred: (torch.stack([post_pred(i) for i in decollate_batch(y_pred)]), torch.stack([post_label(i) for i in decollate_batch(y)])),
+        output_transform=lambda x, y, y_pred: ([post_pred(i) for i in decollate_batch(y_pred)], [post_label(i) for i in decollate_batch(y)]),
     )
 
     @trainer.on(Events.EPOCH_COMPLETED(every=validation_every_n_epochs))

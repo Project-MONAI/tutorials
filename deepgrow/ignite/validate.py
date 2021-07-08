@@ -9,15 +9,24 @@ import time
 import torch
 
 import train
-from handler import DeepgrowStatsHandler, SegmentationSaver
+
 from monai.apps.deepgrow.interaction import Interaction
 from monai.engines import SupervisedEvaluator
 from monai.handlers import (
     StatsHandler,
     TensorBoardStatsHandler,
-    MeanDice)
+    from_engine,
+    MeanDice,
+)
 from monai.inferers import SimpleInferer
 from monai.utils import set_determinism
+from monai.transforms import (
+    Compose,
+    ToTensord,
+    Activationsd,
+    AsDiscreted,
+    SaveImaged,
+)
 
 
 def create_validator(args, click):
@@ -27,7 +36,6 @@ def create_validator(args, click):
 
     pre_transforms = train.get_pre_transforms(args.roi_size, args.model_size, args.dimensions)
     click_transforms = train.get_click_transforms()
-    post_transform = train.get_post_transforms()
 
     # define training components
     network = train.get_network(args.network, args.channels, args.dimensions).to(device)
@@ -47,14 +55,20 @@ def create_validator(args, click):
     val_handlers = [
         StatsHandler(output_transform=lambda x: None),
         TensorBoardStatsHandler(log_dir=args.output, output_transform=lambda x: None),
-        DeepgrowStatsHandler(
-            log_dir=args.output,
-            tag_name=f'clicks_{click}_val_dice',
-            fold_size=int(len(val_loader.dataset) / args.batch / args.folds) if args.folds else 0
-        ),
     ]
+
+    post_transform_list = [
+        ToTensord(keys='pred'),
+        Activationsd(keys='pred', sigmoid=True),
+        AsDiscreted(keys='pred', threshold_values=True, logit_thresh=0.5)
+    ]
+
     if args.save_seg:
-        val_handlers.append(SegmentationSaver(output_dir=os.path.join(args.output, f'clicks_{click}_images')))
+        post_transform_list.append(
+            SaveImaged(keys="pred", meta_keys="image_meta_dict", output_dir=os.path.join(args.output, f'clicks_{click}_images'))
+        )
+
+    post_transform = Compose(post_transform_list)
 
     evaluator = SupervisedEvaluator(
         device=device,
@@ -65,12 +79,12 @@ def create_validator(args, click):
             max_interactions=click,
             train=False),
         inferer=SimpleInferer(),
-        post_transform=post_transform,
+        postprocessing=post_transform,
         val_handlers=val_handlers,
         key_val_metric={
             f'clicks_{click}_val_dice': MeanDice(
                 include_background=False,
-                output_transform=lambda x: (x["pred"], x["label"])
+                output_transform=from_engine(["pred", "label"]),
             )
         }
     )

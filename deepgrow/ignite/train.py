@@ -29,6 +29,7 @@ from monai.handlers import (
     ValidationHandler,
     LrScheduleHandler,
     CheckpointSaver,
+    from_engine,
     MeanDice)
 from monai.inferers import SimpleInferer
 from monai.losses import DiceLoss
@@ -46,7 +47,6 @@ from monai.transforms import (
     Resized,
 )
 from monai.utils import set_determinism
-from handler import DeepgrowStatsHandler
 
 
 def get_network(network, channels, dimensions):
@@ -93,16 +93,17 @@ def get_pre_transforms(roi_size, model_size, dimensions):
 def get_click_transforms():
     return Compose([
         Activationsd(keys='pred', sigmoid=True),
-        ToNumpyd(keys=('image', 'label', 'pred', 'probability', 'guidance')),
-        FindDiscrepancyRegionsd(label='label', pred='pred', discrepancy='discrepancy', batched=True),
-        AddRandomGuidanced(guidance='guidance', discrepancy='discrepancy', probability='probability', batched=True),
-        AddGuidanceSignald(image='image', guidance='guidance', batched=True),
+        ToNumpyd(keys=('image', 'label', 'pred')),
+        FindDiscrepancyRegionsd(label='label', pred='pred', discrepancy='discrepancy'),
+        AddRandomGuidanced(guidance='guidance', discrepancy='discrepancy', probability='probability'),
+        AddGuidanceSignald(image='image', guidance='guidance'),
         ToTensord(keys=('image', 'label'))
     ])
 
 
 def get_post_transforms():
     return Compose([
+        ToTensord(keys='pred'),
         Activationsd(keys='pred', sigmoid=True),
         AsDiscreted(keys='pred', threshold_values=True, logit_thresh=0.5)
     ])
@@ -188,7 +189,6 @@ def create_trainer(args):
     val_handlers = [
         StatsHandler(output_transform=lambda x: None),
         TensorBoardStatsHandler(log_dir=args.output, output_transform=lambda x: None),
-        DeepgrowStatsHandler(log_dir=args.output, tag_name='val_dice', image_interval=args.image_interval),
         CheckpointSaver(save_dir=args.output, save_dict={"net": network}, save_key_metric=True, save_final=True,
                         save_interval=args.save_interval, final_filename='model.pt')
     ]
@@ -204,11 +204,11 @@ def create_trainer(args):
             key_probability='probability',
             train=False),
         inferer=SimpleInferer(),
-        post_transform=post_transform,
+        postprocessing=post_transform,
         key_val_metric={
             "val_dice": MeanDice(
                 include_background=False,
-                output_transform=lambda x: (x["pred"], x["label"])
+                output_transform=from_engine(["pred", "label"]),
             )
         },
         val_handlers=val_handlers
@@ -221,8 +221,8 @@ def create_trainer(args):
     train_handlers = [
         LrScheduleHandler(lr_scheduler=lr_scheduler, print_lr=True),
         ValidationHandler(validator=evaluator, interval=args.val_freq, epoch_level=True),
-        StatsHandler(tag_name="train_loss", output_transform=lambda x: x["loss"]),
-        TensorBoardStatsHandler(log_dir=args.output, tag_name="train_loss", output_transform=lambda x: x["loss"]),
+        StatsHandler(tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
+        TensorBoardStatsHandler(log_dir=args.output, tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
         CheckpointSaver(save_dir=args.output, save_dict={"net": network, "opt": optimizer, "lr": lr_scheduler},
                         save_interval=args.save_interval * 2, save_final=True, final_filename='checkpoint.pt'),
     ]
@@ -241,12 +241,12 @@ def create_trainer(args):
         optimizer=optimizer,
         loss_function=loss_function,
         inferer=SimpleInferer(),
-        post_transform=post_transform,
+        postprocessing=post_transform,
         amp=args.amp,
         key_train_metric={
             "train_dice": MeanDice(
                 include_background=False,
-                output_transform=lambda x: (x["pred"], x["label"])
+                output_transform=from_engine(["pred", "label"]),
             )
         },
         train_handlers=train_handlers,

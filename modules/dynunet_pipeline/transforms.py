@@ -226,7 +226,6 @@ def recovery_prediction(prediction, shape, anisotrophy_flag):
             )
             reshaped[class_][resized >= 0.5] = 1
 
-    reshaped = np.expand_dims(reshaped, 0)
     return reshaped
 
 

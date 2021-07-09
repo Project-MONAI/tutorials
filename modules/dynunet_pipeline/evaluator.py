@@ -148,8 +148,9 @@ class DynUNetEvaluator(SupervisedEvaluator):
                 predictions = _compute_pred()
 
         inputs = inputs.cpu()
-        predictions = torch.stack([self.post_pred(i) for i in decollate_batch(predictions)])
-        targets = torch.stack([self.post_label(i) for i in decollate_batch(targets)])
+
+        predictions = self.post_pred(decollate_batch(predictions)[0])
+        targets = self.post_label(decollate_batch(targets)[0])
 
         resample_flag = batchdata["resample_flag"]
         anisotrophy_flag = batchdata["anisotrophy_flag"]
@@ -158,12 +159,12 @@ class DynUNetEvaluator(SupervisedEvaluator):
         if resample_flag:
             # convert the prediction back to the original (after cropped) shape
             predictions = recovery_prediction(
-                predictions.numpy()[0], [self.n_classes, *crop_shape], anisotrophy_flag
+                predictions.numpy(), [self.n_classes, *crop_shape], anisotrophy_flag
             )
             predictions = torch.tensor(predictions)
 
         # put iteration outputs into engine.state
-        engine.state.output = {Keys.IMAGE: inputs, Keys.LABEL: targets}
+        engine.state.output = {Keys.IMAGE: inputs, Keys.LABEL: targets.unsqueeze(0)}
         engine.state.output[Keys.PRED] = torch.zeros([1, self.n_classes, *original_shape])
         # pad the prediction back to the original shape
         box_start, box_end = batchdata["bbox"][0]

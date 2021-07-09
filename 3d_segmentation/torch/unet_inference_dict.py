@@ -27,7 +27,6 @@ from monai.transforms import (
     Activationsd,
     AsDiscreted,
     Compose,
-    Decollated,
     EnsureChannelFirstd,
     Invertd,
     LoadImaged,
@@ -66,7 +65,6 @@ def main(tempdir):
     dataloader = DataLoader(dataset, batch_size=2, num_workers=4)
     # define post transforms
     post_transforms = Compose([
-        Decollated(),
         ToTensord(keys="pred"), 
         Activationsd(keys="pred", sigmoid=True),
         AsDiscreted(keys="pred", threshold_values=True),
@@ -105,9 +103,11 @@ def main(tempdir):
         for d in dataloader:
             images = d["img"].to(device)
             # define sliding window size and batch size for windows inference
-            d["pred"] = sliding_window_inference(inputs=images, roi_size=(96, 96, 96), sw_batch_size=4, predictor=net)
-            # execute post transforms to invert spatial transforms and save to NIfTI files
-            post_transforms(d)
+            infer_outputs = sliding_window_inference(inputs=images, roi_size=(96, 96, 96), sw_batch_size=4, predictor=net)
+            infer_outputs = decollate_batch(infer_outputs)
+            for (infer_output, infer_output_data) in zip(infer_outputs, decollate_batch(d)):
+                infer_output_data["pred"] = infer_output
+                post_transforms(infer_output_data)
 
 
 if __name__ == "__main__":

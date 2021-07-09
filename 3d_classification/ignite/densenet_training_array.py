@@ -32,7 +32,7 @@ def main():
 
     # IXI dataset as a demo, downloadable from https://brain-development.org/ixi-dataset/
     # the path of ixi IXI-T1 dataset
-    data_path = "/workspace/data/medical/ixi/IXI-T1"
+    data_path = os.sep.join(["", "workspace", "data", "medical", "ixi", "IXI-T1"])
     images = [
         "IXI314-IOP-0889-T1.nii.gz",
         "IXI249-Guys-1072-T1.nii.gz",
@@ -55,7 +55,7 @@ def main():
         "IXI574-IOP-1156-T1.nii.gz",
         "IXI585-Guys-1130-T1.nii.gz",
     ]
-    images = [os.path.join(data_path, f) for f in images]
+    images = [os.sep.join([data_path, f]) for f in images]
 
     # 2 binary labels for gender classification: man and woman
     labels = np.array([0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0], dtype=np.int64)

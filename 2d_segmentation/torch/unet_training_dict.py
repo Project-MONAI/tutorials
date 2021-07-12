@@ -21,7 +21,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 import monai
-from monai.data import create_test_image_2d, list_data_collate
+from monai.data import create_test_image_2d, list_data_collate, decollate_batch
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.transforms import (
@@ -34,6 +34,7 @@ from monai.transforms import (
     RandRotate90d,
     ScaleIntensityd,
     ToTensord,
+    ToTensor,
 )
 from monai.visualize import plot_2d_or_3d_image
 
@@ -97,8 +98,8 @@ def main(tempdir):
     # create a validation data loader
     val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
     val_loader = DataLoader(val_ds, batch_size=1, num_workers=4, collate_fn=list_data_collate)
-    dice_metric = DiceMetric(include_background=True, reduction="mean")
-    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+    dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
+    post_trans = Compose([ToTensor(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = monai.networks.nets.UNet(
@@ -144,8 +145,6 @@ def main(tempdir):
         if (epoch + 1) % val_interval == 0:
             model.eval()
             with torch.no_grad():
-                metric_sum = 0.0
-                metric_count = 0
                 val_images = None
                 val_labels = None
                 val_outputs = None
@@ -154,11 +153,13 @@ def main(tempdir):
                     roi_size = (96, 96)
                     sw_batch_size = 4
                     val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
-                    val_outputs = post_trans(val_outputs)
-                    value, _ = dice_metric(y_pred=val_outputs, y=val_labels)
-                    metric_count += len(value)
-                    metric_sum += value.item() * len(value)
-                metric = metric_sum / metric_count
+                    val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+                    # compute metric for current iteration
+                    dice_metric(y_pred=val_outputs, y=val_labels)
+                # aggregate the final mean dice result
+                metric = dice_metric.aggregate().item()
+                # reset the status for next validation round
+                dice_metric.reset()
                 metric_values.append(metric)
                 if metric > best_metric:
                     best_metric = metric

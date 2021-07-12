@@ -21,7 +21,7 @@ from ignite.metrics import Accuracy
 from torch.utils.data import DataLoader
 
 import monai
-from monai.data import ImageDataset
+from monai.data import ImageDataset, decollate_batch
 from monai.handlers import StatsHandler, TensorBoardStatsHandler, stopping_fn_from_metric
 from monai.transforms import AddChannel, Compose, RandRotate90, Resize, ScaleIntensity, ToTensor
 
@@ -31,28 +31,31 @@ def main():
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
     # IXI dataset as a demo, downloadable from https://brain-development.org/ixi-dataset/
+    # the path of ixi IXI-T1 dataset
+    data_path = os.sep.join(["", "workspace", "data", "medical", "ixi", "IXI-T1"])
     images = [
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI314-IOP-0889-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI249-Guys-1072-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI609-HH-2600-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI173-HH-1590-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI020-Guys-0700-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI342-Guys-0909-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI134-Guys-0780-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI577-HH-2661-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI066-Guys-0731-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI130-HH-1528-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI607-Guys-1097-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI175-HH-1570-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI385-HH-2078-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI344-Guys-0905-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI409-Guys-0960-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI584-Guys-1129-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI253-HH-1694-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI092-HH-1436-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI574-IOP-1156-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI585-Guys-1130-T1.nii.gz"]),
+        "IXI314-IOP-0889-T1.nii.gz",
+        "IXI249-Guys-1072-T1.nii.gz",
+        "IXI609-HH-2600-T1.nii.gz",
+        "IXI173-HH-1590-T1.nii.gz",
+        "IXI020-Guys-0700-T1.nii.gz",
+        "IXI342-Guys-0909-T1.nii.gz",
+        "IXI134-Guys-0780-T1.nii.gz",
+        "IXI577-HH-2661-T1.nii.gz",
+        "IXI066-Guys-0731-T1.nii.gz",
+        "IXI130-HH-1528-T1.nii.gz",
+        "IXI607-Guys-1097-T1.nii.gz",
+        "IXI175-HH-1570-T1.nii.gz",
+        "IXI385-HH-2078-T1.nii.gz",
+        "IXI344-Guys-0905-T1.nii.gz",
+        "IXI409-Guys-0960-T1.nii.gz",
+        "IXI584-Guys-1129-T1.nii.gz",
+        "IXI253-HH-1694-T1.nii.gz",
+        "IXI092-HH-1436-T1.nii.gz",
+        "IXI574-IOP-1156-T1.nii.gz",
+        "IXI585-Guys-1130-T1.nii.gz",
     ]
+    images = [os.sep.join([data_path, f]) for f in images]
 
     # 2 binary labels for gender classification: man and woman
     labels = np.array([0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0], dtype=np.int64)
@@ -87,11 +90,11 @@ def main():
     # StatsHandler prints loss at every iteration and print metrics at every epoch,
     # we don't set metrics for trainer here, so just print loss, user can also customize print functions
     # and can use output_transform to convert engine.state.output if it's not loss value
-    train_stats_handler = StatsHandler(name="trainer")
+    train_stats_handler = StatsHandler(name="trainer", output_transform=lambda x: x)
     train_stats_handler.attach(trainer)
 
     # TensorBoardStatsHandler plots loss at every iteration and plots metrics at every epoch, same as StatsHandler
-    train_tensorboard_stats_handler = TensorBoardStatsHandler()
+    train_tensorboard_stats_handler = TensorBoardStatsHandler(output_transform=lambda x: x)
     train_tensorboard_stats_handler.attach(trainer)
 
     # set parameters for validation

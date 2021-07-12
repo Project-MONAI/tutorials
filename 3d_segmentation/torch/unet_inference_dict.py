@@ -20,7 +20,7 @@ import numpy as np
 import torch
 
 from monai.config import print_config
-from monai.data import Dataset, DataLoader, create_test_image_3d
+from monai.data import Dataset, DataLoader, create_test_image_3d, decollate_batch
 from monai.inferers import sliding_window_inference
 from monai.networks.nets import UNet
 from monai.transforms import (
@@ -65,12 +65,12 @@ def main(tempdir):
     dataloader = DataLoader(dataset, batch_size=2, num_workers=4)
     # define post transforms
     post_transforms = Compose([
+        ToTensord(keys="pred"), 
         Activationsd(keys="pred", sigmoid=True),
         AsDiscreted(keys="pred", threshold_values=True),
         Invertd(
             keys="pred",  # invert the `pred` data field, also support multiple fields
             transform=pre_transforms,
-            loader=dataloader,
             orig_keys="img",  # get the previously applied pre_transforms information on the `img` data field,
                               # then invert `pred` based on this information. we can use same info
                               # for multiple fields, also support different orig_keys for different fields
@@ -103,9 +103,11 @@ def main(tempdir):
         for d in dataloader:
             images = d["img"].to(device)
             # define sliding window size and batch size for windows inference
-            d["pred"] = sliding_window_inference(inputs=images, roi_size=(96, 96, 96), sw_batch_size=4, predictor=net)
-            # execute post transforms to invert spatial transforms and save to NIfTI files
-            post_transforms(d)
+            infer_outputs = sliding_window_inference(inputs=images, roi_size=(96, 96, 96), sw_batch_size=4, predictor=net)
+            infer_outputs = decollate_batch(infer_outputs)
+            for (infer_output, infer_output_data) in zip(infer_outputs, decollate_batch(d)):
+                infer_output_data["pred"] = infer_output
+                post_transforms(infer_output_data)
 
 
 if __name__ == "__main__":

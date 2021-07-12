@@ -27,18 +27,21 @@ def main():
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
     # IXI dataset as a demo, downloadable from https://brain-development.org/ixi-dataset/
+    # the path of ixi IXI-T1 dataset
+    data_path = os.sep.join(["", "workspace", "data", "medical", "ixi", "IXI-T1"])
     images = [
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI607-Guys-1097-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI175-HH-1570-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI385-HH-2078-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI344-Guys-0905-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI409-Guys-0960-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI584-Guys-1129-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI253-HH-1694-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI092-HH-1436-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI574-IOP-1156-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI585-Guys-1130-T1.nii.gz"]),
+        "IXI607-Guys-1097-T1.nii.gz",
+        "IXI175-HH-1570-T1.nii.gz",
+        "IXI385-HH-2078-T1.nii.gz",
+        "IXI344-Guys-0905-T1.nii.gz",
+        "IXI409-Guys-0960-T1.nii.gz",
+        "IXI584-Guys-1129-T1.nii.gz",
+        "IXI253-HH-1694-T1.nii.gz",
+        "IXI092-HH-1436-T1.nii.gz",
+        "IXI574-IOP-1156-T1.nii.gz",
+        "IXI585-Guys-1130-T1.nii.gz",
     ]
+    images = [os.sep.join([data_path, f]) for f in images]
 
     # 2 binary labels for gender classification: man and woman
     labels = np.array([0, 0, 1, 0, 1, 0, 1, 0, 1, 0], dtype=np.int64)

@@ -31,6 +31,7 @@ from monai.handlers import (
     TensorBoardImageHandler,
     TensorBoardStatsHandler,
     ValidationHandler,
+    from_engine,
 )
 from monai.inferers import SimpleInferer, SlidingWindowInferer
 from monai.transforms import (
@@ -111,6 +112,7 @@ def main(tempdir):
 
     val_post_transforms = Compose(
         [
+            ToTensord(keys="pred"),
             Activationsd(keys="pred", sigmoid=True),
             AsDiscreted(keys="pred", threshold_values=True),
             KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
@@ -121,8 +123,8 @@ def main(tempdir):
         TensorBoardStatsHandler(log_dir="./runs/", output_transform=lambda x: None),
         TensorBoardImageHandler(
             log_dir="./runs/",
-            batch_transform=lambda x: (x["image"], x["label"]),
-            output_transform=lambda x: x["pred"],
+            batch_transform=from_engine(["image", "label"]),
+            output_transform=from_engine(["pred"]),
         ),
         CheckpointSaver(save_dir="./runs/", save_dict={"net": net}, save_key_metric=True),
     ]
@@ -132,11 +134,11 @@ def main(tempdir):
         val_data_loader=val_loader,
         network=net,
         inferer=SlidingWindowInferer(roi_size=(96, 96, 96), sw_batch_size=4, overlap=0.5),
-        post_transform=val_post_transforms,
+        postprocessing=val_post_transforms,
         key_val_metric={
-            "val_mean_dice": MeanDice(include_background=True, output_transform=lambda x: (x["pred"], x["label"]))
+            "val_mean_dice": MeanDice(include_background=True, output_transform=from_engine(["pred", "label"]))
         },
-        additional_metrics={"val_acc": Accuracy(output_transform=lambda x: (x["pred"], x["label"]))},
+        additional_metrics={"val_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},
         val_handlers=val_handlers,
         # if no FP16 support in GPU or PyTorch version < 1.6, will not enable AMP evaluation
         amp=True if monai.utils.get_torch_version_tuple() >= (1, 6) else False,
@@ -152,8 +154,8 @@ def main(tempdir):
     train_handlers = [
         LrScheduleHandler(lr_scheduler=lr_scheduler, print_lr=True),
         ValidationHandler(validator=evaluator, interval=2, epoch_level=True),
-        StatsHandler(tag_name="train_loss", output_transform=lambda x: x["loss"]),
-        TensorBoardStatsHandler(log_dir="./runs/", tag_name="train_loss", output_transform=lambda x: x["loss"]),
+        StatsHandler(tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
+        TensorBoardStatsHandler(log_dir="./runs/", tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
         CheckpointSaver(save_dir="./runs/", save_dict={"net": net, "opt": opt}, save_interval=2, epoch_level=True),
     ]
 
@@ -165,8 +167,8 @@ def main(tempdir):
         optimizer=opt,
         loss_function=loss,
         inferer=SimpleInferer(),
-        post_transform=train_post_transforms,
-        key_train_metric={"train_acc": Accuracy(output_transform=lambda x: (x["pred"], x["label"]))},
+        postprocessing=train_post_transforms,
+        key_train_metric={"train_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},
         train_handlers=train_handlers,
         # if no FP16 support in GPU or PyTorch version < 1.6, will not enable AMP training
         amp=True if monai.utils.get_torch_version_tuple() >= (1, 6) else False,

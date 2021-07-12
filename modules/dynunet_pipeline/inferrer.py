@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 from ignite.engine import Engine
 from ignite.metrics import Metric
+from monai.data import decollate_batch
 from monai.data.nifti_writer import write_nifti
 from monai.engines import SupervisedEvaluator
 from monai.engines.utils import IterationEvents, default_prepare_batch
@@ -37,7 +38,7 @@ class DynUNetInferrer(SupervisedEvaluator):
         iteration_update: the callable function for every iteration, expect to accept `engine`
             and `batchdata` as input parameters. if not provided, use `self._iteration()` instead.
         inferer: inference method that execute model forward on input data, like: SlidingWindow, etc.
-        post_transform: execute additional transformation for the model output data.
+        postprocessing: execute additional transformation for the model output data.
             Typically, several Tensor based transforms composed by `Compose`.
         key_val_metric: compute metric when every iteration completed, and save average value to
             engine.state.metrics when epoch completed. key_val_metric is the main metric to compare and save the
@@ -63,7 +64,7 @@ class DynUNetInferrer(SupervisedEvaluator):
         prepare_batch: Callable = default_prepare_batch,
         iteration_update: Optional[Callable] = None,
         inferer: Optional[Inferer] = None,
-        post_transform: Optional[Transform] = None,
+        postprocessing: Optional[Transform] = None,
         key_val_metric: Optional[Dict[str, Metric]] = None,
         additional_metrics: Optional[Dict[str, Metric]] = None,
         val_handlers: Optional[Sequence] = None,
@@ -79,7 +80,7 @@ class DynUNetInferrer(SupervisedEvaluator):
             prepare_batch=prepare_batch,
             iteration_update=iteration_update,
             inferer=inferer,
-            post_transform=post_transform,
+            postprocessing=postprocessing,
             key_val_metric=key_val_metric,
             additional_metrics=additional_metrics,
             val_handlers=val_handlers,
@@ -147,7 +148,7 @@ class DynUNetInferrer(SupervisedEvaluator):
                 predictions = _compute_pred()
 
         inputs = inputs.cpu()
-        predictions = self.post_pred(predictions)
+        predictions = self.post_pred(decollate_batch(predictions)[0])
 
         affine = batchdata["image_meta_dict"]["affine"].numpy()[0]
         resample_flag = batchdata["resample_flag"]
@@ -158,12 +159,11 @@ class DynUNetInferrer(SupervisedEvaluator):
         if resample_flag:
             # convert the prediction back to the original (after cropped) shape
             predictions = recovery_prediction(
-                predictions.numpy()[0], [self.n_classes, *crop_shape], anisotrophy_flag
+                predictions.numpy(), [self.n_classes, *crop_shape], anisotrophy_flag
             )
         else:
             predictions = predictions.numpy()
 
-        predictions = predictions[0]
         predictions = np.argmax(predictions, axis=0)
 
         # pad the prediction back to the original shape

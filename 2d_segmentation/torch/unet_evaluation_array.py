@@ -20,11 +20,11 @@ from PIL import Image
 from torch.utils.data import DataLoader
 
 from monai import config
-from monai.data import ArrayDataset, PNGSaver, create_test_image_2d
+from monai.data import ArrayDataset, create_test_image_2d, decollate_batch
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.networks.nets import UNet
-from monai.transforms import Activations, AddChannel, AsDiscrete, Compose, LoadImage, ScaleIntensity, ToTensor
+from monai.transforms import Activations, AddChannel, AsDiscrete, Compose, LoadImage, SaveImage, ScaleIntensity, ToTensor
 
 
 def main(tempdir):
@@ -46,8 +46,9 @@ def main(tempdir):
     val_ds = ArrayDataset(images, imtrans, segs, segtrans)
     # sliding window inference for one image at every iteration
     val_loader = DataLoader(val_ds, batch_size=1, num_workers=1, pin_memory=torch.cuda.is_available())
-    dice_metric = DiceMetric(include_background=True, reduction="mean")
-    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+    dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
+    post_trans = Compose([ToTensor(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+    saver = SaveImage(output_dir="./output", output_ext=".png", output_postfix="seg")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = UNet(
         dimensions=2,
@@ -61,22 +62,22 @@ def main(tempdir):
     model.load_state_dict(torch.load("best_metric_model_segmentation2d_array.pth"))
     model.eval()
     with torch.no_grad():
-        metric_sum = 0.0
-        metric_count = 0
-        saver = PNGSaver(output_dir="./output")
         for val_data in val_loader:
             val_images, val_labels = val_data[0].to(device), val_data[1].to(device)
             # define sliding window size and batch size for windows inference
             roi_size = (96, 96)
             sw_batch_size = 4
             val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
-            val_outputs = post_trans(val_outputs)
-            value, _ = dice_metric(y_pred=val_outputs, y=val_labels)
-            metric_count += len(value)
-            metric_sum += value.item() * len(value)
-            saver.save_batch(val_outputs.to(dtype=torch.int))
-        metric = metric_sum / metric_count
-        print("evaluation metric:", metric)
+            val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+            val_labels = decollate_batch(val_labels)
+            # compute metric for current iteration
+            dice_metric(y_pred=val_outputs, y=val_labels)
+            for val_output in val_outputs:
+                saver(val_output)
+        # aggregate the final mean dice result
+        print("evaluation metric:", dice_metric.aggregate().item())
+        # reset the status
+        dice_metric.reset()
 
 
 if __name__ == "__main__":

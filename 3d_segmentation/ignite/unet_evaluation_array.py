@@ -22,11 +22,11 @@ from ignite.engine import Engine
 from torch.utils.data import DataLoader
 
 from monai import config
-from monai.data import ImageDataset, create_test_image_3d
-from monai.handlers import CheckpointLoader, MeanDice, SegmentationSaver, StatsHandler
+from monai.data import ImageDataset, create_test_image_3d, decollate_batch
+from monai.handlers import CheckpointLoader, MeanDice, StatsHandler
 from monai.inferers import sliding_window_inference
 from monai.networks.nets import UNet
-from monai.transforms import Activations, AddChannel, AsDiscrete, Compose, ScaleIntensity, ToTensor
+from monai.transforms import Activations, AddChannel, AsDiscrete, Compose, SaveImage, ScaleIntensity, ToTensor
 
 
 def main(tempdir):
@@ -65,14 +65,18 @@ def main(tempdir):
     roi_size = (96, 96, 96)
     sw_batch_size = 4
 
-    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+    post_trans = Compose([ToTensor(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+    save_image = SaveImage(output_dir="tempdir", output_ext=".nii.gz", output_postfix="seg")
 
     def _sliding_window_processor(engine, batch):
         net.eval()
         with torch.no_grad():
             val_images, val_labels = batch[0].to(device), batch[1].to(device)
             seg_probs = sliding_window_inference(val_images, roi_size, sw_batch_size, net)
-            seg_probs = post_trans(seg_probs)
+            seg_probs = [post_trans(i) for i in decollate_batch(seg_probs)]
+            val_data = decollate_batch(batch[2])
+            for seg_prob, data in zip(seg_probs, val_data):
+                save_image(seg_prob, data)
             return seg_probs, val_labels
 
     evaluator = Engine(_sliding_window_processor)
@@ -87,17 +91,6 @@ def main(tempdir):
         output_transform=lambda x: None,  # no need to print loss value, so disable per iteration output
     )
     val_stats_handler.attach(evaluator)
-
-    # for the array data format, assume the 3rd item of batch data is the meta_data
-    file_saver = SegmentationSaver(
-        output_dir="tempdir",
-        output_ext=".nii.gz",
-        output_postfix="seg",
-        name="evaluator",
-        batch_transform=lambda x: x[2],
-        output_transform=lambda output: output[0],
-    )
-    file_saver.attach(evaluator)
 
     # the model was trained by "unet_training_array" example
     ckpt_saver = CheckpointLoader(load_path="./runs_array/net_checkpoint_100.pt", load_dict={"net": net})

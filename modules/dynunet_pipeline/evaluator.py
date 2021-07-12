@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 from ignite.engine import Engine
 from ignite.metrics import Metric
+from monai.data import decollate_batch
 from monai.engines import SupervisedEvaluator
 from monai.engines.utils import CommonKeys as Keys
 from monai.engines.utils import IterationEvents, default_prepare_batch
@@ -34,7 +35,7 @@ class DynUNetEvaluator(SupervisedEvaluator):
         iteration_update: the callable function for every iteration, expect to accept `engine`
             and `batchdata` as input parameters. if not provided, use `self._iteration()` instead.
         inferer: inference method that execute model forward on input data, like: SlidingWindow, etc.
-        post_transform: execute additional transformation for the model output data.
+        postprocessing: execute additional transformation for the model output data.
             Typically, several Tensor based transforms composed by `Compose`.
         key_val_metric: compute metric when every iteration completed, and save average value to
             engine.state.metrics when epoch completed. key_val_metric is the main metric to compare and save the
@@ -59,7 +60,7 @@ class DynUNetEvaluator(SupervisedEvaluator):
         prepare_batch: Callable = default_prepare_batch,
         iteration_update: Optional[Callable] = None,
         inferer: Optional[Inferer] = None,
-        post_transform: Optional[Transform] = None,
+        postprocessing: Optional[Transform] = None,
         key_val_metric: Optional[Dict[str, Metric]] = None,
         additional_metrics: Optional[Dict[str, Metric]] = None,
         val_handlers: Optional[Sequence] = None,
@@ -75,7 +76,7 @@ class DynUNetEvaluator(SupervisedEvaluator):
             prepare_batch=prepare_batch,
             iteration_update=iteration_update,
             inferer=inferer,
-            post_transform=post_transform,
+            postprocessing=postprocessing,
             key_val_metric=key_val_metric,
             additional_metrics=additional_metrics,
             val_handlers=val_handlers,
@@ -147,8 +148,9 @@ class DynUNetEvaluator(SupervisedEvaluator):
                 predictions = _compute_pred()
 
         inputs = inputs.cpu()
-        predictions = self.post_pred(predictions)
-        targets = self.post_label(targets)
+
+        predictions = self.post_pred(decollate_batch(predictions)[0])
+        targets = self.post_label(decollate_batch(targets)[0])
 
         resample_flag = batchdata["resample_flag"]
         anisotrophy_flag = batchdata["anisotrophy_flag"]
@@ -157,21 +159,24 @@ class DynUNetEvaluator(SupervisedEvaluator):
         if resample_flag:
             # convert the prediction back to the original (after cropped) shape
             predictions = recovery_prediction(
-                predictions.numpy()[0], [self.n_classes, *crop_shape], anisotrophy_flag
+                predictions.numpy(), [self.n_classes, *crop_shape], anisotrophy_flag
             )
             predictions = torch.tensor(predictions)
 
         # put iteration outputs into engine.state
-        engine.state.output = output = {Keys.IMAGE: inputs, Keys.LABEL: targets}
-        output[Keys.PRED] = torch.zeros([1, self.n_classes, *original_shape])
+        engine.state.output = {Keys.IMAGE: inputs, Keys.LABEL: targets.unsqueeze(0)}
+        engine.state.output[Keys.PRED] = torch.zeros([1, self.n_classes, *original_shape])
         # pad the prediction back to the original shape
         box_start, box_end = batchdata["bbox"][0]
         h_start, w_start, d_start = box_start
         h_end, w_end, d_end = box_end
-        output[Keys.PRED][
+
+        engine.state.output[Keys.PRED][
             0, :, h_start:h_end, w_start:w_end, d_start:d_end
         ] = predictions
         del predictions
 
         engine.fire_event(IterationEvents.FORWARD_COMPLETED)
-        return output
+        engine.fire_event(IterationEvents.MODEL_COMPLETED)
+
+        return engine.state.output

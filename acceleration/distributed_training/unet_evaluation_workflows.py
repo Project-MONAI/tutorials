@@ -69,7 +69,7 @@ from torch.utils.data.distributed import DistributedSampler
 import monai
 from monai.data import DataLoader, Dataset, create_test_image_3d
 from monai.engines import SupervisedEvaluator
-from monai.handlers import CheckpointLoader, MeanDice, SegmentationSaver, StatsHandler
+from monai.handlers import CheckpointLoader, MeanDice, StatsHandler, from_engine
 from monai.inferers import SlidingWindowInferer
 from monai.transforms import (
     Activationsd,
@@ -80,6 +80,7 @@ from monai.transforms import (
     LoadImaged,
     ScaleIntensityd,
     ToTensord,
+    SaveImaged,
 )
 
 
@@ -142,6 +143,7 @@ def evaluate(args):
             Activationsd(keys="pred", sigmoid=True),
             AsDiscreted(keys="pred", threshold_values=True),
             KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
+            SaveImaged(keys="pred", meta_keys="image_meta_dict", output_dir="./runs/")
         ]
     )
     val_handlers = [
@@ -156,11 +158,6 @@ def evaluate(args):
         val_handlers.extend(
             [
                 StatsHandler(output_transform=lambda x: None),
-                SegmentationSaver(
-                    output_dir="./runs/",
-                    batch_transform=lambda batch: batch["image_meta_dict"],
-                    output_transform=lambda output: output["pred"],
-                ),
             ]
         )
 
@@ -169,15 +166,14 @@ def evaluate(args):
         val_data_loader=val_loader,
         network=net,
         inferer=SlidingWindowInferer(roi_size=(96, 96, 96), sw_batch_size=4, overlap=0.5),
-        post_transform=val_post_transforms,
+        postprocessing=val_post_transforms,
         key_val_metric={
             "val_mean_dice": MeanDice(
                 include_background=True,
-                output_transform=lambda x: (x["pred"], x["label"]),
-                device=device,
+                output_transform=from_engine(["pred", "label"]),
             )
         },
-        additional_metrics={"val_acc": Accuracy(output_transform=lambda x: (x["pred"], x["label"]), device=device)},
+        additional_metrics={"val_acc": Accuracy(output_transform=from_engine(["pred", "label"]), device=device)},
         val_handlers=val_handlers,
         # if no FP16 support in GPU or PyTorch version < 1.6, will not enable AMP evaluation
         amp=True if monai.utils.get_torch_version_tuple() >= (1, 6) else False,

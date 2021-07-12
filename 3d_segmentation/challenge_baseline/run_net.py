@@ -22,7 +22,7 @@ import torch.nn as nn
 from ignite.contrib.handlers import ProgressBar
 
 import monai
-from monai.handlers import CheckpointSaver, MeanDice, StatsHandler, ValidationHandler
+from monai.handlers import CheckpointSaver, MeanDice, StatsHandler, ValidationHandler, from_engine
 from monai.transforms import (
     AddChanneld,
     AsDiscreted,
@@ -172,7 +172,7 @@ def train(data_folder=".", model_folder="runs"):
 
     # create evaluator (to be used to measure model quality during training
     val_post_transform = monai.transforms.Compose(
-        [AsDiscreted(keys=("pred", "label"), argmax=(True, False), to_onehot=True, n_classes=2)]
+        [ToTensord(keys=("pred", "label")), AsDiscreted(keys=("pred", "label"), argmax=(True, False), to_onehot=True, n_classes=2)]
     )
     val_handlers = [
         ProgressBar(),
@@ -183,9 +183,9 @@ def train(data_folder=".", model_folder="runs"):
         val_data_loader=val_loader,
         network=net,
         inferer=get_inferer(),
-        post_transform=val_post_transform,
+        postprocessing=val_post_transform,
         key_val_metric={
-            "val_mean_dice": MeanDice(include_background=False, output_transform=lambda x: (x["pred"], x["label"]))
+            "val_mean_dice": MeanDice(include_background=False, output_transform=from_engine(["pred", "label"]))
         },
         val_handlers=val_handlers,
         amp=amp,
@@ -194,7 +194,7 @@ def train(data_folder=".", model_folder="runs"):
     # evaluator as an event handler of the trainer
     train_handlers = [
         ValidationHandler(validator=evaluator, interval=1, epoch_level=True),
-        StatsHandler(tag_name="train_loss", output_transform=lambda x: x["loss"]),
+        StatsHandler(tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
     ]
     trainer = monai.engines.SupervisedTrainer(
         device=device,

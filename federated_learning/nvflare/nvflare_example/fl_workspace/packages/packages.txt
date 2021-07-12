@@ -1,0 +1,32 @@
+# Output of running: provision -p project.yml -a authz_config.json
+Build docker.sh based on container: nvcr.io/nvidia/clara-train-sdk:v4.0
+You may change the container image by setting FL_DOCKER_IMAGE environment variable
+Using the default audit file.
+Audit file: /home/hroth/Code2/MONAI-hroth/misc/Hello_MONAI/nvflare_monai/lib/python3.8/site-packages/provision/audit.pkl
+
+Authorization configuration file: /home/hroth/Code2/MONAI-hroth/misc/Hello_MONAI/fl_workspace/authz_config.json
+
+Project yaml file: /home/hroth/Code2/MONAI-hroth/misc/Hello_MONAI/fl_workspace/project.yml.
+
+This set of packages is generated for fl project and server's cn is localhost.
+
+Both authz_def.json and /home/hroth/Code2/MONAI-hroth/misc/Hello_MONAI/fl_workspace/authz_config.json are compliant with Authorization Policy
+
+┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Password         ┃ Zip file name        ┃ Email of recipient (if provided) ┃
+┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ O95470DjhMG1XbId │ server.zip           │                                  │
+│ tsOJEeZQdVMYfWv2 │ client1.zip          │                                  │
+│ Xyf3EGpBoR0zjlrI │ client2.zip          │                                  │
+│ 0FEWfTm2vcPzSC4Z │ client3.zip          │                                  │
+│ 6aTx0O8KpLFwqYHz │ client4.zip          │                                  │
+│ utgvxZwS7514AeKz │ client5.zip          │                                  │
+│ h9tSTPrQc7zA0vI3 │ client6.zip          │                                  │
+│ mJLhcsT3Er7XiSMH │ client7.zip          │                                  │
+│ e8RsUpH5AdSZqMjJ │ client8.zip          │                                  │
+│ 7UnwMtQis1OFq5Po │ admin@nvidia.com.zip │ admin@nvidia.com                 │
+└──────────────────┴──────────────────────┴──────────────────────────────────┘
+
+Finished generating packages.
+All generated zip files are inside /home/hroth/Code2/MONAI-hroth/misc/Hello_MONAI/fl_workspace/packages folder.
+

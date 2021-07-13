@@ -22,7 +22,7 @@ from torch.utils.data import DataLoader
 import monai
 from monai.data import decollate_batch
 from monai.handlers import ROCAUC, StatsHandler, TensorBoardStatsHandler, stopping_fn_from_metric
-from monai.transforms import Activations, AddChanneld, AsDiscrete, Compose, LoadImaged, RandRotate90d, Resized, ScaleIntensityd, ToTensord, ToTensor
+from monai.transforms import Activations, AddChanneld, AsDiscrete, Compose, LoadImaged, RandRotate90d, Resized, ScaleIntensityd, EnsureTyped, EnsureType
 
 
 def main():
@@ -69,7 +69,7 @@ def main():
             ScaleIntensityd(keys=["img"]),
             Resized(keys=["img"], spatial_size=(96, 96, 96)),
             RandRotate90d(keys=["img"], prob=0.8, spatial_axes=[0, 2]),
-            ToTensord(keys=["img"]),
+            EnsureTyped(keys=["img"]),
         ]
     )
     val_transforms = Compose(
@@ -78,7 +78,7 @@ def main():
             AddChanneld(keys=["img"]),
             ScaleIntensityd(keys=["img"]),
             Resized(keys=["img"], spatial_size=(96, 96, 96)),
-            ToTensord(keys=["img"]),
+            EnsureTyped(keys=["img"]),
         ]
     )
 
@@ -126,8 +126,8 @@ def main():
     # add evaluation metric to the evaluator engine
     val_metrics = {metric_name: ROCAUC()}
 
-    post_label = Compose([ToTensor(), AsDiscrete(to_onehot=True, n_classes=2)])
-    post_pred = Compose([ToTensor(), Activations(softmax=True)])
+    post_label = Compose([EnsureType(), AsDiscrete(to_onehot=True, n_classes=2)])
+    post_pred = Compose([EnsureType(), Activations(softmax=True)])
     # Ignite evaluator expects batch=(img, label) and returns output=(y_pred, y) at every iteration,
     # user can add output_transform to return other values
     evaluator = create_supervised_evaluator(net, val_metrics, device, True, prepare_batch=prepare_batch, output_transform=lambda x, y, y_pred: ([post_pred(i) for i in decollate_batch(y_pred)], [post_label(i) for i in decollate_batch(y)]))

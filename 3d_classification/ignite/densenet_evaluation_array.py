@@ -22,7 +22,7 @@ from torch.utils.data import DataLoader
 import monai
 from monai.data import ImageDataset
 from monai.handlers import CheckpointLoader, ClassificationSaver, StatsHandler
-from monai.transforms import AddChannel, Compose, Resize, ScaleIntensity, ToTensor
+from monai.transforms import AddChannel, Compose, Resize, ScaleIntensity, EnsureType
 
 
 def main():
@@ -50,7 +50,7 @@ def main():
     labels = np.array([0, 0, 1, 0, 1, 0, 1, 0, 1, 0], dtype=np.int64)
 
     # define transforms for image
-    val_transforms = Compose([ScaleIntensity(), AddChannel(), Resize((96, 96, 96)), ToTensor()])
+    val_transforms = Compose([ScaleIntensity(), AddChannel(), Resize((96, 96, 96)), EnsureType()])
     # define image dataset
     val_ds = ImageDataset(image_files=images, labels=labels, transform=val_transforms, image_only=False)
     # create DenseNet121

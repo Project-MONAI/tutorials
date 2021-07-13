@@ -56,7 +56,7 @@ import monai
 from monai.data import DataLoader, Dataset, create_test_image_3d, decollate_batch
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
-from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadImaged, ScaleIntensityd, ToTensord, ToTensor
+from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadImaged, ScaleIntensityd, EnsureTyped, EnsureType
 
 
 def evaluate(args):
@@ -88,7 +88,7 @@ def evaluate(args):
             LoadImaged(keys=["img", "seg"]),
             AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
             ScaleIntensityd(keys="img"),
-            ToTensord(keys=["img", "seg"]),
+            EnsureTyped(keys=["img", "seg"]),
         ]
     )
 
@@ -112,7 +112,7 @@ def evaluate(args):
         multiprocessing_context=multiprocessing_context,
     )
     dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
-    post_trans = Compose([ToTensor(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+    post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device(f"cuda:{hvd.local_rank()}")
     torch.cuda.set_device(device)

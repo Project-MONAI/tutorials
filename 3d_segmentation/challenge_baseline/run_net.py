@@ -36,7 +36,7 @@ from monai.transforms import (
     ScaleIntensityRanged,
     Spacingd,
     SpatialPadd,
-    ToTensord,
+    EnsureTyped,
 )
 
 
@@ -74,7 +74,7 @@ def get_xforms(mode="train", keys=("image", "label")):
         dtype = (np.float32, np.uint8)
     if mode == "infer":
         dtype = (np.float32,)
-    xforms.extend([CastToTyped(keys, dtype=dtype), ToTensord(keys)])
+    xforms.extend([CastToTyped(keys, dtype=dtype), EnsureTyped(keys)])
     return monai.transforms.Compose(xforms)
 
 
@@ -172,7 +172,7 @@ def train(data_folder=".", model_folder="runs"):
 
     # create evaluator (to be used to measure model quality during training
     val_post_transform = monai.transforms.Compose(
-        [ToTensord(keys=("pred", "label")), AsDiscreted(keys=("pred", "label"), argmax=(True, False), to_onehot=True, n_classes=2)]
+        [EnsureTyped(keys=("pred", "label")), AsDiscreted(keys=("pred", "label"), argmax=(True, False), to_onehot=True, n_classes=2)]
     )
     val_handlers = [
         ProgressBar(),

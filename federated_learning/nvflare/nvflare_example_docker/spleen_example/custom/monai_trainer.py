@@ -113,7 +113,7 @@ class MONAITrainer(Trainer):
                 self.train_engine.terminate()
                 self.eval_engine.terminate()
             except BaseException as e:
-                self.logger.info(f"exception in closing engines {e}")
+                self.logger.info(f"exception in closing fitter {e}")
 
     def train(
         self, shareable: Shareable, fl_ctx: FLContext, abort_signal: Signal

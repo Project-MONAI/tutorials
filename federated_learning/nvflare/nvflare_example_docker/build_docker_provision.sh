@@ -8,7 +8,7 @@ dockerNameExist=$?
 if ((${dockerNameExist}==0)) ;then
   echo --- docker image ${DOCKER_Run_Name} exist
 else
-  echo --- docker image ${DOCKER_Run_Name} doesnot exist, building it
+  echo --- docker image ${DOCKER_Run_Name} does not exist, building it
   docker build -f docker_files/Dockerfile --tag ${DOCKER_IMAGE} .
   echo ----------- docker image ${DOCKER_Run_Name} built
 fi

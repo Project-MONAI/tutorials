@@ -50,6 +50,7 @@ from monai.transforms import (
 from torch.nn.parallel import DistributedDataParallel
 from monai.handlers import from_engine
 
+
 class TrainConfiger:
     """
     This class is used to config the necessary components of train and evaluate engines
@@ -93,7 +94,6 @@ class TrainConfiger:
         self.ckpt_dir = wf_config["ckpt_dir"]
         self.amp = wf_config["amp"]
         self.use_gpu = wf_config["use_gpu"]
-        self.gpu_id = wf_config["gpu_id"]
         self.multi_gpu = wf_config["multi_gpu"]
         self.local_rank = local_rank
 
@@ -104,9 +104,8 @@ class TrainConfiger:
             device = torch.device(f"cuda:{self.local_rank}")
             torch.cuda.set_device(device)
         else:
-            device = torch.device(f"cuda:{self.gpu_id}" if self.use_gpu else "cpu")
+            device = torch.device("cuda" if self.use_gpu else "cpu")
         self.device = device
-        print("Device:", self.device)
 
     def configure(self):
         self.set_device()
@@ -186,9 +185,9 @@ class TrainConfiger:
         )
         train_data_loader = DataLoader(
             train_ds,
-            batch_size=1,
+            batch_size=2,
             shuffle=True,
-            num_workers=2,
+            num_workers=4,
         )
         val_transforms = Compose(
             [
@@ -220,7 +219,7 @@ class TrainConfiger:
             val_ds,
             batch_size=1,
             shuffle=False,
-            num_workers=2,
+            num_workers=4,
         )
         post_transform = Compose(
             [
@@ -233,7 +232,6 @@ class TrainConfiger:
                 ),
             ]
         )
-
         # metric
         key_val_metric = {
             "val_mean_dice": MeanDice(

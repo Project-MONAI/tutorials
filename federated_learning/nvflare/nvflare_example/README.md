@@ -8,6 +8,11 @@ It is based on the [tutorial](../nvflare_example_docker) showing how to run FL w
 python3 -m pip install --user --upgrade pip
 python3 -m pip install --user virtualenv
 ```
+(If needed) make shell scripts executable using
+```
+chmod +x ./*.sh
+chmod +x ./*/*.sh
+```
 set up virtual environment
 ```
 source ./set_env.sh
@@ -19,7 +24,10 @@ pip install -r ${projectpath}/requirements.txt
 ```
 
 ## Download the data
-Download the Spleen segmentation task dataset from http://medicaldecathlon.com and place under `./data/Task09_Spleen` following the prepared folder structure.
+Download the Spleen segmentation task dataset from http://medicaldecathlon.com. 
+```
+./data/download_dataset.sh
+```
 
 ## Start server and clients
 To start the server and clients, run the following script.
@@ -74,6 +82,7 @@ Next, you can start the FL server in the admin terminal and begin training:
 > shutdown client
 admin@nvidia.com
 > shutdown server
+admin@nvidia.com
 ```
 (Optional) clean up previous runs
 ```
@@ -87,6 +96,7 @@ The following commands automate the above described steps. Executing the `run_fl
 export n_clients=2
 ${projectpath}/run_fl.sh ${n_clients}
 ```
+*Note:* This script will automatically shutdown the server and client in case of an error or misconfiguration. You can check if a nvflare process is still running before starting a new experiment via `ps -as | grep nvflare`. It is best to not keep old processes running while trying to start a new experiment.
 
 ## Visualize the training progress
 To visualize the training progress, run tensorboard in the server/client terminal:

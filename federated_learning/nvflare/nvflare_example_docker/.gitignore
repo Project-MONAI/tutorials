@@ -7,11 +7,6 @@ Task09_Spleen
 # virtual environments
 nvflare_monai
 
-# training artifacts
-log.txt
-*.fl
-client_token.txt
-run_*
-*.pt
-events.*
-models
+# demo artifacts
+demo_workspace
+expr_files

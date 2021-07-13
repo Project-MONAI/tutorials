@@ -2,6 +2,12 @@
 
 n_clients=$1
 
+if test -z "$n_clients"
+then
+      echo "Please provide the number of clients, e.g. ./clean_up.sh 2"
+      exit 1
+fi
+
 rm -rf server/run_*
 rm -rf server/transfer/*
 rm server/*.*

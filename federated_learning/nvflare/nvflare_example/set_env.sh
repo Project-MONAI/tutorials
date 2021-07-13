@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export projectpath="."
+export projectpath="./fl_workspace"
 export projectname='nvflare_monai'
 
 python3 -m venv ${projectname}

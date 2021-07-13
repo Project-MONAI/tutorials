@@ -1,3 +1,14 @@
 *.nii
 *.nii.gz
 
+# virtual environments
+nvflare_monai
+
+# training artifacts
+log.txt
+*.fl
+client_token.txt
+run_*
+*.pt
+events.*
+models

@@ -122,7 +122,7 @@ class MONAITrainer(Trainer):
         This function is an extended function from the super class.
         As a supervised learning based trainer, the train function will run
         evaluate and train engines based on model weights from `shareable`.
-        After finishing training, a new `Shareable` object will be submitted
+        After fininshing training, a new `Shareable` object will be submitted
         to server for aggregation.
 
         Args:

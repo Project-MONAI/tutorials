@@ -21,7 +21,7 @@ from torch.utils.data import DataLoader
 
 import monai
 from monai.handlers import CheckpointLoader, ClassificationSaver, StatsHandler
-from monai.transforms import AddChanneld, Compose, LoadImaged, Resized, ScaleIntensityd, ToTensord
+from monai.transforms import AddChanneld, Compose, LoadImaged, Resized, ScaleIntensityd, EnsureTyped
 
 
 def main():
@@ -56,7 +56,7 @@ def main():
             AddChanneld(keys=["img"]),
             ScaleIntensityd(keys=["img"]),
             Resized(keys=["img"], spatial_size=(96, 96, 96)),
-            ToTensord(keys=["img"]),
+            EnsureTyped(keys=["img"]),
         ]
     )
 

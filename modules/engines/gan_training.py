@@ -43,7 +43,7 @@ from monai.transforms import (
     RandRotateD,
     RandZoomD,
     ScaleIntensityD,
-    ToTensorD,
+    EnsureTypeD,
 )
 from monai.utils.misc import set_determinism
 
@@ -72,7 +72,7 @@ def main():
             RandRotateD(keys=["hand"], range_x=np.pi / 12, prob=0.5, keep_size=True),
             RandFlipD(keys=["hand"], spatial_axis=0, prob=0.5),
             RandZoomD(keys=["hand"], min_zoom=0.9, max_zoom=1.1, prob=0.5),
-            ToTensorD(keys=["hand"]),
+            EnsureTypeD(keys=["hand"]),
         ]
     )
 

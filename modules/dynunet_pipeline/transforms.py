@@ -4,7 +4,7 @@ from monai.transforms import (CastToTyped,
                               NormalizeIntensity, RandCropByPosNegLabeld,
                               RandFlipd, RandGaussianNoised,
                               RandGaussianSmoothd, RandScaleIntensityd,
-                              RandZoomd, SpatialCrop, SpatialPadd, ToTensord)
+                              RandZoomd, SpatialCrop, SpatialPadd, EnsureTyped)
 from monai.transforms.compose import MapTransform
 from monai.transforms.utils import generate_spatial_bounding_box
 from skimage.transform import resize
@@ -67,17 +67,17 @@ def get_task_transforms(mode, task_id, pos_sample_num, neg_sample_num, num_sampl
             RandFlipd(["image", "label"], spatial_axis=[1], prob=0.5),
             RandFlipd(["image", "label"], spatial_axis=[2], prob=0.5),
             CastToTyped(keys=["image", "label"], dtype=(np.float32, np.uint8)),
-            ToTensord(keys=["image", "label"]),
+            EnsureTyped(keys=["image", "label"]),
         ]
     elif mode == "validation":
         other_transforms = [
             CastToTyped(keys=["image", "label"], dtype=(np.float32, np.uint8)),
-            ToTensord(keys=["image", "label"]),
+            EnsureTyped(keys=["image", "label"]),
         ]
     else:
         other_transforms = [
             CastToTyped(keys=["image"], dtype=(np.float32)),
-            ToTensord(keys=["image"]),
+            EnsureTyped(keys=["image"]),
         ]
 
     all_transforms = load_transforms + sample_transforms + other_transforms

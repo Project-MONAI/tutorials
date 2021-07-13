@@ -20,7 +20,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 import monai
 from monai.data import ImageDataset
-from monai.transforms import AddChannel, Compose, RandRotate90, Resize, ScaleIntensity, ToTensor
+from monai.transforms import AddChannel, Compose, RandRotate90, Resize, ScaleIntensity, EnsureType
 
 
 def main():
@@ -58,8 +58,8 @@ def main():
     labels = np.array([0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0], dtype=np.int64)
 
     # Define transforms
-    train_transforms = Compose([ScaleIntensity(), AddChannel(), Resize((96, 96, 96)), RandRotate90(), ToTensor()])
-    val_transforms = Compose([ScaleIntensity(), AddChannel(), Resize((96, 96, 96)), ToTensor()])
+    train_transforms = Compose([ScaleIntensity(), AddChannel(), Resize((96, 96, 96)), RandRotate90(), EnsureType()])
+    val_transforms = Compose([ScaleIntensity(), AddChannel(), Resize((96, 96, 96)), EnsureType()])
 
     # Define image dataset, data loader
     check_ds = ImageDataset(image_files=images, labels=labels, transform=train_transforms)

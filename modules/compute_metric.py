@@ -57,7 +57,7 @@ from monai.transforms import (
     KeepLargestConnectedComponentd,
     LoadImaged,
     ScaleIntensityd,
-    ToTensord,
+    EnsureTyped,
 )
 from monai.utils import string_list_all_gather
 
@@ -98,7 +98,7 @@ def compute(args):
             LoadImaged(keys=["pred", "label"]),
             EnsureChannelFirstd(keys=["pred", "label"]),
             ScaleIntensityd(keys="pred"),
-            ToTensord(keys=["pred", "label"]),
+            EnsureTyped(keys=["pred", "label"]),
             AsDiscreted(keys="pred", threshold_values=True),
             KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
         ]

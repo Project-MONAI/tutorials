@@ -84,8 +84,8 @@ from monai.transforms import (
     RandShiftIntensityd,
     RandSpatialCropd,
     Spacingd,
-    ToTensord,
-    ToTensor,
+    EnsureTyped,
+    EnsureType,
 )
 from monai.utils import set_determinism
 
@@ -179,7 +179,7 @@ def main_worker(args):
             RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=0),
             RandScaleIntensityd(keys="image", factors=0.1, prob=0.5),
             RandShiftIntensityd(keys="image", offsets=0.1, prob=0.5),
-            ToTensord(keys=["image", "label"]),
+            EnsureTyped(keys=["image", "label"]),
         ]
     )
 
@@ -206,7 +206,7 @@ def main_worker(args):
             Orientationd(keys=["image", "label"], axcodes="RAS"),
             CenterSpatialCropd(keys=["image", "label"], roi_size=[128, 128, 64]),
             NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True),
-            ToTensord(keys=["image", "label"]),
+            EnsureTyped(keys=["image", "label"]),
         ]
     )
     val_ds = BratsCacheDataset(
@@ -337,7 +337,7 @@ def evaluate(model, data_loader, device):
     with torch.no_grad():
         dice_metric = DiceMetric(include_background=True, reduction="mean")
         dice_metric_batch = DiceMetric(include_background=True, reduction="mean_batch")
-        post_trans = Compose([ToTensor(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+        post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
         for val_data in data_loader:
             val_inputs, val_labels = (
                 val_data["image"].to(device, non_blocking=True),

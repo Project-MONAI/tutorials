@@ -31,6 +31,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" mednist_classifier_
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" TorchIO_MONAI_PyTorch_Lightning.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" image_dataset.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" decollate_batch.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" csv_datasets.ipynb)
 
 
 # output formatting

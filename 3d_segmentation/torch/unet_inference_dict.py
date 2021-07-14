@@ -34,7 +34,7 @@ from monai.transforms import (
     Resized,
     SaveImaged,
     ScaleIntensityd,
-    ToTensord,
+    EnsureTyped,
 )
 
 
@@ -58,14 +58,14 @@ def main(tempdir):
         Orientationd(keys="img", axcodes="RAS"),
         Resized(keys="img", spatial_size=(96, 96, 96), mode="trilinear", align_corners=True),
         ScaleIntensityd(keys="img"),
-        ToTensord(keys="img"),
+        EnsureTyped(keys="img"),
     ])
     # define dataset and dataloader
     dataset = Dataset(data=files, transform=pre_transforms)
     dataloader = DataLoader(dataset, batch_size=2, num_workers=4)
     # define post transforms
     post_transforms = Compose([
-        ToTensord(keys="pred"), 
+        EnsureTyped(keys="pred"), 
         Activationsd(keys="pred", sigmoid=True),
         AsDiscreted(keys="pred", threshold_values=True),
         Invertd(

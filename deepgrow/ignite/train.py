@@ -40,7 +40,7 @@ from monai.transforms import (
     LoadImaged,
     AddChanneld,
     NormalizeIntensityd,
-    ToTensord,
+    EnsureTyped,
     ToNumpyd,
     Activationsd,
     AsDiscreted,
@@ -85,7 +85,7 @@ def get_pre_transforms(roi_size, model_size, dimensions):
     t.extend([
         AddInitialSeedPointd(label='label', guidance='guidance', sids='sids'),
         AddGuidanceSignald(image='image', guidance='guidance'),
-        ToTensord(keys=('image', 'label'))
+        EnsureTyped(keys=('image', 'label'))
     ])
     return Compose(t)
 
@@ -97,13 +97,13 @@ def get_click_transforms():
         FindDiscrepancyRegionsd(label='label', pred='pred', discrepancy='discrepancy'),
         AddRandomGuidanced(guidance='guidance', discrepancy='discrepancy', probability='probability'),
         AddGuidanceSignald(image='image', guidance='guidance'),
-        ToTensord(keys=('image', 'label'))
+        EnsureTyped(keys=('image', 'label'))
     ])
 
 
 def get_post_transforms():
     return Compose([
-        ToTensord(keys='pred'),
+        EnsureTyped(keys='pred'),
         Activationsd(keys='pred', sigmoid=True),
         AsDiscreted(keys='pred', threshold_values=True, logit_thresh=0.5)
     ])

@@ -22,7 +22,7 @@ from monai.inferers import SimpleInferer
 from monai.utils import set_determinism
 from monai.transforms import (
     Compose,
-    ToTensord,
+    EnsureTyped,
     Activationsd,
     AsDiscreted,
     SaveImaged,
@@ -58,7 +58,7 @@ def create_validator(args, click):
     ]
 
     post_transform_list = [
-        ToTensord(keys='pred'),
+        EnsureTyped(keys='pred'),
         Activationsd(keys='pred', sigmoid=True),
         AsDiscreted(keys='pred', threshold_values=True, logit_thresh=0.5)
     ]

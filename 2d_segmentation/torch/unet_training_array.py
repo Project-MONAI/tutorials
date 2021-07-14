@@ -33,7 +33,7 @@ from monai.transforms import (
     RandRotate90,
     RandSpatialCrop,
     ScaleIntensity,
-    ToTensor,
+    EnsureType,
 )
 from monai.visualize import plot_2d_or_3d_image
 
@@ -60,7 +60,7 @@ def main(tempdir):
             AddChannel(),
             RandSpatialCrop((96, 96), random_size=False),
             RandRotate90(prob=0.5, spatial_axes=(0, 1)),
-            ToTensor(),
+            EnsureType(),
         ]
     )
     train_segtrans = Compose(
@@ -69,11 +69,11 @@ def main(tempdir):
             AddChannel(),
             RandSpatialCrop((96, 96), random_size=False),
             RandRotate90(prob=0.5, spatial_axes=(0, 1)),
-            ToTensor(),
+            EnsureType(),
         ]
     )
-    val_imtrans = Compose([LoadImage(image_only=True), ScaleIntensity(), AddChannel(), ToTensor()])
-    val_segtrans = Compose([LoadImage(image_only=True), AddChannel(), ToTensor()])
+    val_imtrans = Compose([LoadImage(image_only=True), ScaleIntensity(), AddChannel(), EnsureType()])
+    val_segtrans = Compose([LoadImage(image_only=True), AddChannel(), EnsureType()])
 
     # define array dataset, data loader
     check_ds = ArrayDataset(images, train_imtrans, segs, train_segtrans)
@@ -88,7 +88,7 @@ def main(tempdir):
     val_ds = ArrayDataset(images[-20:], val_imtrans, segs[-20:], val_segtrans)
     val_loader = DataLoader(val_ds, batch_size=1, num_workers=4, pin_memory=torch.cuda.is_available())
     dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
-    post_trans = Compose([ToTensor(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+    post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = monai.networks.nets.UNet(

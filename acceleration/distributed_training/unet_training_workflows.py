@@ -81,7 +81,7 @@ from monai.transforms import (
     RandCropByPosNegLabeld,
     RandRotate90d,
     ScaleIntensityd,
-    ToTensord,
+    EnsureTyped,
 )
 
 
@@ -118,7 +118,7 @@ def train(args):
                 keys=["image", "label"], label_key="label", spatial_size=[96, 96, 96], pos=1, neg=1, num_samples=4
             ),
             RandRotate90d(keys=["image", "label"], prob=0.5, spatial_axes=[0, 2]),
-            ToTensord(keys=["image", "label"]),
+            EnsureTyped(keys=["image", "label"]),
         ]
     )
 
@@ -155,7 +155,7 @@ def train(args):
 
     train_post_transforms = Compose(
         [
-            ToTensord(keys="pred"),
+            EnsureTyped(keys="pred"),
             Activationsd(keys="pred", sigmoid=True),
             AsDiscreted(keys="pred", threshold_values=True),
             KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),

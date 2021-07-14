@@ -34,8 +34,8 @@ from monai.transforms import (
     RandCropByPosNegLabeld,
     RandRotate90d,
     ScaleIntensityd,
-    ToTensord,
-    ToTensor,
+    EnsureTyped,
+    EnsureType,
 )
 from monai.visualize import plot_2d_or_3d_image
 
@@ -70,7 +70,7 @@ def main(tempdir):
                 keys=["img", "seg"], label_key="seg", spatial_size=[96, 96, 96], pos=1, neg=1, num_samples=4
             ),
             RandRotate90d(keys=["img", "seg"], prob=0.5, spatial_axes=[0, 2]),
-            ToTensord(keys=["img", "seg"]),
+            EnsureTyped(keys=["img", "seg"]),
         ]
     )
     val_transforms = Compose(
@@ -78,7 +78,7 @@ def main(tempdir):
             LoadImaged(keys=["img", "seg"]),
             AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
             ScaleIntensityd(keys="img"),
-            ToTensord(keys=["img", "seg"]),
+            EnsureTyped(keys=["img", "seg"]),
         ]
     )
 
@@ -104,7 +104,7 @@ def main(tempdir):
     val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
     val_loader = DataLoader(val_ds, batch_size=1, num_workers=4, collate_fn=list_data_collate)
     dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
-    post_trans = Compose([ToTensor(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+    post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = monai.networks.nets.UNet(

@@ -39,7 +39,7 @@ from monai.transforms import (
     RandSpatialCrop,
     Resize,
     ScaleIntensity,
-    ToTensor,
+    EnsureType,
 )
 
 
@@ -67,16 +67,16 @@ def main(tempdir):
             ScaleIntensity(),
             AddChannel(),
             RandSpatialCrop((96, 96, 96), random_size=False),
-            ToTensor(),
+            EnsureType(),
         ]
     )
     train_segtrans = Compose(
-        [AddChannel(), RandSpatialCrop((96, 96, 96), random_size=False), ToTensor()]
+        [AddChannel(), RandSpatialCrop((96, 96, 96), random_size=False), EnsureType()]
     )
     val_imtrans = Compose(
-        [ScaleIntensity(), AddChannel(), Resize((96, 96, 96)), ToTensor()]
+        [ScaleIntensity(), AddChannel(), Resize((96, 96, 96)), EnsureType()]
     )
-    val_segtrans = Compose([AddChannel(), Resize((96, 96, 96)), ToTensor()])
+    val_segtrans = Compose([AddChannel(), Resize((96, 96, 96)), EnsureType()])
 
     # define image dataset, data loader
     check_ds = ImageDataset(
@@ -151,8 +151,8 @@ def main(tempdir):
     # add evaluation metric to the evaluator engine
     val_metrics = {metric_name: MeanDice()}
 
-    post_pred = Compose([ToTensor(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
-    post_label = Compose([ToTensor(), AsDiscrete(threshold_values=True)])
+    post_pred = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+    post_label = Compose([EnsureType(), AsDiscrete(threshold_values=True)])
 
     # Ignite evaluator expects batch=(img, seg) and returns output=(y_pred, y) at every iteration,
     # user can add output_transform to return other values

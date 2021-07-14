@@ -34,7 +34,7 @@ from monai.transforms import (
     LoadImaged,
     SaveImaged,
     ScaleIntensityd,
-    ToTensord,
+    EnsureTyped,
 )
 
 
@@ -64,7 +64,7 @@ def main(tempdir):
             LoadImaged(keys=["image", "label"]),
             AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
             ScaleIntensityd(keys="image"),
-            ToTensord(keys=["image", "label"]),
+            EnsureTyped(keys=["image", "label"]),
         ]
     )
 
@@ -85,7 +85,7 @@ def main(tempdir):
 
     val_post_transforms = Compose(
         [
-            ToTensord(keys="pred"),
+            EnsureTyped(keys="pred"),
             Activationsd(keys="pred", sigmoid=True),
             AsDiscreted(keys="pred", threshold_values=True),
             KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),

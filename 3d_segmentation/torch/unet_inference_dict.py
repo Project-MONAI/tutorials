@@ -67,7 +67,6 @@ def main(tempdir):
     post_transforms = Compose([
         EnsureTyped(keys="pred"), 
         Activationsd(keys="pred", sigmoid=True),
-        AsDiscreted(keys="pred", threshold_values=True),
         Invertd(
             keys="pred",  # invert the `pred` data field, also support multiple fields
             transform=pre_transforms,
@@ -81,9 +80,11 @@ def main(tempdir):
             meta_key_postfix="meta_dict",  # if `meta_keys=None`, use "{keys}_{meta_key_postfix}" as the meta key,
                                            # if `orig_meta_keys=None`, use "{orig_keys}_{meta_key_postfix}",
                                            # otherwise, no need this arg during inverting
-            nearest_interp=True,  # change to use "nearest" mode in interpolation when inverting
+            nearest_interp=False,  # don't change the interpolation mode to "nearest" when inverting transforms
+                                   # to ensure a smooth output, then execute `AsDiscreted` transform
             to_tensor=True,  # convert to PyTorch Tensor after inverting
         ),
+        AsDiscreted(keys="pred", threshold_values=True),
         SaveImaged(keys="pred", meta_keys="pred_meta_dict", output_dir="./out", output_postfix="seg", resample=False),
     ])
 

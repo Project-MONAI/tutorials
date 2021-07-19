@@ -2,50 +2,68 @@
 The purpose of this tutorial is to show how to run [NVFlare](https://pypi.org/project/nvflare) with MONAI on a local machine to simulate a FL setting (server and client communicate over localhost).
 It is based on the [tutorial](../nvflare_example_docker) showing how to run FL with MONAI and NVFlare which using a docker container for the server and each client.
 
-## Installation
+## Environment setup
 (If needed) install pip and virtualenv (on macOS and Linux):
 ```
 python3 -m pip install --user --upgrade pip
 python3 -m pip install --user virtualenv
 ```
-(If needed) make shell scripts executable using
+(If needed) make all shell scripts executable using
 ```
-chmod +x ./*.sh
-chmod +x ./*/*.sh
+find . -name ".sh" -exec chmod +x {} \;
 ```
-set up virtual environment
+initialize virtual environment and set the current folder as projectpath
 ```
-source ./set_env.sh
+source ./virtualenv/set_env.sh
+export projectpath="."
 ```
 install required packages
 ```
 pip install --upgrade pip
-pip install -r ${projectpath}/requirements.txt
+pip install -r ${projectpath}/virtualenv/requirements.txt
 ```
 
-## Download the data
+## FL workspace prepareation for NVFlare
+NVFlare has a "provision" mechanisum to automatically generate the fl workspace, see [here](https://docs.nvidia.com/clara/clara-train-sdk/federated-learning/fl_provisioning_tool.html) for details.
+
+In this example for convenience, we included a pregenerated workspace supporting up to 8 clients. 
+```
+unzip ${projectpath}/fl_workspace_pregenerated.zip
+```
+If needed (changing the number of max clients, client names, etc.), please follow the instructions from above link. We included the sample project.yml and authz_config.json files used for generating the 8-client workspace under `${projectpath}/fl_utils/workspace_gen`. After modification, the provisioning tool can be run as: `provision -p project.yml -a authz_config.json` 
+
+## Example task - spleen segmentation with MONAI
+In this example, we used spleen segmentation task with a MONAI-based client trainer under `${projectpath}/spleen_example`
+### Download the data
 Download the Spleen segmentation task dataset from http://medicaldecathlon.com. 
 ```
-./data/download_dataset.sh
+${projectpath}/spleen_example/data/download_dataset.sh
 ```
-
-## Start server and clients
-To start the server and clients, run the following script.
+This will creat a `${projectpath}/data` folder containing the dataset and pre-assigned 8-client datalists.
+### Copy the MONAI-based trainer files to workspace.
+```
+cp -r ${projectpath}/spleen_example/ ${projectpath}/fl_workspace/admin/transfer/
+```
+## Running the federated learning
+Two steps for running the federated learning using NVFlare+MONAI: 
+1. start the server, clients, and admin under NVFlare workspace
+2. start the actual training process with MONAI implementation
+### Start server and clients
+To start the server and clients, run the following script (example with 2 clients).
 ```
 export n_clients=2
-${projectpath}/start_fl.sh ${n_clients}
+${projectpath}/fl_utils/fl_run/start_fl.sh ${n_clients}
 ```
-*Note:* We have prepared startup kits for up to 8 clients. If you need to modify the number of clients, please follow instructions here and modify the provided project.yml file. Then re-run the provisioning tool: `provision -p project.yml -a authz_config.json` (see [here](https://docs.nvidia.com/clara/clara-train-sdk/federated-learning/fl_provisioning_tool.html) for details).
-Optionally, modify the `export CUDA_VISIBLE_DEVICES` command in `start_fl.sh` to set which GPU a client should run on.
+For more clients/GPUs, modify the `n_clients` and `export CUDA_VISIBLE_DEVICES` command in `start_fl.sh` to set which GPU a client should run on. Note that multiple clients can run on a single GPU as long as the memory is sufficient.
 
-## Start admin client
+### Start admin client
 In new terminal, start environment again
 ```
-source ./set_env.sh
+source ./virtualenv/set_env.sh
 ```
 Then, start admin client
 ```
-${projectpath}/admin/startup/fl_admin.sh
+${projectpath}/fl_workspace/admin/startup/fl_admin.sh
 ```
 *Note:* user name: admin@nvidia.com
 
@@ -57,7 +75,9 @@ Use the admin client to control the FL process:
 ```
 *Note:* For more details about the admin client and its commands, see [here](https://docs.nvidia.com/clara/clara-train-sdk/federated-learning/fl_admin_commands.html).
 
-Next, upload and deploy the training configurations. The files implementing the configuration parser and MONAI-based trainer are under `fl_workspace/admin/transfer`.
+### Start actual fl with spleen_example
+Upload and deploy the training configurations. 
+Then in admin, 
 ```
 > upload_folder spleen_example
 > deploy spleen_example server
@@ -65,7 +85,7 @@ Next, upload and deploy the training configurations. The files implementing the 
 ```
 Inside the server/client terminal, deploy the training configurations that specify the data json for each client
 ```
-${projectpath}/deploy_train_configs.sh ${n_clients}
+${projectpath}/fl_utils/fl_run/deploy_train_configs.sh ${n_clients}
 ```
 Next, you can start the FL server in the admin terminal and begin training:
 ```
@@ -86,15 +106,14 @@ admin@nvidia.com
 ```
 (Optional) clean up previous runs
 ```
-cd fl_workspace
-./clean_up.sh ${n_clients}
+${projectpath}/fl_utils/fl_run/clean_up.sh ${n_clients}
 ```
 
 ## Automate running FL
-The following commands automate the above described steps. Executing the `run_fl.sh` script will automatically start the server and clients, upload the configuration folders and deploy them with the client-specific data list. It will also set the minimum number of clients needed for each global model update depending on the given argument.
+Alternatively, the following commands automate the above described steps. It makes use of NVFlare's AdminAPI. The script will automatically start the server and clients, upload the configuration folders and deploy them with the client-specific data list. It will also set the minimum number of clients needed for each global model update depending on the given argument.
 ```
 export n_clients=2
-${projectpath}/run_fl.sh ${n_clients}
+${projectpath}/fl_utils/fl_run_auto/run_fl.sh ${n_clients}
 ```
 *Note:* This script will automatically shutdown the server and client in case of an error or misconfiguration. You can check if a nvflare process is still running before starting a new experiment via `ps -as | grep nvflare`. It is best to not keep old processes running while trying to start a new experiment.
 

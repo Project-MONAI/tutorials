@@ -1,1 +1,0 @@
-{"format_version": 1, "servers": [{"name": "fl", "service": {"target": "localhost:8002", "options": [["grpc.max_send_message_length", 2147483647], ["grpc.max_receive_message_length", 2147483647]]}}], "client": {"retry_timeout": 30, "ssl_private_key": "client.key", "ssl_cert": "client.crt", "ssl_root_cert": "rootCA.pem", "compression": "Gzip"}}

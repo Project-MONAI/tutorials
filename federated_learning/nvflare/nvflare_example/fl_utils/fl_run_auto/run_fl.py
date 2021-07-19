@@ -15,7 +15,18 @@ import uuid
 #[sys.path.insert(0, item) for item in python_paths]
 
 from dlmed.hci.client.api import AdminAPI
-from api_utils import api_command_wrapper, wait_to_complete
+from api_utils import api_command_wrapper, wait_to_complete, fl_shutdown
+
+
+def create_tmp_config_dir(upload_dir, config):
+    tmp_config = str(uuid.uuid4())
+    print(f"Creating temporary config from {config} -> {tmp_config}")
+    tmp_config_dir = os.path.join(upload_dir, tmp_config)  # creat a temp config for this run
+    if os.path.isdir(tmp_config_dir):
+        shutil.rmtree(tmp_config_dir)
+    shutil.copytree(os.path.join(upload_dir, config), tmp_config_dir)
+
+    return tmp_config, tmp_config_dir
 
 
 def main():
@@ -36,6 +47,8 @@ def main():
     client_key = os.path.join(args.admin_dir, 'startup', 'client.key')
     upload_dir = os.path.join(args.admin_dir, 'transfer')
     download_dir = os.path.join(args.admin_dir, 'download')
+    if not os.path.isdir(download_dir):
+        os.makedirs(download_dir)
 
     assert os.path.isdir(args.admin_dir), f"admin directory does not exist at {args.admin_dir}"
     assert os.path.isfile(ca_cert), f"rootCA.pem does not exist at {ca_cert}"
@@ -61,12 +74,12 @@ def main():
     api_command_wrapper(api, "set_timeout 30")
 
     # create a temporary config for editing
-    tmp_config = str(uuid.uuid4())
-    print(f"Creating temporary config from {args.config} -> {tmp_config}")
-    tmp_config_dir = os.path.join(upload_dir, tmp_config)  # creat a temp config for this run
-    if os.path.isdir(tmp_config_dir):
-        shutil.rmtree(tmp_config_dir)
-    shutil.copytree(os.path.join(upload_dir, args.config), tmp_config_dir)
+    try:
+        tmp_config, tmp_config_dir = create_tmp_config_dir(upload_dir, args.config)
+    except BaseException as e:
+        print(f"There was an exception {e}. Shutting down clients and server.")
+        fl_shutdown(api)
+        sys.exit(1)
 
     # update server config to set min_num_clients:
     server_config_file = os.path.join(tmp_config_dir, 'config', 'config_fed_server.json')
@@ -110,10 +123,7 @@ def main():
     wait_to_complete(api, interval=30)
 
     # shutdown
-    print('Shutting down FL system...')
-    api_command_wrapper(api, "shutdown client")
-    time.sleep(10)
-    api_command_wrapper(api, "shutdown server")
+    fl_shutdown(api)
 
     # log out
     print('Admin logging out.')

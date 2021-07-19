@@ -46,3 +46,10 @@ def wait_to_complete(api, interval=60):
             print('FL training & cross-site validation stopped/completed.')
 
     return True
+
+
+def fl_shutdown(api):
+    print('Shutting down FL system...')
+    api_command_wrapper(api, "shutdown client")
+    time.sleep(10)
+    api_command_wrapper(api, "shutdown server")

@@ -16,5 +16,5 @@ sleep 30s
 ## Run FL training ##
 echo "Run FL training"
 python3 ${projectpath}/fl_utils/fl_run_auto/run_fl.py --nr_clients ${n_clients} --run_number 1 \
-  --config "spleen_example" \
+  --config "../../../spleen_example" \
   --admin_dir "${projectpath}/fl_workspace/admin" &

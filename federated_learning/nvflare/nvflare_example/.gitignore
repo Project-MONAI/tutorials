@@ -3,6 +3,6 @@ nvflare_monai
 # workspace
 fl_workspace
 # data
-data
+*.nii.gz
 # pycharm
 .idea

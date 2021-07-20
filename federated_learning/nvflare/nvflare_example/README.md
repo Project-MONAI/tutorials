@@ -22,26 +22,26 @@ pip install --upgrade pip
 pip install -r ${projectpath}/virtualenv/requirements.txt
 ```
 
-## FL workspace prepareation for NVFlare
+## FL workspace preparation for NVFlare
 NVFlare has a "provision" mechanism to automatically generate the fl workspace, see [here](https://docs.nvidia.com/clara/clara-train-sdk/federated-learning/fl_provisioning_tool.html) for details.
 
-In this example, for convenience, we included a pregenerated workspace supporting up to 8 clients which which needs to be extracted.
+In this example, for convenience, we included a pregenerated workspace supporting up to 8 clients which needs to be extracted.
 ```
 unzip ${projectpath}/fl_workspace_pregenerated.zip
 ```
-*Note: (Optional)* If you need to modify the fl workspace (changing the number of max clients, client names, etc.), please follow the instructions [here](https://docs.nvidia.com/clara/clara-train-sdk/federated-learning/fl_provisioning_tool.html). We included the sample project.yml and authz_config.json files used for generating the 8-client workspace under `${projectpath}/fl_utils/workspace_gen`. After modification, the provisioning tool can be run as: `provision -p project.yml -a authz_config.json` 
+*Note: (Optional)* If you need to modify the fl workspace (changing the number of max clients, client names, etc.), please follow the instructions [here](https://docs.nvidia.com/clara/clara-train-sdk/federated-learning/fl_provisioning_tool.html). We included the sample project.yml and authz_config.json files used for generating the 8-client workspace under `${projectpath}/fl_utils/workspace_gen`. After modification, the provisioning tool can be run as: `provision -p project.yml -a authz_config.json`
 
 ## Example task - spleen segmentation with MONAI
 In this example, we used spleen segmentation task with a MONAI-based client trainer under `${projectpath}/spleen_example`
 ### Download the data
-Download the Spleen segmentation task dataset from http://medicaldecathlon.com. 
+Download the Spleen segmentation task dataset from http://medicaldecathlon.com.
 ```
 ${projectpath}/spleen_example/data/download_dataset.sh
 ```
 This will create a `${projectpath}/data` folder containing the dataset and pre-assigned 8-client datalists.
 
 ## Run federated learning
-Two steps for running the federated learning using NVFlare+MONAI: 
+Two steps for running the federated learning using NVFlare+MONAI:
 1. start the server, clients, and admin under NVFlare workspace
 2. start the actual training process with MONAI implementation
 ### Start server and clients
@@ -73,7 +73,7 @@ Expected output
 ```
 FL run number has not been set.
 FL server status: training not started
-Registered clients: 2 
+Registered clients: 2
 -------------------------------------------------------------------------------------------------
 | CLIENT NAME | TOKEN                                | LAST ACCEPTED ROUND | CONTRIBUTION COUNT |
 -------------------------------------------------------------------------------------------------
@@ -94,7 +94,7 @@ instance:client1 : client name: client1	token: fd9a8872-2dba-4e25-829e-db0a524a6
 *Note:* For more details about the admin client and its commands, see [here](https://docs.nvidia.com/clara/clara-train-sdk/federated-learning/fl_admin_commands.html).
 
 ### Start FL training with spleen_example
-Upload and deploy the training configurations. 
+Upload and deploy the training configurations.
 Then in admin,
 ```
 > set_run_number 1
@@ -122,7 +122,7 @@ FL run number:1
 FL server status: training started
 run number:1	start round:0	max round:200	current round:1
 min_num_clients:2	max_num_clients:100
-Registered clients: 2 
+Registered clients: 2
 Total number of clients submitted models for current round: 0
 -------------------------------------------------------------------------------------------------
 | CLIENT NAME | TOKEN                                | LAST ACCEPTED ROUND | CONTRIBUTION COUNT |

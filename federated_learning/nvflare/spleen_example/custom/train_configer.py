@@ -48,6 +48,7 @@ from monai.transforms import (
     ToTensord,
 )
 from torch.nn.parallel import DistributedDataParallel
+from monai.handlers import from_engine
 
 
 class TrainConfiger:
@@ -56,7 +57,6 @@ class TrainConfiger:
     for MONAI trainer.
     Please check the implementation of `SupervisedEvaluator` and `SupervisedTrainer`
     from `monai.engines` and determine which components can be used.
-
     Args:
         config_root: root folder path of config files.
         wf_config_file_name: json file name of the workflow config file.
@@ -83,7 +83,6 @@ class TrainConfiger:
             amp: whether to enable auto-mixed-precision training.
             use_gpu: whether to use GPU in training.
             multi_gpu: whether to use multiple GPUs for distributed training.
-
         """
         self.max_epochs = wf_config["max_epochs"]
         self.learning_rate = wf_config["learning_rate"]
@@ -235,8 +234,8 @@ class TrainConfiger:
         key_val_metric = {
             "val_mean_dice": MeanDice(
                 include_background=False,
-                output_transform=lambda x: (x["pred"], x["label"]),
-                device=self.device,
+                output_transform=from_engine(["pred", "label"]),
+                #device=self.device,
             )
         }
         val_handlers = [
@@ -259,7 +258,7 @@ class TrainConfiger:
                 sw_batch_size=4,
                 overlap=0.5,
             ),
-            post_transform=post_transform,
+            postprocessing=post_transform,
             key_val_metric=key_val_metric,
             val_handlers=val_handlers,
             amp=self.amp,
@@ -275,11 +274,11 @@ class TrainConfiger:
             ValidationHandler(
                 validator=self.eval_engine, interval=self.val_interval, epoch_level=True
             ),
-            StatsHandler(tag_name="train_loss", output_transform=lambda x: x["loss"]),
+            StatsHandler(tag_name="train_loss", output_transform=from_engine("loss", first=True)),
             TensorBoardStatsHandler(
                 log_dir=self.ckpt_dir,
                 tag_name="train_loss",
-                output_transform=lambda x: x["loss"],
+                output_transform=from_engine("loss", first=True),
             ),
         ]
 
@@ -291,7 +290,7 @@ class TrainConfiger:
             optimizer=optimizer,
             loss_function=loss_function,
             inferer=SimpleInferer(),
-            post_transform=post_transform,
+            postprocessing=post_transform,
             key_train_metric=None,
             train_handlers=train_handlers,
             amp=self.amp,

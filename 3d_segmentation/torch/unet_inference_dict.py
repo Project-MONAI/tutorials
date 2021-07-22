@@ -104,11 +104,9 @@ def main(tempdir):
         for d in dataloader:
             images = d["img"].to(device)
             # define sliding window size and batch size for windows inference
-            infer_outputs = sliding_window_inference(inputs=images, roi_size=(96, 96, 96), sw_batch_size=4, predictor=net)
-            infer_outputs = decollate_batch(infer_outputs)
-            for (infer_output, infer_output_data) in zip(infer_outputs, decollate_batch(d)):
-                infer_output_data["pred"] = infer_output
-                post_transforms(infer_output_data)
+            d["pred"] = sliding_window_inference(inputs=images, roi_size=(96, 96, 96), sw_batch_size=4, predictor=net)
+            # decollate the batch data into a list of dictionaries, then execute postprocessing transforms
+            d = [post_transforms(i) for i in decollate_batch(d)]
 
 
 if __name__ == "__main__":

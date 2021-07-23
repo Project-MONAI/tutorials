@@ -57,7 +57,6 @@ class TrainConfiger:
     for MONAI trainer.
     Please check the implementation of `SupervisedEvaluator` and `SupervisedTrainer`
     from `monai.engines` and determine which components can be used.
-
     Args:
         config_root: root folder path of config files.
         wf_config_file_name: json file name of the workflow config file.
@@ -84,7 +83,6 @@ class TrainConfiger:
             amp: whether to enable auto-mixed-precision training.
             use_gpu: whether to use GPU in training.
             multi_gpu: whether to use multiple GPUs for distributed training.
-
         """
         self.max_epochs = wf_config["max_epochs"]
         self.learning_rate = wf_config["learning_rate"]

@@ -163,16 +163,13 @@ class MONAITrainer(Trainer):
         self.train_ctx.fl_init_validation_metric = self.eval_engine.state.metrics.get(
             self.eval_engine.state.key_metric_name, -1
         )
-        # record iteration and epoch data before training
-        starting_iters = self.train_engine.state.iteration
-        starting_epochs = self.train_engine.state.epoch
         self.train_engine.run()
         # calculate current iteration and epoch data after training
         self.train_ctx.current_iters = (
-            self.train_engine.state.iteration - starting_iters
+            self.train_engine.state.iteration - self.train_ctx.iter_of_start_time
         )
         self.train_ctx.current_executed_epochs = (
-            self.train_engine.state.epoch - starting_epochs
+            self.train_engine.state.epoch - self.train_ctx.epoch_of_start_time
         )
         # create a new `Shareable` object
         if self.train_engine.state.rank == 0:

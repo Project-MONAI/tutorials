@@ -110,10 +110,11 @@ class MONAIModelManager:
         should be added into ShareableKey.META.
         """
 
-        # input the initlal metric into meta data. You can also add other parameters.
+        # input the initial metric into meta data. You can also add other parameters.
         meta_data = {}
         meta_data[FLConstants.INITIAL_METRICS] = train_ctx.fl_init_validation_metric
         meta_data[FLConstants.CURRENT_LEARNING_RATE] = train_ctx.current_learning_rate
+        meta_data[FLConstants.NUM_STEPS_CURRENT_ROUND] = train_ctx.current_iters
 
         shareable = Shareable()
         shareable[ShareableKey.TYPE] = ShareableValue.TYPE_WEIGHT_DIFF

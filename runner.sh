@@ -33,6 +33,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" image_dataset.ipynb
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" decollate_batch.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" csv_datasets.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" unetr_btcv_segmentation_3d.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" UNet_input_size_constrains.ipynb)
 
 # output formatting
 separator=""

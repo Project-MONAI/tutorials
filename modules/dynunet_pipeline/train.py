@@ -42,10 +42,15 @@ def validation(args):
 
     if multi_gpu_flag:
         dist.init_process_group(backend="nccl", init_method="env://")
-        device = torch.device(f"cuda:{local_rank}")
+        device = torch.device("cuda:", local_rank)
         torch.cuda.set_device(device)
     else:
-        device = torch.device("cuda")
+        if torch.cuda.is_available():
+            print("Using cuda device {}".format(torch.cuda.current_device()))
+            device = torch.device("cuda")
+        else:
+            print('Cuda not available. Using CPU.')
+            device = torch.device("cpu")
 
     properties, val_loader = get_data(args, mode="validation")
     net = get_network(properties, task_id, val_output_dir, checkpoint)
@@ -125,10 +130,15 @@ def train(args):
     if multi_gpu_flag:
         dist.init_process_group(backend="nccl", init_method="env://")
 
-        device = torch.device(f"cuda:{local_rank}")
+        device = torch.device("cuda", local_rank)
         torch.cuda.set_device(device)
     else:
-        device = torch.device("cuda")
+        if torch.cuda.is_available():
+            print("Using cuda device {}".format(torch.cuda.current_device()))
+            device = torch.device("cuda")
+        else:
+            print('Cuda not available. Using CPU.')
+            device = torch.device("cpu")
 
     properties, val_loader = get_data(args, mode="validation")
     _, train_loader = get_data(args, batch_size=train_batch_size, mode="train")

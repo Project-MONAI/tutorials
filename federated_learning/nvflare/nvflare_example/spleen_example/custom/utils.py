@@ -57,8 +57,7 @@ class MONAIModelManager:
         """
         This function is used to load provided weights for the network saved
         in FL context.
-        Before loading weights, shapes for each layer will be checked first. This
-        step is only needed to support HE for secure aggregation.
+        Before loading weights, tensors might need to be reshaped to support HE for secure aggregation.
         More info of HE:
         https://github.com/NVIDIA/clara-train-examples/blob/master/PyTorch/NoteBooks/FL/Homomorphic_Encryption.ipynb
 

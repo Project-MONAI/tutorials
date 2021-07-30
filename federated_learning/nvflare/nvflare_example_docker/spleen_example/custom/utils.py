@@ -68,7 +68,7 @@ class MONAIModelManager:
             if var_name in model_keys:
                 weights = model_weights[var_name]
                 try:
-                    local_var_dict[var_name] = torch.as_tensor(weights)
+                    local_var_dict[var_name] = torch.as_tensor(np.reshape(weights, local_var_dict[var_name].shape))
                 except Exception as e:
                     raise ValueError(
                         "Convert weight from {} failed with error: {}".format(

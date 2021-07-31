@@ -56,7 +56,7 @@ doChecks=true
 doRun=true
 autofix=false
 failfast=false
-pattern="-and -name '*' -and ! -wholename '*federated_learning*'"
+pattern="-and -name '*' -and ! -wholename '*federated_learning*' -and ! -wholename '*unetr_btcv*'"
 kernelspec="python3"
 
 function print_usage {

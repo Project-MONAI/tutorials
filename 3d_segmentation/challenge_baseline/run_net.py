@@ -22,12 +22,12 @@ import torch.nn as nn
 from ignite.contrib.handlers import ProgressBar
 
 import monai
-from monai.handlers import CheckpointSaver, MeanDice, StatsHandler, ValidationHandler
+from monai.handlers import CheckpointSaver, MeanDice, StatsHandler, ValidationHandler, from_engine
 from monai.transforms import (
     AddChanneld,
     AsDiscreted,
     CastToTyped,
-    LoadNiftid,
+    LoadImaged,
     Orientationd,
     RandAffined,
     RandCropByPosNegLabeld,
@@ -36,7 +36,7 @@ from monai.transforms import (
     ScaleIntensityRanged,
     Spacingd,
     SpatialPadd,
-    ToTensord,
+    EnsureTyped,
 )
 
 
@@ -44,7 +44,7 @@ def get_xforms(mode="train", keys=("image", "label")):
     """returns a composed transform for train/val/infer."""
 
     xforms = [
-        LoadNiftid(keys),
+        LoadImaged(keys),
         AddChanneld(keys),
         Orientationd(keys, axcodes="LPS"),
         Spacingd(keys, pixdim=(1.25, 1.25, 5.0), mode=("bilinear", "nearest")[: len(keys)]),
@@ -57,8 +57,8 @@ def get_xforms(mode="train", keys=("image", "label")):
                 RandAffined(
                     keys,
                     prob=0.15,
-                    rotate_range=(-0.05, 0.05),
-                    scale_range=(-0.1, 0.1),
+                    rotate_range=(0.05, 0.05, None),  # 3 parameters control the transform on 3 dimensions
+                    scale_range=(0.1, 0.1, None), 
                     mode=("bilinear", "nearest"),
                     as_tensor_output=False,
                 ),
@@ -74,7 +74,7 @@ def get_xforms(mode="train", keys=("image", "label")):
         dtype = (np.float32, np.uint8)
     if mode == "infer":
         dtype = (np.float32,)
-    xforms.extend([CastToTyped(keys, dtype=dtype), ToTensord(keys)])
+    xforms.extend([CastToTyped(keys, dtype=dtype), EnsureTyped(keys)])
     return monai.transforms.Compose(xforms)
 
 
@@ -172,7 +172,7 @@ def train(data_folder=".", model_folder="runs"):
 
     # create evaluator (to be used to measure model quality during training
     val_post_transform = monai.transforms.Compose(
-        [AsDiscreted(keys=("pred", "label"), argmax=(True, False), to_onehot=True, n_classes=2)]
+        [EnsureTyped(keys=("pred", "label")), AsDiscreted(keys=("pred", "label"), argmax=(True, False), to_onehot=True, n_classes=2)]
     )
     val_handlers = [
         ProgressBar(),
@@ -183,9 +183,9 @@ def train(data_folder=".", model_folder="runs"):
         val_data_loader=val_loader,
         network=net,
         inferer=get_inferer(),
-        post_transform=val_post_transform,
+        postprocessing=val_post_transform,
         key_val_metric={
-            "val_mean_dice": MeanDice(include_background=False, output_transform=lambda x: (x["pred"], x["label"]))
+            "val_mean_dice": MeanDice(include_background=False, output_transform=from_engine(["pred", "label"]))
         },
         val_handlers=val_handlers,
         amp=amp,
@@ -194,7 +194,7 @@ def train(data_folder=".", model_folder="runs"):
     # evaluator as an event handler of the trainer
     train_handlers = [
         ValidationHandler(validator=evaluator, interval=1, epoch_level=True),
-        StatsHandler(tag_name="train_loss", output_transform=lambda x: x["loss"]),
+        StatsHandler(tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
     ]
     trainer = monai.engines.SupervisedTrainer(
         device=device,
@@ -271,7 +271,7 @@ def infer(data_folder=".", model_folder="runs", prediction_folder="output"):
     files = glob.glob(os.path.join(prediction_folder, "volume*", "*.nii.gz"))
     for f in files:
         new_name = os.path.basename(f)
-        new_name = new_name[len("volume-covid19-A-0") :]
+        new_name = new_name[len("volume-covid19-A-0"):]
         new_name = new_name[: -len("_ct_seg.nii.gz")] + ".nii.gz"
         to_name = os.path.join(submission_dir, new_name)
         shutil.copy(f, to_name)

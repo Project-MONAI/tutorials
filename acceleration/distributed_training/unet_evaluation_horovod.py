@@ -16,8 +16,8 @@ Main steps to set up the distributed evaluation:
 
 - Install Horovod referring to the guide: https://github.com/horovod/horovod/blob/master/docs/gpus.rst
   If using MONAI docker, which already has NCCL and MPI, can quickly install Horovod with command:
-  `HOROVOD_NCCL_INCLUDE=/usr/include HOROVOD_NCCL_LIB=/usr/lib/x86_64-linux-gnu HOROVOD_GPU_OPERATIONS=NCCL \
-  pip install --no-cache-dir horovod`
+  `HOROVOD_NCCL_INCLUDE=/usr/include HOROVOD_NCCL_LIB=/usr/lib/x86_64-linux-gnu HOROVOD_NCCL_LINK=SHARED \
+  HOROVOD_GPU_OPERATIONS=NCCL pip install --no-cache-dir horovod`
 - Set SSH permissions for root login without password at all nodes except master, referring to:
   http://www.linuxproblem.org/art_9.html
 - Run `hvd.init()` to initialize Horovod.
@@ -53,10 +53,10 @@ import torch.multiprocessing as mp
 from torch.utils.data.distributed import DistributedSampler
 
 import monai
-from monai.data import DataLoader, Dataset, create_test_image_3d
+from monai.data import DataLoader, Dataset, create_test_image_3d, decollate_batch
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
-from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadNiftid, ScaleIntensityd, ToTensord
+from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadImaged, ScaleIntensityd, EnsureTyped, EnsureType
 
 
 def evaluate(args):
@@ -85,10 +85,10 @@ def evaluate(args):
     # define transforms for image and segmentation
     val_transforms = Compose(
         [
-            LoadNiftid(keys=["img", "seg"]),
+            LoadImaged(keys=["img", "seg"]),
             AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
             ScaleIntensityd(keys="img"),
-            ToTensord(keys=["img", "seg"]),
+            EnsureTyped(keys=["img", "seg"]),
         ]
     )
 
@@ -111,8 +111,8 @@ def evaluate(args):
         sampler=val_sampler,
         multiprocessing_context=multiprocessing_context,
     )
-    dice_metric = DiceMetric(include_background=True, reduction="mean")
-    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+    dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
+    post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device(f"cuda:{hvd.local_rank()}")
     torch.cuda.set_device(device)
@@ -132,26 +132,20 @@ def evaluate(args):
 
     model.eval()
     with torch.no_grad():
-        # define PyTorch Tensor to record metrics result at each GPU
-        # the first value is `sum` of all dice metric, the second value is `count` of not_nan items
-        metric = torch.zeros(2, dtype=torch.float, device=device)
         for val_data in val_loader:
             val_images, val_labels = val_data["img"].to(device), val_data["seg"].to(device)
             # define sliding window size and batch size for windows inference
             roi_size = (96, 96, 96)
             sw_batch_size = 4
             val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
-            val_outputs = post_trans(val_outputs)
-            value, not_nans = dice_metric(y_pred=val_outputs, y=val_labels)
-            value = value.squeeze()
-            metric[0] += value * not_nans
-            metric[1] += not_nans
-        # synchronizes all processes and reduce results
-        print(f"metric in rank {hvd.rank()}: sum={metric[0].item()}, count={metric[1].item()}")
-        avg_metric = hvd.allreduce(metric, name="mean_dice")
+            val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+            dice_metric(y_pred=val_outputs, y=val_labels)
+
+        metric = dice_metric.aggregate().item()
+        dice_metric.reset()
+
         if hvd.rank() == 0:
-            print(f"average metric: sum={avg_metric[0].item()}, count={avg_metric[1].item()}")
-            print("evaluation metric:", (avg_metric[0] / avg_metric[1]).item())
+            print("evaluation metric:", metric)
 
 
 def main():

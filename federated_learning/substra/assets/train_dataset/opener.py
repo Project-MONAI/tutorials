@@ -1,7 +1,7 @@
 import os
 import tempfile
 from glob import glob
-
+import numpy as np
 import nibabel as nib
 import substratools as tools
 import torch
@@ -11,7 +11,7 @@ from monai.data import CacheDataset, create_test_image_3d, list_data_collate
 from monai.transforms import (
     AsChannelFirstd,
     Compose,
-    LoadNiftid,
+    LoadImaged,
     RandCropByPosNegLabeld,
     RandRotate90d,
     ScaleIntensityd,
@@ -36,7 +36,7 @@ class MonaiTrainOpener(tools.Opener):
 
         transforms = Compose(
             [
-                LoadNiftid(keys=["img", "seg"]),
+                LoadImaged(keys=["img", "seg"]),
                 AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
                 ScaleIntensityd(keys="img"),
                 RandCropByPosNegLabeld(

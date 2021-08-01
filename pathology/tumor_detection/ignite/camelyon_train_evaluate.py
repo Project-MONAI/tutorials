@@ -245,7 +245,7 @@ def main():
     parser.add_argument(
         "--dataset",
         type=str,
-        default="../dataset_subset.json",
+        default="../dataset_0.json",
         dest="dataset_json",
         help="path to dataset json file",
     )

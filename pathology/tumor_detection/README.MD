@@ -16,7 +16,7 @@ Location information for training/validation patches (the location on the whole 
 
 This pipeline expects the training/validation data (whole slide images) reside in `cfg["data_root"]/training/images`. By default `data_root` is pointing to `/workspace/data/medical/pathology/` You can easily modify it to point to a different directory by passing the following argument in the runtime: `--data-root /other/data/root/dir/`.
 
-> `dataset_0_subset_0.json` is also provided [here](https://drive.google.com/file/d/1NCd0y4FR42maQpfZjzKlFSIX4oeKgysg/view?usp=sharing) to check the functionality of the pipeline using only two of the whole slide images: `tumor_001` and `tumor_101`. <br/> 
+> `dataset_0_subset_0.json` is also provided [here](https://drive.google.com/file/d/1NCd0y4FR42maQpfZjzKlFSIX4oeKgysg/view?usp=sharing) to check the functionality of the pipeline using only two of the whole slide images: `tumor_001` and `tumor_101`. <br/>
 > This dataset should not be used for the real training or any perfomance evaluation.
 
 ### Input and output formats

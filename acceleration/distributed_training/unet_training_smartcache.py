@@ -69,11 +69,11 @@ from monai.data import DataLoader, SmartCacheDataset, create_test_image_3d, part
 from monai.transforms import (
     AsChannelFirstd,
     Compose,
-    LoadNiftid,
+    LoadImaged,
     RandCropByPosNegLabeld,
     RandRotate90d,
     ScaleIntensityd,
-    ToTensord,
+    EnsureTyped,
 )
 
 
@@ -105,18 +105,19 @@ def train(args):
     # define transforms for image and segmentation
     train_transforms = Compose(
         [
-            LoadNiftid(keys=["img", "seg"]),
+            LoadImaged(keys=["img", "seg"]),
             AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
             ScaleIntensityd(keys="img"),
             RandCropByPosNegLabeld(
                 keys=["img", "seg"], label_key="seg", spatial_size=[96, 96, 96], pos=1, neg=1, num_samples=4
             ),
             RandRotate90d(keys=["img", "seg"], prob=0.5, spatial_axes=[0, 2]),
-            ToTensord(keys=["img", "seg"]),
+            EnsureTyped(keys=["img", "seg"]),
         ]
     )
 
     # partition dataset based on current rank number, every rank trains with its own data
+    # it can avoid duplicated caching content in each rank, but will not do global shuffle before every epoch
     data_part = partition_dataset(
         data=train_files,
         num_partitions=dist.get_world_size(),

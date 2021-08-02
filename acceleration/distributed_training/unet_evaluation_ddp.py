@@ -57,13 +57,12 @@ import numpy as np
 import torch
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel
-from torch.utils.data.distributed import DistributedSampler
 
 import monai
-from monai.data import DataLoader, Dataset, create_test_image_3d
+from monai.data import DataLoader, Dataset, create_test_image_3d, DistributedSampler, decollate_batch
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
-from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadNiftid, ScaleIntensityd, ToTensord
+from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadImaged, ScaleIntensityd, EnsureTyped, EnsureType
 
 
 def evaluate(args):
@@ -90,21 +89,21 @@ def evaluate(args):
     # define transforms for image and segmentation
     val_transforms = Compose(
         [
-            LoadNiftid(keys=["img", "seg"]),
+            LoadImaged(keys=["img", "seg"]),
             AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
             ScaleIntensityd(keys="img"),
-            ToTensord(keys=["img", "seg"]),
+            EnsureTyped(keys=["img", "seg"]),
         ]
     )
 
     # create a evaluation data loader
     val_ds = Dataset(data=val_files, transform=val_transforms)
     # create a evaluation data sampler
-    val_sampler = DistributedSampler(val_ds, shuffle=False)
+    val_sampler = DistributedSampler(dataset=val_ds, even_divisible=False, shuffle=False)
     # sliding window inference need to input 1 image in every iteration
     val_loader = DataLoader(val_ds, batch_size=1, shuffle=False, num_workers=2, pin_memory=True, sampler=val_sampler)
-    dice_metric = DiceMetric(include_background=True, reduction="mean")
-    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+    dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
+    post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device(f"cuda:{args.local_rank}")
     torch.cuda.set_device(device)
@@ -125,26 +124,21 @@ def evaluate(args):
 
     model.eval()
     with torch.no_grad():
-        # define PyTorch Tensor to record metrics result at each GPU
-        # the first value is `sum` of all dice metric, the second value is `count` of not_nan items
-        metric = torch.zeros(2, dtype=torch.float, device=device)
         for val_data in val_loader:
             val_images, val_labels = val_data["img"].to(device), val_data["seg"].to(device)
             # define sliding window size and batch size for windows inference
             roi_size = (96, 96, 96)
             sw_batch_size = 4
             val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
-            val_outputs = post_trans(val_outputs)
-            value, not_nans = dice_metric(y_pred=val_outputs, y=val_labels)
-            value = value.squeeze()
-            metric[0] += value * not_nans
-            metric[1] += not_nans
-        # synchronizes all processes and reduce results
-        dist.barrier()
-        dist.all_reduce(metric, op=torch.distributed.ReduceOp.SUM)
-        metric = metric.tolist()
+            val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+
+            dice_metric(y_pred=val_outputs, y=val_labels)
+
+        metric = dice_metric.aggregate().item()
+        dice_metric.reset()
+
         if dist.get_rank() == 0:
-            print("evaluation metric:", metric[0] / metric[1])
+            print("evaluation metric:", metric)
         dist.destroy_process_group()
 
 

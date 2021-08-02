@@ -65,7 +65,7 @@ from torch.nn.parallel import DistributedDataParallel
 from torch.utils.tensorboard import SummaryWriter
 
 from monai.apps import DecathlonDataset
-from monai.data import DataLoader, partition_dataset
+from monai.data import DataLoader, partition_dataset, decollate_batch
 from monai.losses import DiceLoss
 from monai.metrics import DiceMetric
 from monai.networks.nets import SegResNet, UNet
@@ -75,7 +75,7 @@ from monai.transforms import (
     AsDiscrete,
     CenterSpatialCropd,
     Compose,
-    LoadNiftid,
+    LoadImaged,
     MapTransform,
     NormalizeIntensityd,
     Orientationd,
@@ -84,7 +84,8 @@ from monai.transforms import (
     RandShiftIntensityd,
     RandSpatialCropd,
     Spacingd,
-    ToTensord,
+    EnsureTyped,
+    EnsureType,
 )
 from monai.utils import set_determinism
 
@@ -119,7 +120,7 @@ class BratsCacheDataset(DecathlonDataset):
         self,
         root_dir,
         section,
-        transform=LoadNiftid(["image", "label"]),
+        transform=LoadImaged(["image", "label"]),
         cache_rate=1.0,
         num_workers=0,
         shuffle=False,
@@ -141,6 +142,8 @@ class BratsCacheDataset(DecathlonDataset):
 
     def _generate_data_list(self, dataset_dir):
         data = super()._generate_data_list(dataset_dir)
+        # partition dataset based on current rank number, every rank trains with its own data
+        # it can avoid duplicated caching content in each rank, but will not do global shuffle before every epoch
         return partition_dataset(
             data=data,
             num_partitions=dist.get_world_size(),
@@ -166,7 +169,7 @@ def main_worker(args):
     train_transforms = Compose(
         [
             # load 4 Nifti images and stack them together
-            LoadNiftid(keys=["image", "label"]),
+            LoadImaged(keys=["image", "label"]),
             AsChannelFirstd(keys="image"),
             ConvertToMultiChannelBasedOnBratsClassesd(keys="label"),
             Spacingd(keys=["image", "label"], pixdim=(1.5, 1.5, 2.0), mode=("bilinear", "nearest")),
@@ -176,7 +179,7 @@ def main_worker(args):
             RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=0),
             RandScaleIntensityd(keys="image", factors=0.1, prob=0.5),
             RandShiftIntensityd(keys="image", offsets=0.1, prob=0.5),
-            ToTensord(keys=["image", "label"]),
+            EnsureTyped(keys=["image", "label"]),
         ]
     )
 
@@ -196,14 +199,14 @@ def main_worker(args):
     # validation transforms and dataset
     val_transforms = Compose(
         [
-            LoadNiftid(keys=["image", "label"]),
+            LoadImaged(keys=["image", "label"]),
             AsChannelFirstd(keys="image"),
             ConvertToMultiChannelBasedOnBratsClassesd(keys="label"),
             Spacingd(keys=["image", "label"], pixdim=(1.5, 1.5, 2.0), mode=("bilinear", "nearest")),
             Orientationd(keys=["image", "label"], axcodes="RAS"),
             CenterSpatialCropd(keys=["image", "label"], roi_size=[128, 128, 64]),
             NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True),
-            ToTensord(keys=["image", "label"]),
+            EnsureTyped(keys=["image", "label"]),
         ]
     )
     val_ds = BratsCacheDataset(
@@ -333,41 +336,27 @@ def evaluate(model, data_loader, device):
     model.eval()
     with torch.no_grad():
         dice_metric = DiceMetric(include_background=True, reduction="mean")
-        post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+        dice_metric_batch = DiceMetric(include_background=True, reduction="mean_batch")
+        post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
         for val_data in data_loader:
             val_inputs, val_labels = (
                 val_data["image"].to(device, non_blocking=True),
                 val_data["label"].to(device, non_blocking=True),
             )
             val_outputs = model(val_inputs)
-            val_outputs = post_trans(val_outputs)
-            # compute overall mean dice
-            value, not_nans = dice_metric(y_pred=val_outputs, y=val_labels)
-            value = value.squeeze()
-            metric[0] += value * not_nans
-            metric[1] += not_nans
-            # compute mean dice for TC
-            value_tc, not_nans = dice_metric(y_pred=val_outputs[:, 0:1], y=val_labels[:, 0:1])
-            value_tc = value_tc.squeeze()
-            metric[2] += value_tc * not_nans
-            metric[3] += not_nans
-            # compute mean dice for WT
-            value_wt, not_nans = dice_metric(y_pred=val_outputs[:, 1:2], y=val_labels[:, 1:2])
-            value_wt = value_wt.squeeze()
-            metric[4] += value_wt * not_nans
-            metric[5] += not_nans
-            # compute mean dice for ET
-            value_et, not_nans = dice_metric(y_pred=val_outputs[:, 2:3], y=val_labels[:, 2:3])
-            value_et = value_et.squeeze()
-            metric[6] += value_et * not_nans
-            metric[7] += not_nans
+            val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+            dice_metric(y_pred=val_outputs, y=val_labels)
+            dice_metric_batch(y_pred=val_outputs, y=val_labels)
 
-        # synchronizes all processes and reduce results
-        dist.barrier()
-        dist.all_reduce(metric, op=torch.distributed.ReduceOp.SUM)
-        metric = metric.tolist()
+        metric = dice_metric.aggregate().item()
+        metric_batch = dice_metric_batch.aggregate()
+        metric_tc = metric_batch[0].item()
+        metric_wt = metric_batch[1].item()
+        metric_et = metric_batch[2].item()
+        dice_metric.reset()
+        dice_metric_batch.reset()
 
-    return metric[0] / metric[1], metric[2] / metric[3], metric[4] / metric[5], metric[6] / metric[7]
+    return metric, metric_tc, metric_wt, metric_et
 
 
 def main():

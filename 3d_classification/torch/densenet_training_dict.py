@@ -19,8 +19,9 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 import monai
-from monai.metrics import compute_roc_auc
-from monai.transforms import AddChanneld, Compose, LoadNiftid, RandRotate90d, Resized, ScaleIntensityd, ToTensord
+from monai.data import decollate_batch
+from monai.metrics import ROCAUCMetric
+from monai.transforms import Activations, AddChanneld, AsDiscrete, Compose, LoadImaged, RandRotate90d, Resized, ScaleIntensityd, EnsureTyped, EnsureType
 
 
 def main():
@@ -28,28 +29,31 @@ def main():
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
     # IXI dataset as a demo, downloadable from https://brain-development.org/ixi-dataset/
+    # the path of ixi IXI-T1 dataset
+    data_path = os.sep.join(["", "workspace", "data", "medical", "ixi", "IXI-T1"])
     images = [
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI314-IOP-0889-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI249-Guys-1072-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI609-HH-2600-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI173-HH-1590-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI020-Guys-0700-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI342-Guys-0909-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI134-Guys-0780-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI577-HH-2661-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI066-Guys-0731-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI130-HH-1528-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI607-Guys-1097-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI175-HH-1570-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI385-HH-2078-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI344-Guys-0905-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI409-Guys-0960-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI584-Guys-1129-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI253-HH-1694-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI092-HH-1436-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI574-IOP-1156-T1.nii.gz"]),
-        os.sep.join(["workspace", "data", "medical", "ixi", "IXI-T1", "IXI585-Guys-1130-T1.nii.gz"]),
+        "IXI314-IOP-0889-T1.nii.gz",
+        "IXI249-Guys-1072-T1.nii.gz",
+        "IXI609-HH-2600-T1.nii.gz",
+        "IXI173-HH-1590-T1.nii.gz",
+        "IXI020-Guys-0700-T1.nii.gz",
+        "IXI342-Guys-0909-T1.nii.gz",
+        "IXI134-Guys-0780-T1.nii.gz",
+        "IXI577-HH-2661-T1.nii.gz",
+        "IXI066-Guys-0731-T1.nii.gz",
+        "IXI130-HH-1528-T1.nii.gz",
+        "IXI607-Guys-1097-T1.nii.gz",
+        "IXI175-HH-1570-T1.nii.gz",
+        "IXI385-HH-2078-T1.nii.gz",
+        "IXI344-Guys-0905-T1.nii.gz",
+        "IXI409-Guys-0960-T1.nii.gz",
+        "IXI584-Guys-1129-T1.nii.gz",
+        "IXI253-HH-1694-T1.nii.gz",
+        "IXI092-HH-1436-T1.nii.gz",
+        "IXI574-IOP-1156-T1.nii.gz",
+        "IXI585-Guys-1130-T1.nii.gz",
     ]
+    images = [os.sep.join([data_path, f]) for f in images]
 
     # 2 binary labels for gender classification: man and woman
     labels = np.array([0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0], dtype=np.int64)
@@ -59,23 +63,25 @@ def main():
     # Define transforms for image
     train_transforms = Compose(
         [
-            LoadNiftid(keys=["img"]),
+            LoadImaged(keys=["img"]),
             AddChanneld(keys=["img"]),
             ScaleIntensityd(keys=["img"]),
             Resized(keys=["img"], spatial_size=(96, 96, 96)),
             RandRotate90d(keys=["img"], prob=0.8, spatial_axes=[0, 2]),
-            ToTensord(keys=["img"]),
+            EnsureTyped(keys=["img"]),
         ]
     )
     val_transforms = Compose(
         [
-            LoadNiftid(keys=["img"]),
+            LoadImaged(keys=["img"]),
             AddChanneld(keys=["img"]),
             ScaleIntensityd(keys=["img"]),
             Resized(keys=["img"], spatial_size=(96, 96, 96)),
-            ToTensord(keys=["img"]),
+            EnsureTyped(keys=["img"]),
         ]
     )
+    post_pred = Compose([EnsureType(), Activations(softmax=True)])
+    post_label = Compose([EnsureType(), AsDiscrete(to_onehot=True, n_classes=2)])
 
     # Define dataset, data loader
     check_ds = monai.data.Dataset(data=train_files, transform=train_transforms)
@@ -93,9 +99,10 @@ def main():
 
     # Create DenseNet121, CrossEntropyLoss and Adam optimizer
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = monai.networks.nets.densenet.densenet121(spatial_dims=3, in_channels=1, out_channels=2).to(device)
+    model = monai.networks.nets.DenseNet121(spatial_dims=3, in_channels=1, out_channels=2).to(device)
     loss_function = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), 1e-5)
+    auc_metric = ROCAUCMetric()
 
     # start a typical PyTorch training
     val_interval = 2
@@ -135,7 +142,12 @@ def main():
 
                 acc_value = torch.eq(y_pred.argmax(dim=1), y)
                 acc_metric = acc_value.sum().item() / len(acc_value)
-                auc_metric = compute_roc_auc(y_pred, y, to_onehot_y=True, softmax=True)
+                y_onehot = [post_label(i) for i in decollate_batch(y)]
+                y_pred_act = [post_pred(i) for i in decollate_batch(y_pred)]
+                auc_metric(y_pred_act, y_onehot)
+                auc_result = auc_metric.aggregate()
+                auc_metric.reset()
+                del y_pred_act, y_onehot
                 if acc_metric > best_metric:
                     best_metric = acc_metric
                     best_metric_epoch = epoch + 1
@@ -143,7 +155,7 @@ def main():
                     print("saved new best metric model")
                 print(
                     "current epoch: {} current accuracy: {:.4f} current AUC: {:.4f} best accuracy: {:.4f} at epoch {}".format(
-                        epoch + 1, acc_metric, auc_metric, best_metric, best_metric_epoch
+                        epoch + 1, acc_metric, auc_result, best_metric, best_metric_epoch
                     )
                 )
                 writer.add_scalar("val_accuracy", acc_metric, epoch + 1)

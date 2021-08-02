@@ -1,0 +1,6 @@
+flake8
+papermill
+autopep8
+jupytext
+autoflake
+tensorboard>=2.4.0

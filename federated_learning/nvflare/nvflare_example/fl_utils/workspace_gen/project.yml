@@ -1,0 +1,59 @@
+# org is to describe each participant's organization and is optional
+
+# the name of this project
+name: fl
+
+config_folder: config
+
+server:
+  auth: true
+
+  org: nvidia
+
+  # set cn to the server's fully qualified domain name
+  # never set it to example.com
+  cn: localhost
+
+  # replace the number with that all clients can reach out to, and that the server can open to listen to
+  fed_learn_port: 8002
+
+  # again, replace the number with that all clients can reach out to, and that the server can open to listen to
+  # the value must be different from fed_learn_port
+  admin_port: 8003
+
+  # admin_storage is the mmar upload folder name on the server
+  admin_storage: transfer
+
+  min_num_clients: 1
+  max_num_clients: 100
+
+  # don't use a config_validator
+  config_validator:
+
+# The following values under fl_clients and admin_clients are for demo purpose only.
+# Please change them according to the information of actual project.
+fl_clients:
+  # client_name must be unique
+  # email is optional
+  - org: nvidia
+    client_name: client1
+  - org: nvidia
+    client_name: client2
+  - org: nvidia
+    client_name: client3
+  - org: nvidia
+    client_name: client4  
+  - org: nvidia
+    client_name: client5
+  - org: nvidia
+    client_name: client6
+  - org: nvidia
+    client_name: client7
+  - org: nvidia
+    client_name: client8  
+
+admin_clients:
+  # email is the user name for admin authentication.  Hence, it must be unique within the project
+  - org: nvidia
+    email: admin@nvidia.com
+

@@ -13,11 +13,11 @@ MONAI Generative Adversarial Networks Workflow Example
     Sample script using MONAI to train a GAN to synthesize images from a latent code.
 
 ## Get the dataset
-    MedNIST.tar.gz link: https://www.dropbox.com/s/5wwskxctvcxiuea/MedNIST.tar.gz
+    MedNIST.tar.gz link: https://drive.google.com/uc?id=1QsnnkvZyJPcbRoV_ArW8SnE1OTuoVbKE
     Extract tarball and set input_dir variable. GAN script trains using hand CT scan jpg images.
 
     Dataset information available in MedNIST Tutorial
-    https://github.com/Project-MONAI/Tutorials/blob/master/mednist_tutorial.ipynb
+    https://github.com/Project-MONAI/tutorials/blob/master/2d_classification/mednist_tutorial.ipynb
 """
 
 import logging
@@ -38,12 +38,12 @@ from monai.networks.nets import Discriminator, Generator
 from monai.transforms import (
     AddChannelD,
     Compose,
-    LoadPNGD,
+    LoadImageD,
     RandFlipD,
     RandRotateD,
     RandZoomD,
     ScaleIntensityD,
-    ToTensorD,
+    EnsureTypeD,
 )
 from monai.utils.misc import set_determinism
 
@@ -66,13 +66,13 @@ def main():
     # define real data transforms
     train_transforms = Compose(
         [
-            LoadPNGD(keys=["hand"]),
+            LoadImageD(keys=["hand"]),
             AddChannelD(keys=["hand"]),
             ScaleIntensityD(keys=["hand"]),
             RandRotateD(keys=["hand"], range_x=np.pi / 12, prob=0.5, keep_size=True),
             RandFlipD(keys=["hand"], spatial_axis=0, prob=0.5),
             RandZoomD(keys=["hand"], min_zoom=0.9, max_zoom=1.1, prob=0.5),
-            ToTensorD(keys=["hand"]),
+            EnsureTypeD(keys=["hand"]),
         ]
     )
 
@@ -82,11 +82,11 @@ def main():
     real_dataloader = DataLoader(real_dataset, batch_size=batch_size, shuffle=True, num_workers=10)
 
     # define function to process batchdata for input into discriminator
-    def prepare_batch(batchdata):
+    def prepare_batch(batchdata, device=None, non_blocking=False):
         """
         Process Dataloader batchdata dict object and return image tensors for D Inferer
         """
-        return batchdata["hand"]
+        return batchdata["hand"].to(device=device, non_blocking=non_blocking)
 
     # define networks
     disc_net = Discriminator(

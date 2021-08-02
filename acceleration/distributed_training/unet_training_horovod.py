@@ -16,8 +16,8 @@ Main steps to set up the distributed training:
 
 - Install Horovod referring to the guide: https://github.com/horovod/horovod/blob/master/docs/gpus.rst
   If using MONAI docker, which already has NCCL and MPI, can quickly install Horovod with command:
-  `HOROVOD_NCCL_INCLUDE=/usr/include HOROVOD_NCCL_LIB=/usr/lib/x86_64-linux-gnu HOROVOD_GPU_OPERATIONS=NCCL \
-  pip install --no-cache-dir horovod`
+  `HOROVOD_NCCL_INCLUDE=/usr/include HOROVOD_NCCL_LIB=/usr/lib/x86_64-linux-gnu HOROVOD_NCCL_LINK=SHARED \
+  HOROVOD_GPU_OPERATIONS=NCCL pip install --no-cache-dir horovod`
 - Set SSH permissions for root login without password at all nodes except master, referring to:
   http://www.linuxproblem.org/art_9.html
 - Run `hvd.init()` to initialize Horovod.
@@ -62,11 +62,11 @@ from monai.data import DataLoader, Dataset, create_test_image_3d
 from monai.transforms import (
     AsChannelFirstd,
     Compose,
-    LoadNiftid,
+    LoadImaged,
     RandCropByPosNegLabeld,
     RandRotate90d,
     ScaleIntensityd,
-    ToTensord,
+    EnsureTyped,
 )
 
 
@@ -99,14 +99,14 @@ def train(args):
     # define transforms for image and segmentation
     train_transforms = Compose(
         [
-            LoadNiftid(keys=["img", "seg"]),
+            LoadImaged(keys=["img", "seg"]),
             AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
             ScaleIntensityd(keys="img"),
             RandCropByPosNegLabeld(
                 keys=["img", "seg"], label_key="seg", spatial_size=[96, 96, 96], pos=1, neg=1, num_samples=4
             ),
             RandRotate90d(keys=["img", "seg"], prob=0.5, spatial_axes=[0, 2]),
-            ToTensord(keys=["img", "seg"]),
+            EnsureTyped(keys=["img", "seg"]),
         ]
     )
 

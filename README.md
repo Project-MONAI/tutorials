@@ -134,6 +134,10 @@ The examples show how to train federated learning models with [NVFlare](https://
 #### [Substra](./federated_learning/substra)
 The example show how to execute the 3d segmentation torch tutorial on a federated learning platform, Substra.
 
+**Digital Pathology**
+#### [Whole Slide Tumor Detection](./pathology/tumor_detection)
+The example show how to train and evaluate a tumor detection model (based on patch classification) on whole-slide histopathology images.
+
 **acceleration**
 #### [distributed_training](./acceleration/distributed_training)
 The examples show how to execute distributed training and evaluation based on 3 different frameworks:

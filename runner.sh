@@ -32,7 +32,6 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" TorchIO_MONAI_PyTor
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" image_dataset.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" decollate_batch.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" csv_datasets.ipynb)
-doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" unetr_btcv_segmentation_3d.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" UNet_input_size_constrains.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" network_api.ipynb)
 
@@ -56,7 +55,7 @@ doChecks=true
 doRun=true
 autofix=false
 failfast=false
-pattern="-and -name '*' -and ! -wholename '*federated_learning*'"
+pattern="-and -name '*' -and ! -wholename '*federated_learning*' -and ! -wholename '*unetr_btcv*'"
 kernelspec="python3"
 
 function print_usage {

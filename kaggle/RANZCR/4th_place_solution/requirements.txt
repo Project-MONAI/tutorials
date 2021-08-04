@@ -1,4 +1,3 @@
 timm
 transformers
 segmentation-models-pytorch
-albumentations

@@ -6,14 +6,13 @@ cfg = SimpleNamespace(**{})
 #dataset
 cfg.dataset = 'rfcx_dataset'
 cfg.batch_size = 32
-cfg.normalization = 'image'
+# cfg.normalization = 'image'
 cfg.img_size = (256,256,1)
 cfg.train_aug = None
 cfg.val_aug = None
 cfg.test_augs = None
 cfg.cache_n_img = 0
 cfg.cache = False
-cfg.train_df2 = None
 cfg.label_cols = ['ETT - Abnormal',
                   'ETT - Borderline',
                   'ETT - Normal',
@@ -30,7 +29,6 @@ cfg.label_cols = ['ETT - Abnormal',
 cfg.thickness = 32
 cfg.points_mask = False
 cfg.smooth_mask = 0
-cfg.rgb = False
 cfg.seg_weight = 1
 cfg.annotated_only = False
 #model
@@ -55,8 +53,6 @@ cfg.eval_epochs = 1
 cfg.eval_train_epochs = 1
 cfg.drop_path_rate = None
 cfg.warmup = 0
-
-cfg.pseudo_df = None
 
 cfg.label_smoothing = 0
 

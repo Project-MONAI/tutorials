@@ -16,13 +16,10 @@ import argparse
 import math
 
 import torch
-from torch.utils.data import RandomSampler, SequentialSampler, DataLoader
+from torch.utils.data import Sampler, RandomSampler, SequentialSampler, DataLoader
 from torch import nn, optim
 from torch.cuda.amp import GradScaler, autocast
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
-from torch import nn
-from torch.utils.data import Sampler, RandomSampler, SequentialSampler, DataLoader
-
 
 from transformers import get_cosine_schedule_with_warmup, get_linear_schedule_with_warmup
 from transformers import AdamW
@@ -484,19 +481,6 @@ if __name__ == "__main__":
     else:
         val_df = train[train['fold'] == cfg.fold]
     train_df = train[train['fold'] != cfg.fold]
-    
-    if cfg.train_df2 is not None:
-        print('using train_df2')
-        train2 = pd.read_csv(cfg.data_dir + cfg.train_df2)
-        train_df = train2[train2['fold'] != cfg.fold]
-
-    if cfg.pseudo_df is not None:
-        train_df["weight"] = 1
-        val_df["weight"] = 1
-        pseudo_df = pd.read_csv(cfg.pseudo_df)
-        pseudo_df["weight"] = cfg.pseudo_weight
-        train_df = pd.concat([train_df, pseudo_df], axis=0)
-        
 
     train_dataset = get_train_dataset(train_df,cfg)
     val_dataset = get_val_dataset(val_df,cfg)

@@ -1,7 +1,26 @@
 from default_config import basic_cfg
-import albumentations as A
+
 import os
-import cv2
+
+from monai.transforms import (
+    Resized,
+    SpatialPadd,
+    RandFlipd,
+    RandAffined,
+    RandSpatialCropd,
+    RandScaleIntensityd,
+    RandShiftIntensityd,
+    RandLambdad,
+    RandCoarseDropoutd,
+    CenterSpatialCropd,
+    CastToTyped,
+    Compose,
+    EnsureTyped,
+    NormalizeIntensityd,
+    Lambdad,
+)
+
+import numpy as np
 
 cfg = basic_cfg
 cfg.name = os.path.basename(__file__).split(".")[0]
@@ -24,7 +43,6 @@ cfg.tags = 'segment'
 cfg.fold = -1
 cfg.img_size = (1024,1024)
 # cfg.weight_decay = 0.0001
-cfg.normalization = 'image'
 cfg.drop_last=True
 cfg.grad_accumulation = 3
 
@@ -67,23 +85,28 @@ cfg.find_unused_parameters = True
 
 cfg.eval_ddp = True
 
+cfg.train_aug = Compose([
+    Resized(keys=("input", "mask"), spatial_size=1120, size_mode="longest", mode="bilinear", align_corners=False),
+    SpatialPadd(keys=("input", "mask"), spatial_size=(1120, 1120)),
+    RandFlipd(keys=("input", "mask"), prob=0.5, spatial_axis=1),
+    RandAffined(keys=("input", "mask"), prob=0.5, rotate_range=np.pi/14.4, translate_range=(70, 70), scale_range=(0.1, 0.1), as_tensor_output=False),
+    RandSpatialCropd(keys=("input", "mask"), roi_size=(cfg.img_size[0], cfg.img_size[1]), random_size=False),
+    RandScaleIntensityd(keys="input", factors=(-0.2,0.2), prob=0.5),
+    RandShiftIntensityd(keys="input", offsets=(-51, 51), prob=0.5),
+    RandLambdad(keys="input", func=lambda x: 255 - x, prob=0.5),
+    RandCoarseDropoutd(keys=("input", "mask"), holes=8, spatial_size=(1, 1), max_spatial_size=(102, 102), prob=0.5),
+    CastToTyped(keys="input", dtype=np.float32),
+    NormalizeIntensityd(keys="input", nonzero=False),
+    Lambdad(keys="input", func=lambda x: x.clip(-20, 20)),
+    EnsureTyped(keys=("input", "mask")),
+])
 
-cfg.train_aug = A.Compose([A.HorizontalFlip(p=0.5),
-                           A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.1, rotate_limit=25, p=0.5),
-                           A.LongestMaxSize(1120,p=1),
-                            A.PadIfNeeded(1120, 1120, border_mode=cv2.BORDER_CONSTANT,p=1),
-                            A.RandomCrop(always_apply=False, p=1.0, height=cfg.img_size[0], width=cfg.img_size[1]), 
-                            #A.HueSaturationValue(hue_shift_limit=10, sat_shift_limit=10, val_shift_limit=10, p=0.5),
-                            A.RandomBrightnessContrast(brightness_limit=(-0.2,0.2), contrast_limit=(-0.2, 0.2), p=0.5),
-                            A.InvertImg(p=0.5),
-                           A.Cutout(num_holes=8, max_h_size=102, max_w_size=102, p=0.5),
-                          ])
-
-                           #A.RandomResizedCrop(cfg.img_size[0], cfg.img_size[1], scale=(0.85, 1.0)),
-
-cfg.val_aug = A.Compose([#A.PadIfNeeded (min_height=256, min_width=940),
-                            A.LongestMaxSize(1120,p=1),
-                            A.PadIfNeeded(1120, 1120, border_mode=cv2.BORDER_CONSTANT,p=1),
-                            A.CenterCrop(always_apply=False, p=1.0, height=cfg.img_size[0], width=cfg.img_size[1]), 
-                         #A.Resize(cfg.img_size[0],cfg.img_size[1])
-                         ])
+cfg.val_aug = Compose([
+    Resized(keys=("input", "mask"), spatial_size=1120, size_mode="longest", mode="bilinear", align_corners=False),
+    SpatialPadd(keys=("input", "mask"), spatial_size=(1120, 1120)),
+    CenterSpatialCropd(keys=("input", "mask"), roi_size=(cfg.img_size[0], cfg.img_size[1])),
+    CastToTyped(keys="input", dtype=np.float32),
+    NormalizeIntensityd(keys="input", nonzero=False),
+    Lambdad(keys="input", func=lambda x: x.clip(-20, 20)),
+    EnsureTyped(keys=("input", "mask")),
+])

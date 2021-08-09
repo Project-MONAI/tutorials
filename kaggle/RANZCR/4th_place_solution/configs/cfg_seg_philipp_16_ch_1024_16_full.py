@@ -60,7 +60,6 @@ cfg.seg_dim = 3
 
 # cfg.clip_grad = 5
 
-cfg.optimizer = "Adam"
 cfg.weight_decay = 0
 
 cfg.tubemix = False

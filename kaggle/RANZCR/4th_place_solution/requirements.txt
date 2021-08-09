@@ -1,3 +1,2 @@
 timm
-transformers
 segmentation-models-pytorch

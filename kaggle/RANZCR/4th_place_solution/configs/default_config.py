@@ -44,7 +44,6 @@ cfg.epoch_weights = None
 
 cfg.calc_loss = True
 
-cfg.bce_seg = "bce"
 
 cfg.alpha = 1
 cfg.cls_loss_pos_weight = None
@@ -63,9 +62,7 @@ cfg.remove_border = False
 #training
 cfg.fold = 0
 cfg.lr = 1e-4
-cfg.schedule = 'cosine'
 cfg.weight_decay = 0
-cfg.optimizer = 'Adam' # "Adam", "fused_Adam", "SGD", "fused_SGD"
 cfg.epochs = 10
 cfg.seed = -1
 cfg.resume_training = False

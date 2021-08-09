@@ -99,11 +99,7 @@ class Net(nn.Module):
         self.head = nn.Linear(self.head_in_units, self.n_classes)
         
         self.bce_cls = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([1,1,1,1,1,1,1,1,1,1,1]).to(cfg.device), reduction="mean")
-
-        if cfg.bce_seg == "focal":
-            self.bce_seg = FocalLoss(gamma=2.)
-        else:
-            self.bce_seg = nn.BCEWithLogitsLoss(reduction="mean")
+        self.bce_seg = nn.BCEWithLogitsLoss(reduction="mean")
         self.w = cfg.seg_weight
 
         self.cfg = cfg
@@ -136,12 +132,6 @@ class Net(nn.Module):
         else:
             cls_loss = torch.Tensor(0).to(x.device)
 
-        # if self.cfg.reduction == "mean":
-        #     cls_loss = torch.mean(cls_loss)
-        # else:
-        #     cls_loss = torch.mean(cls_loss, dim=1)
-        #     cls_loss = torch.sum(cls_loss, dim=0)
-
         if batch['is_annotated'].sum() > 0 and not self.cfg.ignore_seg:
             ia = batch['is_annotated']>0
 
@@ -150,25 +140,12 @@ class Net(nn.Module):
             decoder_out = self.dropout(decoder_out)    
 
             x_seg = self.segmentation_head(decoder_out)
-
-            #print(x_seg[ia].shape, batch['mask'][ia].shape)
             
             seg_loss = self.bce_seg(x_seg[ia].permute(0,2,3,1), batch['mask'][ia].permute(0,2,3,1))
             
-            # if self.cfg.reduction == "mean":
-            #     seg_loss = torch.mean(seg_loss)
-            # else:
-            #     seg_loss = torch.mean(seg_loss, dim=(1,2,3))
-            #     seg_loss = torch.sum(seg_loss, dim=0)
-
         else:
             seg_loss = torch.zeros_like(cls_loss)
 
-        
-        #print(cls_loss,seg_loss)
-
-        #print(cls_loss.shape, seg_loss.shape)
-        #print(cls_loss, seg_loss)
         loss =  cls_loss + self.w * seg_loss
     
         if self.training == True:

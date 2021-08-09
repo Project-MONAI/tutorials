@@ -21,11 +21,10 @@ from torch import nn, optim
 from torch.cuda.amp import GradScaler, autocast
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
 
-from transformers import get_cosine_schedule_with_warmup, get_linear_schedule_with_warmup
-from transformers import AdamW
 from torch.utils.tensorboard import SummaryWriter
 import pandas as pd
 import cv2
+from monai.optimizers.lr_scheduler import WarmupCosineSchedule
 
 cv2.setNumThreads(0)
 
@@ -42,11 +41,13 @@ parser = argparse.ArgumentParser(description="")
 parser.add_argument("-C", "--config", help="config filename")
 parser.add_argument("-f", "--fold",type=int , default=-1, help="fold")
 parser.add_argument("-s", "--seed",type=int , default=-1, help="fold")
+parser.add_argument("-debug", "--debug",type=bool , default=False, help="debug mode")
 parser_args, _ = parser.parse_known_args(sys.argv)
 
 
 cfg = importlib.import_module(parser_args.config).cfg
 
+cfg.debug = parser_args.debug
 
 if parser_args.fold > -1:
     cfg.fold = parser_args.fold
@@ -169,97 +170,22 @@ def get_model(cfg):
 
 def get_optimizer(model, cfg):
 
-    #params = [{"params": [param for name, param in model.named_parameters()], "lr": cfg.lr,"weight_decay":cfg.weight_decay}]
     params = model.parameters()
-    
-    if cfg.optimizer == "Adam":
-        optimizer = optim.Adam(params, lr=cfg.lr, weight_decay=cfg.weight_decay)
-    if cfg.optimizer == "AdamW":
-        optimizer = AdamW(params, lr=cfg.lr, weight_decay=cfg.weight_decay)
-    elif cfg.optimizer == "SGD":
-        optimizer = optim.SGD(params,lr=cfg.lr,momentum=0.9,nesterov=True, weight_decay=cfg.weight_decay)
-    elif cfg.optimizer == "fused_SGD":
-        import apex
-
-        optimizer = apex.optimizers.FusedSGD(params, lr=cfg.lr, momentum=0.9, nesterov=True, weight_decay=cfg.weight_decay)
-    elif cfg.optimizer == "fused_Adam":
-        import apex
-
-        optimizer = apex.optimizers.FusedAdam(params, lr=cfg.lr, weight_decay=cfg.weight_decay)
-    elif cfg.optimizer == 'SGD_AGC':
-        from nfnets import SGD_AGC
-
-        optimizer = SGD_AGC(
-                named_params=model.named_parameters(), # Pass named parameters
-                lr=cfg.lr,
-                momentum=0.9,
-                clipping=0.1, # New clipping parameter
-                weight_decay=cfg.weight_decay, 
-                nesterov=True)
+    optimizer = optim.Adam(params, lr=cfg.lr, weight_decay=cfg.weight_decay)
 
     return optimizer
 
 
 def get_scheduler(cfg, optimizer, total_steps):
         
-
-    if cfg.schedule == "steplr":
-        scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=cfg.epochs_step * (total_steps // cfg.batch_size) // cfg.world_size, gamma=0.5)
-    elif cfg.schedule == "cosine":
-        scheduler = get_cosine_schedule_with_warmup(
-            optimizer,
-            num_warmup_steps=cfg.warmup * (total_steps // cfg.batch_size) // cfg.world_size,
-            num_training_steps=cfg.epochs * (total_steps // cfg.batch_size) // cfg.world_size,
-        )
-    elif cfg.schedule == "linear":
-        scheduler = get_linear_schedule_with_warmup(
-            optimizer,
-            num_warmup_steps=0,
-            num_training_steps=cfg.epochs * (total_steps // cfg.batch_size) // cfg.world_size,
-        )
-        
-        print("num_steps", (total_steps // cfg.batch_size) // cfg.world_size)
-    elif cfg.schedule == "onecycle":
-        scheduler = optim.lr_scheduler.OneCycleLR(
-            optimizer,
-            max_lr=cfg.lr,
-            total_steps=cfg.epochs * total_steps // cfg.batch_size // 50,  # only go for 50 % of train
-            pct_start=0.01,
-            anneal_strategy="cos",
-            cycle_momentum=True,
-            base_momentum=0.85,
-            max_momentum=0.95,
-            div_factor=1e2,
-            final_div_factor=1e5,
-        )
-    elif cfg.schedule == "gradual_warmup":
-        from warmup_scheduler import GradualWarmupScheduler
-        class GradualWarmupSchedulerV2(GradualWarmupScheduler):
-            def __init__(self, optimizer, multiplier, total_epoch, after_scheduler=None):
-                super(GradualWarmupSchedulerV2, self).__init__(optimizer, multiplier, total_epoch, after_scheduler)
-            def get_lr(self):
-                if self.last_epoch > self.total_epoch:
-                    if self.after_scheduler:
-                        if not self.finished:
-                            self.after_scheduler.base_lrs = [base_lr * self.multiplier for base_lr in self.base_lrs]
-                            self.finished = True
-                        return self.after_scheduler.get_lr()
-                    return [base_lr * self.multiplier for base_lr in self.base_lrs]
-                if self.multiplier == 1.0:
-                    return [base_lr * (float(self.last_epoch) / self.total_epoch) for base_lr in self.base_lrs]
-                else:
-                    return [base_lr * ((self.multiplier - 1.) * self.last_epoch / self.total_epoch + 1.) for base_lr in self.base_lrs]
-                
-        
-        
-        
-    else:
-        scheduler = None
+    scheduler = WarmupCosineSchedule(
+        optimizer,
+        warmup_steps=cfg.warmup * (total_steps // cfg.batch_size) // cfg.world_size,
+        t_total=cfg.epochs * (total_steps // cfg.batch_size) // cfg.world_size,
+    )
 
     return scheduler
 
-
-import numpy as np 
 from numba import jit
 
 @jit
@@ -340,9 +266,12 @@ def run_eval(model, val_dataloader, cfg, writer, epoch, pre="val"):
         
         val_preds = val_preds.cpu().numpy().astype(np.float32)
         val_targets = val_targets.cpu().numpy().astype(np.float32)
-        rocs = [fast_auc(val_targets[:,i], val_preds[:,i]) for i in range(len(val_dataloader.dataset.label_cols))]
+        if cfg.debug:
+            avg_roc = 0.0
+        else:
+            rocs = [fast_auc(val_targets[:,i], val_preds[:,i]) for i in range(len(val_dataloader.dataset.label_cols))]
 
-        avg_roc = np.mean(rocs)
+            avg_roc = np.mean(rocs)
         
         print(f"{pre}_loss", val_loss)
         print(f"{pre}_avg_roc", avg_roc)
@@ -438,6 +367,10 @@ if __name__ == "__main__":
     else:
         val_df = train[train['fold'] == cfg.fold]
     train_df = train[train['fold'] != cfg.fold]
+
+    if cfg.debug:
+        train_df = train_df.head(100)
+        val_df = val_df.head(20)
 
     train_dataset = get_train_dataset(train_df,cfg)
     val_dataset = get_val_dataset(val_df,cfg)

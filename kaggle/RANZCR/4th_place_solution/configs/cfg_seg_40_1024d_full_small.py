@@ -42,14 +42,14 @@ cfg.gpu = 0
 cfg.num_workers = 8
 cfg.tags = 'segment'
 cfg.fold = -1
-cfg.img_size = (896,896)
+cfg.img_size = (448,448)
 # cfg.weight_decay = 0.0001
 cfg.drop_last=True
 cfg.grad_accumulation =2
 
 cfg.eval_epochs = 1
 cfg.train_val = True
-cfg.eval_train_epochs = 20
+cfg.eval_train_epochs = 10
 
 cfg.drop_path_rate = 0.
 cfg.drop_rate = 0.
@@ -90,15 +90,15 @@ cfg.find_unused_parameters = True
 cfg.eval_ddp = True
 
 cfg.train_aug = Compose([
-    Resized(keys=("input", "mask"), spatial_size=1008, size_mode="longest", mode="bilinear", align_corners=False),
-    SpatialPadd(keys=("input", "mask"), spatial_size=(1008, 1008)),
+    Resized(keys=("input", "mask"), spatial_size=504, size_mode="longest", mode="bilinear", align_corners=False),
+    SpatialPadd(keys=("input", "mask"), spatial_size=(504, 504)),
     RandFlipd(keys=("input", "mask"), prob=0.5, spatial_axis=1),
-    RandAffined(keys=("input", "mask"), prob=0.5, rotate_range=np.pi/14.4, translate_range=(63, 63), scale_range=(0.1, 0.1), as_tensor_output=False),
+    RandAffined(keys=("input", "mask"), prob=0.5, rotate_range=np.pi/14.4, translate_range=(31.5, 31.5), scale_range=(0.1, 0.1), as_tensor_output=False),
     RandSpatialCropd(keys=("input", "mask"), roi_size=(cfg.img_size[0], cfg.img_size[1]), random_size=False),
     RandScaleIntensityd(keys="input", factors=(-0.2,0.2), prob=0.7),
     RandShiftIntensityd(keys="input", offsets=(-51, 51), prob=0.7),
     RandLambdad(keys="input", func=lambda x: 255 - x, prob=0.5),
-    RandCoarseDropoutd(keys=("input", "mask"), holes=8, spatial_size=(1, 1), max_spatial_size=(84, 84), prob=0.5),
+    RandCoarseDropoutd(keys=("input", "mask"), holes=8, spatial_size=(1, 1), max_spatial_size=(42, 42), prob=0.5),
     CastToTyped(keys="input", dtype=np.float32),
     NormalizeIntensityd(keys="input", nonzero=False),
     Lambdad(keys="input", func=lambda x: x.clip(-20, 20)),
@@ -106,8 +106,8 @@ cfg.train_aug = Compose([
 ])
 
 cfg.val_aug = Compose([
-    Resized(keys=("input", "mask"), spatial_size=1008, size_mode="longest", mode="bilinear", align_corners=False),
-    SpatialPadd(keys=("input", "mask"), spatial_size=(1008, 1008)),
+    Resized(keys=("input", "mask"), spatial_size=504, size_mode="longest", mode="bilinear", align_corners=False),
+    SpatialPadd(keys=("input", "mask"), spatial_size=(504, 504)),
     CenterSpatialCropd(keys=("input", "mask"), roi_size=(cfg.img_size[0], cfg.img_size[1])),
     CastToTyped(keys="input", dtype=np.float32),
     NormalizeIntensityd(keys="input", nonzero=False),

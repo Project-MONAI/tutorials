@@ -23,7 +23,7 @@ from torch.nn.parallel import DistributedDataParallel as NativeDDP
 
 from transformers import get_cosine_schedule_with_warmup, get_linear_schedule_with_warmup
 from transformers import AdamW
-
+from torch.utils.tensorboard import SummaryWriter
 import pandas as pd
 import cv2
 
@@ -277,54 +277,7 @@ def fast_auc(y_true, y_prob):
     return auc
 
 
-
-def run_simple_eval(model, val_dataloader, cfg,pre="val"):
-    
-    model.eval()
-    torch.set_grad_enabled(False)
-
-    # store information for evaluation
-    val_losses = []
-
-    for data in tqdm(val_dataloader, disable=cfg.local_rank != 0):
-
-        batch = batch_to_device(data, device)
-
-        if cfg.mixed_precision:
-            with autocast():
-                output = model(batch)
-        else:
-            output = model(batch)
-
-        val_losses += [output['loss']]
-
-    val_losses = torch.stack(val_losses)
-    
-    if cfg.distributed and cfg.eval_ddp:
-        val_losses = sync_across_gpus(val_losses, cfg.world_size)
-
-    if cfg.local_rank == 0:
-        val_losses = val_losses.cpu().numpy()
-        
-        val_loss = np.mean(val_losses)
-
-
-        print(f"Mean {pre}_loss", np.mean(val_losses))
-
-
-
-    else:
-        val_loss = 0.
-
-    if cfg.distributed:
-        torch.distributed.barrier(group)
-
-    print("EVAL FINISHED")
-
-    return val_loss
-
-
-def run_eval(model, val_dataloader, cfg, pre="val"):
+def run_eval(model, val_dataloader, cfg, writer, epoch, pre="val"):
     
     model.eval()
     torch.set_grad_enabled(False)
@@ -394,6 +347,9 @@ def run_eval(model, val_dataloader, cfg, pre="val"):
         print(f"{pre}_loss", val_loss)
         print(f"{pre}_avg_roc", avg_roc)
 
+        writer.add_scalar(f"{pre}_loss", val_loss, epoch)
+        writer.add_scalar(f"{pre}_avg_roc", avg_roc, epoch)
+
         if len(val_seg_losses) > 0:
             val_seg_loss = val_seg_losses.cpu().numpy().mean()
             val_cls_loss = val_cls_losses.cpu().numpy().mean() 
@@ -437,6 +393,7 @@ if __name__ == "__main__":
         cfg.seed = np.random.randint(1_000_000)
     set_seed(cfg.seed)  
 
+    writer = SummaryWriter(str(cfg.output_dir + f'/fold{cfg.fold}/'))
     
     cfg.distributed = False
     if "WORLD_SIZE" in os.environ:
@@ -513,10 +470,6 @@ if __name__ == "__main__":
         scaler = GradScaler()
     else:
         scaler = None
-
-
-    if cfg.simple_eval:
-        run_eval = run_simple_eval
             
     step = 0
     i = 0
@@ -617,23 +570,22 @@ if __name__ == "__main__":
         if (epoch+1) % cfg.eval_epochs == 0 or (epoch+1) == cfg.epochs:
             if cfg.distributed and cfg.eval_ddp:
                 #torch.cuda.synchronize()
-                val_loss = run_eval(model, val_dataloader, cfg)
+                val_loss = run_eval(model, val_dataloader, cfg, writer, epoch)
             else:
                 if cfg.local_rank == 0:
-                    val_loss = run_eval(model, val_dataloader, cfg)
+                    val_loss = run_eval(model, val_dataloader, cfg, writer, epoch)
         else:
             val_score = 0
 
         if cfg.train_val == True:
             if (epoch+1) % cfg.eval_train_epochs == 0 or (epoch+1) == cfg.epochs:
                 if cfg.distributed and cfg.eval_ddp:
-                    train_val_loss = run_eval(model, train_val_dataloader, cfg, pre="tr")
+                    train_val_loss = run_eval(model, train_val_dataloader, cfg, writer, epoch, pre="tr")
                 else:
                     if cfg.local_rank == 0:
-                        train_val_loss = run_eval(model, train_val_dataloader, cfg, pre="tr")
+                        train_val_loss = run_eval(model, train_val_dataloader, cfg, writer, epoch, pre="tr")
 
         if cfg.local_rank == 0:
-            #val_loss = run_eval(model, val_dataloader, cfg)
 
             if val_loss < best_val_loss:
                 print(f'SAVING CHECKPOINT: val_loss {best_val_loss:.5} -> {val_loss:.5}')
@@ -652,6 +604,7 @@ if __name__ == "__main__":
             torch.distributed.barrier(group)
 
 
+    writer.close()
 
     #END of training
     

@@ -69,7 +69,6 @@ cfg.optimizer = 'Adam' # "Adam", "fused_Adam", "SGD", "fused_SGD"
 cfg.epochs = 10
 cfg.seed = -1
 cfg.resume_training = False
-cfg.simple_eval = False
 cfg.do_test = True
 cfg.do_seg = False
 cfg.eval_ddp = True

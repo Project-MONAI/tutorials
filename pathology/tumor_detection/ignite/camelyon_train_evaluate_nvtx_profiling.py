@@ -256,7 +256,7 @@ def train(cfg):
     ]
     train_postprocessing = Compose(
         [
-            RangePushD("Postprocessing}"),
+            RangePushD("Postprocessing"),
             RangePushD("ActivationsD"),
             ActivationsD(keys="pred", sigmoid=True),
             RangePopD(),

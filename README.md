@@ -142,6 +142,9 @@ The example show how to execute the 3d segmentation torch tutorial on a federate
 #### [Whole Slide Tumor Detection](./pathology/tumor_detection)
 The example show how to train and evaluate a tumor detection model (based on patch classification) on whole-slide histopathology images.
 
+#### [Profiling Whole Slide Tumor Detection](./pathology/tumor_detection)
+The example show how to use MONAI NVTX transforms to tag and profile pre- and post-processing transforms in the digital pathology whole slide tumor detection pipeline.
+
 **acceleration**
 #### [distributed_training](./acceleration/distributed_training)
 The examples show how to execute distributed training and evaluation based on 3 different frameworks:

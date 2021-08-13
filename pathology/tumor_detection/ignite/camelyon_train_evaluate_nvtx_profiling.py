@@ -12,8 +12,7 @@ from torch.optim import SGD, lr_scheduler
 from ignite.metrics import Accuracy
 
 import monai
-from monai.config import KeysCollection
-from monai.data import DataLoader, load_decathlon_datalist, list_data_collate
+from monai.data import DataLoader, load_decathlon_datalist
 from monai.transforms import (
     ActivationsD,
     AsDiscreteD,
@@ -38,22 +37,9 @@ from monai.handlers import (
     ValidationHandler,
     from_engine,
 )
-from monai.transforms.nvtx import (
-    Mark,
-    MarkD,
-    RandMark,
-    RandMarkD,
-    RandRangePop,
-    RandRangePopD,
-    RandRangePush,
-    RandRangePushD,
-    RangePop,
-    RangePopD,
-    RangePush,
-    RangePushD,
-)
+from monai.transforms.nvtx import RangePopD, RangePushD
 
-from monai.apps.pathology.datasets import PatchWSIDataset, SmartCachePatchWSIDataset
+from monai.apps.pathology.data import PatchWSIDataset
 from monai.networks.nets import TorchVisionFCModel
 
 
@@ -297,7 +283,7 @@ def main():
         type=str,
         default="/workspace/data/medical/pathology/",
         dest="data_root",
-        help="path to root folder of images containg training folder",
+        help="path to root folder of images containing training folder",
     )
     parser.add_argument("--logdir", type=str, default="./logs/", dest="logdir", help="log directory")
 

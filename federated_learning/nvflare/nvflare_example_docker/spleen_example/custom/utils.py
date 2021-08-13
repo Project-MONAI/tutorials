@@ -57,6 +57,10 @@ class MONAIModelManager:
         """
         This function is used to load provided weights for the network saved
         in FL context.
+        Before loading weights, tensors might need to be reshaped to support HE for secure aggregation.
+        More info of HE:
+        https://github.com/NVIDIA/clara-train-examples/blob/master/PyTorch/NoteBooks/FL/Homomorphic_Encryption.ipynb
+
         """
         net = fl_ctx.get_prop(FLConstants.MODEL_NETWORK)
         if fl_ctx.get_prop(FLConstants.MULTI_GPU):
@@ -68,7 +72,7 @@ class MONAIModelManager:
             if var_name in model_keys:
                 weights = model_weights[var_name]
                 try:
-                    local_var_dict[var_name] = torch.as_tensor(weights)
+                    local_var_dict[var_name] = torch.as_tensor(np.reshape(weights, local_var_dict[var_name].shape))
                 except Exception as e:
                     raise ValueError(
                         "Convert weight from {} failed with error: {}".format(

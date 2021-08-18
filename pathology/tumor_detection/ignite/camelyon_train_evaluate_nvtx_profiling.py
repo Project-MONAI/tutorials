@@ -98,7 +98,7 @@ def train(cfg):
             RangeD(CastToTypeD(keys="image", dtype=np.float32)),
             RandRangeD(RandZoomD(keys="image", prob=0.5, min_zoom=0.9, max_zoom=1.1)),
             RangeD(ScaleIntensityRangeD(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0)),
-            RangeD(ToTensorD(keys=("image", "label")), "ToTensorD_1"),
+            RangeD(ToTensorD(keys=("image", "label")), "ToTensorD_2"),
             RangePopD(),
         ]
     )

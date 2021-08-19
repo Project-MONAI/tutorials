@@ -26,10 +26,12 @@
 
 import json
 import logging
+from monai.transforms.utility.array import CastToType
 import numpy as np
 import os
 import pathlib
 from tempfile import NamedTemporaryFile
+from PIL import Image
 
 import torch
 import torch.backends.cudnn as cudnn
@@ -41,6 +43,7 @@ from monai.transforms import (Activations,
                               AddChannel,
                               AsDiscrete,
                               CropForeground,
+                              CastToType,
                               EnsureType,
                               LoadImage,
                               Lambda,
@@ -53,6 +56,8 @@ from monai.transforms import (Activations,
 
 import triton_python_backend_utils as pb_utils
 
+MEDNIST_CLASSES = ["AbdomenCT", "BreastMRI", "CXR", "ChestCT", "Hand", "HeadCT"]
+
 
 logger = logging.getLogger(__name__)
 gdrive_url = "https://drive.google.com/uc?id=1U9Oaw47SWMJeDkg1FSTY1W__tQOY1nAZ"
@@ -62,6 +67,20 @@ model_filename = "MedNIST_model.tar.gz"
 md5_check = "571046a25659515bf7abee4266f14435"
 md5_check = "b09c4ea9f220b4d0536000757a6ba5cd"
 
+
+class LoadStreamPIL(Transform):
+    """Load an image file from a data stream using PIL."""
+
+    def __init__(self, mode=None):
+        self.mode = mode
+
+    def __call__(self, stream):
+        img = Image.open(stream)
+
+        if self.mode is not None:
+            img = img.convert(mode=self.mode)
+
+        return np.array(img)
 
 class TritonPythonModel:
     """
@@ -101,19 +120,28 @@ class TritonPythonModel:
                 logger.error(f"No CUDA device detected. Using device: {inference_device_kind}")
 
         # create pre-transforms for MedNIST
+        #self.load_transforms = Compose
         self.pre_transforms = Compose([
-            LoadImage(reader="PILreader", image_only=True),
-            AddChannel(),
+            LoadImage(reader="PILReader", image_only=True,dtype=np.float32),
             ScaleIntensity(),
-            EnsureType(),
+            AddChannel(),
+            AddChannel(),
             ToTensor(),
             Lambda(func=lambda x: x.to(device=self.inference_device)),
         ])
+        # self.pre_transforms = Compose([LoadStreamPIL("L"),
+        #                     Lambda(func=lambda x: x.astype(np.float32)),
+        #                     ScaleIntensity(),
+        #                     AddChannel(),
+        #                     AddChannel(),
+        #                     ToTensor(),
+        #                     Lambda(func=lambda x: x.to(device=self.inference_device)),
 
+        # ])
         # create post-transforms
         self.post_transforms = Compose([
             Lambda(func=lambda x: x.to(device="cpu")),
-            AsDiscrete(to_onehot=True, n_classes=6),
+            # AsDiscrete(to_onehot=False, n_classes=6),
         ])
 
         self.inferer = SimpleInferer()
@@ -124,9 +152,7 @@ class TritonPythonModel:
 
         self.model = torch.jit.load(
             "/models/mednist_class/1/model.pt", map_location=self.inference_device)
-        # self.model = torch.jit.load(
-        #     "/models/mednist_class/1/MedNist_model.zip", 
-        #     map_location=self.inference_device)
+ 
 
     def execute(self, requests):
         """
@@ -141,7 +167,8 @@ class TritonPythonModel:
         """
 
         responses = []
-
+        batched_img = []
+        print("starting request")
         for request in requests:
 
             # get the input by name (as configured in config.pbtxt)
@@ -151,19 +178,22 @@ class TritonPythonModel:
             tmpFile.seek(0)
             tmpFile.write(input_0.as_numpy().astype(np.bytes_).tobytes())
             tmpFile.close()
-
+            
             transform_output = self.pre_transforms(tmpFile.name)
 
+#       
             with torch.no_grad():
                 inference_output = self.inferer(transform_output, self.model)
 
             classification_output = self.post_transforms(inference_output)
-            _, output_classes = classification_output.max(dim=1)
+            class_ = classification_output.numpy().argmax()
+            class_idx = int(class_)
+            class_pred = str(MEDNIST_CLASSES[class_idx])
+            class_data = np.array([bytes( class_pred, encoding='utf-8')], dtype=np.bytes_)
 
-       
             output0_tensor = pb_utils.Tensor(
                 "OUTPUT0",
-                output_classes,
+                class_data,
             )
             inference_response = pb_utils.InferenceResponse(
                 output_tensors=[output0_tensor],

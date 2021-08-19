@@ -2,6 +2,7 @@
 __pycache__
 #  Ignore Pipenv files
 Pipfile
-Pipfile.loc
-Image Input Files
+Pipfile.lock
+# Image Input Files
 *.jpeg
+*.gz

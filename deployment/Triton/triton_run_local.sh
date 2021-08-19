@@ -38,4 +38,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 demo_app_image_name="monai_triton:class"
-docker run --shm-size=128G --rm -p 127.0.0.1:8000:8000 -p 127.0.0.1:8001:8001 -p 127.0.0.1:8002:8002 ${demo_app_image_name}
+
+docker run  \
+            --rm \
+            -p7555:8000 -p 8001:8001 -p 8002:8002 \
+            --runtime=nvidia \
+            --shm-size=1g \
+            --ulimit memlock=-1 \
+            --ulimit stack=67108864 \
+            ${demo_app_image_name}

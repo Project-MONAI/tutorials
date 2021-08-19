@@ -47,26 +47,13 @@ import sys
 import time
 from uuid import uuid4
 import glob
-from PIL import Image
 
 from monai.apps.utils import download_and_extract
+from monai.transforms.utils import convert_to_numpy
 
 MEDNIST_CLASSES = ["AbdomenCT", "BreastMRI", "CXR", "ChestCT", "Hand", "HeadCT"]
 
 
-class LoadStreamPIL(Transform):
-    """Load an image file from a data stream using PIL."""
-
-    def __init__(self, mode=None):
-        self.mode = mode
-
-    def __call__(self, stream):
-        img = Image.open(stream)
-
-        if self.mode is not None:
-            img = img.convert(mode=self.mode)
-
-        return np.array(img)
 
 model_name = "mednist_class"
 gdrive_path = "https://drive.google.com/uc?id=1GYvHGU2jES0m_msin-FFQnmTOaHkl0LN"
@@ -78,7 +65,8 @@ md5_check = "0bc7306e7427e00ad1c5526a6677552d"
 
 def open_nifti_files(input_path):
     return sorted(glob.glob(os.path.join(input_path, "*.nii*")))
-
+def open_jpeg_files(input_path):
+    return sorted(glob.glob(os.path.join(input_path, "*.jpeg")))
 
 
 if __name__ == "__main__":
@@ -91,28 +79,30 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    nifti_files = []
+    jpeg_files = []
     extract_dir = "./client/test_data"
-    tar_save_path = os.path.join(extract_dir, covid19_filename)
-    if os.path.isdir(args.input):
+    tar_save_path = os.path.join(extract_dir, mednist_filename)
+    # if os.path.isdir(args.input):  # check for directory existence
+    if True:  #temp all true condition for dev
         # Grab files from Google Drive and place in directory
-        download_and_extract(gdrive_path, tar_save_path, output_dir=extract_dir, hash_val=md5_check, hash_type="md5")
-        nifti_files = open_nifti_files(args.input)
-    elif os.path.isfile(args.input):
-        nifti_files = [args.input]
+        # download_and_extract(gdrive_path, tar_save_path, output_dir=extract_dir, hash_val=md5_check, hash_type="md5")
+        jpeg_files = open_jpeg_files(args.input)
 
-    if not nifti_files:
+    elif os.path.isfile(args.input):
+        jpeg_files = [args.input]
+
+    if not jpeg_files:
         print("No valid inputs provided")
         sys.exit(1)
 
-    with httpclient.InferenceServerClient("localhost:8000") as client:
+    with httpclient.InferenceServerClient("localhost:7555") as client:
         image_bytes = b''
-        for nifti_file in nifti_files:
-            with open(nifti_file, 'rb') as f:
+        for jpeg_file in jpeg_files:
+            with open(jpeg_file, 'rb') as f:
                 image_bytes = f.read()
 
             input0_data = np.array([[image_bytes]], dtype=np.bytes_)
-
+            
             inputs = [
                 httpclient.InferInput("INPUT0", input0_data.shape, np_to_triton_dtype(input0_data.dtype)),
             ]
@@ -132,7 +122,7 @@ if __name__ == "__main__":
 
             result = response.get_response()
             print("Classification result for `{}`: {}. (Inference time: {:6.0f} ms)".format(
-                nifti_file,
+                jpeg_file,
                 response.as_numpy("OUTPUT0").astype(str)[0],
                 inference_time,
             ))

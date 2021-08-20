@@ -34,7 +34,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" decollate_batch.ipy
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" csv_datasets.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" UNet_input_size_constrains.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" network_api.ipynb)
-doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" profiling_camelyon_pipline.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" profiling_camelyon_pipeline.ipynb)
 
 # output formatting
 separator=""

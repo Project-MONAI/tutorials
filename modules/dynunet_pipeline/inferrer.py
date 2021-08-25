@@ -29,7 +29,7 @@ class DynUNetInferrer(SupervisedEvaluator):
             torch.DataLoader.
         network: use the network to run model forward.
         output_dir: the path to save inferred outputs.
-        n_classes: the number of classes (output channels) for the task.
+        num_classes: the number of classes (output channels) for the task.
         epoch_length: number of iterations for one epoch, default to
             `len(val_data_loader)`.
         non_blocking: if True and this copy is between CPU and GPU, the copy may occur asynchronously
@@ -58,7 +58,7 @@ class DynUNetInferrer(SupervisedEvaluator):
         val_data_loader: DataLoader,
         network: torch.nn.Module,
         output_dir: str,
-        n_classes: Union[str, int],
+        num_classes: Union[str, int],
         epoch_length: Optional[int] = None,
         non_blocking: bool = False,
         prepare_batch: Callable = default_prepare_batch,
@@ -87,12 +87,12 @@ class DynUNetInferrer(SupervisedEvaluator):
             amp=amp,
         )
 
-        if not isinstance(n_classes, int):
-            n_classes = int(n_classes)
-        self.post_pred = AsDiscrete(argmax=True, to_onehot=True, n_classes=n_classes)
+        if not isinstance(num_classes, int):
+            num_classes = int(num_classes)
+        self.post_pred = AsDiscrete(argmax=True, to_onehot=True, num_classes=num_classes)
         self.output_dir = output_dir
         self.tta_val = tta_val
-        self.n_classes = n_classes
+        self.num_classes = num_classes
 
     def _iteration(
         self, engine: Engine, batchdata: Dict[str, Any]
@@ -159,7 +159,7 @@ class DynUNetInferrer(SupervisedEvaluator):
         if resample_flag:
             # convert the prediction back to the original (after cropped) shape
             predictions = recovery_prediction(
-                predictions.numpy(), [self.n_classes, *crop_shape], anisotrophy_flag
+                predictions.numpy(), [self.num_classes, *crop_shape], anisotrophy_flag
             )
         else:
             predictions = predictions.numpy()

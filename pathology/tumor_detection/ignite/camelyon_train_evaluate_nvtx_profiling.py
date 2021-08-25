@@ -33,8 +33,8 @@ from monai.transforms import (
     TorchVisionD,
     ToTensorD,
 )
-from monai.transforms.nvtx import RandRangeD, RangeD, RangePopD, RangePushD
-from monai.utils import first, set_determinism
+from monai.transforms.nvtx import RangePopD, RangePushD
+from monai.utils import Range, first, set_determinism
 from torch.optim import SGD, lr_scheduler
 
 from ignite.metrics import Accuracy
@@ -79,9 +79,8 @@ def train(cfg):
     # Build MONAI preprocessing
     train_preprocess = Compose(
         [
-            RangePushD("Preprocessing"),
-            RangeD(ToTensorD(keys="image"), "ToTensorD_1"),
-            RangeD(
+            Range()(ToTensorD(keys="image")),
+            Range("ColorJitter")(
                 TorchVisionD(
                     keys="image",
                     name="ColorJitter",
@@ -89,19 +88,18 @@ def train(cfg):
                     contrast=0.75,
                     saturation=0.25,
                     hue=0.04,
-                ),
-                "ColorJitter",
+                )
             ),
-            RangeD(ToNumpyD(keys="image")),
-            RandRangeD(RandFlipD(keys="image", prob=0.5)),
-            RandRangeD(RandRotate90D(keys="image", prob=0.5)),
-            RangeD(CastToTypeD(keys="image", dtype=np.float32)),
-            RandRangeD(RandZoomD(keys="image", prob=0.5, min_zoom=0.9, max_zoom=1.1)),
-            RangeD(ScaleIntensityRangeD(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0)),
-            RangeD(ToTensorD(keys=("image", "label")), "ToTensorD_2"),
-            RangePopD(),
+            Range()(ToNumpyD(keys="image")),
+            Range()(RandFlipD(keys="image", prob=0.5)),
+            Range()(RandRotate90D(keys="image", prob=0.5)),
+            Range()(CastToTypeD(keys="image", dtype=np.float32)),
+            Range()(RandZoomD(keys="image", prob=0.5, min_zoom=0.9, max_zoom=1.1)),
+            Range()(ScaleIntensityRangeD(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0)),
+            ToTensorD(keys=("image", "label")),
         ]
     )
+    train_preprocess = Range("Preprocessing")(train_preprocess)
     valid_preprocess = Compose(
         [
             CastToTypeD(keys="image", dtype=np.float32),
@@ -178,10 +176,11 @@ def train(cfg):
     # __________________________________________________________________________
     # initialize model
     model = TorchVisionFCModel("resnet18", n_classes=1, use_conv=True, pretrained=cfg["pretrain"])
+    model = Range("ResNet18")(model)
     model = model.to(device)
 
     # loss function
-    loss_func = torch.nn.BCEWithLogitsLoss()
+    loss_func = Range("Loss")(torch.nn.BCEWithLogitsLoss())
     loss_func = loss_func.to(device)
 
     # optimizer
@@ -245,8 +244,8 @@ def train(cfg):
     train_postprocessing = Compose(
         [
             RangePushD("Postprocessing"),
-            RangeD(ActivationsD(keys="pred", sigmoid=True)),
-            RangeD(AsDiscreteD(keys="pred", threshold_values=True)),
+            Range()(ActivationsD(keys="pred", sigmoid=True)),
+            Range()(AsDiscreteD(keys="pred", threshold_values=True)),
             RangePopD(),
         ]
     )

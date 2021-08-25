@@ -1,99 +1,66 @@
+import os
 from types import SimpleNamespace
-from copy import deepcopy
 
 cfg = SimpleNamespace(**{})
 
-#dataset
-cfg.dataset = 'rfcx_dataset'
-cfg.batch_size = 32
-# cfg.normalization = 'image'
-cfg.img_size = (256,256,1)
+# data path
+cfg.name = os.path.basename(__file__).split(".")[0]
+cfg.data_dir = "/workspace/data/ranzcr/"
+cfg.data_folder = cfg.data_dir + "train/"
+cfg.train_df = "/workspace/data/ranzcr/train_folds.csv"
+cfg.output_dir = "./output/{}".format(os.path.basename(__file__).split(".")[0])
+
+# dataset
+cfg.batch_size = 4
+cfg.img_size = (896, 896)
 cfg.train_aug = None
 cfg.val_aug = None
-cfg.test_augs = None
-cfg.cache_n_img = 0
-cfg.cache = False
-cfg.label_cols = ['ETT - Abnormal',
-                  'ETT - Borderline',
-                  'ETT - Normal',
-                           'NGT - Abnormal',
-                           'NGT - Borderline',
-                           'NGT - Incompletely Imaged',
-                           'NGT - Normal',
-                           'CVC - Abnormal',
-                           'CVC - Borderline',
-                           'CVC - Normal',
-                           'Swan Ganz Catheter Present']
 
-#mask
+cfg.label_cols = [
+    "ETT - Abnormal",
+    "ETT - Borderline",
+    "ETT - Normal",
+    "NGT - Abnormal",
+    "NGT - Borderline",
+    "NGT - Incompletely Imaged",
+    "NGT - Normal",
+    "CVC - Abnormal",
+    "CVC - Borderline",
+    "CVC - Normal",
+    "Swan Ganz Catheter Present",
+]
+cfg.num_classes = len(cfg.label_cols)
+
+# mask
 cfg.thickness = 32
-cfg.points_mask = False
-cfg.smooth_mask = 0
-cfg.seg_weight = 1
-cfg.annotated_only = False
-#model
-cfg.backbone = 'resnet18'
+cfg.seg_weight = 50
+
+# model
+cfg.backbone = "tf_efficientnet_b8_ap"
 cfg.pretrained = True
 cfg.pretrained_weights = None
-cfg.pool = 'mean'
 cfg.train = True
-
+cfg.seg_dim = 3
 cfg.image_extension = ".jpg"
 
-cfg.epoch_weights = None
-
-cfg.calc_loss = True
-
-
-cfg.alpha = 1
-cfg.cls_loss_pos_weight = None
-cfg.train_val = True
-cfg.eval_epochs = 1
-cfg.eval_train_epochs = 1
-cfg.drop_path_rate = None
-cfg.warmup = 0
-
-cfg.label_smoothing = 0
-
-cfg.ignore_seg = False
-
-cfg.remove_border = False
-
-#training
-cfg.fold = 0
+# training
+cfg.fold = -1
 cfg.lr = 1e-4
 cfg.weight_decay = 0
-cfg.epochs = 10
+cfg.epochs = 15
 cfg.seed = -1
-cfg.resume_training = False
-cfg.do_test = True
-cfg.do_seg = False
-cfg.eval_ddp = True
-cfg.clip_grad = 0
+cfg.calc_loss = True
+cfg.train_val = True
+cfg.eval_epochs = 1
+cfg.eval_train_epochs = 20
+cfg.warmup = 5
 
-#ressources
-cfg.find_unused_parameters = False
+# ressources
+cfg.find_unused_parameters = True
 cfg.mixed_precision = True
 cfg.grad_accumulation = 1
-cfg.syncbn = False
 cfg.gpu = 0
-cfg.dp = False
-cfg.num_workers = 4
-cfg.drop_last = True            
-#logging,
-cfg.neptune_project = None
-cfg.tags = None
-
+cfg.num_workers = 8
+cfg.drop_last = True
 
 basic_cfg = cfg
-
-
-
-
-
-
-
-
-
-
-

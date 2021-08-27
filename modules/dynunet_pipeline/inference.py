@@ -55,7 +55,7 @@ def inference(args):
         val_data_loader=test_loader,
         network=net,
         output_dir=infer_output_dir,
-        n_classes=len(properties["labels"]),
+        num_classes=len(properties["labels"]),
         inferer=SlidingWindowInferer(
             roi_size=patch_size[task_id],
             sw_batch_size=sw_batch_size,

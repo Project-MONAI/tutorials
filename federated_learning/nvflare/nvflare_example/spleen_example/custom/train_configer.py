@@ -226,7 +226,7 @@ class TrainConfiger:
                     keys=["pred", "label"],
                     argmax=[True, False],
                     to_onehot=True,
-                    n_classes=2,
+                    num_classes=2,
                 ),
             ]
         )

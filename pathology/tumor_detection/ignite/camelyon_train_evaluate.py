@@ -164,7 +164,7 @@ def train(cfg):
     # --------------------------------------------------------------------------
     # __________________________________________________________________________
     # initialize model
-    model = TorchVisionFCModel("resnet18", n_classes=1, use_conv=True, pretrained=cfg["pretrain"])
+    model = TorchVisionFCModel("resnet18", num_classes=1, use_conv=True, pretrained=cfg["pretrain"])
     model = model.to(device)
 
     # loss function

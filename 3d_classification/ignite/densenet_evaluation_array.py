@@ -31,7 +31,7 @@ def main():
 
     # IXI dataset as a demo, downloadable from https://brain-development.org/ixi-dataset/
     # the path of ixi IXI-T1 dataset
-    data_path = os.sep.join(["", "workspace", "data", "medical", "ixi", "IXI-T1"])
+    data_path = os.sep.join([".", "workspace", "data", "medical", "ixi", "IXI-T1"])
     images = [
         "IXI607-Guys-1097-T1.nii.gz",
         "IXI175-HH-1570-T1.nii.gz",

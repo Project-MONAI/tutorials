@@ -63,7 +63,8 @@ def main(tempdir):
     post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
     saver = SaveImage(output_dir="./output", output_ext=".nii.gz", output_postfix="seg")
     # try to use all the available GPUs
-    devices = get_devices_spec(None)
+    devices = [torch.device("cuda" if torch.cuda.is_available() else "cpu")]
+    #devices = get_devices_spec(None)
     model = UNet(
         dimensions=3,
         in_channels=1,

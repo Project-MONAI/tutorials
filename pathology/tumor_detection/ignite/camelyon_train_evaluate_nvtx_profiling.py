@@ -1,18 +1,25 @@
-import os
-
 import logging
+import os
 import time
 from argparse import ArgumentParser
 
-import numpy as np
-
-import torch
-from torch.optim import SGD, lr_scheduler
-
-from ignite.metrics import Accuracy
-
 import monai
+import numpy as np
+import torch
+from monai.apps.pathology.data import PatchWSIDataset
 from monai.data import DataLoader, load_decathlon_datalist
+from monai.engines import SupervisedEvaluator, SupervisedTrainer
+from monai.handlers import (
+    CheckpointSaver,
+    LrScheduleHandler,
+    StatsHandler,
+    TensorBoardStatsHandler,
+    ValidationHandler,
+    from_engine,
+)
+from monai.handlers.nvtx_handlers import RangeHandler
+from monai.networks.nets import TorchVisionFCModel
+from monai.optimizers import Novograd
 from monai.transforms import (
     ActivationsD,
     AsDiscreteD,
@@ -26,21 +33,11 @@ from monai.transforms import (
     TorchVisionD,
     ToTensorD,
 )
-from monai.utils import first, set_determinism
-from monai.optimizers import Novograd
-from monai.engines import SupervisedTrainer, SupervisedEvaluator
-from monai.handlers import (
-    CheckpointSaver,
-    LrScheduleHandler,
-    StatsHandler,
-    TensorBoardStatsHandler,
-    ValidationHandler,
-    from_engine,
-)
+from monai.transforms.nvtx import RangePopD, RangePushD
+from monai.utils import Range, first, set_determinism
+from torch.optim import SGD, lr_scheduler
 
-from monai.apps.pathology.data import PatchWSIDataset
-from monai.networks.nets import TorchVisionFCModel
-
+from ignite.metrics import Accuracy
 
 torch.backends.cudnn.enabled = True
 set_determinism(seed=0, additional_settings=None)
@@ -82,19 +79,27 @@ def train(cfg):
     # Build MONAI preprocessing
     train_preprocess = Compose(
         [
-            ToTensorD(keys="image"),
-            TorchVisionD(
-                keys="image", name="ColorJitter", brightness=64.0 / 255.0, contrast=0.75, saturation=0.25, hue=0.04
+            Range()(ToTensorD(keys="image")),
+            Range("ColorJitter")(
+                TorchVisionD(
+                    keys="image",
+                    name="ColorJitter",
+                    brightness=64.0 / 255.0,
+                    contrast=0.75,
+                    saturation=0.25,
+                    hue=0.04,
+                )
             ),
-            ToNumpyD(keys="image"),
-            RandFlipD(keys="image", prob=0.5),
-            RandRotate90D(keys="image", prob=0.5),
-            CastToTypeD(keys="image", dtype=np.float32),
-            RandZoomD(keys="image", prob=0.5, min_zoom=0.9, max_zoom=1.1),
-            ScaleIntensityRangeD(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0),
+            Range()(ToNumpyD(keys="image")),
+            Range()(RandFlipD(keys="image", prob=0.5)),
+            Range()(RandRotate90D(keys="image", prob=0.5)),
+            Range()(CastToTypeD(keys="image", dtype=np.float32)),
+            Range()(RandZoomD(keys="image", prob=0.5, min_zoom=0.9, max_zoom=1.1)),
+            Range()(ScaleIntensityRangeD(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0)),
             ToTensorD(keys=("image", "label")),
         ]
     )
+    train_preprocess = Range("Preprocessing")(train_preprocess)
     valid_preprocess = Compose(
         [
             CastToTypeD(keys="image", dtype=np.float32),
@@ -135,10 +140,16 @@ def train(cfg):
     # __________________________________________________________________________
     # DataLoaders
     train_dataloader = DataLoader(
-        train_dataset, num_workers=cfg["num_workers"], batch_size=cfg["batch_size"], pin_memory=True
+        train_dataset,
+        num_workers=cfg["num_workers"],
+        batch_size=cfg["batch_size"],
+        pin_memory=True,
     )
     valid_dataloader = DataLoader(
-        valid_dataset, num_workers=cfg["num_workers"], batch_size=cfg["batch_size"], pin_memory=True
+        valid_dataset,
+        num_workers=cfg["num_workers"],
+        batch_size=cfg["batch_size"],
+        pin_memory=True,
     )
 
     # __________________________________________________________________________
@@ -165,10 +176,11 @@ def train(cfg):
     # __________________________________________________________________________
     # initialize model
     model = TorchVisionFCModel("resnet18", n_classes=1, use_conv=True, pretrained=cfg["pretrain"])
+    model = Range("ResNet18")(model)
     model = model.to(device)
 
     # loss function
-    loss_func = torch.nn.BCEWithLogitsLoss()
+    loss_func = Range("Loss")(torch.nn.BCEWithLogitsLoss())
     loss_func = loss_func.to(device)
 
     # optimizer
@@ -195,7 +207,10 @@ def train(cfg):
         TensorBoardStatsHandler(log_dir=log_dir, output_transform=lambda x: None),
     ]
     val_postprocessing = Compose(
-        [ActivationsD(keys="pred", sigmoid=True), AsDiscreteD(keys="pred", threshold_values=True)]
+        [
+            ActivationsD(keys="pred", sigmoid=True),
+            AsDiscreteD(keys="pred", threshold_values=True),
+        ]
     )
     evaluator = SupervisedEvaluator(
         device=device,
@@ -209,18 +224,30 @@ def train(cfg):
 
     # Trainer
     train_handlers = [
+        RangeHandler("Iteration"),
+        RangeHandler("Batch"),
         LrScheduleHandler(lr_scheduler=scheduler, print_lr=True),
         CheckpointSaver(
-            save_dir=cfg["logdir"], save_dict={"net": model, "opt": optimizer}, save_interval=1, epoch_level=True
+            save_dir=cfg["logdir"],
+            save_dict={"net": model, "opt": optimizer},
+            save_interval=1,
+            epoch_level=True,
         ),
         StatsHandler(tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
         ValidationHandler(validator=evaluator, interval=1, epoch_level=True),
         TensorBoardStatsHandler(
-            log_dir=cfg["logdir"], tag_name="train_loss", output_transform=from_engine(["loss"], first=True)
+            log_dir=cfg["logdir"],
+            tag_name="train_loss",
+            output_transform=from_engine(["loss"], first=True),
         ),
     ]
     train_postprocessing = Compose(
-        [ActivationsD(keys="pred", sigmoid=True), AsDiscreteD(keys="pred", threshold_values=True)]
+        [
+            RangePushD("Postprocessing"),
+            Range()(ActivationsD(keys="pred", sigmoid=True)),
+            Range()(AsDiscreteD(keys="pred", threshold_values=True)),
+            RangePopD(),
+        ]
     )
 
     trainer = SupervisedTrainer(
@@ -266,10 +293,20 @@ def main():
 
     parser.add_argument("--openslide", action="store_true", dest="use_openslide", help="use OpenSlide")
     parser.add_argument("--no-amp", action="store_false", dest="amp", help="deactivate amp")
-    parser.add_argument("--no-novograd", action="store_false", dest="novograd", help="deactivate novograd optimizer")
-    parser.add_argument("--no-pretrain", action="store_false", dest="pretrain", help="deactivate Imagenet weights")
+    parser.add_argument(
+        "--no-novograd",
+        action="store_false",
+        dest="novograd",
+        help="deactivate novograd optimizer",
+    )
+    parser.add_argument(
+        "--no-pretrain",
+        action="store_false",
+        dest="pretrain",
+        help="deactivate Imagenet weights",
+    )
 
-    parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")
+    parser.add_argument("--cpu", type=int, default=0, dest="num_workers", help="number of workers")
     parser.add_argument("--gpu", type=str, default="0", dest="gpu", help="which gpu to use")
 
     args = parser.parse_args()

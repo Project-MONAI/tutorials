@@ -14,7 +14,7 @@
 set -e
 # script for running the examples
 
-
+function setup() {
 # install necessary packages
 pip install numpy
 pip install torch
@@ -38,11 +38,13 @@ else
         mkdir -p ./workspace/data/medical/ixi/IXI-T1/
         tar -C ./workspace/data/medical/ixi/IXI-T1/ -xf testing_ixi_t1.tar.gz
 fi
+}
 
-
+function 3d_class_torch() {
 # run training files in 3d_classification/torch
 for file in "3d_classification/torch"/*train*
 do
+    echo "Running $file"
     python "$file"
 done
 
@@ -53,13 +55,16 @@ done
 # run eval files in 3d_classification/torch
 for file in "3d_classification/torch"/*eval*
 do
+    echo "Running $file"
     python "$file"
 done
+}
 
-
+function 3d_class_ignite() {
 # run training files in 3d_classification/ignite
 for file in "3d_classification/ignite"/*train*
 do
+    echo "Running $file"
     python "$file"
 done
 
@@ -70,13 +75,16 @@ done
 # run eval files in 3d_classification/ignite
 for file in "3d_classification/ignite"/*eval*
 do
+    echo "Running $file"
     python "$file"
 done
+}
 
-
+function 2d_seg_torch() {
 # run training files in 2d_segmentation/torch
 for file in "2d_segmentation/torch"/*train*
 do
+    echo "Running $file"
     python "$file"
 done
 
@@ -89,8 +97,9 @@ for file in "2d_segmentation/torch"/*eval*
 do
     python "$file"
 done
+}
 
-
+function 3d_seg_torch() {
 # run training files in 3d_segmentation/torch
 for file in "3d_segmentation/torch"/*train*
 do
@@ -112,8 +121,9 @@ for file in "3d_segmentation/torch"/*inference*
 do
     python "$file"
 done
+}
 
-
+function 3d_seg_ignite() {
 # run training files in 3d_segmentation/ignite
 for file in "3d_segmentation/ignite"/*train*
 do
@@ -129,11 +139,13 @@ for file in "3d_segmentation/ignite"/*eval*
 do
     python "$file"
 done
-
+}
 
 # run training file in modules/workflows
+function modules_workload() {
 for file in "modules/workflows"/*train*
 do
+    echo "Running $file"
     python "$file"
 done
 
@@ -146,3 +158,22 @@ for file in "modules/workflows"/*eval*
 do
     python "$file"
 done
+}
+
+# run the workloads
+setup
+3d_class_torch
+3d_class_ignite
+2d_seg_torch
+3d_seg_torch
+3d_seg_ignite
+# TODO: there are no .py files. needs fix later
+# modules_workload
+
+
+
+
+ 
+ 
+ 
+ 

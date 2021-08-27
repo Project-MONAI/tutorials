@@ -2,8 +2,13 @@
 This pipeline is modified from the 4th place solution of RANZCR CLiP - Catheter and Line Position Challenge in Kaggle:
 https://www.kaggle.com/c/ranzcr-clip-catheter-line-classification
 
-Please modify the dataset path in `configs/default_config.py`. In this pipeline, the data split is achieved from the following public kernel which is different from the original solution:
+# Prepared data
+
+Please download the dataset from the competition site and modify the dataset path in `configs/default_config.py`. 
+
+In this pipeline, the data split file `train_folds.csv` is achieved from the following public kernel which is different from the original solution:
 https://www.kaggle.com/underwearfitting/how-to-properly-split-folds
+Please download and put it into the dataset's path
 
 # GPU used:
 

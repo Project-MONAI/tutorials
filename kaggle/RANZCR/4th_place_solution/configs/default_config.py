@@ -4,7 +4,6 @@ from types import SimpleNamespace
 cfg = SimpleNamespace(**{})
 
 # data path
-cfg.name = os.path.basename(__file__).split(".")[0]
 cfg.data_dir = "/workspace/data/ranzcr/"
 cfg.data_folder = cfg.data_dir + "train/"
 cfg.train_df = "/workspace/data/ranzcr/train_folds.csv"
@@ -50,7 +49,7 @@ cfg.weight_decay = 0
 cfg.epochs = 15
 cfg.seed = -1
 cfg.calc_loss = True
-cfg.train_val = True
+cfg.train_val = False
 cfg.eval_epochs = 1
 cfg.eval_train_epochs = 20
 cfg.warmup = 5

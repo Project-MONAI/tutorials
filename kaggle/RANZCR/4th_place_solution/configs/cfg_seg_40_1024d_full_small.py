@@ -22,7 +22,7 @@ from default_config import basic_cfg
 cfg = basic_cfg
 
 cfg.lr = 0.0006
-cfg.backbone = "tf_efficientnet_b8_ap"
+cfg.backbone = "efficientnet_b8_ap"
 cfg.img_size = (448, 448)
 cfg.grad_accumulation = 2
 

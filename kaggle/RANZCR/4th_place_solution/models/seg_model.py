@@ -148,11 +148,11 @@ class Net(nn.Module):
     def __init__(self, cfg):
         super(Net, self).__init__()
 
-        if "tf_efficientnet_b8" in cfg.backbone:
+        if "efficientnet_b8" in cfg.backbone:
             backbone_out = 704
             encoder_channels = (1, 32, 56, 88, 248, 704)
             model_name = "efficientnet-b8"
-        else:
+        else: # efficientnet_b7
             backbone_out = 640
             encoder_channels = (1, 32, 48, 80, 224, 640)
             model_name = "efficientnet-b7"

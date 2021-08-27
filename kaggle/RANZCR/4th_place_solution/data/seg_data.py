@@ -8,11 +8,6 @@ from monai.transforms import LoadImage
 from torch.utils.data import Dataset
 
 
-def batch_to_device(batch, device):
-    batch_dict = {key: batch[key].to(device) for key in batch}
-    return batch_dict
-
-
 class CustomDataset(Dataset):
     def __init__(self, df, cfg, aug, mode="train"):
 

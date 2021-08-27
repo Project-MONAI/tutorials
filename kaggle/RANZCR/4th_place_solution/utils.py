@@ -1,0 +1,116 @@
+import os
+import random
+
+import numpy as np
+import torch
+from monai.optimizers.lr_scheduler import WarmupCosineSchedule
+from numba import jit
+from torch import optim
+from torch.utils.data import DataLoader, SequentialSampler
+
+from data.seg_data import CustomDataset
+
+
+def set_seed(seed=1234):
+    random.seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = False
+    torch.backends.cudnn.benchmark = True
+
+
+def get_train_dataset(train_df, cfg):
+    train_dataset = CustomDataset(train_df, cfg, aug=cfg.train_aug, mode="train")
+    return train_dataset
+
+
+def get_train_dataloader(train_dataset, cfg):
+
+    train_dataloader = DataLoader(
+        train_dataset,
+        sampler=None,
+        shuffle=True,
+        batch_size=cfg.batch_size,
+        num_workers=cfg.num_workers,
+        pin_memory=False,
+        collate_fn=None,
+        drop_last=cfg.drop_last,
+    )
+    print(f"train: dataset {len(train_dataset)}, dataloader {len(train_dataloader)}")
+    return train_dataloader
+
+
+def get_val_dataset(val_df, cfg):
+    print("Loading val dataset")
+    val_dataset = CustomDataset(val_df, cfg, aug=cfg.val_aug, mode="val")
+    return val_dataset
+
+
+def get_val_dataloader(val_dataset, cfg):
+
+    val_dataloader = DataLoader(
+        val_dataset,
+        sampler=SequentialSampler(val_dataset),
+        batch_size=cfg.batch_size,
+        num_workers=cfg.num_workers,
+        pin_memory=False,
+        collate_fn=None,
+    )
+    print(f"valid: dataset {len(val_dataset)}, dataloader {len(val_dataloader)}")
+    return val_dataloader
+
+
+def get_optimizer(model, cfg):
+
+    params = model.parameters()
+    optimizer = optim.Adam(params, lr=cfg.lr, weight_decay=cfg.weight_decay)
+
+    return optimizer
+
+
+def get_scheduler(cfg, optimizer, total_steps):
+
+    scheduler = WarmupCosineSchedule(
+        optimizer,
+        warmup_steps=cfg.warmup * (total_steps // cfg.batch_size),
+        t_total=cfg.epochs * (total_steps // cfg.batch_size),
+    )
+
+    return scheduler
+
+
+def create_checkpoint(model, optimizer, epoch, scheduler=None, scaler=None):
+    checkpoint = {
+        "model": model.state_dict(),
+        "optimizer": optimizer.state_dict(),
+        "epoch": epoch,
+    }
+
+    if scheduler is not None:
+        checkpoint["scheduler"] = scheduler.state_dict()
+
+    if scaler is not None:
+        checkpoint["scaler"] = scaler.state_dict()
+    return checkpoint
+
+
+def batch_to_device(batch, device):
+    batch_dict = {key: batch[key].to(device) for key in batch}
+    return batch_dict
+
+
+@jit
+def fast_auc(y_true, y_prob):
+    y_true = np.asarray(y_true)
+    y_true = y_true[np.argsort(y_prob)]
+    nfalse = 0
+    auc = 0
+    n = len(y_true)
+    for i in range(n):
+        y_i = y_true[i]
+        nfalse += 1 - y_i
+        auc += y_i * nfalse
+    auc /= nfalse * (n - nfalse)
+    return auc

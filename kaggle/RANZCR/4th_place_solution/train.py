@@ -11,7 +11,7 @@ import torch
 from torch.cuda.amp import GradScaler, autocast
 from torch.utils.tensorboard import SummaryWriter
 
-from models.seg_model import Net
+from models.seg_model import RanzcrNet
 from utils import (
     batch_to_device,
     create_checkpoint,
@@ -58,7 +58,7 @@ def main(cfg):
     device = "cuda:%d" % cfg.gpu
     cfg.device = device
 
-    model = Net(cfg)
+    model = RanzcrNet(cfg)
     model.to(device)
 
     # set optimizer, lr scheduler

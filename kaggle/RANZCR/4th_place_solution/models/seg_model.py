@@ -144,7 +144,7 @@ class SegmentationHead(nn.Sequential):
         super().__init__(conv_layer, up_layer, act_layer)
 
 
-class Net(nn.Module):
+class RanzcrNet(nn.Module):
     def __init__(self, cfg):
         super(Net, self).__init__()
 

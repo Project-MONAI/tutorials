@@ -1,15 +1,33 @@
 import ast
+from types import SimpleNamespace
+from typing import Tuple
 
 import cv2
 import numpy as np
 import pandas as pd
 import torch
 from monai.transforms import LoadImage
+from monai.transforms.transform import Transform
 from torch.utils.data import Dataset
 
 
 class CustomDataset(Dataset):
-    def __init__(self, df, cfg, aug, mode="train"):
+    def __init__(
+        self,
+        df: pd.DataFrame,
+        cfg: SimpleNamespace,
+        aug: Transform,
+        mode: str = "train",
+    ):
+        """
+
+        Args:
+            df: input dataframe.
+            cfg: the config data, it must be based on `basic_cfg` in `default_config.py`.
+            aug: transform(s) of the input data.
+            mode: mode of the dataset. For `train` mode, annotations will also be loaded.
+
+        """
 
         self.img_reader = LoadImage(image_only=True)
         self.cfg = cfg
@@ -19,7 +37,7 @@ class CustomDataset(Dataset):
         self.is_annotated = (
             self.df["StudyInstanceUID"].isin(annotated_ids).astype(int).values
         )
-        self.fns = self.df["StudyInstanceUID"].values
+        self.study_ids = self.df["StudyInstanceUID"].values
         self.annotated_df = self.annotated_df.groupby("StudyInstanceUID")
         self.label_cols = np.array(cfg.label_cols)
 
@@ -35,7 +53,11 @@ class CustomDataset(Dataset):
         self.data_folder = cfg.data_folder
 
     def get_thickness(self):
+        """
+        Get thickness from config data. The value determines the thichness of the polyline edges
+        of the mask to be drawn.
 
+        """
         if isinstance(self.cfg.thickness, list):
             thickness = np.random.randint(self.cfg.thickness[0], self.cfg.thickness[1])
         else:
@@ -43,16 +65,24 @@ class CustomDataset(Dataset):
 
         return thickness
 
-    def load_one(self, id_):
+    def load_one(self, study_id: str):
+        """
+        Load image. The returned image has the shape (height, width, 1).
+
+        """
         ext = self.cfg.image_extension
-        fp = self.data_folder + id_ + ext
+        fp = self.data_folder + study_id + ext
         img = self.img_reader(filename=fp).transpose(1, 0)
         img = img[:, :, None]
 
         return img
 
-    def get_mask(self, study_id, img_shape, is_annotated):
+    def get_mask(self, study_id: str, img_shape: Tuple, is_annotated: int):
+        """
+        Get mask of image. The returned mask has the shape (height, width, 3),
+        where 3 represents three different labels: ETT, NGT and CVC.
 
+        """
         if is_annotated == 0:
             return np.zeros((img_shape[0], img_shape[1], self.cfg.seg_dim))
 
@@ -92,12 +122,13 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, idx):
 
-        fn = self.fns[idx]
+        study_id = self.study_ids[idx]
         label = self.labels[idx]
         is_annotated = self.is_annotated[idx]
 
-        img = self.load_one(fn)
-        mask = self.get_mask(fn, img.shape, is_annotated).transpose(2, 0, 1)
+        img = self.load_one(study_id)
+        # convert the shape into (Channel, height, width)
+        mask = self.get_mask(study_id, img.shape, is_annotated).transpose(2, 0, 1)
         data = {"input": img.transpose(2, 0, 1), "mask": mask}
         if self.aug:
             data = self.aug(data)
@@ -110,4 +141,4 @@ class CustomDataset(Dataset):
         }
 
     def __len__(self):
-        return len(self.fns)
+        return len(self.study_ids)

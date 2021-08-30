@@ -7,7 +7,7 @@ cfg = SimpleNamespace(**{})
 cfg.data_dir = "/workspace/data/ranzcr/"
 cfg.data_folder = cfg.data_dir + "train/"
 cfg.train_df = "/workspace/data/ranzcr/train_folds.csv"
-cfg.output_dir = "./output/{}".format(os.path.basename(__file__).split(".")[0])
+cfg.output_dir = "./output/weights/"
 
 # dataset
 cfg.batch_size = 4

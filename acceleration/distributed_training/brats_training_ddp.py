@@ -58,6 +58,7 @@ import sys
 import time
 import warnings
 
+import numpy as np
 import torch
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel
@@ -72,9 +73,9 @@ from monai.transforms import (
     Activations,
     AsDiscrete,
     Compose,
-    ConvertToMultiChannelBasedOnBratsClassesd,
     EnsureChannelFirstd,
     LoadImaged,
+    MapTransform,
     NormalizeIntensityd,
     Orientationd,
     RandFlipd,
@@ -89,9 +90,37 @@ from monai.transforms import (
 from monai.utils import set_determinism
 
 
+class ConvertToMultiChannelBasedOnBratsClassesd(MapTransform):
+    """
+    Convert labels to multi channels based on brats classes:
+    label 1 is the peritumoral edema
+    label 2 is the GD-enhancing tumor
+    label 3 is the necrotic and non-enhancing tumor core
+    The possible classes are TC (Tumor core), WT (Whole tumor)
+    and ET (Enhancing tumor).
+
+    """
+    def __call__(self, data):
+        d = dict(data)
+        for key in self.keys:
+            result = []
+            # merge label 2 and label 3 to construct TC
+            result.append(np.logical_or(d[key] == 2, d[key] == 3))
+            # merge labels 1, 2 and 3 to construct WT
+            result.append(
+                np.logical_or(
+                    np.logical_or(d[key] == 2, d[key] == 3), d[key] == 1
+                )
+            )
+            # label 2 is ET
+            result.append(d[key] == 2)
+            d[key] = np.stack(result, axis=0).astype(np.float32)
+        return d
+
+
 class BratsCacheDataset(DecathlonDataset):
     """
-    Enhance the DecathlonDataset to support distributed data parallel.    
+    Enhance the DecathlonDataset to support distributed data parallel.
 
     """
     def __init__(
@@ -259,15 +288,15 @@ def main_worker(args):
                 model, val_loader, dice_metric, dice_metric_batch, post_trans
             )
 
-        if metric > best_metric:
-            best_metric = metric
-            best_metric_epoch = epoch + 1
-            if dist.get_rank() == 0:
-                torch.save(model.state_dict(), "best_metric_model.pth")
-        print(
-            f"current epoch: {epoch + 1} current mean dice: {metric:.4f}"
-            f" tc: {metric_tc:.4f} wt: {metric_wt:.4f} et: {metric_et:.4f}"
-            f"\nbest mean dice: {best_metric:.4f} at epoch: {best_metric_epoch}"
+            if metric > best_metric:
+                best_metric = metric
+                best_metric_epoch = epoch + 1
+                if dist.get_rank() == 0:
+                    torch.save(model.state_dict(), "best_metric_model.pth")
+            print(
+                f"current epoch: {epoch + 1} current mean dice: {metric:.4f}"
+                f" tc: {metric_tc:.4f} wt: {metric_wt:.4f} et: {metric_et:.4f}"
+                f"\nbest mean dice: {best_metric:.4f} at epoch: {best_metric_epoch}"
         )
         print(f"time consuming of epoch {epoch + 1} is: {(time.time() - epoch_start):.4f}")
 
@@ -306,9 +335,10 @@ def evaluate(model, val_loader, dice_metric, dice_metric_batch, post_trans):
     model.eval()
     with torch.no_grad():
         for val_data in val_loader:
-            val_outputs = sliding_window_inference(
-                inputs=val_data["image"], roi_size=(240, 240, 160), sw_batch_size=1, predictor=model, overlap=0.5
-            )
+            with torch.cuda.amp.autocast():
+                val_outputs = sliding_window_inference(
+                    inputs=val_data["image"], roi_size=(240, 240, 160), sw_batch_size=1, predictor=model, overlap=0.5
+                )
             val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
             dice_metric(y_pred=val_outputs, y=val_data["label"])
             dice_metric_batch(y_pred=val_outputs, y=val_data["label"])

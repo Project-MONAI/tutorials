@@ -4,7 +4,6 @@ import random
 import numpy as np
 import torch
 from monai.optimizers.lr_scheduler import WarmupCosineSchedule
-from numba import jit
 from torch import optim
 from torch.utils.data import DataLoader, SequentialSampler
 
@@ -94,23 +93,3 @@ def create_checkpoint(model, optimizer, epoch, scheduler=None, scaler=None):
     if scaler is not None:
         checkpoint["scaler"] = scaler.state_dict()
     return checkpoint
-
-
-def batch_to_device(batch, device):
-    batch_dict = {key: batch[key].to(device) for key in batch}
-    return batch_dict
-
-
-@jit
-def fast_auc(y_true, y_prob):
-    y_true = np.asarray(y_true)
-    y_true = y_true[np.argsort(y_prob)]
-    nfalse = 0
-    auc = 0
-    n = len(y_true)
-    for i in range(n):
-        y_i = y_true[i]
-        nfalse += 1 - y_i
-        auc += y_i * nfalse
-    auc /= nfalse * (n - nfalse)
-    return auc

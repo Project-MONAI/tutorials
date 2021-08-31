@@ -146,7 +146,7 @@ class SegmentationHead(nn.Sequential):
 
 class RanzcrNet(nn.Module):
     def __init__(self, cfg):
-        super(Net, self).__init__()
+        super(RanzcrNet, self).__init__()
 
         if "efficientnet_b8" in cfg.backbone:
             backbone_out = 704

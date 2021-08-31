@@ -53,12 +53,14 @@ cfg.train_val = False
 cfg.eval_epochs = 1
 cfg.eval_train_epochs = 20
 cfg.warmup = 5
+cfg.compute_auc = True
 
 # ressources
 cfg.find_unused_parameters = True
 cfg.mixed_precision = True
 cfg.grad_accumulation = 1
 cfg.gpu = 0
+cfg.device = "cuda:%d" % cfg.gpu
 cfg.num_workers = 8
 cfg.drop_last = True
 

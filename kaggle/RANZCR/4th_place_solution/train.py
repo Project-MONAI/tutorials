@@ -6,16 +6,16 @@ import sys
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 import torch
+from monai.metrics import compute_roc_auc
+from monai.transforms import ToDeviced
 from torch.cuda.amp import GradScaler, autocast
 from torch.utils.tensorboard import SummaryWriter
+from tqdm import tqdm
 
 from models.seg_model import RanzcrNet
 from utils import (
-    batch_to_device,
     create_checkpoint,
-    fast_auc,
     get_optimizer,
     get_scheduler,
     get_train_dataloader,
@@ -54,12 +54,14 @@ def main(cfg):
         train_val_dataset = get_val_dataset(train_df, cfg)
         train_val_dataloader = get_val_dataloader(train_val_dataset, cfg)
 
+    to_device_transform = ToDeviced(
+        keys=("input", "target", "mask", "is_annotated"), device=cfg.device
+    )
+    cfg.to_device_transform = to_device_transform
     # set model
-    device = "cuda:%d" % cfg.gpu
-    cfg.device = device
 
     model = RanzcrNet(cfg)
-    model.to(device)
+    model.to(cfg.device)
 
     # set optimizer, lr scheduler
     total_steps = len(train_dataset)
@@ -98,7 +100,7 @@ def main(cfg):
             )
 
         if (epoch + 1) % cfg.eval_epochs == 0 or (epoch + 1) == cfg.epochs:
-            val_loss, avg_roc = run_eval(
+            val_loss = run_eval(
                 model=model,
                 val_dataloader=val_dataloader,
                 cfg=cfg,
@@ -108,19 +110,15 @@ def main(cfg):
 
         if cfg.train_val is True:
             if (epoch + 1) % cfg.eval_train_epochs == 0 or (epoch + 1) == cfg.epochs:
-                train_val_loss, train_avg_roc = run_eval(
+                train_val_loss = run_eval(
                     model, train_val_dataloader, cfg, writer, epoch
                 )
-                print(
-                    f"train_val_loss {train_val_loss:.5} train_avg_roc {train_avg_roc:.5}"
-                )
+                print(f"train_val_loss {train_val_loss:.5}")
 
         if val_loss < best_val_loss:
-            print(
-                f"SAVING CHECKPOINT: val_loss {best_val_loss:.5} -> {val_loss:.5} avg_roc {avg_roc:.5}"
-            )
+            print(f"SAVING CHECKPOINT: val_loss {best_val_loss:.5} -> {val_loss:.5}")
             best_val_loss = val_loss
-            
+
             checkpoint = create_checkpoint(
                 model,
                 optimizer,
@@ -152,12 +150,12 @@ def run_train(
     tr_it = iter(train_dataloader)
 
     for itr in progress_bar:
-        data = next(tr_it)
+        batch = next(tr_it)
+        batch = cfg.to_device_transform(batch)
         iteration += 1
 
         step += cfg.batch_size
         torch.set_grad_enabled(True)
-        batch = batch_to_device(data, cfg.device)
 
         if cfg.mixed_precision:
             with autocast():
@@ -186,9 +184,7 @@ def run_train(
 
         if step % cfg.batch_size == 0:
 
-            progress_bar.set_description(
-                f"loss: {np.mean(losses[-10:]):.2f}"
-            )
+            progress_bar.set_description(f"loss: {np.mean(losses[-10:]):.2f}")
 
 
 def run_eval(model, val_dataloader, cfg, writer, epoch):
@@ -198,13 +194,13 @@ def run_eval(model, val_dataloader, cfg, writer, epoch):
 
     # store information for evaluation
     val_losses = []
-    val_preds = []
-    val_targets = []
 
-    for data in val_dataloader:
+    if cfg.compute_auc is True:
+        val_preds = []
+        val_targets = []
 
-        batch = batch_to_device(data, cfg.device)
-
+    for batch in val_dataloader:
+        batch = cfg.to_device_transform(batch)
         if cfg.mixed_precision:
             with autocast():
                 output = model(batch)
@@ -212,28 +208,26 @@ def run_eval(model, val_dataloader, cfg, writer, epoch):
             output = model(batch)
 
         val_losses += [output["loss"]]
-        val_preds += [output["logits"].sigmoid()]
-        val_targets += [batch["target"]]
+        if cfg.compute_auc is True:
+            val_preds += [output["logits"].sigmoid()]
+            val_targets += [batch["target"]]
 
     val_losses = torch.stack(val_losses)
-    val_preds = torch.cat(val_preds)
-    val_targets = torch.cat(val_targets)
-
     val_losses = val_losses.cpu().numpy()
     val_loss = np.mean(val_losses)
 
-    val_preds = val_preds.cpu().numpy().astype(np.float32)
-    val_targets = val_targets.cpu().numpy().astype(np.float32)
+    if cfg.compute_auc is True:
 
-    rocs = [
-        fast_auc(val_targets[:, i], val_preds[:, i]) for i in range(cfg.num_classes)
-    ]
-    avg_roc = np.mean(rocs)
+        val_preds = torch.cat(val_preds)
+        val_targets = torch.cat(val_targets)
+        val_preds = val_preds.cpu().numpy().astype(np.float32)
+        val_targets = val_targets.cpu().numpy().astype(np.float32)
+        avg_auc = compute_roc_auc(val_preds, val_targets, average="macro")
+        writer.add_scalar("val_avg_auc", avg_auc, epoch)
 
     writer.add_scalar("val_loss", val_loss, epoch)
-    writer.add_scalar("val_avg_roc", avg_roc, epoch)
 
-    return val_loss, avg_roc
+    return val_loss
 
 
 if __name__ == "__main__":

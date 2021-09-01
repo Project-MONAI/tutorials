@@ -1,21 +1,17 @@
-import os
-import random
-
-import numpy as np
 import torch
 from monai.optimizers.lr_scheduler import WarmupCosineSchedule
+from monai.utils import set_determinism
 from torch import optim
 from torch.utils.data import DataLoader, SequentialSampler
 
 from data.seg_data import CustomDataset
 
 
-def set_seed(seed=1234):
-    random.seed(seed)
-    os.environ["PYTHONHASHSEED"] = str(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
+def set_seed(seed):
+    # use monai's function to set the seed.
+    # since the function will also change the deterministic settings, which are unnecessary here,
+    # we need to modify the values back.
+    set_determinism(seed=seed)
     torch.backends.cudnn.deterministic = False
     torch.backends.cudnn.benchmark = True
 

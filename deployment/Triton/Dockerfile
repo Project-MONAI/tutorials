@@ -41,9 +41,7 @@ FROM nvcr.io/nvidia/tritonserver:21.04-py3
 
 # create model directory in container
 RUN mkdir -p /models/monai_covid/1
-RUN mkdir -p /models/monai_covid/
 RUN mkdir -p /models/mednist_class/1
-RUN mkdir -p /models/mednist_class/
 # install project-specific dependencies
 COPY requirements.txt .
 
@@ -53,12 +51,12 @@ RUN rm requirements.txt
 # copy contents of model project into model repo in container image
 COPY models/monai_covid/config.pbtxt /models/monai_covid
 COPY models/monai_covid/1/model.py /models/monai_covid/1
-# COPY models/monai_covid/1/model.pt /models/monai_covid/1 
+
 
 # copy contents of model project into model repo in container image
 COPY models/mednist_class/config.pbtxt /models/mednist_class
 COPY models/mednist_class/1/model.py /models/mednist_class/1
-COPY models/mednist_class/1/model.pt /models/mednist_class/1  
+# COPY models/mednist_class/1/model.pt /models/mednist_class/1  
 
 #COPY models/monai_covid/1/covid19_model.ts /models/monai_covid/1  #moved to google drive
 

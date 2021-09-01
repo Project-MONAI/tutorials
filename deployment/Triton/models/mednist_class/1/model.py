@@ -31,7 +31,7 @@ import numpy as np
 import os
 import pathlib
 from tempfile import NamedTemporaryFile
-from PIL import Image
+# from PIL import Image
 
 import torch
 import torch.backends.cudnn as cudnn
@@ -60,27 +60,9 @@ MEDNIST_CLASSES = ["AbdomenCT", "BreastMRI", "CXR", "ChestCT", "Hand", "HeadCT"]
 
 
 logger = logging.getLogger(__name__)
-gdrive_url = "https://drive.google.com/uc?id=1U9Oaw47SWMJeDkg1FSTY1W__tQOY1nAZ"
 gdrive_url = "https://drive.google.com/uc?id=1eTQuEL1wvU3OmnVz3HXGbUn9hP4_ySbh"
-model_filename = "covid19_model.tar.gz"
 model_filename = "MedNIST_model.tar.gz"
-md5_check = "571046a25659515bf7abee4266f14435"
 md5_check = "b09c4ea9f220b4d0536000757a6ba5cd"
-
-
-class LoadStreamPIL(Transform):
-    """Load an image file from a data stream using PIL."""
-
-    def __init__(self, mode=None):
-        self.mode = mode
-
-    def __call__(self, stream):
-        img = Image.open(stream)
-
-        if self.mode is not None:
-            img = img.convert(mode=self.mode)
-
-        return np.array(img)
 
 class TritonPythonModel:
     """
@@ -98,7 +80,7 @@ class TritonPythonModel:
         # Pull model from google drive
         extract_dir = "/models/mednist_class/1"
         tar_save_path = os.path.join(extract_dir, model_filename)
-        # download_and_extract(gdrive_url, tar_save_path, output_dir=extract_dir, hash_val=md5_check, hash_type="md5")
+        download_and_extract(gdrive_url, tar_save_path, output_dir=extract_dir, hash_val=md5_check, hash_type="md5")
         # load model configuration
         self.model_config = json.loads(args['model_config'])
 
@@ -120,7 +102,6 @@ class TritonPythonModel:
                 logger.error(f"No CUDA device detected. Using device: {inference_device_kind}")
 
         # create pre-transforms for MedNIST
-        #self.load_transforms = Compose
         self.pre_transforms = Compose([
             LoadImage(reader="PILReader", image_only=True,dtype=np.float32),
             ScaleIntensity(),
@@ -129,26 +110,13 @@ class TritonPythonModel:
             ToTensor(),
             Lambda(func=lambda x: x.to(device=self.inference_device)),
         ])
-        # self.pre_transforms = Compose([LoadStreamPIL("L"),
-        #                     Lambda(func=lambda x: x.astype(np.float32)),
-        #                     ScaleIntensity(),
-        #                     AddChannel(),
-        #                     AddChannel(),
-        #                     ToTensor(),
-        #                     Lambda(func=lambda x: x.to(device=self.inference_device)),
-
-        # ])
+ 
         # create post-transforms
         self.post_transforms = Compose([
             Lambda(func=lambda x: x.to(device="cpu")),
-            # AsDiscrete(to_onehot=False, n_classes=6),
         ])
 
         self.inferer = SimpleInferer()
-
-        # self.model = torch.jit.load(
-        #     f'{pathlib.Path(os.path.realpath(__file__)).parent}{os.path.sep}covid.pt',
-        #     map_location=self.inference_device)
 
         self.model = torch.jit.load(
             "/models/mednist_class/1/model.pt", map_location=self.inference_device)
@@ -189,6 +157,7 @@ class TritonPythonModel:
             class_ = classification_output.numpy().argmax()
             class_idx = int(class_)
             class_pred = str(MEDNIST_CLASSES[class_idx])
+            class_pred = str(MEDNIST_CLASSES[int(class_)])
             class_data = np.array([bytes( class_pred, encoding='utf-8')], dtype=np.bytes_)
 
             output0_tensor = pb_utils.Tensor(

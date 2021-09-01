@@ -57,35 +57,33 @@ MEDNIST_CLASSES = ["AbdomenCT", "BreastMRI", "CXR", "ChestCT", "Hand", "HeadCT"]
 
 model_name = "mednist_class"
 gdrive_path = "https://drive.google.com/uc?id=1GYvHGU2jES0m_msin-FFQnmTOaHkl0LN"
-covid19_filename = "covid19_compress.tar.gz"
-mednist_filename = "MedNist.tar.gz"
-md5_check = "cadd79d5ca9ccdee2b49cd0c8a3e6217"
-md5_check = "0bc7306e7427e00ad1c5526a6677552d"
+# covid19_filename = "covid19_compress.tar.gz"
+mednist_filename = "MedNIST_demo.tar.gz"
+# md5_check = "cadd79d5ca9ccdee2b49cd0c8a3e6217"
+# md5_check = "0bc7306e7427e00ad1c5526a6677552d"
+md5_check = "d2066bad5fcc3466303013e2ba9bc408"
 
 
-def open_nifti_files(input_path):
-    return sorted(glob.glob(os.path.join(input_path, "*.nii*")))
 def open_jpeg_files(input_path):
     return sorted(glob.glob(os.path.join(input_path, "*.jpeg")))
 
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description='Triton CLI for COVID classification inference from NIFTI data')
+    parser = argparse.ArgumentParser(description='Triton CLI for MedNist classification inference from JPEG data')
     parser.add_argument(
         'input',
         type=str,
-        help="Path to NIFTI file or directory containing NIFTI files to send for COVID classification"
+        help="Path to JPEG file or directory containing JPEG files to send for MedNist classification"
     )
     args = parser.parse_args()
 
     jpeg_files = []
-    extract_dir = "./client/test_data"
+    extract_dir = "./client/test_data/MedNist"
     tar_save_path = os.path.join(extract_dir, mednist_filename)
-    # if os.path.isdir(args.input):  # check for directory existence
-    if True:  #temp all true condition for dev
+    if os.path.isdir(args.input):  # check for directory existence
         # Grab files from Google Drive and place in directory
-        # download_and_extract(gdrive_path, tar_save_path, output_dir=extract_dir, hash_val=md5_check, hash_type="md5")
+        download_and_extract(gdrive_path, tar_save_path, output_dir=extract_dir, hash_val=md5_check, hash_type="md5")
         jpeg_files = open_jpeg_files(args.input)
 
     elif os.path.isfile(args.input):
@@ -121,7 +119,7 @@ if __name__ == "__main__":
             inference_time = time.time() * 1000 - inference_start_time
 
             result = response.get_response()
-            print("Classification result for `{}`: {}. (Inference time: {:6.0f} ms)".format(
+            print("Classification result for `{}`: {}.  (Inference time: {:6.0f} ms)".format(
                 jpeg_file,
                 response.as_numpy("OUTPUT0").astype(str)[0],
                 inference_time,

@@ -60,9 +60,9 @@ MEDNIST_CLASSES = ["AbdomenCT", "BreastMRI", "CXR", "ChestCT", "Hand", "HeadCT"]
 
 
 logger = logging.getLogger(__name__)
-gdrive_url = "https://drive.google.com/uc?id=1eTQuEL1wvU3OmnVz3HXGbUn9hP4_ySbh"
+gdrive_url = "https://drive.google.com/uc?id=1c6noLV9oR0_mQwrsiQ9TqaaeWFKyw46l"
 model_filename = "MedNIST_model.tar.gz"
-md5_check = "b09c4ea9f220b4d0536000757a6ba5cd"
+md5_check = "370f1dd4ada1350e3ed7650cf0502332"
 
 class TritonPythonModel:
     """
@@ -119,7 +119,8 @@ class TritonPythonModel:
         self.inferer = SimpleInferer()
 
         self.model = torch.jit.load(
-            "/models/mednist_class/1/model.pt", map_location=self.inference_device)
+           f'{pathlib.Path(os.path.realpath(__file__)).parent}{os.path.sep}MedNIST_model.pt', 
+            map_location=self.inference_device)
  
 
     def execute(self, requests):

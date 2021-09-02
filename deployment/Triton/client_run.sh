@@ -45,4 +45,4 @@ else
 # otherwise use the first argument as the operator image
     input_name=$1
 fi
-python -u client/client_app.py $input_name
+python -u client/client.py $input_name

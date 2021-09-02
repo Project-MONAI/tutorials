@@ -56,12 +56,9 @@ MEDNIST_CLASSES = ["AbdomenCT", "BreastMRI", "CXR", "ChestCT", "Hand", "HeadCT"]
 
 
 model_name = "mednist_class"
-gdrive_path = "https://drive.google.com/uc?id=1GYvHGU2jES0m_msin-FFQnmTOaHkl0LN"
-# covid19_filename = "covid19_compress.tar.gz"
+gdrive_path = "https://drive.google.com/uc?id=1HQk4i4vXKUX_aAYR4wcZQKd-qk5Lcm_W"
 mednist_filename = "MedNIST_demo.tar.gz"
-# md5_check = "cadd79d5ca9ccdee2b49cd0c8a3e6217"
-# md5_check = "0bc7306e7427e00ad1c5526a6677552d"
-md5_check = "d2066bad5fcc3466303013e2ba9bc408"
+md5_check = "3f24a5833bb0455a7815c4e0ecc8a810"
 
 
 def open_jpeg_files(input_path):

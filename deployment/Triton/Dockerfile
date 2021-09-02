@@ -56,9 +56,7 @@ COPY models/monai_covid/1/model.py /models/monai_covid/1
 # copy contents of model project into model repo in container image
 COPY models/mednist_class/config.pbtxt /models/mednist_class
 COPY models/mednist_class/1/model.py /models/mednist_class/1
-# COPY models/mednist_class/1/model.pt /models/mednist_class/1  
 
-#COPY models/monai_covid/1/covid19_model.ts /models/monai_covid/1  #moved to google drive
 
-# ENTRYPOINT [ "tritonserver", "--model-repository=/models"]
-ENTRYPOINT [ "tritonserver", "--model-repository=/models", "--log-verbose=1"]
+ENTRYPOINT [ "tritonserver", "--model-repository=/models"]
+# ENTRYPOINT [ "tritonserver", "--model-repository=/models", "--log-verbose=1"]

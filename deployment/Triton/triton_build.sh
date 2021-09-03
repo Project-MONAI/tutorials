@@ -37,5 +37,5 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-demo_app_image_name="monai_triton:demo"
-docker build --no-cache -t ${demo_app_image_name} -f Dockerfile .
+demo_app_image_name="monai_triton:class"
+docker build -t ${demo_app_image_name} -f Dockerfile . 

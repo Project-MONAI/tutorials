@@ -26,10 +26,13 @@
 
 import json
 import logging
+from monai.transforms.utility.array import CastToType
 import numpy as np
 import os
 import pathlib
 from tempfile import NamedTemporaryFile
+# from PIL import Image
+
 import torch
 import torch.backends.cudnn as cudnn
 
@@ -40,21 +43,26 @@ from monai.transforms import (Activations,
                               AddChannel,
                               AsDiscrete,
                               CropForeground,
+                              CastToType,
+                              EnsureType,
                               LoadImage,
                               Lambda,
+                              ScaleIntensity,
                               ScaleIntensityRange,
                               ToNumpy,
                               ToTensor,
+                              Transform,
                               Resize)
 
 import triton_python_backend_utils as pb_utils
 
+MEDNIST_CLASSES = ["AbdomenCT", "BreastMRI", "CXR", "ChestCT", "Hand", "HeadCT"]
+
 
 logger = logging.getLogger(__name__)
-gdrive_url = "https://drive.google.com/uc?id=1U9Oaw47SWMJeDkg1FSTY1W__tQOY1nAZ"
-model_filename = "covid19_model.tar.gz"
-md5_check = "571046a25659515bf7abee4266f14435"
-
+gdrive_url = "https://drive.google.com/uc?id=1c6noLV9oR0_mQwrsiQ9TqaaeWFKyw46l"
+model_filename = "MedNIST_model.tar.gz"
+md5_check = "a4fb9d6147599e104b5d8dc1809ed034"
 
 class TritonPythonModel:
     """
@@ -70,7 +78,7 @@ class TritonPythonModel:
         """
 
         # Pull model from google drive
-        extract_dir = "/models/monai_covid/1"
+        extract_dir = "/models/mednist_class/1"
         tar_save_path = os.path.join(extract_dir, model_filename)
         download_and_extract(gdrive_url, tar_save_path, output_dir=extract_dir, hash_val=md5_check, hash_type="md5")
         # load model configuration
@@ -93,31 +101,27 @@ class TritonPythonModel:
             else:
                 logger.error(f"No CUDA device detected. Using device: {inference_device_kind}")
 
-        # create pre-transforms
+        # create pre-transforms for MedNIST
         self.pre_transforms = Compose([
-            LoadImage(reader="NibabelReader", image_only=True, dtype=np.float32),
+            LoadImage(reader="PILReader", image_only=True,dtype=np.float32),
+            ScaleIntensity(),
             AddChannel(),
-            ScaleIntensityRange(a_min=-1000, a_max=500, b_min=0.0, b_max=1.0, clip=True),
-            CropForeground(margin=5),
-            Resize([192, 192, 64], mode="area"),
             AddChannel(),
             ToTensor(),
             Lambda(func=lambda x: x.to(device=self.inference_device)),
         ])
-
+ 
         # create post-transforms
         self.post_transforms = Compose([
             Lambda(func=lambda x: x.to(device="cpu")),
-            Activations(sigmoid=True),
-            ToNumpy(),
-            AsDiscrete(threshold_values=True, logit_thresh=0.5),
         ])
 
         self.inferer = SimpleInferer()
 
         self.model = torch.jit.load(
-            f'{pathlib.Path(os.path.realpath(__file__)).parent}{os.path.sep}covid19_model.ts',
+           f'{pathlib.Path(os.path.realpath(__file__)).parent}{os.path.sep}model.pt', 
             map_location=self.inference_device)
+ 
 
     def execute(self, requests):
         """
@@ -132,27 +136,30 @@ class TritonPythonModel:
         """
 
         responses = []
-
+        batched_img = []
+        print("starting request")
         for request in requests:
 
             # get the input by name (as configured in config.pbtxt)
             input_0 = pb_utils.get_input_tensor_by_name(request, "INPUT0")
 
-            tmpFile = NamedTemporaryFile(delete=False, suffix=".nii.gz")
+            tmpFile = NamedTemporaryFile(delete=False, suffix=".jpeg")
             tmpFile.seek(0)
             tmpFile.write(input_0.as_numpy().astype(np.bytes_).tobytes())
             tmpFile.close()
-
+            
             transform_output = self.pre_transforms(tmpFile.name)
 
+#       
             with torch.no_grad():
                 inference_output = self.inferer(transform_output, self.model)
 
             classification_output = self.post_transforms(inference_output)
-            class_data = np.array([bytes("COVID Negative", encoding='utf-8')], dtype=np.bytes_)
-
-            if classification_output[0] > 0:
-                class_data = np.array([bytes("COVID Positive", encoding='utf-8')], dtype=np.bytes_)
+            class_ = classification_output.numpy().argmax()
+            class_idx = int(class_)
+            class_pred = str(MEDNIST_CLASSES[class_idx])
+            class_pred = str(MEDNIST_CLASSES[int(class_)])
+            class_data = np.array([bytes( class_pred, encoding='utf-8')], dtype=np.bytes_)
 
             output0_tensor = pb_utils.Tensor(
                 "OUTPUT0",

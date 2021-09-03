@@ -83,7 +83,7 @@ $ ./triton_build.sh
 2. Run Triton Container Image in Background Terminal using provided shell script
 The supplied script will start the demo container with Triton and expose the three ports to localhost needed for the application to send inference requests. 
 ```
-$ ./triton_run_local.sh
+$ ./run_triton_local.sh
 ```
 3. Install environment for client
 The client environment should have Python 3 installed and should have the necessary packages installed. 
@@ -171,7 +171,7 @@ filename = 'client/test_data/volume-covid19-A-0000.nii.gz'
 ```
 - The client calls the Triton Service using the external port configured previously.
 ```python:
-with httpclient.InferenceServerClient("localhost:8000") as client:
+with httpclient.InferenceServerClient("localhost:7555") as client:
 ```
 - The Triton inference response is returned :
 ```python:
@@ -182,6 +182,23 @@ response = client.infer(model_name,
 
 result = response.get_response()
 ```
+-------
+## MedNIST Classification Example
+
+- Added to this demo as alternate demo using the MedNIST dataset in a classification example.
+- To run the MedNIST example use the same steps as shown in the [Quick Start](#quick-start) with the following changes at step 5. 
+5. Run the client program (for the MedNIST example)
+The [client](./client/client_mednist.py) program will take an optional file input and perform classification on body parts using the MedNIST data set.  A small subset of the database is included. 
+```
+$ mkdir -p client/test_data/MedNist
+$ python -u client/client_mednist.py client/test_data/MedNist
+```
+Alternatively, the user can just run the shell script provided the previous steps 1 -4 in the [Quick Start](#quick-start) were followed.
+```
+$ ./mednist_client_run.sh
+```
+The expected result is variety of classification results for body images and local inference times.
+
 -------
 ## Usage
 [See Triton Inference Server/python_backend documentation](https://github.com/triton-inference-server/python_backend#usage)

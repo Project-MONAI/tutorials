@@ -41,3 +41,7 @@ python train.py -c cfg_seg_philipp_16_ch_1024_ap_full -s 183105
 python train.py -c cfg_seg_philipp_16_ch_1024_nons_full -s 701922
 python train.py -c cfg_seg_philipp_16_ch_1024_nons_full -s 7259
 ```
+
+# Inference
+
+`inference.ipynb` is the code we used for inference in Kaggle, since the inference part does not support the internet access, you may need to copy the code of `MONAI/monai/` into this directory and upload the whole folder as a Kaggle dataset to use.

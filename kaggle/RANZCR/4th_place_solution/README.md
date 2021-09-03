@@ -58,5 +58,5 @@ python train.py -c cfg_seg_40_1024d_full -i True -p your_actual_local_weight_fol
 
 ```
 
-In Kaggle, since the kernel for submission does not support the internet access, you may need to copy the code of `MONAI/monai/` into this directory and upload the whole folder as a Kaggle dataset to use. Please take the `run_infer` function in `train.py` for reference and write the script.
+In Kaggle, since the kernel for submission does not support the internet access, you may need to copy the code of `MONAI/monai/` (if using MONAI docker, the path is `/opt/monai/monai/`) into this directory and upload the whole folder as a Kaggle dataset to use. Please take the `run_infer` function in `train.py` for reference and write the script.
 

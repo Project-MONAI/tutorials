@@ -53,12 +53,12 @@ Some codes are taken from https://github.com/pytorch/examples/blob/master/imagen
 """
 
 import argparse
+import numpy as np
 import os
 import sys
 import time
 import warnings
 
-import numpy as np
 import torch
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel
@@ -66,9 +66,10 @@ from torch.nn.parallel import DistributedDataParallel
 from monai.apps import DecathlonDataset
 from monai.data import ThreadDataLoader, partition_dataset, decollate_batch
 from monai.inferers import sliding_window_inference
-from monai.losses import DiceLoss
+from monai.losses import DiceFocalLoss
 from monai.metrics import DiceMetric
 from monai.networks.nets import SegResNet, UNet
+from monai.optimizers import Novograd
 from monai.transforms import (
     Activations,
     AsDiscrete,
@@ -197,8 +198,8 @@ def main_worker(args):
             RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=1),
             RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=2),
             NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True),
-            RandScaleIntensityd(keys="image", factors=0.1, prob=1.0),
-            RandShiftIntensityd(keys="image", offsets=0.1, prob=1.0),
+            RandScaleIntensityd(keys="image", factors=0.1, prob=0.5),
+            RandShiftIntensityd(keys="image", offsets=0.1, prob=0.5),
         ]
     )
 
@@ -211,6 +212,7 @@ def main_worker(args):
         cache_rate=args.cache_rate,
         shuffle=True,
     )
+    # ThreadDataLoader can be faster if no IO operations when caching all the data in memory
     train_loader = ThreadDataLoader(train_ds, num_workers=0, batch_size=args.batch_size, shuffle=True)
 
     # validation transforms and dataset
@@ -238,6 +240,7 @@ def main_worker(args):
         cache_rate=args.cache_rate,
         shuffle=False,
     )
+    # ThreadDataLoader can be faster if no IO operations when caching all the data in memory
     val_loader = ThreadDataLoader(val_ds, num_workers=0, batch_size=args.batch_size, shuffle=False)
 
     # create network, loss function and optimizer
@@ -248,7 +251,7 @@ def main_worker(args):
             init_filters=16,
             in_channels=4,
             out_channels=3,
-            dropout_prob=0.2,
+            dropout_prob=0.0,
         ).to(device)
     else:
         model = UNet(
@@ -260,8 +263,15 @@ def main_worker(args):
             num_res_units=2,
         ).to(device)
 
-    loss_function = DiceLoss(smooth_nr=0, smooth_dr=1e-5, squared_pred=True, to_onehot_y=False, sigmoid=True)
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-5)
+    loss_function = DiceFocalLoss(
+        smooth_nr=1e-5,
+        smooth_dr=1e-5,
+        squared_pred=True,
+        to_onehot_y=False,
+        sigmoid=True,
+        batch=True,
+    )
+    optimizer = Novograd(model.parameters(), lr=args.lr)
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
     # wrap the model with DistributedDataParallel module
     model = DistributedDataParallel(model, device_ids=[device])
@@ -293,11 +303,12 @@ def main_worker(args):
                 best_metric_epoch = epoch + 1
                 if dist.get_rank() == 0:
                     torch.save(model.state_dict(), "best_metric_model.pth")
-            print(
-                f"current epoch: {epoch + 1} current mean dice: {metric:.4f}"
-                f" tc: {metric_tc:.4f} wt: {metric_wt:.4f} et: {metric_et:.4f}"
-                f"\nbest mean dice: {best_metric:.4f} at epoch: {best_metric_epoch}"
-        )
+                print(
+                    f"current epoch: {epoch + 1} current mean dice: {metric:.4f}"
+                    f" tc: {metric_tc:.4f} wt: {metric_wt:.4f} et: {metric_et:.4f}"
+                    f"\nbest mean dice: {best_metric:.4f} at epoch: {best_metric_epoch}"
+                )
+
         print(f"time consuming of epoch {epoch + 1} is: {(time.time() - epoch_start):.4f}")
 
     print(
@@ -337,7 +348,7 @@ def evaluate(model, val_loader, dice_metric, dice_metric_batch, post_trans):
         for val_data in val_loader:
             with torch.cuda.amp.autocast():
                 val_outputs = sliding_window_inference(
-                    inputs=val_data["image"], roi_size=(240, 240, 160), sw_batch_size=1, predictor=model, overlap=0.5
+                    inputs=val_data["image"], roi_size=(240, 240, 160), sw_batch_size=4, predictor=model, overlap=0.6
                 )
             val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
             dice_metric(y_pred=val_outputs, y=val_data["label"])

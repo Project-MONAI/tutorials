@@ -38,7 +38,6 @@ def get_train_dataloader(train_dataset, cfg):
 
 
 def get_val_dataset(val_df, cfg):
-    print("Loading val dataset")
     val_dataset = CustomDataset(val_df, cfg, aug=cfg.val_aug, mode="val")
     return val_dataset
 
@@ -56,6 +55,19 @@ def get_val_dataloader(val_dataset, cfg):
     print(f"valid: dataset {len(val_dataset)}, dataloader {len(val_dataloader)}")
     return val_dataloader
 
+def get_test_dataset(test_df, cfg):
+    test_dataset = CustomDataset(test_df, cfg, aug=cfg.test_aug, mode="test")
+    return test_dataset
+
+def get_test_dataloader(test_dataset, cfg):
+
+    test_dataloader = DataLoader(
+        test_dataset,
+        shuffle=False,
+        batch_size=cfg.batch_size,
+        num_workers=cfg.num_workers,
+    )
+    return test_dataloader
 
 def get_optimizer(model, cfg):
 

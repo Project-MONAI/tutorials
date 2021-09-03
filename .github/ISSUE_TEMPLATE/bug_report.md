@@ -8,7 +8,7 @@ assignees: ''
 ---
 
 **Describe the bug**
-A clear and concise description of what the bug is. 
+A clear and concise description of what the bug is.
 
 Please only create issues here relating to the functioning of the tutorials. For all other questions/problems/bugs, please refer to MONAI's [main repository](https://github.com/Project-MONAI/MONAI). For MONAI bugs (not just a problem in the notebook), please create an [issue](https://github.com/Project-MONAI/MONAI/issues). For questions, please use the [Discussions tab](https://github.com/Project-MONAI/MONAI/discussions).
 

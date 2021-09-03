@@ -39,10 +39,19 @@
 # if no argument provided use default `client/test_data` name
 if [ $# -eq 0 ]
 then
-    echo "No arguments supplied defaulting 'client/test_data'"
-    input_name="client/test_data"
+    echo "No arguments supplied defaulting './client/test_data/MedNist/demo'"
+    input_name="./client/test_data/MedNist"
+    # check if the output directory exists
+    if [ -d $input_name ]
+    then
+        echo "Directory $PWD/client/test_data/MedNist exists."
+    else
+        echo "Error: Directory $PWD/client/test_data/MedNist does not exist.
+Please create the directory to save data to disk from the Clara operator."
+        exit 1
+    fi
 else
 # otherwise use the first argument as the operator image
     input_name=$1
 fi
-python -u client/client.py $input_name
+python -u client/client_mednist.py $input_name

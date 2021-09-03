@@ -169,11 +169,3 @@ setup
 3d_seg_ignite
 # TODO: there are no .py files. needs fix later
 # modules_workload
-
-
-
-
- 
- 
- 
- 

@@ -303,11 +303,11 @@ def main_worker(args):
                 best_metric_epoch = epoch + 1
                 if dist.get_rank() == 0:
                     torch.save(model.state_dict(), "best_metric_model.pth")
-                print(
-                    f"current epoch: {epoch + 1} current mean dice: {metric:.4f}"
-                    f" tc: {metric_tc:.4f} wt: {metric_wt:.4f} et: {metric_et:.4f}"
-                    f"\nbest mean dice: {best_metric:.4f} at epoch: {best_metric_epoch}"
-                )
+            print(
+                f"current epoch: {epoch + 1} current mean dice: {metric:.4f}"
+                f" tc: {metric_tc:.4f} wt: {metric_wt:.4f} et: {metric_et:.4f}"
+                f"\nbest mean dice: {best_metric:.4f} at epoch: {best_metric_epoch}"
+            )
 
         print(f"time consuming of epoch {epoch + 1} is: {(time.time() - epoch_start):.4f}")
 

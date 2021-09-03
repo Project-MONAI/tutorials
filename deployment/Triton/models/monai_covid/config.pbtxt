@@ -34,7 +34,7 @@ input [
     name: "INPUT0"
     data_type: TYPE_STRING
     dims: [ 1 ]
-    
+
   }
 ]
 
@@ -47,7 +47,7 @@ output [
 ]
 
 instance_group [
-  { 
+  {
     kind: KIND_GPU
     count: 1
     gpus: [ 0 ]

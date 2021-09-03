@@ -6,7 +6,7 @@ name: example_project
 
 # homomorphic encryption
 he:
-  lib: tenseal 
+  lib: tenseal
   config:
     poly_modulus_degree: 8192
     coeff_mod_bit_sizes: [60, 40, 40]

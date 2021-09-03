@@ -43,13 +43,13 @@
 Deploying MONAI Code via Triton Python Backend
 ================================================
 
-Simple demo to introduce a standard way for model developers to incorporate Python based projects in a standard way. 
+Simple demo to introduce a standard way for model developers to incorporate Python based projects in a standard way.
 In addition, this code will demonstrate how Users/Developers can easily deploy MONAI inference code for field testing.
 Finally, the code will demonstrate a method to do low latency classification and validation inference with Triton.
 
 The steps below describe how to set-up a model repository, pull the Triton container, launch the Triton inference server, and then send inference requests to the running server.
 
-This demo and description borrows heavily from the [Triton Python Backend](https://github.com/triton-inference-server/python_backend) repo. The demo assumes you have at least one GPU 
+This demo and description borrows heavily from the [Triton Python Backend](https://github.com/triton-inference-server/python_backend) repo. The demo assumes you have at least one GPU
 
 Get The Demo Source Code
 -------------------------------
@@ -58,7 +58,7 @@ Pull down the demo repository and start with the [Quick Start] (#quick-start) gu
 ```
 $ git clone https://github.com/Project-MONAI/tutorials.git
 ```
-# Python Backend 
+# Python Backend
 
 The Triton backend for Python. The goal of Python backend is to let you serve
 models written in Python by Triton Inference Server without having to write
@@ -81,12 +81,12 @@ any C++ code. We will use this to demonstrate implementing MONAI code inside Tri
 $ ./triton_build.sh
 ```
 2. Run Triton Container Image in Background Terminal using provided shell script
-The supplied script will start the demo container with Triton and expose the three ports to localhost needed for the application to send inference requests. 
+The supplied script will start the demo container with Triton and expose the three ports to localhost needed for the application to send inference requests.
 ```
 $ ./run_triton_local.sh
 ```
 3. Install environment for client
-The client environment should have Python 3 installed and should have the necessary packages installed. 
+The client environment should have Python 3 installed and should have the necessary packages installed.
 ```
 $ python3 -m pip install -r requirements.txt
 ```
@@ -96,7 +96,7 @@ $ pip install nvidia-pyindex
 $ pip install tritonclient[all]
 ```
 5. Run the client program
-The [client](./client/client.py) program will take an optional file input and perform  classification to determine whether the study shows COVID-19 or not COVID-19.  See the [NVIDIA COVID-19 Classification ](https://ngc.nvidia.com/catalog/models/nvidia:med:clara_pt_covid19_3d_ct_classification) example in NGC for more background. 
+The [client](./client/client.py) program will take an optional file input and perform  classification to determine whether the study shows COVID-19 or not COVID-19.  See the [NVIDIA COVID-19 Classification ](https://ngc.nvidia.com/catalog/models/nvidia:med:clara_pt_covid19_3d_ct_classification) example in NGC for more background.
 ```
 $ python -u client/client.py [filename/directory]
 ```
@@ -105,8 +105,8 @@ and the program returns
 $ Classification result: ['Prostate segmented']
 ```
 ## Examples:
-The example demonstrates running a Triton Python Backend on a single image classification problem.  
-1. First, a Dockerfile and build script is used to build a container to Run the Triton Service and copy the model specific files in the container. 
+The example demonstrates running a Triton Python Backend on a single image classification problem.
+1. First, a Dockerfile and build script is used to build a container to Run the Triton Service and copy the model specific files in the container.
 ```Dockerfile:
 # use desired Triton container as base image for our app
 FROM nvcr.io/nvidia/tritonserver:21.04-py3
@@ -134,12 +134,12 @@ demo_app_image_name="monai_triton:demo"
 docker run --shm-size=128G --rm -p 127.0.0.1:8000:8000 -p 127.0.0.1:8001:8001 -p 127.0.0.1:8090:8002 ${demo_app_image_name}
 ```
 3. See [Model Config File](#model-config-file) to see the expected file structure for Triton.
-- Modify the models/monai_prostrate/1/model.py file to satisfy any model configuration requirements while keeping the required components in the model definition. See the * [Usage](#usage) section for background. 
+- Modify the models/monai_prostrate/1/model.py file to satisfy any model configuration requirements while keeping the required components in the model definition. See the * [Usage](#usage) section for background.
 - In the models/monai_prostrate/1/config.pbtxt file configure the number of GPUs and which ones are used.
 e.g. Using two available GPUs and two parallel versions of the model per GPU
 ```
 instance_group [
-  { 
+  {
     kind: KIND_GPU
     count: 2
     gpus: [ 0, 1 ]
@@ -148,24 +148,24 @@ instance_group [
 e.g. Using three of four available GPUs and four parallel versions of the model per GPU
 ```
 instance_group [
-  { 
+  {
     kind: KIND_GPU
     count: 4
     gpus: [ 0, 1, 3 ]
   }
 ```
 Also, other configurations like dynamic batching and corresponding sizes can be configured. See the [Triton Service Documentation model configurations](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md) documentation for more information.
- 
-- Finally, be sure to include Tensors or Torchscript definition *.ts files in the directory structure. In this example, a COVID19 classificatiion model based in PyTorch is used. 
+
+- Finally, be sure to include Tensors or Torchscript definition *.ts files in the directory structure. In this example, a COVID19 classificatiion model based in PyTorch is used.
 ```
 covid19_model.ts
 ```
 The Dockerfile will copy the model definition structure into the Triton container Service.  When the container is run, the python backend implementation will pull the covid19_model.ts file from a Google Drive for the demo.  So the container should be rebuilt after any modifications to the GPU configuration or model configurations for the example.
 
 4. A Python [client](./client/client.py) program configures the model and makes an http request to Triton as a Service. Note: Triton supports other interfaces like gRPC.
-The client reads an input image converted from Nifti to a byte array for classification. 
+The client reads an input image converted from Nifti to a byte array for classification.
 
-- In this example, a model trained to detect COVID-19 is provided an image with COVID or without.    
+- In this example, a model trained to detect COVID-19 is provided an image with COVID or without.
 ```python:
 filename = 'client/test_data/volume-covid19-A-0000.nii.gz'
 ```
@@ -186,9 +186,9 @@ result = response.get_response()
 ## MedNIST Classification Example
 
 - Added to this demo as alternate demo using the MedNIST dataset in a classification example.
-- To run the MedNIST example use the same steps as shown in the [Quick Start](#quick-start) with the following changes at step 5. 
+- To run the MedNIST example use the same steps as shown in the [Quick Start](#quick-start) with the following changes at step 5.
 5. Run the client program (for the MedNIST example)
-The [client](./client/client_mednist.py) program will take an optional file input and perform classification on body parts using the MedNIST data set.  A small subset of the database is included. 
+The [client](./client/client_mednist.py) program will take an optional file input and perform classification on body parts using the MedNIST data set.  A small subset of the database is included.
 ```
 $ mkdir -p client/test_data/MedNist
 $ python -u client/client_mednist.py client/test_data/MedNist

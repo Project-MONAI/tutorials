@@ -65,7 +65,7 @@ def main(tempdir):
     dataloader = DataLoader(dataset, batch_size=2, num_workers=4)
     # define post transforms
     post_transforms = Compose([
-        EnsureTyped(keys="pred"), 
+        EnsureTyped(keys="pred"),
         Activationsd(keys="pred", sigmoid=True),
         Invertd(
             keys="pred",  # invert the `pred` data field, also support multiple fields

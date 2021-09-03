@@ -42,11 +42,11 @@ then
     echo "No arguments supplied defaulting './client/test_data/MedNist/demo'"
     input_name="./client/test_data/MedNist"
     # check if the output directory exists
-    if [ -d $input_name ] 
+    if [ -d $input_name ]
     then
-        echo "Directory $PWD/client/test_data/MedNist exists." 
+        echo "Directory $PWD/client/test_data/MedNist exists."
     else
-        echo "Error: Directory $PWD/client/test_data/MedNist does not exist. 
+        echo "Error: Directory $PWD/client/test_data/MedNist does not exist.
 Please create the directory to save data to disk from the Clara operator."
         exit 1
     fi
@@ -55,4 +55,3 @@ else
     input_name=$1
 fi
 python -u client/client_mednist.py $input_name
-

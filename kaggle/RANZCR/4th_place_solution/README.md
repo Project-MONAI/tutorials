@@ -10,7 +10,7 @@ Recommend to use MONAI docker:
 docker pull projectmonai/monai:latest
 ```
 
-Otherwise, e1xcept monai required libraries, please ensure that `opencv-python` and `scipy` are installed. The command could be:
+Otherwise, except for monai required libraries, please ensure that `opencv-python` and `scipy` are installed. The command could be:
 ```
 pip install opencv-python
 pip install scipy
@@ -51,7 +51,7 @@ python train.py -c cfg_seg_philipp_16_ch_1024_nons_full -s 7259
 
 # Inference
 
-To do inference locally, the command is like follow:
+To do inference locally, the command could be:
 
 ```
 python train.py -c cfg_seg_40_1024d_full -i True -p your_actual_local_weight_folder_path

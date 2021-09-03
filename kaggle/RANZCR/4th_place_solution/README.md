@@ -4,9 +4,16 @@ https://www.kaggle.com/c/ranzcr-clip-catheter-line-classification
 
 # Preparations
 
-Except monai required libraries, please ensure that `opencv-python` is installed. The command could be:
+Recommend to use MONAI docker:
+
+```
+docker pull projectmonai/monai:latest
+```
+
+Otherwise, e1xcept monai required libraries, please ensure that `opencv-python` and `scipy` are installed. The command could be:
 ```
 pip install opencv-python
+pip install scipy
 ```
 
 Please download the dataset from the competition site and modify the dataset path in `configs/default_config.py`. 
@@ -44,4 +51,12 @@ python train.py -c cfg_seg_philipp_16_ch_1024_nons_full -s 7259
 
 # Inference
 
-`inference.ipynb` is the code we used for inference in Kaggle, since the inference part does not support the internet access, you may need to copy the code of `MONAI/monai/` into this directory and upload the whole folder as a Kaggle dataset to use.
+To do inference locally, the command is like follow:
+
+```
+python train.py -c cfg_seg_40_1024d_full -i True -p your_actual_local_weight_folder_path
+
+```
+
+In Kaggle, since the kernel for submission does not support the internet access, you may need to copy the code of `MONAI/monai/` into this directory and upload the whole folder as a Kaggle dataset to use. Please take the `run_infer` function in `train.py` for reference and write the script.
+

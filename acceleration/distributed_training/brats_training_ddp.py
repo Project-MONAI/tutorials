@@ -53,28 +53,28 @@ Some codes are taken from https://github.com/pytorch/examples/blob/master/imagen
 """
 
 import argparse
+import numpy as np
 import os
 import sys
 import time
 import warnings
 
-import numpy as np
 import torch
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel
-from torch.utils.tensorboard import SummaryWriter
 
 from monai.apps import DecathlonDataset
-from monai.data import DataLoader, partition_dataset, decollate_batch
-from monai.losses import DiceLoss
+from monai.data import ThreadDataLoader, partition_dataset, decollate_batch
+from monai.inferers import sliding_window_inference
+from monai.losses import DiceFocalLoss
 from monai.metrics import DiceMetric
 from monai.networks.nets import SegResNet, UNet
+from monai.optimizers import Novograd
 from monai.transforms import (
     Activations,
-    AsChannelFirstd,
     AsDiscrete,
-    CenterSpatialCropd,
     Compose,
+    EnsureChannelFirstd,
     LoadImaged,
     MapTransform,
     NormalizeIntensityd,
@@ -84,6 +84,7 @@ from monai.transforms import (
     RandShiftIntensityd,
     RandSpatialCropd,
     Spacingd,
+    ToDeviced,
     EnsureTyped,
     EnsureType,
 )
@@ -96,19 +97,22 @@ class ConvertToMultiChannelBasedOnBratsClassesd(MapTransform):
     label 1 is the peritumoral edema
     label 2 is the GD-enhancing tumor
     label 3 is the necrotic and non-enhancing tumor core
-    The possible classes are TC (Tumor core), WC (Whole tumor)
+    The possible classes are TC (Tumor core), WT (Whole tumor)
     and ET (Enhancing tumor).
 
     """
-
     def __call__(self, data):
         d = dict(data)
         for key in self.keys:
-            result = list()
+            result = []
             # merge label 2 and label 3 to construct TC
             result.append(np.logical_or(d[key] == 2, d[key] == 3))
-            # merge labels 1, 2 and 3 to construct WC
-            result.append(np.logical_or(np.logical_or(d[key] == 2, d[key] == 3), d[key] == 1))
+            # merge labels 1, 2 and 3 to construct WT
+            result.append(
+                np.logical_or(
+                    np.logical_or(d[key] == 2, d[key] == 3), d[key] == 1
+                )
+            )
             # label 2 is ET
             result.append(d[key] == 2)
             d[key] = np.stack(result, axis=0).astype(np.float32)
@@ -116,6 +120,10 @@ class ConvertToMultiChannelBasedOnBratsClassesd(MapTransform):
 
 
 class BratsCacheDataset(DecathlonDataset):
+    """
+    Enhance the DecathlonDataset to support distributed data parallel.
+
+    """
     def __init__(
         self,
         root_dir,
@@ -127,7 +135,7 @@ class BratsCacheDataset(DecathlonDataset):
     ) -> None:
 
         if not os.path.isdir(root_dir):
-            raise ValueError("Root directory root_dir must be a directory.")
+            raise ValueError("root directory root_dir must be a directory.")
         self.section = section
         self.shuffle = shuffle
         self.val_frac = 0.2
@@ -135,7 +143,7 @@ class BratsCacheDataset(DecathlonDataset):
         dataset_dir = os.path.join(root_dir, "Task01_BrainTumour")
         if not os.path.exists(dataset_dir):
             raise RuntimeError(
-                f"Cannot find dataset directory: {dataset_dir}, please download it from Decathlon challenge."
+                f"cannot find dataset directory: {dataset_dir}, please download it from Decathlon challenge."
             )
         data = self._generate_data_list(dataset_dir)
         super(DecathlonDataset, self).__init__(data, transform, cache_rate=cache_rate, num_workers=num_workers)
@@ -160,26 +168,38 @@ def main_worker(args):
         f = open(os.devnull, "w")
         sys.stdout = sys.stderr = f
     if not os.path.exists(args.dir):
-        raise FileNotFoundError(f"Missing directory {args.dir}")
+        raise FileNotFoundError(f"missing directory {args.dir}")
 
     # initialize the distributed training process, every GPU runs in a process
     dist.init_process_group(backend="nccl", init_method="env://")
+    device = torch.device(f"cuda:{args.local_rank}")
+    torch.cuda.set_device(device)
+    # use amp to accelerate training
+    scaler = torch.cuda.amp.GradScaler()
+    torch.backends.cudnn.benchmark = True
 
     total_start = time.time()
     train_transforms = Compose(
         [
             # load 4 Nifti images and stack them together
             LoadImaged(keys=["image", "label"]),
-            AsChannelFirstd(keys="image"),
+            EnsureChannelFirstd(keys="image"),
             ConvertToMultiChannelBasedOnBratsClassesd(keys="label"),
-            Spacingd(keys=["image", "label"], pixdim=(1.5, 1.5, 2.0), mode=("bilinear", "nearest")),
+            Spacingd(
+                keys=["image", "label"],
+                pixdim=(1.0, 1.0, 1.0),
+                mode=("bilinear", "nearest"),
+            ),
             Orientationd(keys=["image", "label"], axcodes="RAS"),
-            RandSpatialCropd(keys=["image", "label"], roi_size=[128, 128, 64], random_size=False),
-            NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True),
+            EnsureTyped(keys=["image", "label"]),
+            ToDeviced(keys=["image", "label"], device=device),
+            RandSpatialCropd(keys=["image", "label"], roi_size=[224, 224, 144], random_size=False),
             RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=0),
+            RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=1),
+            RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=2),
+            NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True),
             RandScaleIntensityd(keys="image", factors=0.1, prob=0.5),
             RandShiftIntensityd(keys="image", offsets=0.1, prob=0.5),
-            EnsureTyped(keys=["image", "label"]),
         ]
     )
 
@@ -192,21 +212,24 @@ def main_worker(args):
         cache_rate=args.cache_rate,
         shuffle=True,
     )
-    train_loader = DataLoader(
-        train_ds, batch_size=args.batch_size, shuffle=True, num_workers=args.workers, pin_memory=True
-    )
+    # ThreadDataLoader can be faster if no IO operations when caching all the data in memory
+    train_loader = ThreadDataLoader(train_ds, num_workers=0, batch_size=args.batch_size, shuffle=True)
 
     # validation transforms and dataset
     val_transforms = Compose(
         [
             LoadImaged(keys=["image", "label"]),
-            AsChannelFirstd(keys="image"),
+            EnsureChannelFirstd(keys="image"),
             ConvertToMultiChannelBasedOnBratsClassesd(keys="label"),
-            Spacingd(keys=["image", "label"], pixdim=(1.5, 1.5, 2.0), mode=("bilinear", "nearest")),
+            Spacingd(
+                keys=["image", "label"],
+                pixdim=(1.0, 1.0, 1.0),
+                mode=("bilinear", "nearest"),
+            ),
             Orientationd(keys=["image", "label"], axcodes="RAS"),
-            CenterSpatialCropd(keys=["image", "label"], roi_size=[128, 128, 64]),
             NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True),
             EnsureTyped(keys=["image", "label"]),
+            ToDeviced(keys=["image", "label"], device=device),
         ]
     )
     val_ds = BratsCacheDataset(
@@ -217,18 +240,20 @@ def main_worker(args):
         cache_rate=args.cache_rate,
         shuffle=False,
     )
-    val_loader = DataLoader(
-        val_ds, batch_size=args.batch_size, shuffle=False, num_workers=args.workers, pin_memory=True
-    )
+    # ThreadDataLoader can be faster if no IO operations when caching all the data in memory
+    val_loader = ThreadDataLoader(val_ds, num_workers=0, batch_size=args.batch_size, shuffle=False)
 
-    if dist.get_rank() == 0:
-        # Logging for TensorBoard
-        writer = SummaryWriter(log_dir=args.log_dir)
-
-    # create UNet, DiceLoss and Adam optimizer
-    device = torch.device(f"cuda:{args.local_rank}")
-    torch.cuda.set_device(device)
-    if args.network == "UNet":
+    # create network, loss function and optimizer
+    if args.network == "SegResNet":
+        model = SegResNet(
+            blocks_down=[1, 2, 2, 4],
+            blocks_up=[1, 1, 1],
+            init_filters=16,
+            in_channels=4,
+            out_channels=3,
+            dropout_prob=0.0,
+        ).to(device)
+    else:
         model = UNet(
             dimensions=3,
             in_channels=4,
@@ -237,116 +262,97 @@ def main_worker(args):
             strides=(2, 2, 2, 2),
             num_res_units=2,
         ).to(device)
-    else:
-        model = SegResNet(in_channels=4, out_channels=3, init_filters=16, dropout_prob=0.2).to(device)
-    loss_function = DiceLoss(to_onehot_y=False, sigmoid=True, squared_pred=True)
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-5, amsgrad=True)
+
+    loss_function = DiceFocalLoss(
+        smooth_nr=1e-5,
+        smooth_dr=1e-5,
+        squared_pred=True,
+        to_onehot_y=False,
+        sigmoid=True,
+        batch=True,
+    )
+    optimizer = Novograd(model.parameters(), lr=args.lr)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
     # wrap the model with DistributedDataParallel module
     model = DistributedDataParallel(model, device_ids=[device])
 
+    dice_metric = DiceMetric(include_background=True, reduction="mean")
+    dice_metric_batch = DiceMetric(include_background=True, reduction="mean_batch")
+
+    post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+
     # start a typical PyTorch training
-    total_epoch = args.epochs
-    best_metric = -1000000
+    best_metric = -1
     best_metric_epoch = -1
-    epoch_time = AverageMeter("Time", ":6.3f")
-    progress = ProgressMeter(total_epoch, [epoch_time], prefix="Epoch: ")
-    end = time.time()
-    print(f"Time elapsed before training: {end-total_start}")
-    for epoch in range(total_epoch):
-
-        train_loss = train(train_loader, model, loss_function, optimizer, epoch, args, device)
-        epoch_time.update(time.time() - end)
-
-        if epoch % args.print_freq == 0:
-            progress.display(epoch)
-
-        if dist.get_rank() == 0:
-            writer.add_scalar("Loss/train", train_loss, epoch)
+    print(f"time elapsed before training: {time.time() - total_start}")
+    train_start = time.time()
+    for epoch in range(args.epochs):
+        epoch_start = time.time()
+        print("-" * 10)
+        print(f"epoch {epoch + 1}/{args.epochs}")
+        epoch_loss = train(train_loader, model, loss_function, optimizer, lr_scheduler, scaler)
+        print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
 
         if (epoch + 1) % args.val_interval == 0:
-            metric, metric_tc, metric_wt, metric_et = evaluate(model, val_loader, device)
+            metric, metric_tc, metric_wt, metric_et = evaluate(
+                model, val_loader, dice_metric, dice_metric_batch, post_trans
+            )
 
-            if dist.get_rank() == 0:
-                writer.add_scalar("Mean Dice/val", metric, epoch)
-                writer.add_scalar("Mean Dice TC/val", metric_tc, epoch)
-                writer.add_scalar("Mean Dice WT/val", metric_wt, epoch)
-                writer.add_scalar("Mean Dice ET/val", metric_et, epoch)
-                if metric > best_metric:
-                    best_metric = metric
-                    best_metric_epoch = epoch + 1
-                print(
-                    f"current epoch: {epoch + 1} current mean dice: {metric:.4f}"
-                    f" tc: {metric_tc:.4f} wt: {metric_wt:.4f} et: {metric_et:.4f}"
-                    f"\nbest mean dice: {best_metric:.4f} at epoch: {best_metric_epoch}"
-                )
-        end = time.time()
-        print(f"Time elapsed after epoch {epoch + 1} is {end - total_start}")
+            if metric > best_metric:
+                best_metric = metric
+                best_metric_epoch = epoch + 1
+                if dist.get_rank() == 0:
+                    torch.save(model.state_dict(), "best_metric_model.pth")
+            print(
+                f"current epoch: {epoch + 1} current mean dice: {metric:.4f}"
+                f" tc: {metric_tc:.4f} wt: {metric_wt:.4f} et: {metric_et:.4f}"
+                f"\nbest mean dice: {best_metric:.4f} at epoch: {best_metric_epoch}"
+            )
 
-    if dist.get_rank() == 0:
-        print(f"train completed, best_metric: {best_metric:.4f}  at epoch: {best_metric_epoch}")
-        # all processes should see same parameters as they all start from same
-        # random parameters and gradients are synchronized in backward passes,
-        # therefore, saving it in one process is sufficient
-        torch.save(model.state_dict(), "final_model.pth")
-        writer.flush()
+        print(f"time consuming of epoch {epoch + 1} is: {(time.time() - epoch_start):.4f}")
+
+    print(
+        f"train completed, best_metric: {best_metric:.4f} at epoch: {best_metric_epoch},"
+        f" total train time: {(time.time() - train_start):.4f}"
+    )
     dist.destroy_process_group()
 
 
-def train(train_loader, model, criterion, optimizer, epoch, args, device):
-    batch_time = AverageMeter("Time", ":6.3f")
-    data_time = AverageMeter("Data", ":6.3f")
-    losses = AverageMeter("Loss", ":.4e")
-    progress = ProgressMeter(len(train_loader), [batch_time, data_time, losses], prefix="Epoch: [{}]".format(epoch))
-
-    # switch to train mode
+def train(train_loader, model, criterion, optimizer, lr_scheduler, scaler):
     model.train()
-
-    end = time.time()
-    for i, batch_data in enumerate(train_loader):
-        image = batch_data["image"].to(device, non_blocking=True)
-        target = batch_data["label"].to(device, non_blocking=True)
-
-        # measure data loading time
-        data_time.update(time.time() - end)
-
-        # compute output
+    step = 0
+    epoch_len = len(train_loader)
+    epoch_loss = 0
+    step_start = time.time()
+    for batch_data in train_loader:
+        step += 1
         optimizer.zero_grad()
-        output = model(image)
-        loss = criterion(output, target)
+        with torch.cuda.amp.autocast():
+            outputs = model(batch_data["image"])
+            loss = criterion(outputs, batch_data["label"])
+        scaler.scale(loss).backward()
+        scaler.step(optimizer)
+        scaler.update()
+        epoch_loss += loss.item()
+        print(f"{step}/{epoch_len}, train_loss: {loss.item():.4f}, step time: {(time.time() - step_start):.4f}")
+        step_start = time.time()
+    lr_scheduler.step()
+    epoch_loss /= step
 
-        # record loss
-        losses.update(loss.item(), image.size(0))
-
-        # compute gradient and do GD step
-        loss.backward()
-        optimizer.step()
-
-        # measure elapsed time
-        batch_time.update(time.time() - end)
-        end = time.time()
-
-        if i % 10 == 0:
-            progress.display(i)
-    return losses.avg
+    return epoch_loss
 
 
-def evaluate(model, data_loader, device):
-    metric = torch.zeros(8, dtype=torch.float, device=device)
-
+def evaluate(model, val_loader, dice_metric, dice_metric_batch, post_trans):
     model.eval()
     with torch.no_grad():
-        dice_metric = DiceMetric(include_background=True, reduction="mean")
-        dice_metric_batch = DiceMetric(include_background=True, reduction="mean_batch")
-        post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
-        for val_data in data_loader:
-            val_inputs, val_labels = (
-                val_data["image"].to(device, non_blocking=True),
-                val_data["label"].to(device, non_blocking=True),
-            )
-            val_outputs = model(val_inputs)
+        for val_data in val_loader:
+            with torch.cuda.amp.autocast():
+                val_outputs = sliding_window_inference(
+                    inputs=val_data["image"], roi_size=(240, 240, 160), sw_batch_size=4, predictor=model, overlap=0.6
+                )
             val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
-            dice_metric(y_pred=val_outputs, y=val_labels)
-            dice_metric_batch(y_pred=val_outputs, y=val_labels)
+            dice_metric(y_pred=val_outputs, y=val_data["label"])
+            dice_metric_batch(y_pred=val_outputs, y=val_data["label"])
 
         metric = dice_metric.aggregate().item()
         metric_batch = dice_metric_batch.aggregate()
@@ -361,33 +367,16 @@ def evaluate(model, data_loader, device):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--dir", default="./testdata", type=str, help="directory of Brain Tumor dataset.")
+    parser.add_argument("-d", "--dir", default="./testdata", type=str, help="directory of Brain Tumor dataset")
     # must parse the command-line argument: ``--local_rank=LOCAL_PROCESS_RANK``, which will be provided by DDP
     parser.add_argument("--local_rank", type=int, help="node rank for distributed training")
-    parser.add_argument(
-        "-j", "--workers", default=1, type=int, metavar="N", help="number of data loading workers (default: 1)"
-    )
-    parser.add_argument("--epochs", default=90, type=int, metavar="N", help="number of total epochs to run")
+    parser.add_argument("--epochs", default=300, type=int, metavar="N", help="number of total epochs to run")
     parser.add_argument("--lr", default=1e-4, type=float, help="learning rate")
-    parser.add_argument(
-        "-b",
-        "--batch_size",
-        default=4,
-        type=int,
-        metavar="N",
-        help="mini-batch size (default: 256), this is the total "
-        "batch size of all GPUs on the current node when "
-        "using Data Parallel or Distributed Data Parallel",
-    )
-    parser.add_argument("-p", "--print_freq", default=10, type=int, metavar="N", help="print frequency (default: 10)")
-    parser.add_argument(
-        "-e", "--evaluate", dest="evaluate", action="store_true", help="evaluate model on validation set"
-    )
+    parser.add_argument("-b", "--batch_size", default=2, type=int, help="mini-batch size of every GPU")
     parser.add_argument("--seed", default=None, type=int, help="seed for initializing training.")
     parser.add_argument("--cache_rate", type=float, default=1.0)
-    parser.add_argument("--val_interval", type=int, default=5)
-    parser.add_argument("--network", type=str, default="UNet", choices=["UNet", "SegResNet"])
-    parser.add_argument("--log_dir", type=str, default=None)
+    parser.add_argument("--val_interval", type=int, default=20)
+    parser.add_argument("--network", type=str, default="SegResNet", choices=["UNet", "SegResNet"])
     args = parser.parse_args()
 
     if args.seed is not None:
@@ -403,56 +392,11 @@ def main():
     main_worker(args=args)
 
 
-class AverageMeter(object):
-    """Computes and stores the average and current value"""
-
-    def __init__(self, name, fmt=":f"):
-        self.name = name
-        self.fmt = fmt
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
-
-    def reset(self):
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
-
-    def update(self, val, n=1):
-        self.val = val
-        self.sum += val * n
-        self.count += n
-        self.avg = self.sum / self.count
-
-    def __str__(self):
-        fmtstr = "{name} {val" + self.fmt + "} ({avg" + self.fmt + "})"
-        return fmtstr.format(**self.__dict__)
-
-
-class ProgressMeter(object):
-    def __init__(self, num_batches, meters, prefix=""):
-        self.batch_fmtstr = self._get_batch_fmtstr(num_batches)
-        self.meters = meters
-        self.prefix = prefix
-
-    def display(self, batch):
-        entries = [self.prefix + self.batch_fmtstr.format(batch)]
-        entries += [str(meter) for meter in self.meters]
-        print("\t".join(entries))
-
-    def _get_batch_fmtstr(self, num_batches):
-        num_digits = len(str(num_batches // 1))
-        fmt = "{:" + str(num_digits) + "d}"
-        return "[" + fmt + "/" + fmt.format(num_batches) + "]"
-
-
 # usage example(refer to https://github.com/pytorch/pytorch/blob/master/torch/distributed/launch.py):
 
 # python -m torch.distributed.launch --nproc_per_node=NUM_GPUS_PER_NODE
 #        --nnodes=NUM_NODES --node_rank=INDEX_CURRENT_NODE
-#        --master_addr="10.110.44.150" --master_port=1234
+#        --master_addr="192.168.1.1" --master_port=1234
 #        brats_training_ddp.py -d DIR_OF_TESTDATA
 
 if __name__ == "__main__":

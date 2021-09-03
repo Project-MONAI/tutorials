@@ -38,4 +38,4 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 demo_app_image_name="monai_triton:class"
-docker build -t ${demo_app_image_name} -f Dockerfile . 
+docker build -t ${demo_app_image_name} -f Dockerfile .

@@ -1,5 +1,6 @@
 import argparse
 import gc
+import glob
 import importlib
 import os
 import sys
@@ -9,6 +10,7 @@ import pandas as pd
 import torch
 from monai.metrics import compute_roc_auc
 from monai.transforms import ToDeviced
+from scipy.special import expit
 from torch.cuda.amp import GradScaler, autocast
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
@@ -18,6 +20,8 @@ from utils import (
     create_checkpoint,
     get_optimizer,
     get_scheduler,
+    get_test_dataloader,
+    get_test_dataset,
     get_train_dataloader,
     get_train_dataset,
     get_val_dataloader,
@@ -230,6 +234,64 @@ def run_eval(model, val_dataloader, cfg, writer, epoch):
     return val_loss
 
 
+def run_infer(weights_folder_path, cfg):
+
+    cfg.pretrained = False
+    # for local test, please modify the following path into actual path.
+    cfg.data_folder = cfg.data_dir + "test/"
+
+    to_device_transform = ToDeviced(
+        keys=("input", "target", "mask", "is_annotated"), device=cfg.device
+    )
+
+    all_path = []
+    for path in glob.iglob(os.path.join(weights_folder_path, "*.pth")):
+        all_path.append(path)
+
+    nets = []
+    for path in all_path:
+        state_dict = torch.load(path)["model"]
+        new_state_dict = {}
+        for k, v in state_dict.items():
+            new_state_dict[k.replace("module.", "")] = v
+
+        net = RanzcrNet(cfg).eval().to(cfg.device)
+        net.load_state_dict(new_state_dict)
+
+        del net.decoder
+        del net.segmentation_head
+
+        nets.append(net)
+
+    test_df = pd.read_csv(cfg.test_df)
+    test_dataset = get_test_dataset(test_df, cfg)
+    test_dataloader = get_test_dataloader(test_dataset, cfg)
+
+    with torch.no_grad():
+        fold_preds = [[] for i in range(len(nets))]
+        for batch in tqdm(test_dataloader):
+            batch = to_device_transform(batch)
+            for i, net in enumerate(nets):
+                if cfg.mixed_precision:
+                    with autocast():
+                        logits = net(batch)["logits"].cpu().numpy()
+                else:
+                    logits = net(batch)["logits"].cpu().numpy()
+                fold_preds[i] += [logits]
+        fold_preds = [np.concatenate(p) for p in fold_preds]
+
+    preds = np.stack(fold_preds)
+    preds = expit(preds)
+    preds = np.mean(preds, axis=0)
+
+    sub_df = test_df.copy()
+    sub_df[cfg.label_cols] = preds
+
+    submission = pd.read_csv(cfg.test_df)
+    submission.loc[sub_df.index, cfg.label_cols] = sub_df[cfg.label_cols]
+    submission.to_csv("submission.csv", index=False)
+
+
 if __name__ == "__main__":
 
     sys.path.append("configs")
@@ -241,6 +303,10 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--config", help="config filename")
     parser.add_argument("-f", "--fold", type=int, default=-1, help="fold")
     parser.add_argument("-s", "--seed", type=int, default=-1, help="fold")
+    parser.add_argument("-i", "--infer", type=bool, default=None, help="do inference")
+    parser.add_argument(
+        "-p", "--weights_folder_path", default=None, help="the folder path of weights"
+    )
 
     parser_args, _ = parser.parse_known_args(sys.argv)
 
@@ -250,4 +316,10 @@ if __name__ == "__main__":
         cfg.fold = parser_args.fold
         cfg.seed = parser_args.seed
 
-    main(cfg)
+    if parser_args.infer:
+        if not parser_args.weights_folder_path:
+            raise ValueError("When doing inference, weights_folder_path is necessary.")
+        print("do infer")
+        run_infer(parser_args.weights_folder_path, cfg)
+    else:
+        main(cfg)

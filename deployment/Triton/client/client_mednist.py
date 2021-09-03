@@ -97,7 +97,7 @@ if __name__ == "__main__":
                 image_bytes = f.read()
 
             input0_data = np.array([[image_bytes]], dtype=np.bytes_)
-            
+
             inputs = [
                 httpclient.InferInput("INPUT0", input0_data.shape, np_to_triton_dtype(input0_data.dtype)),
             ]

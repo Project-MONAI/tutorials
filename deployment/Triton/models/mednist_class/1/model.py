@@ -110,7 +110,7 @@ class TritonPythonModel:
             ToTensor(),
             Lambda(func=lambda x: x.to(device=self.inference_device)),
         ])
- 
+
         # create post-transforms
         self.post_transforms = Compose([
             Lambda(func=lambda x: x.to(device="cpu")),
@@ -119,9 +119,9 @@ class TritonPythonModel:
         self.inferer = SimpleInferer()
 
         self.model = torch.jit.load(
-           f'{pathlib.Path(os.path.realpath(__file__)).parent}{os.path.sep}model.pt', 
+           f'{pathlib.Path(os.path.realpath(__file__)).parent}{os.path.sep}model.pt',
             map_location=self.inference_device)
- 
+
 
     def execute(self, requests):
         """
@@ -147,10 +147,10 @@ class TritonPythonModel:
             tmpFile.seek(0)
             tmpFile.write(input_0.as_numpy().astype(np.bytes_).tobytes())
             tmpFile.close()
-            
+
             transform_output = self.pre_transforms(tmpFile.name)
 
-#       
+#
             with torch.no_grad():
                 inference_output = self.inferer(transform_output, self.model)
 

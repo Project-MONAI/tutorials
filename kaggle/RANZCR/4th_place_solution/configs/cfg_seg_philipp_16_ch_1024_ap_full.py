@@ -88,3 +88,20 @@ cfg.val_aug = Compose(
         EnsureTyped(keys=("input", "mask")),
     ]
 )
+
+cfg.test_aug = Compose(
+    [
+        Resized(
+            keys=("input", "mask"),
+            spatial_size=1120,
+            size_mode="longest",
+            mode="bilinear",
+            align_corners=False,
+        ),
+        SpatialPadd(keys=("input", "mask"), spatial_size=(1120, 1120)),
+        CastToTyped(keys="input", dtype=np.float32),
+        NormalizeIntensityd(keys="input", nonzero=False),
+        Lambdad(keys="input", func=lambda x: x.clip(-20, 20)),
+        EnsureTyped(keys=("input", "mask")),
+    ]
+)

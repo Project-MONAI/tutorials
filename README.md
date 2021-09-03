@@ -108,6 +108,10 @@ This notebook is an end-to-end training & evaluation example of 3D segmentation 
 The example is a PyTorch Ignite program and shows several key features of MONAI, especially with medical domain specific transforms and event handlers.
 #### [COVID 19-20 challenge baseline](./3d_segmentation/challenge_baseline)
 This folder provides a simple baseline method for training, validation, and inference for [COVID-19 LUNG CT LESION SEGMENTATION CHALLENGE - 2020](https://covid-segmentation.grand-challenge.org/COVID-19-20/) (a MICCAI Endorsed Event).
+#### [unetr_btcv_segmentation_3d](./3d_segmentation/unetr_btcv_segmentation_3d.ipynb)
+This notebook demonstrates how to construct a training workflow of UNETR on multi-organ segmentation task using the BTCV challenge dataset.
+#### [unetr_btcv_segmentation_3d_lightning](./3d_segmentation/unetr_btcv_segmentation_3d_lightning.ipynb)
+This tutorial demonstrates how MONAI can be used in conjunction with [PyTorch Lightning](https://www.pytorchlightning.ai/) framework to construct a training workflow of UNETR on multi-organ segmentation task using the BTCV challenge dataset.
 
 **2D registration**
 #### [registration using mednist](./2d_registration/registration_mednist.ipynb)
@@ -137,6 +141,9 @@ The example show how to execute the 3d segmentation torch tutorial on a federate
 **Digital Pathology**
 #### [Whole Slide Tumor Detection](./pathology/tumor_detection)
 The example show how to train and evaluate a tumor detection model (based on patch classification) on whole-slide histopathology images.
+
+#### [Profiling Whole Slide Tumor Detection](./pathology/tumor_detection)
+The example show how to use MONAI NVTX transforms to tag and profile pre- and post-processing transforms in the digital pathology whole slide tumor detection pipeline.
 
 **acceleration**
 #### [distributed_training](./acceleration/distributed_training)

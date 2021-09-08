@@ -81,11 +81,11 @@ def get_xforms(mode="train", keys=("image", "label")):
 def get_net():
     """returns a unet model instance."""
 
-    n_classes = 2
+    num_classes = 2
     net = monai.networks.nets.BasicUNet(
         dimensions=3,
         in_channels=1,
-        out_channels=n_classes,
+        out_channels=num_classes,
         features=(32, 32, 64, 128, 256, 32),
         dropout=0.1,
     )
@@ -172,7 +172,7 @@ def train(data_folder=".", model_folder="runs"):
 
     # create evaluator (to be used to measure model quality during training
     val_post_transform = monai.transforms.Compose(
-        [EnsureTyped(keys=("pred", "label")), AsDiscreted(keys=("pred", "label"), argmax=(True, False), to_onehot=True, n_classes=2)]
+        [EnsureTyped(keys=("pred", "label")), AsDiscreted(keys=("pred", "label"), argmax=(True, False), to_onehot=True, num_classes=2)]
     )
     val_handlers = [
         ProgressBar(),

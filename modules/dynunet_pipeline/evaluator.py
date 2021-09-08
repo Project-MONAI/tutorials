@@ -26,7 +26,7 @@ class DynUNetEvaluator(SupervisedEvaluator):
         val_data_loader: Ignite engine use data_loader to run, must be
             torch.DataLoader.
         network: use the network to run model forward.
-        n_classes: the number of classes (output channels) for the task.
+        num_classes: the number of classes (output channels) for the task.
         epoch_length: number of iterations for one epoch, default to
             `len(val_data_loader)`.
         non_blocking: if True and this copy is between CPU and GPU, the copy may occur asynchronously
@@ -54,7 +54,7 @@ class DynUNetEvaluator(SupervisedEvaluator):
         device: torch.device,
         val_data_loader: DataLoader,
         network: torch.nn.Module,
-        n_classes: Union[str, int],
+        num_classes: Union[str, int],
         epoch_length: Optional[int] = None,
         non_blocking: bool = False,
         prepare_batch: Callable = default_prepare_batch,
@@ -83,11 +83,11 @@ class DynUNetEvaluator(SupervisedEvaluator):
             amp=amp,
         )
 
-        if not isinstance(n_classes, int):
-            n_classes = int(n_classes)
-        self.n_classes = n_classes
-        self.post_pred = AsDiscrete(argmax=True, to_onehot=True, n_classes=n_classes)
-        self.post_label = AsDiscrete(to_onehot=True, n_classes=n_classes)
+        if not isinstance(num_classes, int):
+            num_classes = int(num_classes)
+        self.num_classes = num_classes
+        self.post_pred = AsDiscrete(argmax=True, to_onehot=True, num_classes=num_classes)
+        self.post_label = AsDiscrete(to_onehot=True, num_classes=num_classes)
         self.tta_val = tta_val
 
     def _iteration(
@@ -159,13 +159,13 @@ class DynUNetEvaluator(SupervisedEvaluator):
         if resample_flag:
             # convert the prediction back to the original (after cropped) shape
             predictions = recovery_prediction(
-                predictions.numpy(), [self.n_classes, *crop_shape], anisotrophy_flag
+                predictions.numpy(), [self.num_classes, *crop_shape], anisotrophy_flag
             )
             predictions = torch.tensor(predictions)
 
         # put iteration outputs into engine.state
         engine.state.output = {Keys.IMAGE: inputs, Keys.LABEL: targets.unsqueeze(0)}
-        engine.state.output[Keys.PRED] = torch.zeros([1, self.n_classes, *original_shape])
+        engine.state.output[Keys.PRED] = torch.zeros([1, self.num_classes, *original_shape])
         # pad the prediction back to the original shape
         box_start, box_end = batchdata["bbox"][0]
         h_start, w_start, d_start = box_start

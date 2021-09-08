@@ -81,7 +81,7 @@ def main():
         ]
     )
     post_pred = Compose([EnsureType(), Activations(softmax=True)])
-    post_label = Compose([EnsureType(), AsDiscrete(to_onehot=True, n_classes=2)])
+    post_label = Compose([EnsureType(), AsDiscrete(to_onehot=True, num_classes=2)])
 
     # Define dataset, data loader
     check_ds = monai.data.Dataset(data=train_files, transform=train_transforms)

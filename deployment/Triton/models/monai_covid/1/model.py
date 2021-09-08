@@ -109,8 +109,8 @@ class TritonPythonModel:
         self.post_transforms = Compose([
             Lambda(func=lambda x: x.to(device="cpu")),
             Activations(sigmoid=True),
-            AsDiscrete(threshold_values=True, logit_thresh=0.5),
             ToNumpy(),
+            AsDiscrete(threshold_values=True, logit_thresh=0.5),
         ])
 
         self.inferer = SimpleInferer()

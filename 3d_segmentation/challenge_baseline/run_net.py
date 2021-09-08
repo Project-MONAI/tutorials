@@ -58,7 +58,7 @@ def get_xforms(mode="train", keys=("image", "label")):
                     keys,
                     prob=0.15,
                     rotate_range=(0.05, 0.05, None),  # 3 parameters control the transform on 3 dimensions
-                    scale_range=(0.1, 0.1, None), 
+                    scale_range=(0.1, 0.1, None),
                     mode=("bilinear", "nearest"),
                     as_tensor_output=False,
                 ),

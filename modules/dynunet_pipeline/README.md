@@ -77,9 +77,9 @@ I used these scripts and trained for all 5 folds for all 10 tasks. As for the te
 Comments:
 - The results of DynUNet come from the re-implemented `3D_fullres` version in MONAI and without postprocessing.
 
-- The results of NNUnet come from different versions (`3D_fullres` for task 01, 02 and 04, `3D_cascade` for task 10, and ensembled two versions for other tasks) and may have postprocessing [1]. 
+- The results of NNUnet come from different versions (`3D_fullres` for task 01, 02 and 04, `3D_cascade` for task 10, and ensembled two versions for other tasks) and may have postprocessing [1].
 
-- Therefore, the two results may not be fully comparable and the above tables are just for reference. 
+- Therefore, the two results may not be fully comparable and the above tables are just for reference.
 
 - After implementing this repository, I re-trained on task 04 and attached the validation results as follow, and the comparisons between DynUNet and NNUnet are all for the single `3D_fullres` version.
 

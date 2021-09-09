@@ -56,7 +56,7 @@ def validation(args):
             module=net, device_ids=[device], find_unused_parameters=True
         )
 
-    n_classes = len(properties["labels"])
+    num_classes = len(properties["labels"])
 
     net.eval()
 
@@ -64,7 +64,7 @@ def validation(args):
         device=device,
         val_data_loader=val_loader,
         network=net,
-        n_classes=n_classes,
+        num_classes=num_classes,
         inferer=SlidingWindowInferer(
             roi_size=patch_size[task_id],
             sw_batch_size=sw_batch_size,
@@ -87,8 +87,8 @@ def validation(args):
     if local_rank == 0:
         print(evaluator.state.metrics)
         results = evaluator.state.metric_details["val_mean_dice"]
-        if n_classes > 2:
-            for i in range(n_classes - 1):
+        if num_classes > 2:
+            for i in range(num_classes - 1):
                 print(
                     "mean dice for label {} is {}".format(i + 1, results[:, i].mean())
                 )
@@ -166,7 +166,7 @@ def train(args):
         device=device,
         val_data_loader=val_loader,
         network=net,
-        n_classes=len(properties["labels"]),
+        num_classes=len(properties["labels"]),
         inferer=SlidingWindowInferer(
             roi_size=patch_size[task_id],
             sw_batch_size=sw_batch_size,

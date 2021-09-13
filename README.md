@@ -216,6 +216,8 @@ This tutorial illustrates the flexible network APIs and utilities.
 This notebook shows the usage of several postprocessing transforms based on the model output of spleen segmentation task.
 #### [public_datasets](./modules/public_datasets.ipynb)
 This notebook shows how to quickly set up training workflow based on `MedNISTDataset` and `DecathlonDataset`, and how to create a new dataset.
+#### [tcia_csv_processing](./modules/tcia_csv_processing.ipynb)
+This notebook shows how to load the TCIA data with CSVDataset from CSV file and extract information for TCIA data to fetch DICOM images based on REST API.
 #### [transforms_demo_2d](./modules/transforms_demo_2d.ipynb)
 This notebook demonstrates the image transformations on histology images using
 [the GlaS Contest dataset](https://warwick.ac.uk/fac/sci/dcs/research/tia/glascontest/download/).

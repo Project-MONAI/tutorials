@@ -126,7 +126,7 @@ def main():
     # add evaluation metric to the evaluator engine
     val_metrics = {metric_name: ROCAUC()}
 
-    post_label = Compose([EnsureType(), AsDiscrete(to_onehot=True, n_classes=2)])
+    post_label = Compose([EnsureType(), AsDiscrete(to_onehot=True, num_classes=2)])
     post_pred = Compose([EnsureType(), Activations(softmax=True)])
     # Ignite evaluator expects batch=(img, label) and returns output=(y_pred, y) at every iteration,
     # user can add output_transform to return other values

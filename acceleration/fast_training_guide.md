@@ -53,7 +53,11 @@ epoch N: [image[N % 5] ...]
 ```
 Full example of `SmartCacheDataset` is available at [Distributed training with SmartCache](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/unet_training_smartcache.py).
 
-### 4. {placeholder}
+### 4. `ThreadDataLoader` vs `DataLoader`
+If the transforms are light-weight, especially when we already cache all the data in memory to avoid IO operations, the `multi-processing` execution of PyTorch `DataLoader` may cause unnecessary IPC time. MONAI provides `ThreadDataLoader` which execute transforms in a separate thread instead of `multi-processing` execution:
+![threaddataloader](../figures/threaddataloader.png)
+
+### 5. {placeholder}
 
 ## Optimize GPU utilization
 NVIDIA GPUs have been widely applied in many areas of deep learning training and evaluation, and the CUDA parallel computation shows obvious acceleration when comparing to traditional computation methods. To fully leverage GPU features, many popular mechanisms raised, like automatic mixed precision (AMP), distributed data parallel, etc. MONAI can support these features and provides rich examples.
@@ -89,10 +93,6 @@ train_transforms = [
 dataset = CacheDataset(..., transform=train_trans)
 ```
 Here we convert to PyTorch `Tensor` with `EnsureTyped` transform, and move data to GPU device with `ToDeviced` transform. `CacheDataset` caches the transform results until `ToDeviced`, so it's in GPU memory. Then every epoch will fetch cache data from GPU memory and only execute the random transform `RandCropByPosNegLabeld` on GPU device directly.
-
-### 4. `ThreadDataLoader` vs `DataLoader`
-If the transforms are light-weight, especially when we already cache all the data in memory to avoid IO operations, the `multi-processing` execution of PyTorch `DataLoader` may cause unnecessary IPC time. MONAI provides `ThreadDataLoader` which execute transforms in a separate thread instead of `multi-processing` execution:
-![threaddataloader](../figures/threaddataloader.png)
 
 ## Leverage multi-GPUs
 When we already fully leveraged single GPU during training, a natrual optimization idea is to partition dataset and execute on multi-GPUs in parallel.

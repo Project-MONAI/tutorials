@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 from ignite.engine import Engine
 from ignite.metrics import Metric
+from monai.data import decollate_batch
 from monai.data.nifti_writer import write_nifti
 from monai.engines import SupervisedEvaluator
 from monai.engines.utils import IterationEvents, default_prepare_batch
@@ -28,7 +29,7 @@ class DynUNetInferrer(SupervisedEvaluator):
             torch.DataLoader.
         network: use the network to run model forward.
         output_dir: the path to save inferred outputs.
-        n_classes: the number of classes (output channels) for the task.
+        num_classes: the number of classes (output channels) for the task.
         epoch_length: number of iterations for one epoch, default to
             `len(val_data_loader)`.
         non_blocking: if True and this copy is between CPU and GPU, the copy may occur asynchronously
@@ -37,7 +38,7 @@ class DynUNetInferrer(SupervisedEvaluator):
         iteration_update: the callable function for every iteration, expect to accept `engine`
             and `batchdata` as input parameters. if not provided, use `self._iteration()` instead.
         inferer: inference method that execute model forward on input data, like: SlidingWindow, etc.
-        post_transform: execute additional transformation for the model output data.
+        postprocessing: execute additional transformation for the model output data.
             Typically, several Tensor based transforms composed by `Compose`.
         key_val_metric: compute metric when every iteration completed, and save average value to
             engine.state.metrics when epoch completed. key_val_metric is the main metric to compare and save the
@@ -57,13 +58,13 @@ class DynUNetInferrer(SupervisedEvaluator):
         val_data_loader: DataLoader,
         network: torch.nn.Module,
         output_dir: str,
-        n_classes: Union[str, int],
+        num_classes: Union[str, int],
         epoch_length: Optional[int] = None,
         non_blocking: bool = False,
         prepare_batch: Callable = default_prepare_batch,
         iteration_update: Optional[Callable] = None,
         inferer: Optional[Inferer] = None,
-        post_transform: Optional[Transform] = None,
+        postprocessing: Optional[Transform] = None,
         key_val_metric: Optional[Dict[str, Metric]] = None,
         additional_metrics: Optional[Dict[str, Metric]] = None,
         val_handlers: Optional[Sequence] = None,
@@ -79,19 +80,19 @@ class DynUNetInferrer(SupervisedEvaluator):
             prepare_batch=prepare_batch,
             iteration_update=iteration_update,
             inferer=inferer,
-            post_transform=post_transform,
+            postprocessing=postprocessing,
             key_val_metric=key_val_metric,
             additional_metrics=additional_metrics,
             val_handlers=val_handlers,
             amp=amp,
         )
 
-        if not isinstance(n_classes, int):
-            n_classes = int(n_classes)
-        self.post_pred = AsDiscrete(argmax=True, to_onehot=True, n_classes=n_classes)
+        if not isinstance(num_classes, int):
+            num_classes = int(num_classes)
+        self.post_pred = AsDiscrete(argmax=True, to_onehot=True, num_classes=num_classes)
         self.output_dir = output_dir
         self.tta_val = tta_val
-        self.n_classes = n_classes
+        self.num_classes = num_classes
 
     def _iteration(
         self, engine: Engine, batchdata: Dict[str, Any]
@@ -147,7 +148,7 @@ class DynUNetInferrer(SupervisedEvaluator):
                 predictions = _compute_pred()
 
         inputs = inputs.cpu()
-        predictions = self.post_pred(predictions)
+        predictions = self.post_pred(decollate_batch(predictions)[0])
 
         affine = batchdata["image_meta_dict"]["affine"].numpy()[0]
         resample_flag = batchdata["resample_flag"]
@@ -158,12 +159,11 @@ class DynUNetInferrer(SupervisedEvaluator):
         if resample_flag:
             # convert the prediction back to the original (after cropped) shape
             predictions = recovery_prediction(
-                predictions.numpy()[0], [self.n_classes, *crop_shape], anisotrophy_flag
+                predictions.numpy(), [self.num_classes, *crop_shape], anisotrophy_flag
             )
         else:
             predictions = predictions.numpy()
 
-        predictions = predictions[0]
         predictions = np.argmax(predictions, axis=0)
 
         # pad the prediction back to the original shape

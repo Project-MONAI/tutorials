@@ -23,7 +23,7 @@ from ignite.handlers import EarlyStopping, ModelCheckpoint
 from torch.utils.data import DataLoader
 
 import monai
-from monai.data import ImageDataset, create_test_image_3d
+from monai.data import ImageDataset, create_test_image_3d, decollate_batch
 from monai.handlers import (
     MeanDice,
     StatsHandler,
@@ -39,7 +39,7 @@ from monai.transforms import (
     RandSpatialCrop,
     Resize,
     ScaleIntensity,
-    ToTensor,
+    EnsureType,
 )
 
 
@@ -67,16 +67,16 @@ def main(tempdir):
             ScaleIntensity(),
             AddChannel(),
             RandSpatialCrop((96, 96, 96), random_size=False),
-            ToTensor(),
+            EnsureType(),
         ]
     )
     train_segtrans = Compose(
-        [AddChannel(), RandSpatialCrop((96, 96, 96), random_size=False), ToTensor()]
+        [AddChannel(), RandSpatialCrop((96, 96, 96), random_size=False), EnsureType()]
     )
     val_imtrans = Compose(
-        [ScaleIntensity(), AddChannel(), Resize((96, 96, 96)), ToTensor()]
+        [ScaleIntensity(), AddChannel(), Resize((96, 96, 96)), EnsureType()]
     )
-    val_segtrans = Compose([AddChannel(), Resize((96, 96, 96)), ToTensor()])
+    val_segtrans = Compose([AddChannel(), Resize((96, 96, 96)), EnsureType()])
 
     # define image dataset, data loader
     check_ds = ImageDataset(
@@ -138,11 +138,11 @@ def main(tempdir):
     # StatsHandler prints loss at every iteration and print metrics at every epoch,
     # we don't set metrics for trainer here, so just print loss, user can also customize print functions
     # and can use output_transform to convert engine.state.output if it's not a loss value
-    train_stats_handler = StatsHandler(name="trainer")
+    train_stats_handler = StatsHandler(name="trainer", output_transform=lambda x: x)
     train_stats_handler.attach(trainer)
 
     # TensorBoardStatsHandler plots loss at every iteration and plots metrics at every epoch, same as StatsHandler
-    train_tensorboard_stats_handler = TensorBoardStatsHandler()
+    train_tensorboard_stats_handler = TensorBoardStatsHandler(output_transform=lambda x: x)
     train_tensorboard_stats_handler.attach(trainer)
 
     validation_every_n_epochs = 1
@@ -151,8 +151,8 @@ def main(tempdir):
     # add evaluation metric to the evaluator engine
     val_metrics = {metric_name: MeanDice()}
 
-    post_pred = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
-    post_label = AsDiscrete(threshold_values=True)
+    post_pred = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+    post_label = Compose([EnsureType(), AsDiscrete(threshold_values=True)])
 
     # Ignite evaluator expects batch=(img, seg) and returns output=(y_pred, y) at every iteration,
     # user can add output_transform to return other values
@@ -161,7 +161,7 @@ def main(tempdir):
         val_metrics,
         device,
         True,
-        output_transform=lambda x, y, y_pred: (post_pred(y_pred), post_label(y)),
+        output_transform=lambda x, y, y_pred: ([post_pred(i) for i in decollate_batch(y_pred)], [post_label(i) for i in decollate_batch(y)]),
     )
 
     @trainer.on(Events.EPOCH_COMPLETED(every=validation_every_n_epochs))

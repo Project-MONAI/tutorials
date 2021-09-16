@@ -4,8 +4,15 @@ from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 
 import torch
 import torch.distributed as dist
-from monai.handlers import (CheckpointSaver, LrScheduleHandler, MeanDice,
-                            StatsHandler, ValidationHandler)
+from monai.config import print_config
+from monai.handlers import (
+    CheckpointSaver,
+    LrScheduleHandler,
+    MeanDice,
+    StatsHandler,
+    ValidationHandler,
+    from_engine,
+)
 from monai.inferers import SimpleInferer, SlidingWindowInferer
 from monai.losses import DiceCELoss
 from monai.utils import set_determinism
@@ -49,7 +56,7 @@ def validation(args):
             module=net, device_ids=[device], find_unused_parameters=True
         )
 
-    n_classes = len(properties["labels"])
+    num_classes = len(properties["labels"])
 
     net.eval()
 
@@ -57,18 +64,18 @@ def validation(args):
         device=device,
         val_data_loader=val_loader,
         network=net,
-        n_classes=n_classes,
+        num_classes=num_classes,
         inferer=SlidingWindowInferer(
             roi_size=patch_size[task_id],
             sw_batch_size=sw_batch_size,
             overlap=eval_overlap,
             mode=window_mode,
         ),
-        post_transform=None,
+        postprocessing=None,
         key_val_metric={
             "val_mean_dice": MeanDice(
                 include_background=False,
-                output_transform=lambda x: (x["pred"], x["label"]),
+                output_transform=from_engine(["pred", "label"]),
             )
         },
         additional_metrics=None,
@@ -80,8 +87,8 @@ def validation(args):
     if local_rank == 0:
         print(evaluator.state.metrics)
         results = evaluator.state.metric_details["val_mean_dice"]
-        if n_classes > 2:
-            for i in range(n_classes - 1):
+        if num_classes > 2:
+            for i in range(num_classes - 1):
                 print(
                     "mean dice for label {} is {}".format(i + 1, results[:, i].mean())
                 )
@@ -159,24 +166,25 @@ def train(args):
         device=device,
         val_data_loader=val_loader,
         network=net,
-        n_classes=len(properties["labels"]),
+        num_classes=len(properties["labels"]),
         inferer=SlidingWindowInferer(
             roi_size=patch_size[task_id],
             sw_batch_size=sw_batch_size,
             overlap=eval_overlap,
             mode=window_mode,
         ),
-        post_transform=None,
+        postprocessing=None,
         key_val_metric={
             "val_mean_dice": MeanDice(
                 include_background=False,
-                output_transform=lambda x: (x["pred"], x["label"]),
+                output_transform=from_engine(["pred", "label"]),
             )
         },
         val_handlers=val_handlers,
         amp=amp_flag,
         tta_val=tta_val,
     )
+
     # produce trainer
     loss = DiceCELoss(to_onehot_y=True, softmax=True, batch=batch_dice)
     train_handlers = []
@@ -185,7 +193,7 @@ def train(args):
 
     train_handlers += [
         ValidationHandler(validator=evaluator, interval=interval, epoch_level=True),
-        StatsHandler(tag_name="train_loss", output_transform=lambda x: x["loss"]),
+        StatsHandler(tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
     ]
 
     trainer = DynUNetTrainer(
@@ -196,13 +204,16 @@ def train(args):
         optimizer=optimizer,
         loss_function=loss,
         inferer=SimpleInferer(),
-        post_transform=None,
+        postprocessing=None,
         key_train_metric=None,
         train_handlers=train_handlers,
         amp=amp_flag,
     )
 
-    # run
+    if local_rank > 0:
+        evaluator.logger.setLevel(logging.WARNING)
+        trainer.logger.setLevel(logging.WARNING)
+
     logger = logging.getLogger()
 
     formatter = logging.Formatter(
@@ -214,16 +225,15 @@ def train(args):
     fhandler.setLevel(logging.INFO)
     fhandler.setFormatter(formatter)
 
-    # Configure stream handler for the cells
-    chandler = logging.StreamHandler()
-    chandler.setLevel(logging.INFO)
-    chandler.setFormatter(formatter)
+    logger.addHandler(fhandler)
 
-    # Add both handlers
-    if local_rank == 0:
-        logger.addHandler(fhandler)
+    if not multi_gpu_flag:
+        chandler = logging.StreamHandler()
+        chandler.setLevel(logging.INFO)
+        chandler.setFormatter(formatter)
         logger.addHandler(chandler)
-        logger.setLevel(logging.INFO)
+
+    logger.setLevel(logging.INFO)
 
     trainer.run()
 
@@ -390,7 +400,8 @@ if __name__ == "__main__":
     )
     parser.add_argument("-local_rank", "--local_rank", type=int, default=0)
     args = parser.parse_args()
-
+    if args.local_rank == 0:
+        print_config()
     if args.mode == "train":
         train(args)
     elif args.mode == "val":

@@ -13,11 +13,11 @@ MONAI Generative Adversarial Networks Workflow Example
     Sample script using MONAI to train a GAN to synthesize images from a latent code.
 
 ## Get the dataset
-    MedNIST.tar.gz link: https://www.dropbox.com/s/5wwskxctvcxiuea/MedNIST.tar.gz
+    MedNIST.tar.gz link: https://drive.google.com/uc?id=1QsnnkvZyJPcbRoV_ArW8SnE1OTuoVbKE
     Extract tarball and set input_dir variable. GAN script trains using hand CT scan jpg images.
 
     Dataset information available in MedNIST Tutorial
-    https://github.com/Project-MONAI/Tutorials/blob/master/mednist_tutorial.ipynb
+    https://github.com/Project-MONAI/tutorials/blob/master/2d_classification/mednist_tutorial.ipynb
 """
 
 import logging
@@ -43,7 +43,7 @@ from monai.transforms import (
     RandRotateD,
     RandZoomD,
     ScaleIntensityD,
-    ToTensorD,
+    EnsureTypeD,
 )
 from monai.utils.misc import set_determinism
 
@@ -72,7 +72,7 @@ def main():
             RandRotateD(keys=["hand"], range_x=np.pi / 12, prob=0.5, keep_size=True),
             RandFlipD(keys=["hand"], spatial_axis=0, prob=0.5),
             RandZoomD(keys=["hand"], min_zoom=0.9, max_zoom=1.1, prob=0.5),
-            ToTensorD(keys=["hand"]),
+            EnsureTypeD(keys=["hand"]),
         ]
     )
 

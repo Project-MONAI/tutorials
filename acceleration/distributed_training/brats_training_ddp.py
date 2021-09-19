@@ -16,6 +16,10 @@ It can run on several nodes with multiple GPU devices on every node.
 This example is a real-world task based on Decathlon challenge Task01: Brain Tumor segmentation.
 So it's more complicated than other distributed training demo examples.
 
+Under default settings, each single GPU needs to use ~12GB memory for network training. In addition, in order to
+cache the whole dataset, ~100GB GPU memory are necessary. Therefore, at least 5 NVIDIA TESLA V100 (32G) are needed.
+If you do not have enough GPU memory, you can try to decrease the input parameter `cache_rate`.
+
 Main steps to set up the distributed training:
 
 - Execute `torch.distributed.launch` to create processes on every node for every GPU.
@@ -372,9 +376,9 @@ def main():
     parser.add_argument("--local_rank", type=int, help="node rank for distributed training")
     parser.add_argument("--epochs", default=300, type=int, metavar="N", help="number of total epochs to run")
     parser.add_argument("--lr", default=1e-4, type=float, help="learning rate")
-    parser.add_argument("-b", "--batch_size", default=2, type=int, help="mini-batch size of every GPU")
+    parser.add_argument("-b", "--batch_size", default=1, type=int, help="mini-batch size of every GPU")
     parser.add_argument("--seed", default=None, type=int, help="seed for initializing training.")
-    parser.add_argument("--cache_rate", type=float, default=1.0)
+    parser.add_argument("--cache_rate", type=float, default=1.0, help="larger cache rate relies on enough GPU memory.")
     parser.add_argument("--val_interval", type=int, default=20)
     parser.add_argument("--network", type=str, default="SegResNet", choices=["UNet", "SegResNet"])
     args = parser.parse_args()

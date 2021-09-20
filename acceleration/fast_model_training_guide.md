@@ -55,7 +55,7 @@ And the output `.json` file contains various aspects of GPU information.
 
 [NVIDIA Nsight™ Systems](https://developer.nvidia.com/nsight-systems) is a system-wide performance analysis tool designed to visualize an application’s algorithms, help to identify the largest opportunities to optimize, and tune to scale efficiently across any quantity or size of CPUs and GPUs.
 
-Nsight provides a great GUI to visualize the output database (`.qdrep` file) from analysis results of DLProf. With necessary annotation inside the existing training scripts. The GPU utilization of each operation can be clearly seen through the interface. Then, users understand better about which components is the bottleneck of computation. The detailed example is shown in the following 
+Nsight provides a great GUI to visualize the output database (`.qdrep` file) from analysis results of DLProf. With necessary annotation inside the existing training scripts. The GPU utilization of each operation can be clearly seen through the interface. Then, users understand better about which components is the bottleneck of computation. The detailed example is shown in the following
 [performance profiling tutorial]( https://github.com/Project-MONAI/tutorials/blob/master/performance_profiling/profiling_train_base_nvtx.ipynb).
 
 As shown in the following figure, each training epoch can be decomposed into several steps, including data loading (I/O), model forward/backward operation, optimization, etc. Then, necessary improvement can be conducted targeting certain steps. For example, if data loading (I/O) takes too much time during training, we can try to cache them into CPU/GPU bypassing data loading and pre-processing. After program optimization, user can re-use the tool further comparing the profiles before and after optimization and determine if the optimization is effective.
@@ -248,4 +248,3 @@ In summary, with all the optimization, the training time of 8 V100 GPUs to achie
 ![brats benchmark](../figures/brats_benchmark.png)
 
 More details is available at [Brats distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py).
-

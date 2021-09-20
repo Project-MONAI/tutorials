@@ -34,15 +34,15 @@ dlprof --mode pytorch \
 And the output `.json` file contains various aspects of GPU information.
 
 ```
-  "All Kernels" : 
+  "All Kernels" :
   {
-    "All kernels" : 
+    "All kernels" :
     {
       "# Kernels" : 39,
       "CPU Time (ns)" : 10115333085,
       "GPU Time (ns)" : 9016239970
     },
-    "All other kernels" : 
+    "All other kernels" :
     {
       "# Kernels" : 32,
       "CPU Time (ns)" : 2246830231,

@@ -171,7 +171,7 @@ def main(cfg):
     # -------------------------------------------------------------------------
     # Create log/model dir
     log_dir = create_log_dir(cfg)
-    # _________________________________________________________________________
+
     # Set the logger
     logging.basicConfig(
         format="%(asctime)s %(levelname)2s %(message)s",
@@ -183,18 +183,18 @@ def main(cfg):
     fh = logging.FileHandler(log_name)
     fh.setLevel(logging.INFO)
     logger.addHandler(fh)
-    # _________________________________________________________________________
+
     # Set TensorBoard summary writter
     writer = SummaryWriter(log_dir)
-    # _________________________________________________________________________
+
     # Save configs
     logging.info(json.dumps(cfg))
     with open(os.path.join(log_dir, "config.json"), "w") as fp:
         json.dump(cfg, fp, indent=4)
-    # _________________________________________________________________________
+
     # Set device cuda/cpu
     device = set_device(cfg)
-    # _________________________________________________________________________
+
     # Set cudnn benchmark/deterministic
     if cfg["benchmark"]:
         torch.backends.cudnn.benchmark = True
@@ -255,7 +255,7 @@ def main(cfg):
         )
     else:
         raise ValueError(f"Backend should be either numpy or cucim! ['{cfg['backend']}' is provided.]")
-    # _________________________________________________________________________
+
     # Post-processing
     postprocess = Compose(
         [
@@ -263,7 +263,7 @@ def main(cfg):
             AsDiscrete(threshold_values=True),
         ]
     )
-    # _________________________________________________________________________
+
     # Create MONAI dataset
     train_json_info_list = load_decathlon_datalist(
         data_list_file_path=cfg["dataset_json"],
@@ -291,7 +291,7 @@ def main(cfg):
         transform=preprocess_cpu_valid,
         image_reader_name="openslide" if cfg["use_openslide"] else "cuCIM",
     )
-    # _________________________________________________________________________
+
     # DataLoaders
     train_dataloader = DataLoader(
         train_dataset, num_workers=cfg["num_workers"], batch_size=cfg["batch_size"], pin_memory=cfg["pin"]
@@ -299,7 +299,7 @@ def main(cfg):
     valid_dataloader = DataLoader(
         valid_dataset, num_workers=cfg["num_workers"], batch_size=cfg["batch_size"], pin_memory=cfg["pin"]
     )
-    # _________________________________________________________________________
+
     # Get sample batch and some info
     first_sample = first(train_dataloader)
     if first_sample is None:
@@ -315,29 +315,29 @@ def main(cfg):
     logging.info(f"[Training] number of batches: {len(train_dataloader)}")
     logging.info(f"[Validation] number of batches: {len(valid_dataloader)}")
     # -------------------------------------------------------------------------
-    # Deep Learning Classification Model
+    # Deep Learning Model and Configurations
     # -------------------------------------------------------------------------
     # Initialize model
     model = TorchVisionFCModel("resnet18", n_classes=1, use_conv=True, pretrained=cfg["pretrain"])
     model = model.to(device)
-    # _________________________________________________________________________
+
     # Loss function
     loss_func = torch.nn.BCEWithLogitsLoss()
     loss_func = loss_func.to(device)
-    # _________________________________________________________________________
+
     # Optimizer
     if cfg["novograd"] is True:
         optimizer = Novograd(model.parameters(), lr=cfg["lr"])
     else:
         optimizer = SGD(model.parameters(), lr=cfg["lr"], momentum=0.9)
-    # _________________________________________________________________________
+
     # AMP scaler
     cfg["amp"] = cfg["amp"] and monai.utils.get_torch_version_tuple() >= (1, 6)
     if cfg["amp"] is True:
         scaler = GradScaler()
     else:
         scaler = None
-    # _________________________________________________________________________
+
     # Learning rate scheduler
     if cfg["cos"] is True:
         scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=cfg["n_epochs"])
@@ -356,7 +356,7 @@ def main(cfg):
     for _ in range(cfg["n_epochs"]):
         t_epoch = time.perf_counter()
         logging.info(f"[Training]learning rate: {optimizer.param_groups[0]['lr']}")
-        # _____________________________________________________________________
+
         # Training
         train_counter = training(
             train_counter,
@@ -379,7 +379,7 @@ def main(cfg):
         t_train = time.perf_counter()
         train_time = t_train - t_epoch
         total_train_time += train_time
-        # _____________________________________________________________________
+
         # Validation
         if cfg["validate"]:
             valid_loss, valid_acc = validation(
@@ -403,31 +403,21 @@ def main(cfg):
             writer.add_scalar("valid/accuracy", valid_acc, train_counter["epoch"])
 
             logging.info(
-                f"\n--------------------------------------------------------------------------------\n"
                 f"[Epoch: {train_counter['epoch']}/{cfg['n_epochs']}] loss: {valid_loss:.3f}, accuracy: {valid_acc:.2f}, "
-                f"time: {t_valid - t_epoch:.1f}s (train: {train_time:.1f}s, valid: {valid_time:.1f}s)\n"
-                f"--------------------------------------------------------------------------------"
+                f"time: {t_valid - t_epoch:.1f}s (train: {train_time:.1f}s, valid: {valid_time:.1f}s)"
             )
         else:
-            logging.info(
-                f"\n--------------------------------------------------------------------------------\n"
-                f"[Epoch: {train_counter['epoch']}/{cfg['n_epochs']}] Train time: {train_time:.1f}s\n"
-                f"--------------------------------------------------------------------------------"
-            )
+            logging.info(f"[Epoch: {train_counter['epoch']}/{cfg['n_epochs']}] Train time: {train_time:.1f}s\n")
         writer.flush()
     t_end = time.perf_counter()
-    # _________________________________________________________________________
+
     # Save final metrics
     metric_summary["train_time_per_epoch"] = total_train_time / cfg["n_epochs"]
     metric_summary["total_time"] = t_end - t_start
     writer.add_hparams(hparam_dict=cfg, metric_dict=metric_summary, run_name=log_dir)
     writer.close()
-    logging.info(
-        f"\n--------------------------------------------------------------------------------\n"
-        f" metric_summary: {metric_summary}\n"
-        f"--------------------------------------------------------------------------------"
-    )
-    # _________________________________________________________________________
+    logging.info(f"Metric Summary: {metric_summary}")
+
     # Save the best and final model
     if cfg["validate"] is True:
         copyfile(
@@ -438,7 +428,7 @@ def main(cfg):
             os.path.join(log_dir, f"model_epoch_{cfg['n_epochs']}.pth"),
             os.path.join(log_dir, "model_final.pth"),
         )
-    # _________________________________________________________________________
+
     # Final prints
     logging.info(
         f"[Completed] {train_counter['epoch']} epochs!"

@@ -355,7 +355,7 @@ def main(cfg):
     # Training/Validation Loop
     for _ in range(cfg["n_epochs"]):
         t_epoch = time.perf_counter()
-        logging.info(f"[Training]learning rate: {optimizer.param_groups[0]['lr']}")
+        logging.info(f"[Training] learning rate: {optimizer.param_groups[0]['lr']}")
 
         # Training
         train_counter = training(

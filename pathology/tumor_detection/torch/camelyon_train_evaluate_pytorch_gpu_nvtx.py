@@ -84,44 +84,45 @@ def training(
     iter_data = iter(dataloader)
 
     for step in range(n_steps):
-        with Range("Data Loading"):
-            batch = next(iter_data)
-            x = batch["image"].to(device)
-            y = batch["label"].to(device)
+        with Range("Training Step"):
+            with Range("Data Loading"):
+                batch = next(iter_data)
+                x = batch["image"].to(device)
+                y = batch["label"].to(device)
 
-            if pre_process is not None:
-                x = pre_process(x)
+                if pre_process is not None:
+                    x = pre_process(x)
 
-        with autocast(enabled=amp):
-            output = model(x)
-            loss = loss_fn(output, y)
+            with autocast(enabled=amp):
+                output = model(x)
+                loss = loss_fn(output, y)
 
-        optimizer.zero_grad()
+            optimizer.zero_grad()
 
-        if amp:
-            scaler.scale(loss).backward()
-            scaler.step(optimizer)
-            scaler.update()
-        else:
-            loss.backward()
-            optimizer.step()
+            if amp:
+                scaler.scale(loss).backward()
+                scaler.step(optimizer)
+                scaler.update()
+            else:
+                loss.backward()
+                optimizer.step()
 
-        pred = post_process(output)
+            pred = post_process(output)
 
-        acc_data = (pred == y).float().mean().item()
-        loss_data = loss.item()
+            acc_data = (pred == y).float().mean().item()
+            loss_data = loss.item()
 
-        writer.add_scalar("train/loss", loss_data, summary["step"])
-        writer.add_scalar("train/accuracy", acc_data, summary["step"])
+            writer.add_scalar("train/loss", loss_data, summary["step"])
+            writer.add_scalar("train/accuracy", acc_data, summary["step"])
 
-        if step % print_step == 0:
-            logging.info(
-                f"[Training] Epoch: {summary['epoch']}/{summary['n_epochs']}, "
-                f"Step: {step + 1}/{n_steps} -- "
-                f"train_loss: {loss_data:.5f}, train_acc: {acc_data:.3f}"
-            )
+            if step % print_step == 0:
+                logging.info(
+                    f"[Training] Epoch: {summary['epoch']}/{summary['n_epochs']}, "
+                    f"Step: {step + 1}/{n_steps} -- "
+                    f"train_loss: {loss_data:.5f}, train_acc: {acc_data:.3f}"
+                )
 
-        summary["step"] += 1
+            summary["step"] += 1
 
     summary["epoch"] += 1
     return summary
@@ -136,33 +137,34 @@ def validation(model, loss_fn, amp, dataloader, pre_process, post_process, devic
     total_loss = 0
     total_n_samples = 0
     for step in range(n_steps):
-        batch = next(iter_data)
-        x = batch["image"].to(device)
-        y = batch["label"].to(device)
+        with Range("Validation Step"):
+            batch = next(iter_data)
+            x = batch["image"].to(device)
+            y = batch["label"].to(device)
 
-        if pre_process is not None:
-            x = pre_process(x)
+            if pre_process is not None:
+                x = pre_process(x)
 
-        with autocast(enabled=amp):
-            output = model(x)
-            loss = loss_fn(output, y)
+            with autocast(enabled=amp):
+                output = model(x)
+                loss = loss_fn(output, y)
 
-        pred = post_process(output)
+            pred = post_process(output)
 
-        acc_data = (pred == y).float().sum().item()
-        loss_data = loss.item()
-        n_samples = y.shape[0]
+            acc_data = (pred == y).float().sum().item()
+            loss_data = loss.item()
+            n_samples = y.shape[0]
 
-        total_acc += acc_data
-        total_loss += loss_data * n_samples
-        total_n_samples += n_samples
+            total_acc += acc_data
+            total_loss += loss_data * n_samples
+            total_n_samples += n_samples
 
-        if step % print_step == 0:
-            logging.info(
-                f"[Validation] "
-                f"Step : {step + 1}/{n_steps} -- "
-                f"valid_loss : {loss_data:.3f}, valid_acc : {acc_data / n_samples:.2f}"
-            )
+            if step % print_step == 0:
+                logging.info(
+                    f"[Validation] "
+                    f"Step : {step + 1}/{n_steps} -- "
+                    f"valid_loss : {loss_data:.3f}, valid_acc : {acc_data / n_samples:.2f}"
+                )
     return (total_loss / total_n_samples, total_acc / total_n_samples)
 
 
@@ -375,7 +377,7 @@ def main(cfg):
     # Training/Validation Loop
     for _ in range(cfg["n_epochs"]):
         t_epoch = time.perf_counter()
-        logging.info(f"[Training]learning rate: {optimizer.param_groups[0]['lr']}")
+        logging.info(f"[Training] learning rate: {optimizer.param_groups[0]['lr']}")
 
         # Training
         with Range("Training Epoch"):
@@ -403,16 +405,17 @@ def main(cfg):
 
         # Validation
         if cfg["validate"]:
-            valid_loss, valid_acc = validation(
-                model,
-                loss_func,
-                cfg["amp"],
-                valid_dataloader,
-                preprocess_gpu_valid,
-                postprocess,
-                device,
-                cfg["print_step"],
-            )
+            with Range("Validation"):
+                valid_loss, valid_acc = validation(
+                    model,
+                    loss_func,
+                    cfg["amp"],
+                    valid_dataloader,
+                    preprocess_gpu_valid,
+                    postprocess,
+                    device,
+                    cfg["print_step"],
+                )
             t_valid = time.perf_counter()
             valid_time = t_valid - t_train
             total_valid_time += valid_time

@@ -2,13 +2,13 @@
 
 Typically, `model training` is the most time-consuming step during the deep learning development, especially in medical imaging applications. Because 3D medical images are usually large (as multi-dimensional arrays), which leads to much more CPU or GPU operations. Even with powerful hardware devices (e.g. CPU/GPU with large RAM), it is not easy to fully leverage them to achieve optimal performance. And if we cannot apply suitable algorithms (such as network model, loss function, optimizer, etc.) to the target dataset, the training progress may be very slow and hard to converge readily.
 
-To provide an overall summary of the techniques to achieve fast training in our practice, this document introduces details of how to profile the training pipeline, analyze the dataset and select suitable algorithms, and optimize GPU utilization in single GPU, multi-GPUs or even multi-nodes.
+To provide an overall summary of the techniques to achieve fast training in our practice, this document introduces details of how to profile the training pipeline, analyze the dataset and select suitable algorithms, and optimize GPU utilization in single GPU, multi-GPU or even multi-node.
 
 * [Profile pipeline](#profile-pipeline)
-* [Analyzing dataset and select algorithms](#analyze-dataset-and-select-algorithms)
-* [Optimize GPU utilization](#optimize-gpu-utilization)
-* [Leveraging multi-GPU](#leverage-multi-gpus)
-* [Leveraging multi-nodes distributed training](#leverage-multi-nodes-distributed-training)
+* [Analyzing dataset and select algorithms](#analyzing-dataset-and-select-algorithms)
+* [Optimizing GPU utilization](#optimizing-gpu-utilization)
+* [Leveraging multi-GPU](#leveraging-multi-gpu)
+* [Leveraging multi-node distributed training](#leveraging-multi-node-distributed-training)
 * [Examples](#examples)
 
 ## Profile pipeline
@@ -211,7 +211,7 @@ Additionally, with more GPU devices, we can achieve more benefits:
 
 For example, during the training of brain tumor segmentation task, with 8 GPUs, we can cache all the data in GPU memory directly and execute following transforms on GPU device, so it's more than `10x` faster than single GPU training.
 
-## Leveraging multi-nodes distributed training
+## Leveraging multi-node distributed training
 
 Distributed data parallelism (DDP) is an important feature of PyTorch to connect multiple GPU devices in multiple nodes to train or evaluate models, it can continuously improve the training speed when we fully leveraged multiple GPUs in single node.
 
@@ -240,7 +240,7 @@ More details is available at [Spleen fast training tutorial](https://github.com/
 - Algorithm experiments based on dataset analysis. (1) `SegResNet` can get better accuracy than `U-Net`, so we chose it in the baseline. (2) Brain tumor segmentation task has 3 classes, and the prediction of every class is independent, so we replaced the `Dice` loss of baseline with `DiceFocal` loss. (3) And as the training curve of baseline is smooth, `Novograd` optimizer with a larger learning rate can converge faster than the `Adam` optimizer in baseline. (4) Some foreground labels are small in image, a bigger `overlap` of `sliding window` improved inference result (with guarantee of boundary smoothness). (5) We also tried experiments with different parameters of random transforms and network, etc. Finally, to get same target metric (mean dice = 0.78), the training epochs decreased from 110 to 80.
 - Optimize GPU utilization. (1) Single GPU cannot cache all the data in memory, so we split dataset into 8 parts and cache the deterministic transforms result in 8 GPU memory to avoid duplicated deterministic transforms and `CPU->GPU sync` in every epoch, every GPU stores data which size is less than 16GB. (2) And we also executed all the random transforms in GPU directly with the `ThreadDataLoader` as spleen segmentation task. The GPU utilization of all the 8 GPUs is always almost `100%` during training:
 ![brats gpu utilization](../figures/brats_gpu_utilization.png)
-(3) As we already fully leveraged the 8 GPUs, we continuously optimize the training with multi-nodes (32 V100 GPUs in 4 nodes). The GPU utilization of all the 32 GPUs is always `97%` during training.
+(3) As we already fully leveraged the 8 GPUs, we continuously optimize the training with multi-node (32 V100 GPUs in 4 nodes). The GPU utilization of all the 32 GPUs is always `97%` during training.
 
 In summary, with all the optimization, the training time of 8 V100 GPUs to achieve validation mean dice of `0.78` is around 40 minutes, which is more than `13x` faster than the baseline on single GPU. And the training time of 32 V100 GPUs is around `13` mins, which is `40x` faster than the baseline:
 ![brats benchmark](../figures/brats_benchmark.png)

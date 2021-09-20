@@ -407,7 +407,7 @@ def main(cfg):
                 f"time: {t_valid - t_epoch:.1f}s (train: {train_time:.1f}s, valid: {valid_time:.1f}s)"
             )
         else:
-            logging.info(f"[Epoch: {train_counter['epoch']}/{cfg['n_epochs']}] Train time: {train_time:.1f}s\n")
+            logging.info(f"[Epoch: {train_counter['epoch']}/{cfg['n_epochs']}] Train time: {train_time:.1f}s")
         writer.flush()
     t_end = time.perf_counter()
 
@@ -431,8 +431,7 @@ def main(cfg):
 
     # Final prints
     logging.info(
-        f"[Completed] {train_counter['epoch']} epochs!"
-        f" -- time: {t_end - t_start:.1f}s "
+        f"[Completed] {train_counter['epoch']} epochs -- time: {t_end - t_start:.1f}s "
         f"(training: {total_train_time:.1f}s, validation: {total_valid_time:.1f}s)",
     )
     logging.info(f"Logs and model was saved at: {log_dir}")

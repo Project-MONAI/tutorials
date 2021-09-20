@@ -146,6 +146,8 @@ The example show how to train and evaluate a tumor detection model (based on pat
 The example show how to use MONAI NVTX transforms to tag and profile pre- and post-processing transforms in the digital pathology whole slide tumor detection pipeline.
 
 **acceleration**
+#### [fast_model_training_guide](./acceleration/fast_model_training_guide.md)
+The document introduces details of how to profile the training pipeline, how to analyze the dataset and select suitable algorithms, and how to optimize GPU utilization in single GPU, multi-GPUs or even multi-nodes.
 #### [distributed_training](./acceleration/distributed_training)
 The examples show how to execute distributed training and evaluation based on 3 different frameworks:
 - PyTorch native `DistributedDataParallel` module with `torch.distributed.launch`.

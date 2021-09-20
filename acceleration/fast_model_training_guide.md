@@ -217,6 +217,8 @@ Distributed data parallelism (DDP) is an important feature of PyTorch to connect
 
 The distributed data parallel APIs of MONAI are compatible with native PyTorch distributed module, pytorch-ignite distributed module, Horovod, XLA, and the SLURM platform. MONAI provides rich demos for reference: train/evaluate with `PyTorch DDP`, train/evaluate with `Horovod`, train/evaluate with `Ignite DDP`, partition dataset and train with `SmartCacheDataset`, as well as a real-world training example based on Decathlon challenge Task01 - Brain Tumor segmentation.
 
+More details about the PyTorch distributed training setup, please refer to: https://pytorch.org/docs/stable/distributed.html.
+
 We obtained U-Net performance benchmarks of Brain tumor segmentation task for reference (based on CUDA 11, NVIDIA V100 GPUs):
 ![distributed training results](../figures/distributed_training.png)
 

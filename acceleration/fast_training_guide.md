@@ -152,7 +152,7 @@ Full example of `SmartCacheDataset` is available at [Distributed training with S
 If the transforms are light-weighted, especially when we cache all the data in RAM to avoid IO operations, the `multi-processing` execution of PyTorch `DataLoader` may cause unnecessary IPC time. MONAI provides `ThreadDataLoader` which execute transforms in a separate thread instead of `multi-processing` execution:
 ![threaddataloader](../figures/threaddataloader.png)
 
-### 5. Algorithmic Improvment
+### 5. Algorithmic improvement
 
 In most deep learning applications, algorithmic improvement has been witnessed to be effective for boosting of training efficiency and performance (for example, from AlexNet to ResNet). The improvement may from a novel loss function, or a sophisicated optimizer, or a different learning rate scheduler, or the combination of all previous items. For our demo applications of 3D medical imange segmentation, we would like to further speed up training from the algorithmic perspective. The default loss function is soft dice loss. And we changed it to `DiceCELoss` from MONAI to further improve the model convergence. Because the `DiceCELoss` combines both dice loss and multi-class cross-entropy loss (which is suitable for the softmax formulation), and balance importance of global and pixel-wise accuracies. The segmentation quality can be largely improved. The following figure shows the great improvement on model convergence after we change dice loss to `DiceCELoss`, with or without enabling automated mixed precision (AMP).
 

@@ -222,6 +222,17 @@ More details about the PyTorch distributed training setup, please refer to: http
 We obtained U-Net performance benchmarks of Brain tumor segmentation task for reference (based on CUDA 11, NVIDIA V100 GPUs):
 ![distributed training results](../figures/distributed_training.png)
 
+## Leveraging specialized GPU transforms for digital pathology
+
+Running preprocessing transforms on CPU while keeping GPU busy by running the model training is a common practice and is an optimal resource distribution in many use cases. However, in digital pathology due to the immense burden of loading images, the CPU is preoccupied by loading images and cannot catch up with preparing the data. This causes the pipeline to become IO bound and results in under-utilization of GPU. To overcome this bottleneck, [cuCIM](https://github.com/rapidsai/cucim) has implemented an optimized version of several common transforms that we are using in digital pathology pipeline. These transforms are natively being run on GPU and act on CuPy arrays. We have leveraged this library in MONAI through adapters (`CuCIM` and `RandCuCIM`). For instance:
+
+```py
+RandCuCIM(name="color_jitter", brightness=64.0 / 255.0, contrast=0.75, saturation=0.25, hue=0.04)
+CuCIM(name="scale_intensity_range", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0)
+```
+
+This has shown a significant speed up in pathology training metastasis detection model. Please refer to Pathology Metastasis Detection Task for more details.
+
 ## Examples
 
 With all the above skills, here we introduce how to apply them into real-world solutions to obviously improve the training speed of target metric.
@@ -248,3 +259,9 @@ In summary, with all the optimization, the training time of 8 V100 GPUs to achie
 ![brats benchmark](../figures/brats_benchmark.png)
 
 More details is available at [Brats distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py).
+
+
+### 3. Pathology metastasis detection task
+
+- Algorithm experiments based on dataset analysis. (1) Training dataset too large to effectively utilize caching mechanisms. (2) Fast convergence within a few epochs, and simple network (Resnet18), such that there is little room for performance gain from training perspective. (3) The major bottleneck comes from data transformations, especially ColorJitter which is a random permutation of communication of four transforms.
+- We employed CuCIM IO for loading whole slide images and cuCIM transforms for performing the chain of transforms on GPU. In this way, we accelerating the data loading, data augmentation and preprocessing. We are getting 3.8X speedup on DGXA100. The chart below shows how it is compared to the baseline.

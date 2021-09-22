@@ -5,7 +5,7 @@ Typically, `model training` is the most time-consuming step during the deep lear
 To provide an overall summary of the techniques to achieve fast training in our practice, this document introduces details of how to profile the training pipeline, analyze the dataset and select suitable algorithms, and optimize GPU utilization in single GPU, multi-GPU or even multi-node.
 
 * [Profile pipeline](#profile-pipeline)
-* [Optimizing dataloading function](#optimizing-dataloading-function)
+* [Optimizing data loading function](#optimizing-dataloading-function)
 * [Algorithmic improvement](#algorithmic-improvement)
 * [Optimizing GPU utilization](#optimizing-gpu-utilization)
 * [Leveraging multi-GPU](#leveraging-multi-gpu)
@@ -104,20 +104,50 @@ with torch.cuda.amp.autocast():
 nvtx.end_range(rng_train_forward)
 ```
 
+The concrete examples can be found in the profiling tutorials of [radiology pipeline]( https://github.com/Project-MONAI/tutorials/blob/master/performance_profiling/profiling_train_base_nvtx.ipynb) and [pathology pipelines](https://github.com/Project-MONAI/tutorials/blob/master/pathology/tumor_detection/ignite/profiling_camelyon_pipeline.ipynb).
+
 ### 4. NVIDIA Management Library (NVML)
 
 [NVIDIA Management Library (NVML)](https://developer.nvidia.com/nvidia-management-library-nvml) is a C-based API for monitoring and managing various states of the NVIDIA GPU devices. It provides a direct access to the queries and commands exposed via `nvidia-smi`. The runtime version of NVML ships with the NVIDIA display driver, and the SDK provides the appropriate header, stub libraries and sample applications. During model training, users can execute `watch -n 1 nvidia-smi` command to monitor real-time GPU activities for each GPU.
 
-Some third-party libraries provide python API to access NVML library, such as [pynvml](https://github.com/gpuopenanalytics/pynvml). Using the following script, the real-time GPU status (e.g., memory consumption, utilization rate, etc.) can be read real-time and stored into a dictionary `data`.
+Some third-party libraries provide python API to access NVML library, such as [pynvml](https://github.com/gpuopenanalytics/pynvml). Using the following script, the real-time GPU status (e.g., memory consumption, utilization rate, etc.) can be read real-time and stored into a dictionary `data`. 
 
 ```py
-from pynvml.smi import nvidia_smi
-nvsmi = nvidia_smi.getInstance()
-data = nvsmi.DeviceQuery('memory.total, memory.free, memory.used, utilization.gpu, utilization.memory')["gpu"]
+#!/usr/bin/env python
 
+from pynvml import *
+from pynvml.smi import nvidia_smi
+from time import sleep
+
+device_id = 0
+record_step = 1.0
+nvsmi = nvidia_smi.getInstance()
+
+with open("nvidia_smi.csv", "a") as f:
+    f.write("time\tgpu_util\tused\ttotal\tratio\n")
+
+for _i in range(1000):
+    data = nvsmi.DeviceQuery('memory.total, memory.free, memory.used, utilization.gpu, utilization.memory')["gpu"]
+    with open("nvidia_smi.csv", "a") as f:
+        print(
+            "{0:f}\t{1:.5f}\t{2:.5f}\t{3:.5f}\t{4:.5f}".format(
+                iter_time,
+                data[device_id]["utilization"]["gpu_util"],
+                data[device_id]["fb_memory_usage"]["used"],
+                data[device_id]["fb_memory_usage"]["total"],
+                data[device_id]["fb_memory_usage"]["used"] / data[device_id]["fb_memory_usage"]["total"] * 100.0
+            )
+        )
+
+    sleep(record_step)
+    iter_time += record_step
 ```
 
-## Optimizing dataloading function
+As shown in the example, the results can be saved into a `.csv` file. With necessary visualization tools (Microsoft Excel, Google Sheets, etc.), we can plot the dynamic changes of monitered metrics. The following figure shows an example of the dynamic changes of GPU utilization rate.
+
+![gpuutilizationrate](../figures/nvml.png)
+
+## Optimizing data loading function
 Based on previous analysis results, we can conduct corresponding optimization strategies to reduce time on bottleneck steps, and then improve the overall computing efficiency. Dataloading is usually a bottleneck for end-to-end pipeline, especially for 3D medical images. MONAI provides rich strategies to optimize different loading cases.
 
 ### 1. Cache I/O and transforms data to accelerate training

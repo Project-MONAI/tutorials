@@ -5,7 +5,7 @@ Typically, `model training` is the most time-consuming step during the deep lear
 To provide an overall summary of the techniques to achieve fast training in our practice, this document introduces details of how to profile the training pipeline, analyze the dataset and select suitable algorithms, and optimize GPU utilization in single GPU, multi-GPU or even multi-node.
 
 * [Profile pipeline](#profile-pipeline)
-* [Optimizing data loading function](#optimizing-dataloading-function)
+* [Optimizing data loading function](#optimizing-data-loading-function)
 * [Algorithmic improvement](#algorithmic-improvement)
 * [Optimizing GPU utilization](#optimizing-gpu-utilization)
 * [Leveraging multi-GPU](#leveraging-multi-gpu)

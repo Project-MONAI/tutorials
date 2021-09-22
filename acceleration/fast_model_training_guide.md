@@ -268,4 +268,4 @@ More details are available at [Brats distributed training tutorial](https://gith
 - In these two experiments, the corresponding best FROC achieved is 0.70 for baseline (Numpy) pipeline at epoch 6, and 0.69 for CuCIM pipeline at epoch 2. Please note that the epoch at which the best model is achieved, as well as its corresponding FROC, can have some variabilities across runs with different random seeds.
 ![pathology gpu utilization](../figures/train_loss_pathology.png)
 
-More details are available at [Profiling pathology metastasis detection pipeline](https://github.com/Project-MONAI/tutorials/blob/master/performance_profiling/pathology/profiling_train_base_nvtx.ipynb).
+More details are available at [Profiling Pathology Metastasis Detection Pipeline](https://github.com/Project-MONAI/tutorials/blob/master/performance_profiling/pathology/profiling_train_base_nvtx.ipynb).

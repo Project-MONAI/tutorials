@@ -5,7 +5,8 @@ Typically, `model training` is the most time-consuming step during the deep lear
 To provide an overall summary of the techniques to achieve fast training in our practice, this document introduces details of how to profile the training pipeline, analyze the dataset and select suitable algorithms, and optimize GPU utilization in single GPU, multi-GPU or even multi-node.
 
 * [Profile pipeline](#profile-pipeline)
-* [Analyzing dataset and select algorithms](#analyzing-dataset-and-select-algorithms)
+* [Optimizing dataloading function](#optimizing-dataloading-function)
+* [Algorithmic improvement](#algorithmic-improvement)
 * [Optimizing GPU utilization](#optimizing-gpu-utilization)
 * [Leveraging multi-GPU](#leveraging-multi-gpu)
 * [Leveraging multi-node distributed training](#leveraging-multi-node-distributed-training)
@@ -116,9 +117,8 @@ data = nvsmi.DeviceQuery('memory.total, memory.free, memory.used, utilization.gp
 
 ```
 
-## Analyzing dataset and select algorithms
-
-Based on previous analysis results, we can conduct corresponding optimization strategies to reduce time on bottleneck steps, and then improve the overall computing efficiency. Meanwhile, some algorithmic improvement can also help for speeding-up model training.
+## Optimizing dataloading function
+Based on previous analysis results, we can conduct corresponding optimization strategies to reduce time on bottleneck steps, and then improve the overall computing efficiency. Dataloading is usually a bottleneck for end-to-end pipeline, especially for 3D medical images. MONAI provides rich strategies to optimize different loading cases.
 
 ### 1. Cache I/O and transforms data to accelerate training
 
@@ -150,10 +150,11 @@ Full example of `SmartCacheDataset` is available at [Distributed training with S
 
 ### 4. `ThreadDataLoader` versus `DataLoader`
 
-If the transforms are light-weighted, especially when we cache all the data in RAM to avoid IO operations, the `multi-processing` execution of PyTorch `DataLoader` may cause unnecessary IPC time. MONAI provides `ThreadDataLoader` which execute transforms in a separate thread instead of `multi-processing` execution:
+If the transforms are light-weighted, especially when we cache all the data in RAM to avoid IO operations, the `multi-processing` execution of PyTorch `DataLoader` may cause unnecessary IPC time and cause the drop of GPU utilization after every epoch. MONAI provides `ThreadDataLoader` which execute transforms in a separate thread instead of `multi-processing` execution:
 ![threaddataloader](../figures/threaddataloader.png)
+ThreadDataLoader usage example is available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_training_tutorial.ipynb).
 
-### 5. Algorithmic improvement
+## Algorithmic improvement
 
 In most deep learning applications, algorithmic improvement has been witnessed to be effective for boosting of training efficiency and performance (for example, from AlexNet to ResNet). The improvement may from a novel loss function, or a sophisticated optimizer, or a different learning rate scheduler, or the combination of all previous items. For our demo applications of 3D medical image segmentation, we would like to further speed up training from the algorithmic perspective. The default loss function is soft dice loss. And we changed it to `DiceCELoss` from MONAI to further improve the model convergence. Because the `DiceCELoss` combines both dice loss and multi-class cross-entropy loss (which is suitable for the softmax formulation), and balance importance of global and pixel-wise accuracies. The segmentation quality can be largely improved. The following figure shows the great improvement on model convergence after we change dice loss to `DiceCELoss`, with or without enabling automated mixed precision (AMP).
 
@@ -174,10 +175,12 @@ For the PyTorch 1.6 release, developers at NVIDIA and Facebook moved mixed preci
 
 MONAI workflows can easily set `amp=True/False` in `SupervisedTrainer` or `SupervisedEvaluator` during training or evaluation to enable/disable AMP. And we tried to compare the training speed of spleen segmentation task if AMP ON/OFF on NVIDIA V100 GPU with CUDA 11, obtained some benchmark results:
 ![amp v100 results](../figures/amp_training_v100.png)
+AMP tutorial is available at [AMP tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/automatic_mixed_precision.ipynb).
 
 ### 2. Execute transforms on GPU device
 
 From MONAI v0.7 we introduced PyTorch `Tensor` based computation in transforms, many transforms already support `Tensor` data. To accelerate the high-computation transforms, users can first convert input data into GPU Tensor by `ToTensor` or `EnsureType` transform, then the following transforms can execute on GPU device based on PyTorch `Tensor` APIs.
+GPU transform tutorial is available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_training_tutorial.ipynb).
 
 ### 3. Cache IO and transforms data to GPU device
 
@@ -200,6 +203,7 @@ train_transforms = [
 dataset = CacheDataset(..., transform=train_trans)
 ```
 Here we convert to PyTorch `Tensor` with `EnsureTyped` transform and move data to GPU device with `ToDeviced` transform. `CacheDataset` caches the transform results until `ToDeviced`, so it is in GPU memory. Then in every epoch, the program fetches cached data from GPU memory and only execute the random transform `RandCropByPosNegLabeld` on GPU device directly.
+GPU caching example is available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_training_tutorial.ipynb).
 
 ## Leveraging multi-GPU
 
@@ -209,7 +213,7 @@ Additionally, with more GPU devices, we can achieve more benefits:
 - Some training algorithms can converge faster with a bigger batch size and the training progress is more stable.
 - If caching data in GPU memory, every GPU only needs to cache a partition, so we can use bigger cache-rate to cache more data in total to accelerate training.
 
-For example, during the training of brain tumor segmentation task, with 8 GPUs, we can cache all the data in GPU memory directly and execute following transforms on GPU device, so it's more than `10x` faster than single GPU training.
+For example, during the training of brain tumor segmentation task, with 8 GPUs, we can cache all the data in GPU memory directly and execute following transforms on GPU device, so it's more than `10x` faster than single GPU training. More details is available at [Brats distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py).
 
 ## Leveraging multi-node distributed training
 
@@ -221,6 +225,7 @@ More details about the PyTorch distributed training setup, please refer to: http
 
 We obtained U-Net performance benchmarks of Brain tumor segmentation task for reference (based on CUDA 11, NVIDIA V100 GPUs):
 ![distributed training results](../figures/distributed_training.png)
+More details is available at [Brats distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py).
 
 ## Examples
 

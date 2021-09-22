@@ -210,7 +210,7 @@ RandCuCIM(name="color_jitter", brightness=64.0 / 255.0, contrast=0.75, saturatio
 CuCIM(name="scale_intensity_range", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0)
 ```
 
-This has shown a significant speed up in pathology training metastasis detection model. Please refer to Pathology Metastasis Detection Task for more details.
+This has shown a significant speed up in pathology training metastasis detection model. Please refer to [Pathology Metastasis Detection Task](#3-pathology-metastasis-detection-task) in the Examples section below for more details.
 
 ## Leveraging multi-GPU
 
@@ -267,3 +267,5 @@ More details are available at [Brats distributed training tutorial](https://gith
 - We employed CuCIM IO for loading whole slide images and cuCIM transforms for performing the chain of transforms on GPU. In this way, we accelerating the data loading, data augmentation and preprocessing. Experiments performed with a single V-100 GPU on a DGX-2 workstation showed 3.3X speedup. The chart below shows the training loss curves of the two pipelines (based on Numpy/CuCIM) and the total time of 10 epochs.
 - In these two experiments, the corresponding best FROC achieved is 0.70 for baseline (Numpy) pipeline at epoch 6, and 0.69 for CuCIM pipeline at epoch 2. Please note that the epoch at which the best model is achieved, as well as its corresponding FROC, can have some variabilities across runs with different random seeds.
 ![pathology gpu utilization](../figures/train_loss_pathology.png)
+
+More details are available at [Profiling pathology metastasis detection pipeline](https://github.com/Project-MONAI/tutorials/blob/master/performance_profiling/pathology/profiling_train_base_nvtx.ipynb).

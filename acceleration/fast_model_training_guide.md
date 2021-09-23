@@ -15,7 +15,7 @@ To provide an overall summary of the techniques to achieve fast training in our 
 * [Leveraging multi-GPU](#leveraging-multi-gpu)
   * Demonstration of multi-GPU training for performance improvement.
 * [Leveraging multi-node distributed training](#leveraging-multi-node-distributed-training)
-  * Demonstration of distrbuted multi-node training for performance improvement.
+  * Demonstration of distributed multi-node training for performance improvement.
 * [Examples](#examples)
   * Demonstration of real-world applications in medical image segmentation with efficiency and effectiveness improvement.
 
@@ -63,7 +63,7 @@ And the output `.json` file contains various aspects of GPU information.
 
 [NVIDIA Nsight™ Systems](https://developer.nvidia.com/nsight-systems) is a system-wide performance analysis tool designed to visualize an application’s algorithms, help to identify the largest opportunities to optimize, and tune to scale efficiently across any quantity or size of CPUs and GPUs.
 
-Nsight provides a great GUI to visualize the output database (`.qdrep` file) from analysis results of DLProf. With necessary annotation inside the existing training scripts. The GPU utilization of each operation can be clearly seen through the interface. Then, users understand better about which components is the bottleneck of computation. The detailed example is shown in the following
+Nsight provides a great GUI to visualize the output database (`.qdrep` file) from analysis results of DLProf. With necessary annotation inside the existing training scripts. The GPU utilization of each operation can be clearly seen through the interface. Then, users understand better about which components are the bottleneck of computation. The detailed example is shown in the following
 [performance profiling tutorial]( https://github.com/Project-MONAI/tutorials/blob/master/performance_profiling/profiling_train_base_nvtx.ipynb).
 
 As shown in the following figure, each training epoch can be decomposed into several steps, including data loading (I/O), model forward/backward operation, optimization, etc. Then, necessary improvement can be conducted targeting certain steps. For example, if data loading (I/O) takes too much time during training, we can try to cache them into CPU/GPU bypassing data loading and pre-processing. After program optimization, user can re-use the tool further comparing the profiles before and after optimization and determine if the optimization is effective.
@@ -72,7 +72,7 @@ As shown in the following figure, each training epoch can be decomposed into sev
 
 ### 3. NVIDIA Tools Extension (NVTX)
 
-[NVIDIA® Tools Extension Library (NVTX)](https://github.com/NVIDIA/NVTX) is a powerful mechanism that allows users to manually instrument their application. With a C-based and a python-based Application Programming Interface (API) for annotating events, code ranges, and resources in your applications. Applications which integrate NVTX can use NVIDIA Nsight, Tegra System Profiler, and Visual Profiler to capture and visualize these events and ranges. In general, the NVTX can bring valuable insight into the application while incurring almost no overhead.
+[NVIDIA® Tools Extension Library (NVTX)](https://github.com/NVIDIA/NVTX) is a powerful mechanism that allows users to manually instrument their application. With a C-based and a Python-based Application Programming Interface (API) for annotating events, code ranges, and resources in your applications. Applications which integrate NVTX can use NVIDIA Nsight, Tegra System Profiler, and Visual Profiler to capture and visualize these events and ranges. In general, the NVTX can bring valuable insight into the application while incurring almost no overhead.
 
 To leverage the visualization capacities of Nsight, necessary annotation/tagging in python script is required. For MONAI transforms, we provide the `Range` function from `monai.utils.nvtx` to add tags for each transform (data pre-processing and augmentation) in the transform chains. Then the analysis results would be itemized based on different transforms.
 
@@ -89,6 +89,8 @@ train_transforms = Compose(
             )
         ),
         ...
+    ]
+)
 ```
 
 For the rest of script, `nvtx` library provides functions `start_range` and `end_range` for users to define the range of the analysis. And user can choose colors of the itemized analysis in Nsight visualization.
@@ -115,7 +117,7 @@ The concrete examples can be found in the profiling tutorials of [radiology pipe
 
 ### 4. NVIDIA Management Library (NVML)
 
-[NVIDIA Management Library (NVML)](https://developer.nvidia.com/nvidia-management-library-nvml) is a C-based API for monitoring and managing various states of the NVIDIA GPU devices. It provides a direct access to the queries and commands exposed via `nvidia-smi`. The runtime version of NVML ships with the NVIDIA display driver, and the SDK provides the appropriate header, stub libraries and sample applications. During model training, users can execute `watch -n 1 nvidia-smi` command to monitor real-time GPU activities for each GPU.
+[NVIDIA Management Library (NVML)](https://developer.nvidia.com/nvidia-management-library-nvml) is a C-based API for monitoring and managing various states of the NVIDIA GPU devices. It provides direct access to the queries and commands exposed via `nvidia-smi`. The runtime version of NVML ships with the NVIDIA display driver, and the SDK provides the appropriate header, stub libraries and sample applications. During model training, users can execute `watch -n 1 nvidia-smi` command to monitor real-time GPU activities for each GPU.
 
 Some third-party libraries provide python API to access NVML library, such as [pynvml](https://github.com/gpuopenanalytics/pynvml). Using the following script, the real-time GPU status (e.g., memory consumption, utilization rate, etc.) can be read real-time and stored into a dictionary `data`.
 
@@ -150,12 +152,12 @@ for _i in range(1000):
     iter_time += record_step
 ```
 
-As shown in the example, the results can be saved into a `.csv` file. With necessary visualization tools (Microsoft Excel, Google Sheets, etc.), we can plot the dynamic changes of monitered metrics. The following figure shows an example of the dynamic changes of GPU utilization rate.
+As shown in the example, the results can be saved into a `.csv` file. With necessary visualization tools (Microsoft Excel, Google Sheets, etc.), we can plot the dynamic changes of metrics. The following figure shows an example of the dynamic changes of GPU utilization rate.
 
 ![gpuutilizationrate](../figures/nvml.png)
 
 ## Optimizing data loading function
-Based on previous analysis results, we can conduct corresponding optimization strategies to reduce time on bottleneck steps, and then improve the overall computing efficiency. Dataloading is usually a bottleneck for end-to-end pipeline, especially for 3D medical images. MONAI provides rich strategies to optimize different loading cases.
+Based on previous analysis results, we can conduct corresponding optimization strategies to reduce time on bottleneck steps, and then improve the overall computing efficiency. Data loading is usually a bottleneck for end-to-end pipelines, especially for 3D medical images. MONAI provides rich strategies to optimize different loading cases.
 
 ### 1. Cache I/O and transforms data to accelerate training
 
@@ -234,9 +236,9 @@ train_transforms = [
     CropForegroundd(...),
     FgBgToIndicesd(...),
     EnsureTyped(..., data_type="tensor"),
-    ToDeviced(..., device="cuda:0")
-    RandCropByPosNegLabeld(...)
-)
+    ToDeviced(..., device="cuda:0"),
+    RandCropByPosNegLabeld(...),
+]
 dataset = CacheDataset(..., transform=train_trans)
 ```
 Here we convert to PyTorch `Tensor` with `EnsureTyped` transform and move data to GPU device with `ToDeviced` transform. `CacheDataset` caches the transform results until `ToDeviced`, so it is in GPU memory. Then in every epoch, the program fetches cached data from GPU memory and only execute the random transform `RandCropByPosNegLabeld` on GPU device directly.
@@ -271,7 +273,7 @@ With all the above skills, here we introduce how to apply them into real-world s
 ### 1. Spleen segmentation task
 
 - Algorithm experiments based on dataset analysis. (1) As a binary segmentation task, we replaced the `Dice` loss of baseline with `DiceCE` loss, it can help converge much faster. To get same target metric (mean dice = 0.95) it decreased the training epochs from 200 to 50. (2) As the training curve is stable and smooth, we tried several other optimizers, finally replaced the `Adam` optimizer of baseline with `Novograd` optimizer, which continuously decreased the training epochs from 50 to 30.
-- Optimize GPU utilization. (1) With `AMP ON`, the training speed significantly improved and got almost same validation metric as `AMP OFF`. (2) The deterministic transforms result of all the spleen dataset is around 8GB, which can be easily cached in a V100 GPU memory. So, we cached all the data in GPU memory and executed the following transforms in GPU directly.
+- Optimize GPU utilization. (1) With `AMP ON`, the training speed significantly improved and got almost same validation metric as `AMP OFF`. (2) The deterministic transforms result of all the spleen dataset is around 8 GB, which can be easily cached in a V100 GPU memory. So, we cached all the data in GPU memory and executed the following transforms in GPU directly.
 - Replace `DataLoader` with `ThreadDataLoader`. As we already cached all the data in GPU memory, the computation of random transforms is on GPU and light-weighted, `ThreadDataLoader` avoided the IPC cost of multi-processing in `DataLoader` and avoided the drop of GPU utilization after every epoch.
 
 In summary, with a V100 GPU, we can achieve the training converges at a validation mean dice of `0.95` within 1 minute (`52s` on V100 GPU, `41s` on A100 GPU), it's approximately `200x` speedup compared with the PyTorch regular implementation when achieving same metric. And every epoch is `20x` faster than regular training.
@@ -282,7 +284,7 @@ More details is available at [Spleen fast training tutorial](https://github.com/
 ### 2. Brain tumor segmentation task
 
 - Algorithm experiments based on dataset analysis. (1) `SegResNet` can get better accuracy than `U-Net`, so we chose it in the baseline. (2) Brain tumor segmentation task has 3 classes, and the prediction of every class is independent, so we replaced the `Dice` loss of baseline with `DiceFocal` loss. (3) And as the training curve of baseline is smooth, `Novograd` optimizer with a larger learning rate can converge faster than the `Adam` optimizer in baseline. (4) Some foreground labels are small in image, a bigger `overlap` of `sliding window` improved inference result (with guarantee of boundary smoothness). (5) We also tried experiments with different parameters of random transforms and network, etc. Finally, to get same target metric (mean dice = 0.78), the training epochs decreased from 110 to 80.
-- Optimize GPU utilization. (1) Single GPU cannot cache all the data in memory, so we split dataset into 8 parts and cache the deterministic transforms result in 8 GPU memory to avoid duplicated deterministic transforms and `CPU->GPU sync` in every epoch, every GPU stores data which size is less than 16GB. (2) And we also executed all the random transforms in GPU directly with the `ThreadDataLoader` as spleen segmentation task. The GPU utilization of all the 8 GPUs is always almost `100%` during training:
+- Optimize GPU utilization. (1) Single GPU cannot cache all the data in memory, so we split dataset into 8 parts and cache the deterministic transforms result in 8 GPU memory to avoid duplicated deterministic transforms and `CPU->GPU sync` in every epoch, every GPU stores data which size is less than 16 GB. (2) And we also executed all the random transforms in GPU directly with the `ThreadDataLoader` as spleen segmentation task. The GPU utilization of all the 8 GPUs is always almost `100%` during training:
 ![brats gpu utilization](../figures/brats_gpu_utilization.png)
 (3) As we already fully leveraged the 8 GPUs, we continuously optimize the training with multi-node (32 V100 GPUs in 4 nodes). The GPU utilization of all the 32 GPUs is always `97%` during training.
 

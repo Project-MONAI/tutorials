@@ -187,7 +187,7 @@ def main(cfg):
     fh.setLevel(logging.INFO)
     logger.addHandler(fh)
 
-    # Set TensorBoard summary writter
+    # Set TensorBoard summary writer
     writer = SummaryWriter(log_dir)
 
     # Save configs

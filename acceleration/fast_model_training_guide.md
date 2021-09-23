@@ -209,7 +209,7 @@ In most deep learning applications, algorithmic improvement has been witnessed t
 ![diceceloss](../figures/diceceloss.png)
 
 Furthermore, we changed default optimizer to Novograd, modified learning rate related settings, and added other necessary improvements. The concrete examples are shown in
-[spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_training_tutorial.ipynb) and [brats distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py). Both are very typical applications in 3D medical image segmentation but with unique challenges. Spleen segmentation has very limited data but with large image size, and brain tumor segmentation has relatively small image samples but with a much larger data pool. Combing algorithmic improvement with computing improvement, our model training cost is significantly reduced when reaching the same level of performance as the existing pipeline.
+[spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_training_tutorial.ipynb) and [BraTS distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py). Both are very typical applications in 3D medical image segmentation but with unique challenges. Spleen segmentation has very limited data but with large image size, and brain tumor segmentation has relatively small image samples but with a much larger data pool. Combing algorithmic improvement with computing improvement, our model training cost is significantly reduced when reaching the same level of performance as the existing pipeline.
 
 ## Optimizing GPU utilization
 
@@ -275,7 +275,7 @@ Additionally, with more GPU devices, we can achieve more benefits:
 - Some training algorithms can converge faster with a larger batch size and the training progress is more stable.
 - If caching data in GPU memory, every GPU only needs to cache a partition, so we can use larger cache rate to cache more data in total to accelerate training.
 
-For example, during the training of brain tumor segmentation task, with 8 GPUs, we can cache all the data in GPU memory directly and execute the following transforms on GPU device, so it's more than `10x` faster than single GPU training. More details are available at [Brats distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py).
+For example, during the training of brain tumor segmentation task, with 8 GPUs, we can cache all the data in GPU memory directly and execute the following transforms on GPU device, so it's more than `10x` faster than single GPU training. More details are available at [BraTS distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py).
 
 ## Leveraging multi-node distributed training
 
@@ -287,7 +287,7 @@ For more details about the PyTorch distributed training setup, please refer to: 
 
 We obtained U-Net performance benchmarks of Brain tumor segmentation task for reference (based on CUDA 11, NVIDIA V100 GPUs):
 ![distributed training results](../figures/distributed_training.png)
-More details are available at [Brats distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py).
+More details are available at [BraTS distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py).
 
 ## Examples
 
@@ -325,7 +325,7 @@ More details are available at [Spleen fast training tutorial](https://github.com
 In summary, combining the optimization strategies, the training time of eight V100 GPUs to achieve the target validation metric was around 40 minutes, which is more than `13x` faster than the baseline with a single GPU. And the training time of 32 V100 GPUs was around `13` minutes, which is `40x` faster than the baseline:
 ![brats benchmark](../figures/brats_benchmark.png)
 
-More details are available at [Brats distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py).
+More details are available at [BraTS distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py).
 
 
 ### 3. Pathology metastasis detection task

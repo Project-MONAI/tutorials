@@ -1,37 +1,45 @@
 # Fast Model Training Guide
 
-Typically, `model training` is the most time-consuming step during the deep learning development, especially in medical imaging applications. Because 3D medical images are usually large (as multi-dimensional arrays), which leads to much more CPU or GPU operations. Even with powerful hardware devices (e.g. CPU/GPU with large RAM), it is not easy to fully leverage them to achieve optimal performance. And if we cannot apply suitable algorithms (such as network model, loss function, optimizer, etc.) to the target dataset, the training progress may be very slow and hard to converge readily.
+Typically, `model training` is a time-consuming step during deep learning development, especially in medical imaging applications. Volumetric medical images are usually large (as multi-dimensional arrays) and the model training process can be complex. Even with powerful hardware (e.g. CPU/GPU with large RAM), it is not easy to fully leverage them to achieve high performance. And using carefully selected algorithms -- such as network models, loss functions, optimizers -- can often accelerate the training.
 
-To provide an overall summary of the techniques to achieve fast training in our practice, this document introduces details of how to profile the training pipeline, analyze the dataset and select suitable algorithms, and optimize GPU utilization in single GPU, multi-GPU or even multi-node.
+To provide an overview of the fast training techniques in practice, this document introduces details of how to profile the training pipelines, analyze the datasets, select suitable algorithms, and optimize GPU utilization in single GPU, multi-GPU or multi-node.
 
-* [Profile pipeline](#profile-pipeline)
-  * Using existing libraries and toolkits to analyze your training scripts with details.
+* [Profiling the pipelines](#profiling-the-pipelines)
+  * Deep Learning Profiler (DLProf)
+  * NVIDIA Nsight Systems
+  * NVIDIA Tools Extension (NVTX)
+  * NVIDIA Management Library (NVML)
 * [Optimizing data loading function](#optimizing-data-loading-function)
-  * Improving data loading efficiency during model training for large medical images.
+  * Cache I/O and transforms data to accelerate training
+  * Cache intermediate outcomes into persistent storage
+  * SmartCache mechanism for large datasets
+  * `ThreadDataLoader` vs. `DataLoader`
 * [Algorithmic improvement](#algorithmic-improvement)
-  * Optimizing choices in algorithm designs to speed up model training and improve convergence.
+  * Optimizing choices of algorithms to speed up model training and improve convergence.
 * [Optimizing GPU utilization](#optimizing-gpu-utilization)
-  * Demonstrating how to fully exploit GPU computing capacities with high utilization rate.
+  * Automated mixed precision (AMP)
+  * Execute transforms on GPU
+  * Cache IO and transforms data to GPU
 * [Leveraging multi-GPU](#leveraging-multi-gpu)
   * Demonstration of multi-GPU training for performance improvement.
 * [Leveraging multi-node distributed training](#leveraging-multi-node-distributed-training)
   * Demonstration of distributed multi-node training for performance improvement.
 * [Examples](#examples)
-  * Demonstration of real-world applications in medical image segmentation with efficiency and effectiveness improvement.
+  * Applications in medical image segmentation with various efficiency and effectiveness improvements.
 
-## Profile pipeline
+## Profiling the pipelines
 
-Model training in deep learning requires sufficient experience regarding various practical applications. For example, medical image analysis normally leverages necessary knowledge about imaging protocols (e.g., spacing, orientation, etc.) to achieve decent model performance. Moreover, training of large deep learning models heavily relies on high-efficiency GPU devices. But sometimes the great capacities of GPUs are not fully exploited with low utilization rate. It might be caused by low CPU-based operations, e.g., data loading, data augmentation, etc.
+Model training in deep learning requires sufficient experience regarding various practical applications. For example, medical image analysis normally leverages necessary knowledge about imaging protocols (e.g., spacing, orientation, etc.) to achieve decent model performance. Moreover, the training of large deep learning models heavily relies on high-efficiency GPU devices. But sometimes the great capacities of GPUs are not fully exploited due to the bottlenecks such as data loading, data augmentation.
 
-Here, we provide several methods for users to analyze their programs when using MONAI. The analysis results include operation-based GPU activity and overall GPU activity during model training. Such analysis will greatly help users reduce computing bottlenecks and provide insights for operations that require improvement to further increase computing efficiency.
+Here, we provide several methods for users to analyze their programs when using MONAI. The analyses include operation-based GPU activity and overall GPU activity during model training. They will greatly help users manage computing bottlenecks and provide insights for the area to be improved for better computing efficiency.
 
 ### 1. Deep Learning Profiler (DLProf)
 
-[Deep Learning Profiler](https://docs.nvidia.com/deeplearning/frameworks/dlprof-user-guide/) is a tool for profiling deep learning models to help data scientists understand and improve performance of their models visually via the DLProf Viewer or by analyzing text reports. We will refer to Deep Learning Profiler simply as DLProf.
+[Deep Learning Profiler](https://docs.nvidia.com/deeplearning/frameworks/dlprof-user-guide/) is a tool for profiling deep learning models to help data scientists understand and improve the performance of their models visually via the DLProf Viewer or by analyzing text reports. We will refer to Deep Learning Profiler simply as DLProf.
 
-DLProf generates reports of summary and detailed analysis of GPU activities based on the whole training program. The format of output reports can be determined by users. An example of execution script is shown as follows.
+DLProf generates reports of summary and detailed analysis of GPU activities based on the whole training program. The format of output reports can be determined by users. An example of an execution script is shown as follows.
 
-```
+```bash
 dlprof --mode pytorch \
        --reports summary \
        --formats json \
@@ -41,7 +49,7 @@ dlprof --mode pytorch \
 
 And the output `.json` file contains various aspects of GPU information.
 
-```
+```json
   "All Kernels" :
   {
     "All kernels" :
@@ -61,20 +69,20 @@ And the output `.json` file contains various aspects of GPU information.
 
 ### 2. NVIDIA Nsight Systems
 
-[NVIDIA Nsight™ Systems](https://developer.nvidia.com/nsight-systems) is a system-wide performance analysis tool designed to visualize an application’s algorithms, help to identify the largest opportunities to optimize, and tune to scale efficiently across any quantity or size of CPUs and GPUs.
+[NVIDIA Nsight™ Systems](https://developer.nvidia.com/nsight-systems) is a system-wide performance analysis tool designed to visualize algorithms, help to identify the largest opportunities to optimize, and tune to scale efficiently across any quantity or size of CPUs and GPUs.
 
-Nsight provides a great GUI to visualize the output database (`.qdrep` file) from analysis results of DLProf. With necessary annotation inside the existing training scripts. The GPU utilization of each operation can be clearly seen through the interface. Then, users understand better about which components are the bottleneck of computation. The detailed example is shown in the following
+Nsight provides a great GUI to visualize the output database (`.qdrep` file) from the analysis results of DLProf. With necessary annotation inside the existing training scripts. The GPU utilization of each operation can be seen through the interface. Then, users understand better which components are the bottlenecks. The detailed example is shown in the following
 [performance profiling tutorial]( https://github.com/Project-MONAI/tutorials/blob/master/performance_profiling/profiling_train_base_nvtx.ipynb).
 
-As shown in the following figure, each training epoch can be decomposed into several steps, including data loading (I/O), model forward/backward operation, optimization, etc. Then, necessary improvement can be conducted targeting certain steps. For example, if data loading (I/O) takes too much time during training, we can try to cache them into CPU/GPU bypassing data loading and pre-processing. After program optimization, user can re-use the tool further comparing the profiles before and after optimization and determine if the optimization is effective.
+As shown in the following figure, each training epoch can be decomposed into multiple steps, including data loading (I/O), model forward/backward operation, optimization, etc. Then, necessary improvement can be conducted targeting certain steps. For example, if data loading (I/O) takes too much time during training, we can try to cache them into CPU/GPU bypassing data loading and pre-processing. After program optimization, users can re-run the analysis to compare the results before and after optimization.
 
 ![nsight](../figures/nsight.png)
 
 ### 3. NVIDIA Tools Extension (NVTX)
 
-[NVIDIA® Tools Extension Library (NVTX)](https://github.com/NVIDIA/NVTX) is a powerful mechanism that allows users to manually instrument their application. With a C-based and a Python-based Application Programming Interface (API) for annotating events, code ranges, and resources in your applications. Applications which integrate NVTX can use NVIDIA Nsight, Tegra System Profiler, and Visual Profiler to capture and visualize these events and ranges. In general, the NVTX can bring valuable insight into the application while incurring almost no overhead.
+[NVIDIA® Tools Extension Library (NVTX)](https://github.com/NVIDIA/NVTX) is a powerful mechanism that allows users to manually instrument their application. With a C-based and a Python-based Application Programming Interface (API) for annotating events, code ranges, and resources in your applications. Applications that integrate NVTX can use NVIDIA Nsight, Tegra System Profiler, and Visual Profiler to capture and visualize these events and ranges. In general, NVTX can bring valuable insight into the application while incurring almost no overhead.
 
-To leverage the visualization capacities of Nsight, necessary annotation/tagging in python script is required. For MONAI transforms, we provide the `Range` function from `monai.utils.nvtx` to add tags for each transform (data pre-processing and augmentation) in the transform chains. Then the analysis results would be itemized based on different transforms.
+To leverage the visualization capacities of Nsight, necessary annotation and tagging in Python script are required. For MONAI transforms, we provide the `Range` function from `monai.utils.nvtx` to add tags for each transform (data pre-processing and augmentation) in the transform chains. Then the analysis results would be itemized based on different transforms.
 
 ```py
 train_transforms = Compose(
@@ -93,7 +101,7 @@ train_transforms = Compose(
 )
 ```
 
-For the rest of script, `nvtx` library provides functions `start_range` and `end_range` for users to define the range of the analysis. And user can choose colors of the itemized analysis in Nsight visualization.
+For the rest of the script, `nvtx` library provides functions `start_range` and `end_range` for users to define the range of the analysis. And user can choose colors of the itemized analysis in Nsight visualization.
 
 ```py
 rng_train_dataload = nvtx.start_range(message="dataload", color="red")
@@ -119,7 +127,7 @@ The concrete examples can be found in the profiling tutorials of [radiology pipe
 
 [NVIDIA Management Library (NVML)](https://developer.nvidia.com/nvidia-management-library-nvml) is a C-based API for monitoring and managing various states of the NVIDIA GPU devices. It provides direct access to the queries and commands exposed via `nvidia-smi`. The runtime version of NVML ships with the NVIDIA display driver, and the SDK provides the appropriate header, stub libraries and sample applications. During model training, users can execute `watch -n 1 nvidia-smi` command to monitor real-time GPU activities for each GPU.
 
-Some third-party libraries provide python API to access NVML library, such as [pynvml](https://github.com/gpuopenanalytics/pynvml). Using the following script, the real-time GPU status (e.g., memory consumption, utilization rate, etc.) can be read real-time and stored into a dictionary `data`.
+Some third-party libraries provide Python API to access NVML library, such as [pynvml](https://github.com/gpuopenanalytics/pynvml). Using the following script, the real-time GPU status (e.g., memory consumption, utilization rate, etc.) can be read and stored into a dictionary `data`.
 
 ```py
 #!/usr/bin/env python
@@ -152,32 +160,32 @@ for _i in range(1000):
     iter_time += record_step
 ```
 
-As shown in the example, the results can be saved into a `.csv` file. With necessary visualization tools (Microsoft Excel, Google Sheets, etc.), we can plot the dynamic changes of metrics. The following figure shows an example of the dynamic changes of GPU utilization rate.
+As shown in the example, the results can be saved into a `.csv` file. With necessary visualization tools (Microsoft Excel, Google Sheets, etc.), we can visualize the dynamic changes of model metrics. The following figure shows an example of the dynamic changes of GPU utilization rate.
 
 ![gpuutilizationrate](../figures/nvml.png)
 
 ## Optimizing data loading function
-Based on previous analysis results, we can conduct corresponding optimization strategies to reduce time on bottleneck steps, and then improve the overall computing efficiency. Data loading is usually a bottleneck for end-to-end pipelines, especially for 3D medical images. MONAI provides rich strategies to optimize different loading cases.
+With the tools described in the previous sections, we can identify the bottlenecks and adopt optimization strategies to manage them, Data loading is usually a key component for end-to-end pipelines, especially for 3D medical images. MONAI provides various strategies for different use cases.
 
 ### 1. Cache I/O and transforms data to accelerate training
 
-Users often need to train the model with many (potentially thousands of) epochs over the training data to achieve the decent model quality. A native PyTorch implementation may repeatedly load data and run the same pre-processing steps for every data point during training, which can be time-consuming and redundant, especially when 3D medical images of the dataset are very large.
+Users often need to train the model with many (potentially thousands of) epochs over the training data to achieve decent model quality. A native PyTorch implementation may repeatedly load data and run the same pre-processing steps for every data point during training, which can be time-consuming and redundant.
 
-MONAI provides a multi-thread `CacheDataset` and `LMDBDataset` to accelerate these transformation steps during training by storing the intermediate outcomes before the first randomized transform in the transform chain. Enabling this feature could potentially give 10x training speedups in the [Datasets experiment](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/dataset_type_performance.ipynb).
+MONAI provides a multi-thread `CacheDataset` and `LMDBDataset` to accelerate these loading steps during training by storing the intermediate outcomes before the first randomized transform in the transform chain. Enabling this feature could potentially give 10x training speedups in the [Datasets experiment](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/dataset_type_performance.ipynb).
 ![cache dataset](../figures/cache_dataset.png)
 
 ### 2. Cache intermediate outcomes into persistent storage
 
-The `PersistentDataset` is similar to the CacheDataset, where the intermediate cached values are persisted to disk storage or LMDB for rapid retrieval between experimental runs (as is the case when tuning hyperparameters), or when the entire size of the dataset exceeds available memory. The `PersistentDataset` could achieve similar performance when comparing to `CacheDataset` in [Datasets experiment](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/dataset_type_performance.ipynb).
-![cachedataset speed](../figures/datasets_speed.png) with SSD storage hardware.
+`PersistentDataset` is similar to `CacheDataset`, where the caches are persisted to disk storage or LMDB for rapid retrieval across experimental runs (as is the case when tuning hyperparameters), or when the entire size of the dataset exceeds available memory. `PersistentDataset` could achieve similar performance when comparing to `CacheDataset` in [Datasets experiment](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/dataset_type_performance.ipynb).
+![cachedataset speed](../figures/datasets_speed.png) with an SSD storage.
 
-### 3. SmartCache mechanism for big datasets
+### 3. SmartCache mechanism for large datasets
 
-During training with dataset of large volumes, another efficient approach is to only train with a subset of the dataset in one epoch and dynamically replace part of the subset in every epoch. It's the `SmartCache` mechanism in [NVIDIA Clara-train SDK](https://docs.nvidia.com/clara/tlt-mi/clara-train-sdk-v3.0/nvmidl/additional_features/smart_cache.html#smart-cache).
+Another efficient strategy is to only train with a subset of the dataset in each epoch (and dynamically, partially replace the subset in every epoch). It's the `SmartCache` mechanism in [NVIDIA Clara-train SDK v3.0](https://docs.nvidia.com/clara/tlt-mi/clara-train-sdk-v3.0/nvmidl/additional_features/smart_cache.html#smart-cache).
 
-MONAI provides a PyTorch version `SmartCache` as `SmartCacheDataset`. In each epoch, only the items in the cache are used for training, at the same time, another thread is preparing replacement items by applying the transform sequence to items not in the cache. Once one epoch is completed, `SmartCache` replaces the same number of items with replacement items.
+MONAI provides a PyTorch version `SmartCache` as `SmartCacheDataset`. In each epoch, only the items in the cache are used for training, and simultaneously, another thread is preparing replacement items by applying the transforms to items that are not in the cache. Once one epoch is completed, `SmartCache` replaces the same number of items with replacement items.
 
-For example, if we have 5 images: `[image1, image2, image3, image4, image5]`, and `cache_num=4`, `replace_rate=0.25`. So the actual training images cached and replaced for every epoch are as below:
+For example, if we have five images: `[image1, image2, image3, image4, image5]`, and `cache_num=4`, `replace_rate=0.25`, the actual training images cached and replaced for every epoch are as follows:
 ```
 epoch 1: [image1, image2, image3, image4]
 epoch 2: [image2, image3, image4, image5]
@@ -187,20 +195,20 @@ epoch N: [image[N % 5] ...]
 ```
 Full example of `SmartCacheDataset` is available at [Distributed training with SmartCache](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/unet_training_smartcache.py).
 
-### 4. `ThreadDataLoader` versus `DataLoader`
+### 4. `ThreadDataLoader` vs. `DataLoader`
 
-If the transforms are light-weighted, especially when we cache all the data in RAM to avoid IO operations, the `multi-processing` execution of PyTorch `DataLoader` may cause unnecessary IPC time and cause the drop of GPU utilization after every epoch. MONAI provides `ThreadDataLoader` which execute transforms in a separate thread instead of `multi-processing` execution:
+If the transforms are light-weighted, especially when we cache all the data in RAM, the multiprocessing of PyTorch `DataLoader` may cause unnecessary IPC time and cause the drop of GPU utilization after every epoch. MONAI provides `ThreadDataLoader` which executes transforms in a separate thread:
 ![threaddataloader](../figures/threaddataloader.png)
-ThreadDataLoader usage example is available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_training_tutorial.ipynb).
+a `ThreadDataLoader` example is available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_training_tutorial.ipynb).
 
 ## Algorithmic improvement
 
-In most deep learning applications, algorithmic improvement has been witnessed to be effective for boosting of training efficiency and performance (for example, from AlexNet to ResNet). The improvement may from a novel loss function, or a sophisticated optimizer, or a different learning rate scheduler, or the combination of all previous items. For our demo applications of 3D medical image segmentation, we would like to further speed up training from the algorithmic perspective. The default loss function is soft dice loss. And we changed it to `DiceCELoss` from MONAI to further improve the model convergence. Because the `DiceCELoss` combines both dice loss and multi-class cross-entropy loss (which is suitable for the softmax formulation), and balance importance of global and pixel-wise accuracies. The segmentation quality can be largely improved. The following figure shows the great improvement on model convergence after we change dice loss to `DiceCELoss`, with or without enabling automated mixed precision (AMP).
+In most deep learning applications, algorithmic improvement has been witnessed to be effective for boosting training efficiency and performance (for example, from AlexNet to ResNet). The improvement may come from a novel loss function, or a sophisticated optimizer, or a different learning rate scheduler, or the combination of all previous items. For our demo applications of 3D medical image segmentation, we would like to further speed up training from the algorithmic perspective. The default loss function is soft Dice loss. And we changed it to `DiceCELoss` from MONAI to further improve the model convergence. Because the `DiceCELoss` combines both Dice loss and multi-class cross-entropy loss (which is suitable for the softmax formulation), and balance the importance of global and pixel-wise accuracies. The segmentation quality can be largely improved. The following figure shows the great improvement on model convergence after we change Dice loss to `DiceCELoss`, with or without enabling automated mixed precision (AMP).
 
 ![diceceloss](../figures/diceceloss.png)
 
-Furthermore, we changed default optimizer to Novograd, modified learning rate related settings, and added other necessary improvement. The concrete examples are shown in
-[spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_training_tutorial.ipynb) and [brats distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py). Both are very typical applications in 3D medical image segmentation but with unique challenging. Spleen segmentation has very limited data but with large image size, and brain tumor segmentation has relatively small image samples but with much larger data pool. Combing algorithmic improvement with computing improvement, our model training cost is significantly reduced when reaching the same level of performance as the existing pipeline.
+Furthermore, we changed default optimizer to Novograd, modified learning rate related settings, and added other necessary improvements. The concrete examples are shown in
+[spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_training_tutorial.ipynb) and [brats distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py). Both are very typical applications in 3D medical image segmentation but with unique challenges. Spleen segmentation has very limited data but with large image size, and brain tumor segmentation has relatively small image samples but with a much larger data pool. Combing algorithmic improvement with computing improvement, our model training cost is significantly reduced when reaching the same level of performance as the existing pipeline.
 
 ## Optimizing GPU utilization
 
@@ -208,7 +216,7 @@ NVIDIA GPUs have been widely applied in many areas of deep learning training and
 
 ### 1. Automated mixed precision (AMP)
 
-In 2017, NVIDIA researchers developed a methodology for mixed-precision training, which combined single-precision (FP32) with half-precision (e.g., FP16) format when training a network, and it achieved the similar accuracy as FP32 training using the same hyperparameters.
+In 2017, NVIDIA researchers developed a methodology for mixed-precision training, which combined single-precision (FP32) with half-precision (e.g., FP16) format when training a network, and it achieved a similar accuracy as FP32 training using the same hyperparameters.
 
 For the PyTorch 1.6 release, developers at NVIDIA and Facebook moved mixed precision functionality into PyTorch core as the AMP package, `torch.cuda.amp`.
 
@@ -216,14 +224,14 @@ MONAI workflows can easily set `amp=True/False` in `SupervisedTrainer` or `Super
 ![amp v100 results](../figures/amp_training_v100.png)
 AMP tutorial is available at [AMP tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/automatic_mixed_precision.ipynb).
 
-### 2. Execute transforms on GPU device
+### 2. Execute transforms on GPU
 
-From MONAI v0.7 we introduced PyTorch `Tensor` based computation in transforms, many transforms already support `Tensor` data. To accelerate the high-computation transforms, users can first convert input data into GPU Tensor by `ToTensor` or `EnsureType` transform, then the following transforms can execute on GPU device based on PyTorch `Tensor` APIs.
+From MONAI v0.7 we introduced PyTorch `Tensor` based computation in transforms, many transforms already support `Tensor` data. To accelerate the high-computation transforms, users can first convert input data into GPU Tensor by `ToTensor` or `EnsureType` transform, then the following transforms can execute on GPU based on PyTorch `Tensor` APIs.
 GPU transform tutorial is available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_training_tutorial.ipynb).
 
-### 3. Cache IO and transforms data to GPU device
+### 3. Cache IO and transforms data to GPU
 
-Even with `CacheDataset`, we usually need to copy the same data to GPU memory for GPU random transforms or network computation in every epoch. As the memory size of new GPU devices are big enough now, an efficient approach is to cache the data to GPU memory directly, then every epoch can start from GPU computation immediately.
+Even with `CacheDataset`, we usually need to copy the same data to GPU memory for GPU random transforms or network computation in every epoch. An efficient approach is to cache the data to GPU memory directly, then every epoch can start from GPU computation immediately.
 
 For example:
 ```py
@@ -241,7 +249,7 @@ train_transforms = [
 ]
 dataset = CacheDataset(..., transform=train_trans)
 ```
-Here we convert to PyTorch `Tensor` with `EnsureTyped` transform and move data to GPU device with `ToDeviced` transform. `CacheDataset` caches the transform results until `ToDeviced`, so it is in GPU memory. Then in every epoch, the program fetches cached data from GPU memory and only execute the random transform `RandCropByPosNegLabeld` on GPU device directly.
+Here we convert to PyTorch `Tensor` with `EnsureTyped` transform and move data to GPU with `ToDeviced` transform. `CacheDataset` caches the transform results until `ToDeviced`, so it is in GPU memory. Then in every epoch, the program fetches cached data from GPU memory and only execute the random transform `RandCropByPosNegLabeld` on GPU directly.
 GPU caching example is available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_training_tutorial.ipynb).
 
 ## Leveraging multi-GPU
@@ -249,46 +257,57 @@ GPU caching example is available at [Spleen fast training tutorial](https://gith
 When we have fully utilized a single GPU during training, a natural optimization idea is to partition the dataset and execute model training in parallel on multiple GPUs.
 
 Additionally, with more GPU devices, we can achieve more benefits:
-- Some training algorithms can converge faster with a bigger batch size and the training progress is more stable.
-- If caching data in GPU memory, every GPU only needs to cache a partition, so we can use bigger cache-rate to cache more data in total to accelerate training.
+- Some training algorithms can converge faster with a larger batch size and the training progress is more stable.
+- If caching data in GPU memory, every GPU only needs to cache a partition, so we can use larger cache rate to cache more data in total to accelerate training.
 
-For example, during the training of brain tumor segmentation task, with 8 GPUs, we can cache all the data in GPU memory directly and execute following transforms on GPU device, so it's more than `10x` faster than single GPU training. More details is available at [Brats distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py).
+For example, during the training of brain tumor segmentation task, with 8 GPUs, we can cache all the data in GPU memory directly and execute the following transforms on GPU device, so it's more than `10x` faster than single GPU training. More details are available at [Brats distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py).
 
 ## Leveraging multi-node distributed training
 
-Distributed data parallelism (DDP) is an important feature of PyTorch to connect multiple GPU devices in multiple nodes to train or evaluate models, it can continuously improve the training speed when we fully leveraged multiple GPUs in single node.
+Distributed data parallelism (DDP) is an important feature of PyTorch to connect multiple GPU devices in multiple nodes to train or evaluate models, it can continuously improve the training speed when we fully leveraged multiple GPUs on a single node.
 
-The distributed data parallel APIs of MONAI are compatible with native PyTorch distributed module, pytorch-ignite distributed module, Horovod, XLA, and the SLURM platform. MONAI provides rich demos for reference: train/evaluate with `PyTorch DDP`, train/evaluate with `Horovod`, train/evaluate with `Ignite DDP`, partition dataset and train with `SmartCacheDataset`, as well as a real-world training example based on Decathlon challenge Task01 - Brain Tumor segmentation.
+The distributed data parallel APIs of MONAI are compatible with the native PyTorch distributed module, pytorch-ignite distributed module, Horovod, XLA, and the SLURM platform. MONAI provides rich demos for reference: train/evaluate with `PyTorch DDP`, train/evaluate with `Horovod`, train/evaluate with `Ignite DDP`, partition dataset and train with `SmartCacheDataset`, as well as a real-world training example based on Decathlon challenge Task01 - Brain Tumor segmentation.
 
-More details about the PyTorch distributed training setup, please refer to: https://pytorch.org/docs/stable/distributed.html.
+For more details about the PyTorch distributed training setup, please refer to: https://pytorch.org/docs/stable/distributed.html.
 
 We obtained U-Net performance benchmarks of Brain tumor segmentation task for reference (based on CUDA 11, NVIDIA V100 GPUs):
 ![distributed training results](../figures/distributed_training.png)
-More details is available at [Brats distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py).
+More details are available at [Brats distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py).
 
 ## Examples
 
-With all the above skills, here we introduce how to apply them into real-world solutions to obviously improve the training speed of target metric.
+With all the above strategies, in this section, we introduce how to apply them to the typical use cases to improve the training efficiency.
 
-### 1. Spleen segmentation task
+### 1. Spleen segmentation
 
-- Algorithm experiments based on dataset analysis. (1) As a binary segmentation task, we replaced the `Dice` loss of baseline with `DiceCE` loss, it can help converge much faster. To get same target metric (mean dice = 0.95) it decreased the training epochs from 200 to 50. (2) As the training curve is stable and smooth, we tried several other optimizers, finally replaced the `Adam` optimizer of baseline with `Novograd` optimizer, which continuously decreased the training epochs from 50 to 30.
-- Optimize GPU utilization. (1) With `AMP ON`, the training speed significantly improved and got almost same validation metric as `AMP OFF`. (2) The deterministic transforms result of all the spleen dataset is around 8 GB, which can be easily cached in a V100 GPU memory. So, we cached all the data in GPU memory and executed the following transforms in GPU directly.
-- Replace `DataLoader` with `ThreadDataLoader`. As we already cached all the data in GPU memory, the computation of random transforms is on GPU and light-weighted, `ThreadDataLoader` avoided the IPC cost of multi-processing in `DataLoader` and avoided the drop of GPU utilization after every epoch.
+- Select the algorithms based on the experiments.
+  1. As a binary segmentation task, we replaced the baseline `Dice` loss with a `DiceCE` loss, it can help improve the convergence. To achieve the target metric (mean Dice = 0.95) it reduces the number of training epochs from 200 to 50.
+  2. We tried several numerical optimizers, and finally replaced the baseline `Adam` optimizer with `Novograd`, which consistently reduce the number of training epochs from 50 to 30.
+- Optimize GPU utilization.
+  1. With `AMP`, the training speed is significantly improved and can achieve almost the same validation metric as without `AMP`.
+  2. The deterministic transform results of all the spleen dataset is around 8 GB, which can be cached in a V100 GPU memory. So, we cached all the data in GPU memory and executed the following transforms in GPU directly.
+- Replace `DataLoader` with `ThreadDataLoader`. As all the data are cached in GPU, the computation of randomized transforms is on GPU and light-weighted, `ThreadDataLoader` help avoid the IPC cost of multi-processing in `DataLoader` and increase the GPU utilization.
 
-In summary, with a V100 GPU, we can achieve the training converges at a validation mean dice of `0.95` within 1 minute (`52s` on V100 GPU, `41s` on A100 GPU), it's approximately `200x` speedup compared with the PyTorch regular implementation when achieving same metric. And every epoch is `20x` faster than regular training.
+In summary, with a V100 GPU, we can achieve the training converges at a target validation mean Dice of `0.95` within one minute (`52s` on a V100 GPU, `41s` on an A100 GPU), it is approximately `200x` faster compared with the native PyTorch implementation when achieving the target metric. And each epoch is `20x` faster than the regular training.
 ![spleen fast training](../figures/fast_training.png)
 
-More details is available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_training_tutorial.ipynb).
+More details are available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_training_tutorial.ipynb).
 
-### 2. Brain tumor segmentation task
+### 2. Brain tumor segmentation
 
-- Algorithm experiments based on dataset analysis. (1) `SegResNet` can get better accuracy than `U-Net`, so we chose it in the baseline. (2) Brain tumor segmentation task has 3 classes, and the prediction of every class is independent, so we replaced the `Dice` loss of baseline with `DiceFocal` loss. (3) And as the training curve of baseline is smooth, `Novograd` optimizer with a larger learning rate can converge faster than the `Adam` optimizer in baseline. (4) Some foreground labels are small in image, a bigger `overlap` of `sliding window` improved inference result (with guarantee of boundary smoothness). (5) We also tried experiments with different parameters of random transforms and network, etc. Finally, to get same target metric (mean dice = 0.78), the training epochs decreased from 110 to 80.
-- Optimize GPU utilization. (1) Single GPU cannot cache all the data in memory, so we split dataset into 8 parts and cache the deterministic transforms result in 8 GPU memory to avoid duplicated deterministic transforms and `CPU->GPU sync` in every epoch, every GPU stores data which size is less than 16 GB. (2) And we also executed all the random transforms in GPU directly with the `ThreadDataLoader` as spleen segmentation task. The GPU utilization of all the 8 GPUs is always almost `100%` during training:
-![brats gpu utilization](../figures/brats_gpu_utilization.png)
-(3) As we already fully leveraged the 8 GPUs, we continuously optimize the training with multi-node (32 V100 GPUs in 4 nodes). The GPU utilization of all the 32 GPUs is always `97%` during training.
+- Select the algorithms based on the experiments.
+  1. `SegResNet` can provide more accurate results than `U-Net`, so we chose it in the baseline.
+  2. Brain tumor segmentation task has three independent classes, so we replaced the `Dice` loss of baseline with a `DiceFocal` loss.
+  3. As the baseline training curve is smooth, `Novograd` with a larger learning rate can converge faster than the `Adam` optimizer in baseline.
+  4. Some foreground labels are small in image, a larger `overlap` of `sliding window` improved inference result (with guarantee of boundary smoothness).
+  5. We also tried experiments with different hyperparameters of random transforms and networks. Finally, to achieve the target metric (mean Dice 0.78), the number of training epochs was reduced from 110 to 80.
+- Optimize GPU utilization.
+  1. Single GPU cannot cache all the data in memory, so we split the dataset into eight parts and cache the deterministic transforms result in eight GPUs to avoid duplicated deterministic transforms and `CPU->GPU sync` in every epoch.
+  2. We executed all the random augmentations in GPU directly with the `ThreadDataLoader`. The GPU utilization of all the eight GPUs was always almost `100%` during training:
+  ![brats gpu utilization](../figures/brats_gpu_utilization.png)
+  3. As we already fully leveraged the GPUs, we continuously optimize the training with multiple nodes (32 V100 GPUs in four nodes). The GPU utilization of all the 32 GPUs was always `97%` during training.
 
-In summary, with all the optimization, the training time of 8 V100 GPUs to achieve validation mean dice of `0.78` is around 40 minutes, which is more than `13x` faster than the baseline on single GPU. And the training time of 32 V100 GPUs is around `13` mins, which is `40x` faster than the baseline:
+In summary, combining the optimization strategies, the training time of eight V100 GPUs to achieve the target validation metric was around 40 minutes, which is more than `13x` faster than the baseline with a single GPU. And the training time of 32 V100 GPUs was around `13` minutes, which is `40x` faster than the baseline:
 ![brats benchmark](../figures/brats_benchmark.png)
 
-More details is available at [Brats distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py).
+More details are available at [Brats distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py).

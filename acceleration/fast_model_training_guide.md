@@ -1,6 +1,6 @@
 # Fast Model Training Guide
 
-Typically, `model training` is a time-consuming step during deep learning development, especially in medical imaging applications. Volumetric medical images are usually large (as multi-dimensional arrays) and the model training process can be complex. Even with powerful hardware (e.g. CPU/GPU with large RAM), it is not easy to fully leverage them to achieve high performance. And using carefully selected algorithms -- such as network models, loss functions, optimizers -- can often accelerate the training.
+Typically, model training is a time-consuming step during deep learning development, especially in medical imaging applications. Volumetric medical images are usually large (as multi-dimensional arrays) and the model training process can be complex. Even with powerful hardware (e.g. CPU/GPU with large RAM), the workflows often require profiling and tuning to achieve high performance. And using carefully selected algorithms -- such as network architectures, loss functions, optimizers -- can accelerate the training.
 
 To provide an overview of the fast training techniques in practice, this document introduces details of how to profile the training pipelines, analyze the datasets, select suitable algorithms, and optimize GPU utilization in single GPU, multi-GPU or multi-node.
 
@@ -65,6 +65,7 @@ And the output `.json` file contains various aspects of GPU information.
       "GPU Time (ns)" : 5318794154
     },
     ...
+  }
 ```
 
 ### 2. NVIDIA Nsight Systems

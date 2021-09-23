@@ -201,6 +201,17 @@ dataset = CacheDataset(..., transform=train_trans)
 ```
 Here we convert to PyTorch `Tensor` with `EnsureTyped` transform and move data to GPU device with `ToDeviced` transform. `CacheDataset` caches the transform results until `ToDeviced`, so it is in GPU memory. Then in every epoch, the program fetches cached data from GPU memory and only execute the random transform `RandCropByPosNegLabeld` on GPU device directly.
 
+### 4. Leveraging specialized GPU transforms for digital pathology
+
+Running preprocessing transforms on CPU while keeping GPU busy by running the model training is a common practice and is an optimal resource distribution in many use cases. However, in digital pathology due to the immense burden of loading images, the CPU is preoccupied by loading images and cannot catch up with preparing the data. This causes the pipeline to become IO bound and results in under-utilization of GPU. To overcome this bottleneck, [cuCIM](https://github.com/rapidsai/cucim) has implemented an optimized version of several common transforms that we are using in digital pathology pipeline. These transforms are natively being run on GPU and act on CuPy arrays. We have leveraged this library in MONAI through adapters (`CuCIM` and `RandCuCIM`). For instance:
+
+```py
+RandCuCIM(name="color_jitter", brightness=64.0 / 255.0, contrast=0.75, saturation=0.25, hue=0.04)
+CuCIM(name="scale_intensity_range", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0)
+```
+
+This has shown a significant speed up in pathology training metastasis detection model. Please refer to [Pathology Metastasis Detection Task](#3-pathology-metastasis-detection-task) in the Examples section below for more details.
+
 ## Leveraging multi-GPU
 
 When we have fully utilized a single GPU during training, a natural optimization idea is to partition the dataset and execute model training in parallel on multiple GPUs.
@@ -235,7 +246,7 @@ With all the above skills, here we introduce how to apply them into real-world s
 In summary, with a V100 GPU, we can achieve the training converges at a validation mean dice of `0.95` within 1 minute (`52s` on V100 GPU, `41s` on A100 GPU), it's approximately `200x` speedup compared with the PyTorch regular implementation when achieving same metric. And every epoch is `20x` faster than regular training.
 ![spleen fast training](../figures/fast_training.png)
 
-More details is available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_training_tutorial.ipynb).
+More details are available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_training_tutorial.ipynb).
 
 ### 2. Brain tumor segmentation task
 
@@ -247,4 +258,14 @@ More details is available at [Spleen fast training tutorial](https://github.com/
 In summary, with all the optimization, the training time of 8 V100 GPUs to achieve validation mean dice of `0.78` is around 40 minutes, which is more than `13x` faster than the baseline on single GPU. And the training time of 32 V100 GPUs is around `13` mins, which is `40x` faster than the baseline:
 ![brats benchmark](../figures/brats_benchmark.png)
 
-More details is available at [Brats distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py).
+More details are available at [Brats distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py).
+
+
+### 3. Pathology metastasis detection task
+
+- Algorithm experiments based on dataset analysis. (1) Training dataset too large to effectively utilize caching mechanisms. (2) Fast convergence within a few epochs, and simple network (Resnet18), such that there is little room for performance gain from training perspective. (3) The major bottleneck comes from data transformations, especially ColorJitter which is a random permutation of communication of four transforms.
+- We employed CuCIM IO for loading whole slide images and cuCIM transforms for performing the chain of transforms on GPU. In this way, we accelerating the data loading, data augmentation and preprocessing. Experiments performed with a single V-100 GPU on a DGX-2 workstation showed 3.3X speedup. The chart below shows the training loss curves of the two pipelines (based on Numpy/CuCIM) and the total time of 10 epochs.
+- In these two experiments, the corresponding best FROC achieved is 0.70 for baseline (Numpy) pipeline at epoch 6, and 0.69 for CuCIM pipeline at epoch 2. Please note that the epoch at which the best model is achieved, as well as its corresponding FROC, can have some variabilities across runs with different random seeds.
+![pathology gpu utilization](../figures/train_loss_pathology.png)
+
+More details are available at [Profiling Pathology Metastasis Detection Pipeline](https://github.com/Project-MONAI/tutorials/blob/master/performance_profiling/pathology/profiling_train_base_nvtx.ipynb).

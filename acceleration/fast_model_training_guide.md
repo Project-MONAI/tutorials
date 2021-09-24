@@ -7,28 +7,28 @@ To provide an overview of the fast training techniques in practice, this documen
 * [Profiling the pipelines](#profiling-the-pipelines)
   * [Deep Learning Profiler (DLProf)](#1-deep-learning-profiler-dlprof)
   * [NVIDIA Nsight Systems](#2-nvidia-nsight-systems)
-  * [NVIDIA Tools Extension (NVTX)](#3-nvidia-tools-extension-%28nvtx%29)
-  * [NVIDIA Management Library (NVML)](#4-nvidia-management-library-%28nvml%29)
+  * [NVIDIA Tools Extension (NVTX)](#3-nvidia-tools-extension-nvtx)
+  * [NVIDIA Management Library (NVML)](#4-nvidia-management-library-nvml)
 * [Optimizing data loading function](#optimizing-data-loading-function)
-  * [Cache I/O and transforms data to accelerate training](#1%2E-cache-i%2Fo-and-transforms-data-to-accelerate-training)
-  * [Cache intermediate outcomes into persistent storage](#2%2E-cache-intermediate-outcomes-into-persistent-storage)
-  * [SmartCache mechanism for large datasets](#3%2E-smartcache-mechanism-for-large-datasets)
-  * [`ThreadDataLoader` vs. `DataLoader`](#4%2E-%60threaddataloader%60-vs%2E-%60dataloader%60)
+  * [Cache I/O and transforms data to accelerate training](#1-cache-io-and-transforms-data-to-accelerate-training)
+  * [Cache intermediate outcomes into persistent storage](#2-cache-intermediate-outcomes-into-persistent-storage)
+  * [SmartCache mechanism for large datasets](#3-smartcache-mechanism-for-large-datasets)
+  * [`ThreadDataLoader` vs. `DataLoader`](#4-threaddataloader-vs-%60dataloader)
 * [Algorithmic improvement](#algorithmic-improvement)
   * Optimizing choices of algorithms to speed up model training and improve convergence.
 * [Optimizing GPU utilization](#optimizing-gpu-utilization)
-  * [Automated mixed precision (AMP)](#1%2E-automated-mixed-precision-%28amp%29)
-  * [Execute transforms on GPU](#2%2E-execute-transforms-on-gpu)
-  * [Cache IO and transforms data to GPU](#3%2E-cache-io-and-transforms-data-to-gpu)
+  * [Automated mixed precision (AMP)](#1-automated-mixed-precision-amp)
+  * [Execute transforms on GPU](#2-execute-transforms-on-gpu)
+  * [Cache IO and transforms data to GPU](#3-cache-io-and-transforms-data-to-gpu)
 * [Leveraging multi-GPU](#leveraging-multi-gpu)
   * Demonstration of multi-GPU training for performance improvement.
 * [Leveraging multi-node distributed training](#leveraging-multi-node-distributed-training)
   * Demonstration of distributed multi-node training for performance improvement.
 * [Examples](#examples)
   * Applications in medical image segmentation with various efficiency and effectiveness improvements.
-  * [Spleen segmentation](#1%2E-spleen-segmentation)
-  * [Brain tumor segmentation](#2%2E-brain-tumor-segmentation)
-  * [Pathology metastasis detection task](#3%2E-pathology-metastasis-detection-task)
+  * [Spleen segmentation](#1-spleen-segmentation)
+  * [Brain tumor segmentation](#2-brain-tumor-segmentation)
+  * [Pathology metastasis detection task](#3-pathology-metastasis-detection-task)
 
 ## Profiling the pipelines
 

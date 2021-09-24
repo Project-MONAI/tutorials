@@ -13,7 +13,7 @@ To provide an overview of the fast training techniques in practice, this documen
   * [Cache I/O and transforms data to accelerate training](#1-cache-io-and-transforms-data-to-accelerate-training)
   * [Cache intermediate outcomes into persistent storage](#2-cache-intermediate-outcomes-into-persistent-storage)
   * [SmartCache mechanism for large datasets](#3-smartcache-mechanism-for-large-datasets)
-  * [`ThreadDataLoader` vs. `DataLoader`](#4-threaddataloader-vs-%60dataloader)
+  * [`ThreadDataLoader` vs. `DataLoader`](#4-threaddataloader-vs-dataloader)
 * [Algorithmic improvement](#algorithmic-improvement)
   * Optimizing choices of algorithms to speed up model training and improve convergence.
 * [Optimizing GPU utilization](#optimizing-gpu-utilization)

@@ -5,30 +5,6 @@ Typically, model training is a time-consuming step during deep learning developm
 To provide an overview of the fast training techniques in practice, this document introduces details of how to profile the training pipelines, analyze the datasets, select suitable algorithms, and optimize GPU utilization in single GPU, multi-GPU or multi-node.
 
 * [Profiling the pipelines](#profiling-the-pipelines)
-  * Deep Learning Profiler (DLProf)
-  * NVIDIA Nsight Systems
-  * NVIDIA Tools Extension (NVTX)
-  * NVIDIA Management Library (NVML)
-* [Optimizing data loading function](#optimizing-data-loading-function)
-  * Cache I/O and transforms data to accelerate training
-  * Cache intermediate outcomes into persistent storage
-  * SmartCache mechanism for large datasets
-  * `ThreadDataLoader` vs. `DataLoader`
-* [Algorithmic improvement](#algorithmic-improvement)
-  * Optimizing choices of algorithms to speed up model training and improve convergence.
-* [Optimizing GPU utilization](#optimizing-gpu-utilization)
-  * Automated mixed precision (AMP)
-  * Execute transforms on GPU
-  * Adapt `cuCIM` to execute GPU transforms
-  * Cache IO and transforms data to GPU
-* [Leveraging multi-GPU](#leveraging-multi-gpu)
-  * Demonstration of multi-GPU training for performance improvement.
-* [Leveraging multi-node distributed training](#leveraging-multi-node-distributed-training)
-  * Demonstration of distributed multi-node training for performance improvement.
-* [Examples](#examples)
-  * Applications in medical image segmentation with various efficiency and effectiveness improvements.
-
-* [Profiling the pipelines](#profiling-the-pipelines)
   * [Deep Learning Profiler (DLProf)](#1-deep-learning-profiler-dlprof)
   * [NVIDIA Nsight Systems](#2-nvidia-nsight-systems)
   * [NVIDIA Tools Extension (NVTX)](#3-nvidia-tools-extension-nvtx)

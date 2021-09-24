@@ -232,7 +232,9 @@ AMP tutorial is available at [AMP tutorial](https://github.com/Project-MONAI/tut
 ### 2. Execute transforms on GPU
 
 Running preprocessing transforms on CPU while keeping GPU busy by running the model training is a common practice and is an optimal resource distribution in many use cases.
-From MONAI v0.7 we introduced PyTorch `Tensor` based computation in transforms, many transforms already support `Tensor` data. To accelerate the high-computation transforms, users can first convert input data into GPU Tensor by `ToTensor` or `EnsureType` transform, then the following transforms can execute on GPU based on PyTorch `Tensor` APIs.
+From MONAI v0.7 we introduced PyTorch `Tensor` based computation in transforms, many transforms already support both `NumPy array` and PyTorch `Tensor` as input types and computational backends. To get the supported backends of every transform, please execute: `python monai/transforms/utils.py`.
+
+To accelerate the high-computation transforms, users can first convert input data into GPU Tensor by `ToTensor` or `EnsureType` transform, then the following transforms can execute on GPU based on PyTorch `Tensor` APIs.
 GPU transform tutorial is available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_training_tutorial.ipynb).
 
 ### 3. Adapt `cuCIM` to execute GPU transforms

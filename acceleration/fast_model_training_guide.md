@@ -5,10 +5,10 @@ Typically, model training is a time-consuming step during deep learning developm
 To provide an overview of the fast training techniques in practice, this document introduces details of how to profile the training pipelines, analyze the datasets, select suitable algorithms, and optimize GPU utilization in single GPU, multi-GPU or multi-node.
 
 * [Profiling the pipelines](#profiling-the-pipelines)
-  * [Deep Learning Profiler (DLProf)](#1%2E-deep-learning-profiler-%28dlprof%29)
+  * [Deep Learning Profiler (DLProf)](#1-deep-learning-profiler-dlprof)
   * [NVIDIA Nsight Systems](#2-nvidia-nsight-systems)
-  * [NVIDIA Tools Extension (NVTX)](#3%2E-nvidia-tools-extension-%28nvtx%29)
-  * [NVIDIA Management Library (NVML)](#4%2E-nvidia-management-library-%28nvml%29)
+  * [NVIDIA Tools Extension (NVTX)](#3-nvidia-tools-extension-%28nvtx%29)
+  * [NVIDIA Management Library (NVML)](#4-nvidia-management-library-%28nvml%29)
 * [Optimizing data loading function](#optimizing-data-loading-function)
   * [Cache I/O and transforms data to accelerate training](#1%2E-cache-i%2Fo-and-transforms-data-to-accelerate-training)
   * [Cache intermediate outcomes into persistent storage](#2%2E-cache-intermediate-outcomes-into-persistent-storage)

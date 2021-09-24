@@ -5,28 +5,31 @@ Typically, model training is a time-consuming step during deep learning developm
 To provide an overview of the fast training techniques in practice, this document introduces details of how to profile the training pipelines, analyze the datasets, select suitable algorithms, and optimize GPU utilization in single GPU, multi-GPU or multi-node.
 
 * [Profiling the pipelines](#profiling-the-pipelines)
-  * Deep Learning Profiler (DLProf)
-  * NVIDIA Nsight Systems
-  * NVIDIA Tools Extension (NVTX)
-  * NVIDIA Management Library (NVML)
+  * [Deep Learning Profiler (DLProf)](#1-deep-learning-profiler-dlprof)
+  * [NVIDIA Nsight Systems](#2-nvidia-nsight-systems)
+  * [NVIDIA Tools Extension (NVTX)](#3-nvidia-tools-extension-nvtx)
+  * [NVIDIA Management Library (NVML)](#4-nvidia-management-library-nvml)
 * [Optimizing data loading function](#optimizing-data-loading-function)
-  * Cache I/O and transforms data to accelerate training
-  * Cache intermediate outcomes into persistent storage
-  * SmartCache mechanism for large datasets
-  * `ThreadDataLoader` vs. `DataLoader`
+  * [Cache I/O and transforms data to accelerate training](#1-cache-io-and-transforms-data-to-accelerate-training)
+  * [Cache intermediate outcomes into persistent storage](#2-cache-intermediate-outcomes-into-persistent-storage)
+  * [SmartCache mechanism for large datasets](#3-smartcache-mechanism-for-large-datasets)
+  * [`ThreadDataLoader` vs. `DataLoader`](#4-threaddataloader-vs-dataloader)
 * [Algorithmic improvement](#algorithmic-improvement)
   * Optimizing choices of algorithms to speed up model training and improve convergence.
 * [Optimizing GPU utilization](#optimizing-gpu-utilization)
-  * Automated mixed precision (AMP)
-  * Execute transforms on GPU
-  * Adapt `cuCIM` to execute GPU transforms
-  * Cache IO and transforms data to GPU
+  * [Automated mixed precision (AMP)](#1-automated-mixed-precision-amp)
+  * [Execute transforms on GPU](#2-execute-transforms-on-gpu)
+  * [Adapt `cuCIM` to execute GPU transforms](#3-adapt-cucim-to-execute-gpu-transforms)
+  * [Cache IO and transforms data to GPU](#4-cache-io-and-transforms-data-to-gpu)
 * [Leveraging multi-GPU](#leveraging-multi-gpu)
   * Demonstration of multi-GPU training for performance improvement.
 * [Leveraging multi-node distributed training](#leveraging-multi-node-distributed-training)
   * Demonstration of distributed multi-node training for performance improvement.
 * [Examples](#examples)
   * Applications in medical image segmentation with various efficiency and effectiveness improvements.
+  * [Spleen segmentation](#1-spleen-segmentation)
+  * [Brain tumor segmentation](#2-brain-tumor-segmentation)
+  * [Pathology metastasis detection task](#3-pathology-metastasis-detection-task)
 
 ## Profiling the pipelines
 

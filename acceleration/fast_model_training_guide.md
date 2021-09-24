@@ -19,6 +19,7 @@ To provide an overview of the fast training techniques in practice, this documen
 * [Optimizing GPU utilization](#optimizing-gpu-utilization)
   * Automated mixed precision (AMP)
   * Execute transforms on GPU
+  * Adapt `cuCIM` to execute GPU transforms
   * Cache IO and transforms data to GPU
 * [Leveraging multi-GPU](#leveraging-multi-gpu)
   * Demonstration of multi-GPU training for performance improvement.
@@ -231,9 +232,10 @@ Running preprocessing transforms on CPU while keeping GPU busy by running the mo
 From MONAI v0.7 we introduced PyTorch `Tensor` based computation in transforms, many transforms already support `Tensor` data. To accelerate the high-computation transforms, users can first convert input data into GPU Tensor by `ToTensor` or `EnsureType` transform, then the following transforms can execute on GPU based on PyTorch `Tensor` APIs.
 GPU transform tutorial is available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_training_tutorial.ipynb).
 
+### 3. Adapt `cuCIM` to execute GPU transforms
 
 [cuCIM](https://github.com/rapidsai/cucim) has implemented an optimized version of several common transforms that we are using in the digital pathology pipeline. These transforms are natively being run on GPU and act on CuPy arrays.
-In MONAI v0.7, we made the transforms available in MONAI through adapters (`CuCIM` and `RandCuCIM`). For instance:
+In MONAI v0.7, besides PyTorch `Tensor` based GPU transforms, we also made the `cuCIM` transforms available in MONAI through adapters (`CuCIM` and `RandCuCIM`). For instance:
 
 ```py
 from monai.transforms import CuCIM, RandCuCIM
@@ -244,7 +246,7 @@ CuCIM(name="scale_intensity_range", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.
 
 This has shown a speedup in the training of metastasis detection model. Please refer to [Pathology Metastasis Detection Task](#3-pathology-metastasis-detection-task) in the Examples section below for more details.
 
-### 3. Cache IO and transforms data to GPU
+### 4. Cache IO and transforms data to GPU
 
 Even with `CacheDataset`, we usually need to copy the same data to GPU memory for GPU random transforms or network computation in every epoch. An efficient approach is to cache the data to GPU memory directly, then every epoch can start from GPU computation immediately.
 

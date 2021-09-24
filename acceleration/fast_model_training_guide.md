@@ -6,7 +6,7 @@ To provide an overview of the fast training techniques in practice, this documen
 
 * [Profiling the pipelines](#profiling-the-pipelines)
   * [Deep Learning Profiler (DLProf)](#1%2E-deep-learning-profiler-%28dlprof%29)
-  * [NVIDIA Nsight Systems](#2%2E-nvidia-nsight-systems)
+  * [NVIDIA Nsight Systems](#2.-nvidia-nsight-systems)
   * [NVIDIA Tools Extension (NVTX)](#3%2E-nvidia-tools-extension-%28nvtx%29)
   * [NVIDIA Management Library (NVML)](#4%2E-nvidia-management-library-%28nvml%29)
 * [Optimizing data loading function](#optimizing-data-loading-function)

@@ -1,0 +1,7 @@
+git+https://github.com/Project-MONAI/MONAI
+pytorch-ignite
+nibabel
+tqdm
+nvidia-pyindex
+nvidia-dlprof[pytorch]
+nvtx

@@ -20,7 +20,7 @@ The pipeline that we are profiling `rain_evaluate_nvtx_profiling.py` requires [C
 
 Instead of the whole dataset, just for the experiment of this performance analysis, users can also download a single whole slide image `tumor_091.tif` from [here](https://drive.google.com/uc?id=1OxAeCMVqH9FGpIWpAXSEJe6cLinEGQtF), as well as its coordinates and labels (`dataset_0.json`), from [here](https://drive.google.com/uc?id=1F-lR9tXoFkPkC1yueM-_TyaFk3CO7v0s).
 
-## Run Nsight Profiling 
+## Run Nsight Profiling
 With environment prepared `requirements.txt`, we use `nsys profile` to get the information regarding the training pipeline's behavior across several steps. Since an epoch for pathology is long (covering 400,000 images), here we run profile on the trainer under basic settings for 30 seconds, with 50 seconds' delay. All results shown below are from experiments performed on a DGX-2 workstation using a single V-100 GPU over the full dataset.
 
 ```python
@@ -33,9 +33,9 @@ nsys profile \
      python3 train_evaluate_nvtx.py --baseline
 ```
 
-# Identify Potential Performance Improvements 
+# Identify Potential Performance Improvements
 ## Profile Results
-After profiling, we visualize the computing details via Nsight System GUI.  
+After profiling, we visualize the computing details via Nsight System GUI.
 
 ![png](Figure/nsight_base.png)
 

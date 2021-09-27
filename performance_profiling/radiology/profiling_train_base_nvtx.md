@@ -5,7 +5,7 @@
 The [NVIDIA® Tools Extension Library (NVTX)](https://github.com/NVIDIA/NVTX) is a powerful mechanism that allows users to manually instrument their application. With a C-based and a python-based Application Programming Interface (API) for annotating events, code ranges, and resources in your applications. Applications which integrate NVTX can use NVIDIA Nsight, Tegra System Profiler, and Visual Profiler to capture and visualize these events and ranges. In general, the NVTX can bring valuable insight into the application while incurring almost no overhead.
 
 # MONAI Training Pipeline and NVTX
-[MONAI](https://github.com/Project-MONAI/MONAI) is a high level framework for deep learning in healthcare imaging. 
+[MONAI](https://github.com/Project-MONAI/MONAI) is a high level framework for deep learning in healthcare imaging.
 
 For performance profiling, we mainly focus on two fronts: data loading/transforms, and training/validation iterations.
 
@@ -14,7 +14,7 @@ For performance profiling, we mainly focus on two fronts: data loading/transform
 For training and validation steps, they are easier to track by setting NVTX annotations within the loop.
 
 # Profiling Spleen Segmentation Pipeline
-## Run Nsight Profiling 
+## Run Nsight Profiling
 With environment prepared `requirements.txt`, we run DLprof (v1.4.0 / r21.08) on the trainer under basic settings for 6 epochs (with validation every 2 epochs). All results shown below are from experiments performed on a DGX-2 workstation using a single V-100 GPU.
 
 ```python
@@ -22,10 +22,10 @@ With environment prepared `requirements.txt`, we run DLprof (v1.4.0 / r21.08) on
         --reports=summary \
         --formats json \
         --output_path ./outputs_base \
-        python3 train_base_nvtx.py 
+        python3 train_base_nvtx.py
 ```
 
-# Identify Potential Performance Improvements 
+# Identify Potential Performance Improvements
 ## Profile Results
 After profiling, DLProf provides summary regarding the training process. Also, the computing details can be visualized via Nsight System GUI. (The version of Nsight used in the tutorial is 2021.3.1.54-ee9c30a OSX)
 
@@ -54,7 +54,7 @@ Upon further analysis of convergence, it appears that the convergence is relativ
 - Faster convergence: by utilizing different optimizers and loss functions.
 
 One optimized solution can be found [here](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_training_tutorial.ipynb). Based on the validation accuracy curves, we can observe that the optimized solution (orange curve) has much faster convergence. The GPU utilization rate is above 90% on average.
-  
+
 ![png](Figure/tensorboard.png)
 
 # Analyzing Performance Improvement
@@ -66,7 +66,7 @@ We again use DLProf to further analyze the optimized training script.
         --reports=summary \
         --formats json \
         --output_path ./outputs_fast \
-        python3 train_fast_nvtx.py 
+        python3 train_fast_nvtx.py
 ```
 And the profiling result is
 
@@ -74,9 +74,9 @@ And the profiling result is
 
 As shown in the figure, the optimized solution:
 
-- Still has the initial 40~50 seconds (red dashed region) for loading all training images into CPU RAM; 
+- Still has the initial 40~50 seconds (red dashed region) for loading all training images into CPU RAM;
 - Uses much less time for data loading (pointed by orange arrows);
-- The total time per epoch on training (green dashed region) and validation (blue dashed region) has been significantly reduced. For the baseline pipeline, a training epoch takes 12-14 sec, and a training+validation epoch takes 22-23 sec; for the improved pipeline, a training epoch takes 6-7 sec, and a training+validation epoch takes ~8 sec.  
+- The total time per epoch on training (green dashed region) and validation (blue dashed region) has been significantly reduced. For the baseline pipeline, a training epoch takes 12-14 sec, and a training+validation epoch takes 22-23 sec; for the improved pipeline, a training epoch takes 6-7 sec, and a training+validation epoch takes ~8 sec.
 
 Therefore, the computing efficiency and the overall training process are thus be improved by a large margin.
 

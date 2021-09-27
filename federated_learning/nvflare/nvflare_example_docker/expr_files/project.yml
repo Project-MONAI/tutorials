@@ -16,7 +16,7 @@ he_config:
 config_folder: config
 
 # Server enforcing role-based rights on admin users. true means all admin users are in role super
-disable_authz: false 
+disable_authz: false
 
 server:
   org: nvidia
@@ -113,29 +113,29 @@ authz_policy:
     site_researcher: site researcher of the study
     site_it: site IT of the study
     lead_it: lead IT of the study
-  groups: 
-    relaxed: 
+  groups:
+    relaxed:
       desc: org group with relaxed policies
-      rules: 
+      rules:
         byoc: true
         custom_datalist: true
-    strict: 
+    strict:
       desc: org group with strict policies
-      rules: 
+      rules:
         byoc: false
         custom_datalist: false
-    general: 
+    general:
       desc: general group user rights
-      role_rights: 
-        lead_researcher: 
+      role_rights:
+        lead_researcher:
           train_all: true
           view_all: true
-        site_researcher: 
+        site_researcher:
           train_self: true
           view_self: true
-        lead_it: 
+        lead_it:
           operate_all: true
           view_all: true
-        site_it: 
+        site_it:
           operate_self: true
           view_self: true

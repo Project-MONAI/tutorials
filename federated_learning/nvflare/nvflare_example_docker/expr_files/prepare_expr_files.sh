@@ -1,9 +1,7 @@
-# set fl docker image name
-export FL_DOCKER_IMAGE="monai_nvflare:latest"
-DOCKER_PROVISION_PATH=/opt/conda/lib/python3.8/site-packages/provision
+# prepare provision files
+# refer to: https://nvidia.github.io/NVFlare/user_guide/provisioning_tool.html
 DEMO_PROVISION_PATH="expr_files"
-provision -p $DEMO_PROVISION_PATH/project.yml -a $DEMO_PROVISION_PATH/authz_config.json -o $DEMO_PROVISION_PATH
-cp $DOCKER_PROVISION_PATH/audit.pkl $DEMO_PROVISION_PATH
+NVFL_DOCKER_IMAGE=monai_nvflare:latest provision -n -p $DEMO_PROVISION_PATH/project.yml -o $DEMO_PROVISION_PATH
 cd /fl_workspace/; chown -R 1000:1000 *
 
 # if you do not need to download the spleen dataset, please comment the following lines.

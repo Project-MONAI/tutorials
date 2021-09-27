@@ -1,3 +1,5 @@
+api_version: 1
+
 # org is to describe each participant's organization
 # schema change: org is now mandatory
 
@@ -5,15 +7,16 @@
 name: example_project
 
 # homomorphic encryption
-he:
-  lib: tenseal
-  config:
-    poly_modulus_degree: 8192
-    coeff_mod_bit_sizes: [60, 40, 40]
-    scale_bits: 40
-    scheme: CKKS
+he_config:
+  poly_modulus_degree: 8192
+  coeff_mod_bit_sizes: [60, 40, 40]
+  scale_bits: 40
+  scheme: CKKS
 
 config_folder: config
+
+# Server enforcing role-based rights on admin users. true means all admin users are in role super
+disable_authz: false
 
 server:
   org: nvidia
@@ -22,10 +25,10 @@ server:
   # never set it to example.com
   cn: localhost
 
-  # replace the number with that all clients can reach out to, and that the server can open to listen to
+  # replace the number with that all clients can reach out to and that the server can open to listen to
   fed_learn_port: 8002
 
-  # again, replace the number with that all clients can reach out to, and that the server can open to listen to
+  # again replace the number with that all clients can reach out to and that the server can open to listen to
   # the value must be different from fed_learn_port
   admin_port: 8003
 
@@ -35,15 +38,11 @@ server:
   min_num_clients: 1
   max_num_clients: 100
 
-  # Server enforcing role-based rights on admin users. false means all admin users are in role "super"
-  auth: true
-
   # The configuration validator class path.
-  # Server does not load configuration validator when it's set to empty.
-  # For example:
-  #  config_validator:
+  # This line must have ONE indentation.  That is, it must be
+  # inside server section.
   #
-  # When it's commented out, the default will be used (medl.apps.fed_learn.server.mmar_validator.MMARValidator)
+  # Server does not load configuration validator when it's commented out.
   #
   # Users can specifiy their own validator.  For example:
   # config_validator:
@@ -55,7 +54,7 @@ server:
   #      arg1: abc
   #      arg2: 123
 
-  config_validator:
+  # config_validator:
 
 # The following values under fl_clients and admin_clients are for demo purpose only.
 # Please change them according to the information of actual project.
@@ -63,21 +62,80 @@ fl_clients:
   # client_name must be unique
   # email is optional
   - org: org1
-    client_name: org1-a
+    site: org1-a
   - org: org1
-    client_name: org1-b
+    site: org1-b
   - org: org2
-    client_name: org2
+    site: org2
+  - org: org3
+    site: org3
 
 admin_clients:
-  # email is the user name for admin authentication.  Hence, it must be unique within the project
+  # email is the user name for admin authentication.  Hence it must be unique within the project
   - org: nvidia
     email: admin@nvidia.com
+    roles:
+      - super
   - org: nvidia
     email: researcher@nvidia.com
+    roles:
+      - lead_it
+      - site_researcher
   - org: org1
     email: researcher@org1.com
+    roles:
+      - site_researcher
   - org: org2
     email: researcher@org2.com
+    roles:
+      - lead_researcher
   - org: org2
     email: it@org2.com
+    roles:
+      - lead_it
+
+authz_policy:
+  orgs:
+    org1:
+      - strict
+      - general
+    org2:
+      - relaxed
+      - general
+    nvidia:
+      - general
+      - relaxed
+    org3:
+      - general
+  roles:
+    super: super user of system
+    lead_researcher: lead researcher of the study
+    site_researcher: site researcher of the study
+    site_it: site IT of the study
+    lead_it: lead IT of the study
+  groups:
+    relaxed:
+      desc: org group with relaxed policies
+      rules:
+        byoc: true
+        custom_datalist: true
+    strict:
+      desc: org group with strict policies
+      rules:
+        byoc: false
+        custom_datalist: false
+    general:
+      desc: general group user rights
+      role_rights:
+        lead_researcher:
+          train_all: true
+          view_all: true
+        site_researcher:
+          train_self: true
+          view_self: true
+        lead_it:
+          operate_all: true
+          view_all: true
+        site_it:
+          operate_self: true
+          view_self: true

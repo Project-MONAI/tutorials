@@ -75,7 +75,7 @@ def main(tempdir):
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     net = monai.networks.nets.UNet(
-        dimensions=3,
+        spatial_dims=3,
         in_channels=1,
         out_channels=1,
         channels=(16, 32, 64, 128, 256),

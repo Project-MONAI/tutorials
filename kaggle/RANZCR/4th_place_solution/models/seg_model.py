@@ -131,7 +131,7 @@ class SegmentationHead(nn.Sequential):
         up_layer: nn.Module = nn.Identity()
         if scale_factor > 1.0:
             up_layer = UpSample(
-                dimensions=dim,
+                spatial_dims=dim,
                 scale_factor=scale_factor,
                 mode="nontrainable",
                 pre_conv=None,

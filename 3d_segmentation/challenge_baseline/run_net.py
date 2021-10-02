@@ -83,7 +83,7 @@ def get_net():
 
     num_classes = 2
     net = monai.networks.nets.BasicUNet(
-        dimensions=3,
+        spatial_dims=3,
         in_channels=1,
         out_channels=num_classes,
         features=(32, 32, 64, 128, 256, 32),

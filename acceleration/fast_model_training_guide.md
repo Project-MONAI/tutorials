@@ -292,6 +292,8 @@ The distributed data parallel APIs of MONAI are compatible with the native PyTor
 
 For more details about the PyTorch distributed training setup, please refer to: https://pytorch.org/docs/stable/distributed.html.
 
+And if using [SLURM](https://developer.nvidia.com/slurm) workload manager, please refer to [SLURM + Singularity MONAI example](https://github.com/UFResearchComputing/MultiNode_MONAI_example).
+
 We obtained U-Net performance benchmarks of Brain tumor segmentation task for reference (based on CUDA 11, NVIDIA V100 GPUs):
 ![distributed training results](../figures/distributed_training.png)
 More details are available at [BraTS distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/distributed_training/brats_training_ddp.py).

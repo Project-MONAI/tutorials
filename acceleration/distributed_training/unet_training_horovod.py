@@ -134,7 +134,7 @@ def train(args):
     device = torch.device(f"cuda:{hvd.local_rank()}")
     torch.cuda.set_device(device)
     model = monai.networks.nets.UNet(
-        dimensions=3,
+        spatial_dims=3,
         in_channels=1,
         out_channels=1,
         channels=(16, 32, 64, 128, 256),

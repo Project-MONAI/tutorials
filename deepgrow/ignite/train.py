@@ -58,7 +58,7 @@ def get_network(network, channels, dimensions):
             features = (64, 128, 256, 512, 1024)
         logging.info("Using Unet with features: {}".format(features))
         network = UNet(
-            dimensions=dimensions,
+            spatial_dims=dimensions,
             in_channels=3,
             out_channels=1,
             channels=features,
@@ -74,7 +74,7 @@ def get_network(network, channels, dimensions):
             features = (64, 128, 256, 512, 1024, 64)
         logging.info("Using BasicUnet with features: {}".format(features))
         network = BasicUNet(
-            dimensions=dimensions, in_channels=3, out_channels=1, features=features
+            spatial_dims=dimensions, in_channels=3, out_channels=1, features=features
         )
     return network
 

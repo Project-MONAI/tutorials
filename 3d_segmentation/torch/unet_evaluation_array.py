@@ -56,7 +56,7 @@ def main(tempdir):
     saver = SaveImage(output_dir="./output", output_ext=".nii.gz", output_postfix="seg")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = UNet(
-        dimensions=3,
+        spatial_dims=3,
         in_channels=1,
         out_channels=1,
         channels=(16, 32, 64, 128, 256),

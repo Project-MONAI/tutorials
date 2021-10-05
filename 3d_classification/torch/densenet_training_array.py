@@ -84,7 +84,6 @@ def main():
     # start a typical PyTorch training
     val_interval = 2
     best_metric = -1
-    best_metric_epoch = -1
     epoch_loss_values = list()
     metric_values = list()
     writer = SummaryWriter()

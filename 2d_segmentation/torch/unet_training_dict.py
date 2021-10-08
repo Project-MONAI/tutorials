@@ -47,8 +47,8 @@ def main(tempdir):
     print(f"generating synthetic data to {tempdir} (this may take a while)")
     for i in range(40):
         im, seg = create_test_image_2d(128, 128, num_seg_classes=1)
-        Image.fromarray(im.astype("uint8")).save(os.path.join(tempdir, f"img{i:d}.png"))
-        Image.fromarray(seg.astype("uint8")).save(os.path.join(tempdir, f"seg{i:d}.png"))
+        Image.fromarray((im * 255).astype("uint8")).save(os.path.join(tempdir, f"img{i:d}.png"))
+        Image.fromarray((seg * 255).astype("uint8")).save(os.path.join(tempdir, f"seg{i:d}.png"))
 
     images = sorted(glob(os.path.join(tempdir, "img*.png")))
     segs = sorted(glob(os.path.join(tempdir, "seg*.png")))
@@ -60,7 +60,7 @@ def main(tempdir):
         [
             LoadImaged(keys=["img", "seg"]),
             AddChanneld(keys=["img", "seg"]),
-            ScaleIntensityd(keys="img"),
+            ScaleIntensityd(keys=["img", "seg"]),
             RandCropByPosNegLabeld(
                 keys=["img", "seg"], label_key="seg", spatial_size=[96, 96], pos=1, neg=1, num_samples=4
             ),
@@ -72,7 +72,7 @@ def main(tempdir):
         [
             LoadImaged(keys=["img", "seg"]),
             AddChanneld(keys=["img", "seg"]),
-            ScaleIntensityd(keys="img"),
+            ScaleIntensityd(keys=["img", "seg"]),
             EnsureTyped(keys=["img", "seg"]),
         ]
     )
@@ -103,7 +103,7 @@ def main(tempdir):
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = monai.networks.nets.UNet(
-        dimensions=2,
+        spatial_dims=2,
         in_channels=1,
         out_channels=1,
         channels=(16, 32, 64, 128, 256),

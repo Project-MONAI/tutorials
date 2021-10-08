@@ -53,7 +53,7 @@ def main(tempdir):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     net = UNet(
-        dimensions=3,
+        spatial_dims=3,
         in_channels=1,
         out_channels=1,
         channels=(16, 32, 64, 128, 256),

@@ -36,5 +36,13 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-python -u client/client.py client/test_data
+# if no argument provided use default `client/test_data` name
+if [ $# -eq 0 ]
+then
+    echo "No arguments supplied defaulting 'client/test_data'"
+    input_name="client/test_data"
+else
+# otherwise use the first argument as the operator image
+    input_name=$1
+fi
+python -u client/client.py $input_name

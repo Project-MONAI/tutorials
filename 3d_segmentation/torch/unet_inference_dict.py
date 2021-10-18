@@ -65,7 +65,7 @@ def main(tempdir):
     dataloader = DataLoader(dataset, batch_size=2, num_workers=4)
     # define post transforms
     post_transforms = Compose([
-        EnsureTyped(keys="pred"), 
+        EnsureTyped(keys="pred"),
         Activationsd(keys="pred", sigmoid=True),
         Invertd(
             keys="pred",  # invert the `pred` data field, also support multiple fields
@@ -90,7 +90,7 @@ def main(tempdir):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     net = UNet(
-        dimensions=3,
+        spatial_dims=3,
         in_channels=1,
         out_channels=1,
         channels=(16, 32, 64, 128, 256),

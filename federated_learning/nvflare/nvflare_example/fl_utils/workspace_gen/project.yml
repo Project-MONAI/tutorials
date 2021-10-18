@@ -42,7 +42,7 @@ fl_clients:
   - org: nvidia
     client_name: client3
   - org: nvidia
-    client_name: client4  
+    client_name: client4
   - org: nvidia
     client_name: client5
   - org: nvidia
@@ -50,10 +50,9 @@ fl_clients:
   - org: nvidia
     client_name: client7
   - org: nvidia
-    client_name: client8  
+    client_name: client8
 
 admin_clients:
   # email is the user name for admin authentication.  Hence, it must be unique within the project
   - org: nvidia
     email: admin@nvidia.com
-

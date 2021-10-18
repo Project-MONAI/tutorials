@@ -30,7 +30,7 @@ def main():
 
     # IXI dataset as a demo, downloadable from https://brain-development.org/ixi-dataset/
     # the path of ixi IXI-T1 dataset
-    data_path = os.sep.join(["", "workspace", "data", "medical", "ixi", "IXI-T1"])
+    data_path = os.sep.join([".", "workspace", "data", "medical", "ixi", "IXI-T1"])
     images = [
         "IXI314-IOP-0889-T1.nii.gz",
         "IXI249-Guys-1072-T1.nii.gz",
@@ -81,7 +81,7 @@ def main():
         ]
     )
     post_pred = Compose([EnsureType(), Activations(softmax=True)])
-    post_label = Compose([EnsureType(), AsDiscrete(to_onehot=True, n_classes=2)])
+    post_label = Compose([EnsureType(), AsDiscrete(to_onehot=True, num_classes=2)])
 
     # Define dataset, data loader
     check_ds = monai.data.Dataset(data=train_files, transform=train_transforms)

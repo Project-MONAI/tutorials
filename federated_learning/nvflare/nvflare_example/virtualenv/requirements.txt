@@ -1,4 +1,4 @@
-monai==0.6.0
+monai==0.7.0
 nvflare==1.0.2
 pytorch-ignite==0.4.5
 tqdm==4.61.2

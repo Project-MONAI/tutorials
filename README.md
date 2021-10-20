@@ -105,7 +105,7 @@ The example shows the flexibility of MONAI modules in a PyTorch-based program:
 This notebook shows how MONAI may be used in conjunction with the [Catalyst](https://github.com/catalyst-team/catalyst) framework.
 #### [unet_segmentation_3d_ignite](./3d_segmentation/unet_segmentation_3d_ignite.ipynb)
 This notebook is an end-to-end training & evaluation example of 3D segmentation based on synthetic dataset.
-The example is a PyTorch Ignite program and shows several key features of MONAI, especially with medical domain specific transforms and event handlers.
+The example is a PyTorch Ignite program and shows several key features of MONAI, especially with medical domain specific transforms and event handlers for profiling (logging, TensorBoard, MLFlow, etc.).
 #### [COVID 19-20 challenge baseline](./3d_segmentation/challenge_baseline)
 This folder provides a simple baseline method for training, validation, and inference for [COVID-19 LUNG CT LESION SEGMENTATION CHALLENGE - 2020](https://covid-segmentation.grand-challenge.org/COVID-19-20/) (a MICCAI Endorsed Event).
 #### [unetr_btcv_segmentation_3d](./3d_segmentation/unetr_btcv_segmentation_3d.ipynb)

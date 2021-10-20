@@ -182,7 +182,7 @@ This tutorial uses the MedNIST hand CT scan dataset to demonstrate MONAI's autoe
 
 #### [compute_metric](./modules/compute_metric.py)
 Example shows how to compute metrics from saved predictions and labels with PyTorch multi-processing support.
-#### [csv_datasets](./modules/csv_datasets.py)
+#### [csv_datasets](./modules/csv_datasets.ipynb)
 Tutorial shows the usage of `CSVDataset` and `CSVIterableDataset`, load multiple CSV files and execute postprocessing logic.
 #### [decollate_batch](./modules/decollate_batch.py)
 Tutorial shows how to decollate batch data to simplify post processing transforms and execute more flexible following operations.

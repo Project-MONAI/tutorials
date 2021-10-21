@@ -179,7 +179,7 @@ This notebook demonstrates the transformations on volumetric images.
 #### [autoencoder_mednist](./modules/autoencoder_mednist.ipynb)
 This tutorial uses the MedNIST hand CT scan dataset to demonstrate MONAI's autoencoder class. The autoencoder is used with an identity encode/decode (i.e., what you put in is what you should get back), as well as demonstrating its usage for de-blurring and de-noising.
 #### [batch_output_transform](./modules/batch_output_transform.py)
-Tutorial to explain and show how to set `batch_transform` and `output_transform` of handlers to work with MONAI engines.S
+Tutorial to explain and show how to set `batch_transform` and `output_transform` of handlers to work with MONAI engines.
 #### [compute_metric](./modules/compute_metric.py)
 Example shows how to compute metrics from saved predictions and labels with PyTorch multi-processing support.
 #### [csv_datasets](./modules/csv_datasets.ipynb)
@@ -233,7 +233,3 @@ This tutorial uses the MedNIST scan (or alternatively the MNIST) dataset to demo
 Tutorials in this folder demonstrate model visualisation and interpretability features of MONAI. Currently, it consists of class activation mapping and occlusion sensitivity for 3D classification model visualisations and analysis.
 #### [Transfer learning with MMAR](./modules/transfer_mmar.ipynb)
 This tutorial demonstrates a transfer learning pipeline from a pretrained model in [Clara Train's Medical Model Archive format](https://docs.nvidia.com/clara/clara-train-sdk/pt/mmar.html).  The notebook also shows the use of LMDB-based dataset.
-
-```bash
-
-```

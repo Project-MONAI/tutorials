@@ -15,7 +15,7 @@ My running environment:
 To prevent the inconsistency, all json files are included in `config/` already.
 
 ## Task parameters
-All task specific parameters are copied from the referred `nnUNet` pipeline (as shown in `task_params.py`).
+All task specific parameters refer from `nnUNet` pipeline (as shown in `task_params.py`).
 During these parameters, `patch_size`, `batch_size` and `deep_supr_num` are achieved from some heuristic rules, and this part is not covered in this pipeline. `spacing`, `clip_values` and `normalize_values` are based on the statistics of the dataset (only on training set). Here we provide `calculate_task_params.py` and you can try to calculate them. The command is like:
 
 ```

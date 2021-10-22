@@ -176,10 +176,10 @@ Training and evaluation examples of 3D segmentation based on UNet3D and syntheti
 The examples are built with MONAI workflows, mainly contain: trainer/evaluator, handlers, post_transforms, etc.
 #### [3d_image_transforms](./modules/3d_image_transforms.ipynb)
 This notebook demonstrates the transformations on volumetric images.
-
 #### [autoencoder_mednist](./modules/autoencoder_mednist.ipynb)
 This tutorial uses the MedNIST hand CT scan dataset to demonstrate MONAI's autoencoder class. The autoencoder is used with an identity encode/decode (i.e., what you put in is what you should get back), as well as demonstrating its usage for de-blurring and de-noising.
-
+#### [batch_output_transform](./modules/batch_output_transform.py)
+Tutorial to explain and show how to set `batch_transform` and `output_transform` of handlers to work with MONAI engines.
 #### [compute_metric](./modules/compute_metric.py)
 Example shows how to compute metrics from saved predictions and labels with PyTorch multi-processing support.
 #### [csv_datasets](./modules/csv_datasets.ipynb)
@@ -227,12 +227,9 @@ This notebook demonstrates the image transformations on histology images using
 This tutorial shows how to determine a reasonable spatial size of the input data for MONAI UNet, which not only supports residual units, but also can use more hyperparameters (like `strides`, `kernel_size` and `up_kernel_size`) than the basic UNet implementation.
 #### [TorchIO, MONAI, PyTorch Lightning](./modules/TorchIO_MONAI_PyTorch_Lightning.ipynb)
 This notebook demonstrates how the three libraries from the official PyTorch Ecosystem can be used together to segment the hippocampus on brain MRIs from the Medical Segmentation Decathlon.
-
 #### [varautoencoder_mednist](./modules/varautoencoder_mednist.ipynb)
 This tutorial uses the MedNIST scan (or alternatively the MNIST) dataset to demonstrate MONAI's variational autoencoder class.
-
 #### [interpretability](./modules/interpretability)
 Tutorials in this folder demonstrate model visualisation and interpretability features of MONAI. Currently, it consists of class activation mapping and occlusion sensitivity for 3D classification model visualisations and analysis.
-
 #### [Transfer learning with MMAR](./modules/transfer_mmar.ipynb)
 This tutorial demonstrates a transfer learning pipeline from a pretrained model in [Clara Train's Medical Model Archive format](https://docs.nvidia.com/clara/clara-train-sdk/pt/mmar.html).  The notebook also shows the use of LMDB-based dataset.

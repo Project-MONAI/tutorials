@@ -121,7 +121,7 @@ class MONAIModelManager:
         meta_data[FLConstants.NUM_STEPS_CURRENT_ROUND] = train_ctx.current_iters
 
         shareable = Shareable()
-        shareable[ShareableKey.TYPE] = ShareableValue.TYPE_WEIGHT_DIFF
+        shareable[ShareableKey.TYPE] = ShareableValue.TYPE_WEIGHTS
         shareable[ShareableKey.DATA_TYPE] = ShareableValue.DATA_TYPE_UNENCRYPTED
         shareable[ShareableKey.MODEL_WEIGHTS] = self.extract_model(fl_ctx)
         shareable[ShareableKey.META] = meta_data

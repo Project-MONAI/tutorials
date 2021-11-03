@@ -30,13 +30,11 @@ from monai.transforms import (
 
 def main():
 
-    # TODO Defining file paths
-    #json_Path = os.path.normpath('/scratch/data_2021/tcia_covid19/dataset_split_debug.json')
-    json_Path = os.path.normpath('/scratch/data_2021/tcia_covid19/dataset_split.json')
-    data_Root = os.path.normpath('/scratch/data_2021/tcia_covid19')
-    pickle_path = os.path.normpath('/scratch/data_2021/tcia_covid19/debug_run.pkl')
+    # Defining file paths
+    json_Path = os.path.normpath('/to/be/defined')
+    data_Root = os.path.normpath('/to/be/defined')
 
-    # TODO Load Json & Append Root Path
+    # Load Json & Append Root Path
     with open(json_Path, 'r') as json_f:
         json_Data = json.load(json_f)
 
@@ -56,11 +54,10 @@ def main():
     print(val_Data)
     print('#######################')
 
-    ###############End Of Append Paths#################
-    # TODO Set Determinism
+    # Set Determinism
     set_determinism(seed=453)
 
-    # TODO Define Training Transforms
+    # Define Training Transforms
     train_Transforms = Compose(
         [
         LoadImaged(keys=["image"]),
@@ -74,9 +71,6 @@ def main():
         CropForegroundd(keys=["image"], source_key="image"),
         SpatialPadd(keys=["image"], spatial_size=(96, 96, 96)),
         RandSpatialCropSamplesd(keys=["image"], roi_size=(96, 96, 96), random_size=False, num_samples=2),
-        #RandSpatialCropd(keys=["image"], roi_size=(96, 96, 96), random_size=False),
-        #TODO Ask Wenqi, if I create another copy of the image using CopyItemsd and then pass both 'image_1', 'image_2'
-        # through the augmentation transforms, will I get the same exact augmentation or will it be different?
         CopyItemsd(keys=["image"], times=1, names=["gt_image"], allow_missing_keys=False),
         OneOf(transforms=[
             RandCoarseDropoutd(keys=["image"], prob=1.0, holes=6, spatial_size=5, dropout_holes=True,
@@ -96,32 +90,7 @@ def main():
     image = (check_data["image"][0][0])
     print(f"image shape: {image.shape}")
 
-    '''
-    # plot the slice [:, :, 80]
-    plt.figure("check", (12, 8))
-    plt.subplot(2, 3, 1)
-    plt.title("Input image")
-    plt.imshow(orig_image[:, :, 80], cmap="gray")
-    plt.subplot(2, 3, 2)
-    plt.title("Input image")
-    plt.imshow(orig_image[:, 60, :], cmap="gray")
-    plt.subplot(2, 3, 3)
-    plt.title("Input image")
-    plt.imshow(orig_image[40, :, :], cmap="gray")
-    plt.subplot(2, 3, 4)
-    plt.title("Aug image")
-    plt.imshow(image[:, :, 80], cmap="gray")
-    plt.subplot(2, 3, 5)
-    plt.title("Aug image")
-    plt.imshow(image[:, 60, :], cmap="gray")
-    plt.subplot(2, 3, 6)
-    plt.title("Aug image")
-    plt.imshow(image[40, :, :], cmap="gray")
-    plt.show()
-    '''
-
-    #TODO Define Network ViT backbone & Loss & Optimizer
-    # Also the ViT model will be updated once the ViT_AE PR is merged
+    # Define Network ViT backbone & Loss & Optimizer
     device = torch.device("cuda:0")
     model = ViT(
                 in_channels=1,
@@ -130,26 +99,18 @@ def main():
                 pos_embed='conv',
                 hidden_size=768,
                 mlp_dim=3072,
-                same_as_input_size=True
     )
-
-    #test_input = torch.randn(1, 96, 96, 96)
-    #macs, params = profile(model, inputs=(input, ))
-
-    print('Debug here')
 
     model = model.to(device)
 
     loss_function = L1Loss()
     optimizer = torch.optim.Adam(model.parameters(), 1e-4)
 
-    #TODO Define DataLoader using MONAI
-    #train_ds = CacheDataset(data=train_Data, transform=train_Transforms, cache_rate=1.0)
-    train_ds = Dataset(data=train_Data, transform=train_Transforms)
+    # Define DataLoader using MONAI, CacheDataset needs to be used
+    train_ds = CacheDataset(data=train_Data, transform=train_Transforms, cache_rate=1.0)
     train_loader = DataLoader(train_ds, batch_size=4, shuffle=True, num_workers=4)
 
-    #val_ds = CacheDataset(data=val_Data, transform=train_Transforms, cache_rate=1.0)
-    val_ds = Dataset(data=val_Data, transform=train_Transforms)
+    val_ds = CacheDataset(data=val_Data, transform=train_Transforms, cache_rate=1.0)
     val_loader = DataLoader(val_ds, batch_size=4, shuffle=True, num_workers=4)
 
     #TODO Run the Training Loop
@@ -219,9 +180,6 @@ def main():
             t_dict['step_losses'] = step_loss_values
             t_dict['epoch_losses'] = epoch_loss_values
             t_dict['val_losses'] = val_loss_values
-            with open(pickle_path, 'wb') as f:
-                pickle.dump(t_dict, f)
-            f.close()
 
             if total_val_loss < best_val_loss:
                 print(f"Saving new model based on validation loss {total_val_loss:.4f}")
@@ -231,7 +189,7 @@ def main():
                               'optimizer': optimizer.state_dict()
                               }
 
-                torch.save(checkpoint, '/home/vishwesh/ttl_vit_weights.pt')
+                torch.save(checkpoint, '/to/be/defined')
 
             plt.figure(1, figsize=(8, 4))
             plt.subplot(1, 2, 1)
@@ -240,7 +198,7 @@ def main():
             plt.subplot(1, 2, 2)
             plt.plot(val_loss_values)
             plt.title('Validation Loss')
-            plt.savefig('/home/vishwesh/ssl_pretrain_losses_all_data.png')
+            plt.savefig('/to/be/defined')
             plt.close(1)
 
     print('Done')

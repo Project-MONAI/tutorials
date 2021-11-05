@@ -1,13 +1,10 @@
 import os
 import json
 import time
-import pickle
 import torch
 import matplotlib.pyplot as plt
 
-from thop import profile
 from torch.nn import L1Loss
-
 from monai.utils import set_determinism, first
 from monai.networks.nets import ViT
 from monai.data import CacheDataset, DataLoader, Dataset
@@ -19,10 +16,8 @@ from monai.transforms import (
     SpatialPadd,
     EnsureChannelFirstd,
     Spacingd,
-    Orientationd,
     OneOf,
     ScaleIntensityRanged,
-    RandSpatialCropd,
     RandSpatialCropSamplesd,
     RandCoarseDropoutd,
     RandCoarseShuffled
@@ -30,9 +25,10 @@ from monai.transforms import (
 
 def main():
 
-    # Defining file paths
+    # Defining file paths & output directory path
     json_Path = os.path.normpath('/to/be/defined')
     data_Root = os.path.normpath('/to/be/defined')
+    logdir_path = os.path.normpath('/to/be/defined')
 
     # Load Json & Append Root Path
     with open(json_Path, 'r') as json_f:
@@ -49,10 +45,10 @@ def main():
 
     print('Total Number of Training Data Samples: {}'.format(len(train_Data)))
     print(train_Data)
-    print('#######################')
+    print('#' * 10)
     print('Total Number of Validation Data Samples: {}'.format(len(val_Data)))
     print(val_Data)
-    print('#######################')
+    print('#' * 10)
 
     # Set Determinism
     set_determinism(seed=453)
@@ -86,7 +82,6 @@ def main():
     check_ds = Dataset(data=train_Data, transform=train_Transforms)
     check_loader = DataLoader(check_ds, batch_size=1)
     check_data = first(check_loader)
-    orig_image = (check_data["gt_image"][0][0])
     image = (check_data["image"][0][0])
     print(f"image shape: {image.shape}")
 
@@ -113,11 +108,9 @@ def main():
     val_ds = CacheDataset(data=val_Data, transform=train_Transforms, cache_rate=1.0)
     val_loader = DataLoader(val_ds, batch_size=4, shuffle=True, num_workers=4)
 
-    #TODO Run the Training Loop
+    # Define Hyper-paramters for training loop
     max_epochs = 300
     val_interval = 2
-    best_metric = 1
-    best_metric_epoch = 1
     epoch_loss_values = []
     step_loss_values = []
     val_loss_values = []
@@ -189,7 +182,7 @@ def main():
                               'optimizer': optimizer.state_dict()
                               }
 
-                torch.save(checkpoint, '/to/be/defined')
+                torch.save(checkpoint, os.path.join(logdir_path, 'best_model.pt'))
 
             plt.figure(1, figsize=(8, 4))
             plt.subplot(1, 2, 1)
@@ -198,11 +191,10 @@ def main():
             plt.subplot(1, 2, 2)
             plt.plot(val_loss_values)
             plt.title('Validation Loss')
-            plt.savefig('/to/be/defined')
+            plt.savefig(os.path.join(logdir_path, 'loss_plots.png'))
             plt.close(1)
 
     print('Done')
-
     return None
 
 if __name__=="__main__":

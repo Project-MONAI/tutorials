@@ -37,6 +37,7 @@ from monai.data import (
 def main():
     print_config()
 
+    #TODO Make datasets as json
     data_dir = os.path.normpath('/to/be/defined')
     datasets = os.path.normpath('/to/be/defined')
     logdir = os.path.normpath('/to/be/defined')
@@ -201,7 +202,7 @@ def main():
         print('Pretrained Weights Succesfully Loaded !')
 
     elif use_pretrained==0:
-        print('No weights were loaded, all weights being used are from scratch')
+        print('No weights were loaded, all weights being used are randomly initialized!')
 
     model.to(device)
 

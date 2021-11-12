@@ -25,7 +25,7 @@ from monai.transforms import (
 
 def main():
 
-    # Defining file paths & output directory path
+    #TODO Defining file paths & output directory path
     json_Path = os.path.normpath('/to/be/defined')
     data_Root = os.path.normpath('/to/be/defined')
     logdir_path = os.path.normpath('/to/be/defined')

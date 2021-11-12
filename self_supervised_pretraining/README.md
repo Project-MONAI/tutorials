@@ -1,23 +1,34 @@
 # Self-Supervised Pretraining Tutorial
 
-Authored by Vishwesh Nath (a.k.a Vish)
-
 This directory contains two scripts. The first script 'ssl_script_train.py' generates 
 a good set of pre-trained weights using unlabeled data with self-supervised tasks that 
 are based on augmentations of different types. The second script 'ssl_finetune_train.py' uses
 the pre-trained weights generated from the first script and performs fine-tuning on a fully supervised 
 task.
 
+### Steps to run the tutorial
+1.) Download the two datasets [TCIA-Covid19](https://wiki.cancerimagingarchive.net/display/Public/CT+Images+in+COVID-19)
+& [BTCV](https://www.synapse.org/#!Synapse:syn3193805/wiki/217789) (More detail about them in the Data section)\
+2.) Modify the paths for data_root, json_path & logdir in ssl_script_train.py\
+3.) Run the 'ssl_script_train.py'\
+4.) Modify the paths for data_root, json_path, pretrained_weights_path from 2.) and 
+logdir_path in 'ssl_finetuning_train.py'\
+5.) Run the ssl_finetuning_script.py\
+6.) And that's all folks, happy observing the plots
+
 ### 1.Data
 Pretraining Dataset: The TCIA Covid-19 dataset was used for generating the pretrained weights.
 The dataset contains a total of 771 3D CT Volumes. The volumes were split into training and validation sets
-of 600 and 171 3D volumes correspondingly. The data is available for download at this link:
-https://wiki.cancerimagingarchive.net/display/Public/CT+Images+in+COVID-19. If this dataset is being used in your work 
-please use [1] as reference.
+of 600 and 171 3D volumes correspondingly. The data is available for download at this [link](https://wiki.cancerimagingarchive.net/display/Public/CT+Images+in+COVID-19). 
+If this dataset is being used in your work 
+please use [1] as reference. A json file is provided which contains the suggested training and validation split 
+in the json_files directory of the self-supervised training tutorial.
 
-Fine-tuning Dataset: The dataset from Beyond the Cranial Vault Challenge (BTCV) 2015 (https://www.synapse.org/#!Synapse:syn3193805/wiki/217789) 
-hosted at MICCAI was used as a fully supervised fine-tuning task on the pre-trained weights. The dataset consists of 30 3D Volumes with annotated labels
-of upto 13 different organs [2]. 
+Fine-tuning Dataset: The dataset from Beyond the Cranial Vault Challenge [(BTCV)](https://www.synapse.org/#!Synapse:syn3193805/wiki/217789) 
+2015 hosted at MICCAI was used as a fully supervised fine-tuning task on the pre-trained weights. The dataset 
+consists of 30 3D Volumes with annotated labels of upto 13 different organs [2]. There are 3 json files provided in the 
+json_files directory for the dataset. They correspond to having different number of training volumes ranging 6, 12 and 24. 
+All 3 json files have the same validation split.
 
 References:
 

@@ -37,9 +37,9 @@ from monai.data import (
 def main():
     print_config()
 
-    #TODO Make datasets as json
+    # Define paths for running the script
     data_dir = os.path.normpath('/to/be/defined')
-    datasets = os.path.normpath('/to/be/defined')
+    json_path = os.path.normpath('/to/be/defined')
     logdir = os.path.normpath('/to/be/defined')
 
     # If use_pretrained is set to 0, ViT weights will not be loaded and random initialization is used
@@ -131,12 +131,12 @@ def main():
     )
 
     datalist = load_decathlon_datalist(base_dir=data_dir,
-                                       data_list_file_path=datasets,
+                                       data_list_file_path=json_path,
                                        is_segmentation=True,
                                        data_list_key="training")
 
     val_files = load_decathlon_datalist(base_dir=data_dir,
-                                        data_list_file_path=datasets,
+                                        data_list_file_path=json_path,
                                         is_segmentation=True,
                                         data_list_key="validation")
     train_ds = CacheDataset(
@@ -192,7 +192,7 @@ def main():
 
         #  Delete the following variable names conv3d_transpose.weight, conv3d_transpose.bias,
         #  conv3d_transpose_1.weight, conv3d_transpose_1.bias as they were used to match dimensions
-        #  while pretraining with ViT
+        #  while pretraining with ViTAutoEnc and are not a part of ViT backbone (this is used in UNETR)
         vit_weights.pop('conv3d_transpose_1.bias')
         vit_weights.pop('conv3d_transpose_1.weight')
         vit_weights.pop('conv3d_transpose.bias')

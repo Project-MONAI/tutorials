@@ -14,7 +14,7 @@ task.
 4.) Modify the paths for data_root, json_path, pretrained_weights_path from 2.) and 
 logdir_path in 'ssl_finetuning_train.py'\
 5.) Run the ssl_finetuning_script.py\
-6.) And that's all folks, happy observing the plots
+6.) And that's all folks, use the model to your needs
 
 ### 1.Data
 Pretraining Dataset: The TCIA Covid-19 dataset was used for generating the pretrained weights.
@@ -40,13 +40,14 @@ Medical Image Analysis 69 (2021): 101894.
 
 ### 2. Network Architectures
 
-For pretraining the ViT [1] has been used. It was modified by attachment of two 3D Convolutional Transpose Layers
-to achieve a similar reconstruction size as that of the input image. The ViT is the backbone for the UNETR [2] network
-architecture which was used for the fine-tuning fully supervised tasks.
+For pretraining a modified version of ViT [1] has been used, it can be referred [here](https://docs.monai.io/en/latest/networks.html#vitautoenc) 
+from MONAI. The original ViT was modified by attachment of two 3D Convolutional Transpose Layers to achieve a similar 
+reconstruction size as that of the input image. The ViT is the backbone for the UNETR [2] network architecture which was
+used for the fine-tuning fully supervised tasks.
 
 The pretrained backbone of ViT weights were loaded to UNETR and the decoder head still relies on random initialization 
-for flexibility. This flexibility also allows the user to adapt the ViT backbone to their own custom created network 
-architecture which uses the ViT backbone.
+for adaptability of the new downstream task. This flexibility also allows the user to adapt the ViT backbone to their 
+own custom created network architectures as well which uses the ViT backbone.
 
 References:
 
@@ -58,19 +59,40 @@ arXiv preprint arXiv:2103.10504 (2021).
 
 ### 3. Self-supervised Tasks
 
-The pretraining pipeline relies upon different augmentations of a selected 3D patch from a 3D volume. 
-The augmentations mutate the 3D patch in different ways and the task of the network is to reconstruct 
-the original image. Different augmentations have been used such as dropping random sized patches also 
-commonly known as in-painting [CITE]. The opposite of it has also been used as an alternative. Noise also 
-is added randomly to the 3D patches.
+The pretraining pipeline has two aspects to it. The first it uses augmentation to mutate the data and the second is 
+it utilizes to a regularized [constrastive loss](https://docs.monai.io/en/latest/losses.html#contrastiveloss) [3] to 
+learn feature representations of the unlabeled data. The multiple augmentations are applied on a randomly selected 3D 
+foreground patch from a 3D volume. Two augmented views of the same 3D patch are generated for the constrastive loss as 
+it functions by drawing the two augmented views closer to each other.
 
-The below example image depicts the usage of the augmentations pipeline:
+The augmentations mutate the 3D patch in different ways and the primary task of the network is to reconstruct 
+the original image. The different augmentations used are classical techniques such as in-painting [1], out-painting [1] 
+and noise augmentation to the image by local pixel shuffling [2]. The secondary task of the network is to simultaneously
+reconstruct the two augmented views as similar to each other as possible via the regularized contrastive loss [3] as it's 
+objective is to maximize the agreement. The term regularized has been used here because the contrastive loss is adjusted
+by the reconstruction loss as a dynamic weight itself.
 
-![image](../figures/ssl_data_pipeline_figure.png)
+The below example image depicts the usage of the augmentations pipeline where two augmented views are drawn of the same
+3D patch:
+
+![image](../figures/ssl_aug_views.png)
 
 The three columns are the three views of axial, coronal, sagittal of a randomly selected patch of size 96x96x96.
-The top row is the ground truth image which is undistorted. The bottom row is the same image when mutated by augmentations.
-The objective of the SSL network is to reconstruct the original top row image
+The top row is the ground truth image which is not augmented. The middle row is the same image when mutated by augmentations.
+The bottom row is a 2nd view of the same patch but augmented with different probabilities
+The objective of the SSL network is to reconstruct the original top row image from the first view. The contrastive loss 
+is driven by maximizing agreement of the reconstruction based on input of the two augmented views .
+
+References:
+
+1.) Pathak, Deepak, et al. "Context encoders: Feature learning by inpainting." Proceedings of the IEEE conference on 
+   computer vision and pattern recognition. 2016.
+   
+2.) Chen, Liang, et al. "Self-supervised learning for medical image analysis using image context restoration." Medical 
+image analysis 58 (2019): 101539.
+
+3.) Chen, Ting, et al. "A simple framework for contrastive learning of visual representations." International conference
+on machine learning. PMLR, 2020.
 
 ### 4. Experiment Hyper-parameters
 
@@ -80,26 +102,27 @@ Validation Frequency: 2 \
 Learning Rate: 1e-4 \
 Batch size: 4 3D Volumes (Total of 8 as 2 samples were drawn per 3D Volume) \
 Loss Function: L1 
+Contrastive Loss Temperature: 0.005
 
-Training Hyper-parameters for Fine-tuning BTCV task (All settings have been kept consistent with prior UNETR 3D 
-Segmentation tutorial (PUT THE LINK HERE)): \
+Training Hyper-parameters for Fine-tuning BTCV task (All settings have been kept consistent with prior [UNETR 3D 
+Segmentation tutorial](https://github.com/Project-MONAI/tutorials/blob/master/3d_segmentation/unetr_btcv_segmentation_3d.ipynb)): \
 Number of Steps: 30000 \
 Validation Frequency: 100 steps \
 Batch Size: 1 3D Volume (4 samples are drawn per 3D volume) \
 Learning Rate: 1e-4 \
 Loss Function: DiceCELoss 
 
-### 4. Show the Training & Validation Curves for pretraining SSL
+### 4. Training & Validation Curves for pretraining SSL
 
-![image](../figures/ssl_pretrain_losses_all_data.png)
+![image](../figures/ssl_pretrain_losses.png)
 
 L1 error reported for training and validation when performing the SSL training
 
-### 5. Show the results of the Fine-tuning vs Random Initialization
+### 5. Results of the Fine-tuning vs Random Initialization on BTCV
 
-| Training Volumes      | Validation Volumes | Random Init Dice score | Pretrained Dice Score | Performance Improvement |
+| Training Volumes      | Validation Volumes | Random Init Dice score | Pretrained Dice Score | Relative Performance Improvement |
 | ----------------      | ----------------   | ----------------       | ----------------      | ----------------        |
-| 6      | 6 | 63.07 | 70.08 | ~7% |
-| 12      | 6 | 76.06 | 79.86 | ~4% |
-| 24      | 6 | 78.91 | 81.62 | ~2.5% |
+| 6      | 6 | 63.07 | 70.09 | ~11.13% |
+| 12      | 6 | 76.06 | 79.55 | ~4.58% |
+| 24      | 6 | 78.91 | 82.30 | ~4.29% |
 

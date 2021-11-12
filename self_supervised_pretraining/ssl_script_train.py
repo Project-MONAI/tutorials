@@ -8,7 +8,7 @@ from torch.nn import L1Loss
 from monai.utils import set_determinism, first
 from monai.networks.nets import ViTAutoEnc
 from monai.losses import ContrastiveLoss
-from monai.data import CacheDataset, DataLoader, Dataset
+from monai.data import DataLoader, Dataset
 from monai.transforms import (
     LoadImaged,
     Compose,
@@ -102,26 +102,28 @@ def main():
 
     model = model.to(device)
 
-    recon_loss = L1Loss()
-    contrastive_loss = ContrastiveLoss(batch_size=4*2, temperature=0.05)
-    optimizer = torch.optim.Adam(model.parameters(), 1e-4)
-
-    # Define DataLoader using MONAI, CacheDataset needs to be used
-    train_ds = Dataset(data=train_Data, transform=train_Transforms)
-    train_loader = DataLoader(train_ds, batch_size=4, shuffle=True, num_workers=4)
-
-    val_ds = Dataset(data=val_Data, transform=train_Transforms)
-    val_loader = DataLoader(val_ds, batch_size=4, shuffle=True, num_workers=4)
-
     # Define Hyper-paramters for training loop
     max_epochs = 500
     val_interval = 2
+    batch_size = 4
+    lr = 1e-4
     epoch_loss_values = []
     step_loss_values = []
     epoch_cl_loss_values = []
     epoch_recon_loss_values = []
     val_loss_values = []
     best_val_loss = 1000.0
+
+    recon_loss = L1Loss()
+    contrastive_loss = ContrastiveLoss(batch_size=batch_size*2, temperature=0.05)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+
+    # Define DataLoader using MONAI, CacheDataset needs to be used
+    train_ds = Dataset(data=train_Data, transform=train_Transforms)
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=4)
+
+    val_ds = Dataset(data=val_Data, transform=train_Transforms)
+    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=True, num_workers=4)
 
     for epoch in range(max_epochs):
         print("-" * 10)
@@ -199,13 +201,6 @@ def main():
             total_val_loss /= step
             val_loss_values.append(total_val_loss)
             print(f"epoch {epoch + 1} Validation average loss: {total_val_loss:.4f}, " f"time taken: {end_time-start_time}s")
-
-            t_dict = {}
-            t_dict['step_losses'] = step_loss_values
-            t_dict['epoch_losses'] = epoch_loss_values
-            t_dict['contrastive_epoch_loss'] = epoch_cl_loss_values
-            t_dict['recon_epoch_loss'] = epoch_recon_loss_values
-            t_dict['val_losses'] = val_loss_values
 
             if total_val_loss < best_val_loss:
                 print(f"Saving new model based on validation loss {total_val_loss:.4f}")

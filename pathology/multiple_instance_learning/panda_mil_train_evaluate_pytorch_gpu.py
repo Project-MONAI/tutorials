@@ -1,13 +1,10 @@
-
-#dependencies to load .tiff WSI image
-#pip install tifffile imagecodecs
-
-import collections.abc
 import os
-import json
 import time
 import shutil
 import argparse
+import copy
+import collections.abc
+from typing import Dict, Hashable, Mapping, Sequence, Any, Union, Optional, List, cast
 
 import numpy as np
 from numpy.lib.stride_tricks import as_strided
@@ -15,63 +12,55 @@ from sklearn.metrics import cohen_kappa_score
 
 import torch
 import torch.nn as nn
-# import torch.nn.functional as F
-
 from torch.utils.tensorboard import SummaryWriter
 from torch.cuda.amp import GradScaler, autocast
 from torch.utils.data.distributed import DistributedSampler
+from torch.utils.data.dataloader import default_collate
 
 import torch.nn.parallel
 import torch.distributed as dist
 import torch.multiprocessing as mp
 
-import tifffile #pip install it
+
 from monai import transforms, data
 from monai.data.image_reader import WSIReader
+from monai.metrics import CumulativeAverage, Cumulative
+from monai.data import load_decathlon_datalist
 
-from monai.data.image_reader import WSIReader
-from monai.networks.nets import MilMode, MILModel #to be added
-from monai.apps.pathology.transforms import TileOnGridd #to be added
 
 def parse_args():
 
-    parser = argparse.ArgumentParser(description='MIL example')
+    parser = argparse.ArgumentParser(description='Multiple Instance Learning (MIL) example on WSI images.')
+    parser.add_argument('--data_root', default='/PandaChallenge2020/train_images/', help="path to root folder of images")
+    parser.add_argument('--dataset_json', default='./datalist_panda_0.json', help="path to dataset json file")
 
-    parser.add_argument('--num_classes', default=5, type=int)
-    parser.add_argument('--max_tiles', default=44, type=int)
-    parser.add_argument('--tile_size', default=256, type=int)
-    parser.add_argument('--data_dir', default='/PandaChallenge2020/train_images/')
+    parser.add_argument('--num_classes', default=5, type=int, help="number of output classes")
+    parser.add_argument('--mil_mode', default='att_trans', help="MIL algorithm")
+    parser.add_argument('--tile_count', default=44, type=int, help="number of patches (instances) to extract from WSI image")
+    parser.add_argument('--tile_size', default=256, type=int, help="size of square patch (instance) in pixels")
 
-    parser.add_argument('--checkpoint', default=None)
-    parser.add_argument('--logdir', default=None)
-    parser.add_argument('--epochs', default=50, type=int)
-    parser.add_argument('--batch_size', default=1, type=int)
-    parser.add_argument('--fold', default=0, type=int)
-    # parser.add_argument('--checkpoint_fromscratch', action='store_true')
+    parser.add_argument('--checkpoint', default=None, help="load existing checkpoint, otherwise random intialization")
+    parser.add_argument('--validate', action='store_true', help="run only inference on the validation set, must specify the checkpoint argument")
 
-    parser.add_argument('--optim_lr', default=3e-5, type=float)
-    parser.add_argument('--optim_trans_lr', default=None, type=float)
+    parser.add_argument('--logdir', default=None, help="path to log directory to store Tensorboard logs")
 
-    parser.add_argument('--quick', action='store_true') #distributed multi gpu
-    parser.add_argument('--amp', action='store_true') #experimental
-    parser.add_argument('--val_every', default=1, type=int)
-
-    parser.add_argument('--mil_mode', default='att')
-    parser.add_argument('--reg_weight', default=0, type=float)
-    parser.add_argument('--optim_trans_reg_weight', default=0, type=float)
-    parser.add_argument('--validation_only', action='store_true')
+    parser.add_argument('--epochs', default=50, type=int, help="number of training epochs")
+    parser.add_argument('--batch_size', default=4, type=int, help="batch size, the number of WSI images per gpu")
+    parser.add_argument('--optim_lr', default=3e-5, type=float, help="initial learning rate")
+    parser.add_argument('--weight_decay', default=0, type=float, help="optimizer weight decay")
+    parser.add_argument('--amp', action='store_true', help="use AMP, recommended")
+    parser.add_argument('--val_every', default=1, type=int, help="run validation after this number of epochs, default 1 to run every epoch")
+    parser.add_argument('--workers', default=2, type=int, help="number of workers for data loading")
 
     ###for multigpu
-    parser.add_argument('--distributed', action='store_true') #distributed multi gpu
-    parser.add_argument('--world_size', default=1, type=int, help='number of nodes for distributed training')
-    parser.add_argument('--rank', default=0, type=int, help='node rank for distributed training')
-    parser.add_argument('--dist-url', default='tcp://127.0.0.1:23456', type=str,  help='url used to set up distributed training')
-    parser.add_argument('--dist-backend', default='nccl', type=str, help='distributed backend')
-    parser.add_argument('--workers', default=2, type=int)
+    parser.add_argument('--distributed', action='store_true', help="use multigpu training, recommended")
+    parser.add_argument('--world_size', default=1, type=int, help="number of nodes for distributed training")
+    parser.add_argument('--rank', default=0, type=int, help="node rank for distributed training")
+    parser.add_argument('--dist-url', default='tcp://127.0.0.1:23456', type=str,  help="url used to set up distributed training")
+    parser.add_argument('--dist-backend', default='nccl', type=str, help="distributed backend")
 
-    parser.add_argument('--tf', action='store_true')
-    parser.add_argument('--normback', action='store_true')
-    parser.add_argument('--collate', action='store_true')
+
+    parser.add_argument('--quick', action='store_true', help="use a small subset of data for debugging") # for debugging
 
 
     args = parser.parse_args()
@@ -84,77 +73,17 @@ def parse_args():
     return args
 
 
-
-#can be removed
-class NormalizeBackground():
-
-    def __init__( self, keys=['image'], tile_background_val=255):
-        super().__init__()
-        self.keys = keys
-        self.tile_background_val=tile_background_val
-
-    def __call__(self, data):
-
-        if self.tile_background_val >0:
-            d = dict(data)
-
-            for key in self.keys:
-                img = d[key]
-                # print('NormalizeBackground', img.shape, img.dtype)
-                d[key] = (self.tile_background_val - img).astype(np.float32) / float(self.tile_background_val)
-        return d
-
-class AverageMeter():
-    """Computes and stores the average and current value"""
-    def __init__(self):
-        self.reset()
-
-    def reset(self):
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
-
-    def update(self, val, n=1):
-
-        if not np.isfinite(np.sum(val)):
-            val = 0
-
-        if n > 0:
-            self.val = val
-            self.sum += val * n
-
-            self.count += n
-            self.avg = np.where(self.count > 0, self.sum / self.count, self.sum)
-
-
-def distributed_all_gather(tensor_list, out_numpy=False):
-    """gathers values in tensor_list from all gpus"""
-    world_size = torch.distributed.get_world_size()
-
-    tensor_list_out = []
-    for tensor in tensor_list:
-        gather_list = [torch.zeros_like(tensor) for _ in range(world_size)]
-        torch.distributed.all_gather(gather_list, tensor)
-
-        if out_numpy:
-            gather_list = [t.cpu().numpy() for t in gather_list] #convert to numpy
-
-        tensor_list_out.append(gather_list)
-
-    return tensor_list_out
-
-
 def train_epoch(model, loader, optimizer, scaler, epoch, args):
     '''One train epoch over the dataset'''
 
     model.train()
     criterion = nn.BCEWithLogitsLoss()
 
-    run_loss = AverageMeter()
-    run_acc = AverageMeter()
+    run_loss = CumulativeAverage()
+    run_acc = CumulativeAverage()
 
     start_time = time.time()
+    loss, acc = 0., 0.
 
     for idx, batch_data in enumerate(loader):
 
@@ -178,26 +107,22 @@ def train_epoch(model, loader, optimizer, scaler, epoch, args):
 
         acc = (logits.sigmoid().sum(1).detach().round() == target.sum(1).round()).float().mean()
 
-        if args.distributed:
-            loss_list, acc_list = distributed_all_gather([loss, acc], out_numpy=True)
-            loss = np.mean(np.stack(loss_list, axis=0))
-            acc = np.mean(np.stack(acc_list, axis=0), axis=0)
-        else:
-            loss = loss.item()
-            acc = acc.cpu().numpy()
+        run_loss.append(loss)
+        run_acc.append(acc)
+
+        loss = run_loss.aggregate()
+        acc = run_acc.aggregate()
 
 
-        run_loss.update(loss, n=args.batch_size * args.world_size)
-        run_acc.update(acc, n=args.batch_size * args.world_size)
 
         if args.rank==0:
             print('Epoch {}/{} {}/{}'.format(epoch, args.epochs, idx, len(loader)),
-                  'loss: {:.4f}'.format(run_loss.avg),
-                  'acc: {:.4f}'.format(run_acc.avg),
+                  'loss: {:.4f}'.format(loss),
+                  'acc: {:.4f}'.format(acc),
                   'time {:.2f}s'.format(time.time() - start_time))
         start_time = time.time()
 
-    return run_loss.avg, run_acc.avg
+    return loss, acc
 
 
 def val_epoch(model, loader, epoch, args, max_tiles=None):
@@ -206,20 +131,20 @@ def val_epoch(model, loader, epoch, args, max_tiles=None):
     model.eval()
 
     model2 = model if not args.distributed else model.module
-    has_extra_outputs = (model2.mil_mode=='att_trans_pyramid')
+    has_extra_outputs = (model2.mil_mode=="att_trans_pyramid")
     extra_outputs = model2.extra_outputs
     calc_head = model2.calc_head
 
-
     criterion = nn.BCEWithLogitsLoss()
 
-    run_loss = AverageMeter()
-    run_acc = AverageMeter()
+    run_loss = CumulativeAverage()
+    run_acc = CumulativeAverage()
+
     start_time = time.time()
+    PREDS = Cumulative()
+    TARGETS = Cumulative()
 
-
-    PREDS = []
-    TARGETS = []
+    loss, acc = 0., 0.
 
     with torch.no_grad():
 
@@ -231,16 +156,12 @@ def val_epoch(model, loader, epoch, args, max_tiles=None):
 
                 if max_tiles is not None and data.shape[1] > max_tiles:
 
-                    # print('data is too large', data.shape, 'max_tiles', max_tiles)
                     logits = []
                     logits2 =  []
-                    sh = data.shape
 
                     for i in range(int(np.ceil(data.shape[1]/float(max_tiles)))):
                         data_slize = data[:,i*max_tiles:(i+1)*max_tiles]
-                        # print('taking slice0', i, data_slize.shape)
                         logits_slize = model(data_slize, no_head=True)
-                        # print('taking slice', i, data_slize.shape, logits_slize.shape)
                         logits.append(logits_slize)
 
                         if has_extra_outputs:
@@ -248,17 +169,15 @@ def val_epoch(model, loader, epoch, args, max_tiles=None):
 
 
                     logits = torch.cat(logits, dim=1)
-                    # print('combined slice  logits', logits.shape)
                     if has_extra_outputs:
-                        extra_outputs['layer1'] = torch.cat([l[0] for l in logits2], dim=1)
-                        extra_outputs['layer2'] = torch.cat([l[1] for l in logits2], dim=1)
-                        extra_outputs['layer3'] = torch.cat([l[2] for l in logits2], dim=1)
-                        extra_outputs['layer4'] = torch.cat([l[3] for l in logits2], dim=1)
+                        extra_outputs['layer1'] = torch.cat([l[0] for l in logits2], dim=0)
+                        extra_outputs['layer2'] = torch.cat([l[1] for l in logits2], dim=0)
+                        extra_outputs['layer3'] = torch.cat([l[2] for l in logits2], dim=0)
+                        extra_outputs['layer4'] = torch.cat([l[3] for l in logits2], dim=0)
 
                     logits = calc_head(logits)
-                    # print('final slice  logits', logits.shape)
 
-                else: #normal
+                else: #
                     logits = model(data)
 
 
@@ -269,42 +188,29 @@ def val_epoch(model, loader, epoch, args, max_tiles=None):
             target = target.sum(1).round()
             acc = (pred == target).float().mean()
 
-            if args.distributed:
-                loss_list, acc_list, pred_list, target_list = distributed_all_gather([loss, acc, pred, target], out_numpy=True)
-                loss = np.mean(np.stack(loss_list, axis=0))
-                acc = np.mean(np.stack(acc_list, axis=0), axis=0)
+            run_loss.append(loss)
+            run_acc.append(acc)
+            loss = run_loss.aggregate()
+            acc = run_acc.aggregate()
 
-                PREDS.extend(pred_list)
-                TARGETS.extend(target_list)
-
-            else:
-                loss = loss.item()
-                acc = acc.cpu().numpy()
-
-                PREDS.append(pred.cpu().numpy())
-                TARGETS.append(target.cpu().numpy())
-
-
-            run_loss.update(loss, n=args.batch_size * args.world_size)
-            run_acc.update(acc, n=args.batch_size * args.world_size)
+            PREDS.extend(pred)
+            TARGETS.extend(target)
 
             if args.rank==0:
                 print('Val epoch {}/{} {}/{}'.format(epoch, args.epochs, idx, len(loader)),
-                      'loss: {:.4f}'.format(run_loss.avg),
-                      'acc: {:.4f}'.format(run_acc.avg),
+                      'loss: {:.4f}'.format(loss),
+                      'acc: {:.4f}'.format(acc),
                       'time {:.2f}s'.format(time.time() - start_time))
             start_time = time.time()
 
 
-        #Calculate QWK metric (Quadratic Weigted Kappa)
-        #https://en.wikipedia.org/wiki/Cohen%27s_kappa
-
-        PREDS = np.concatenate(PREDS)
-        TARGETS = np.concatenate(TARGETS)
+        #Calculate QWK metric (Quadratic Weigted Kappa) https://en.wikipedia.org/wiki/Cohen%27s_kappa
+        PREDS = PREDS.get_buffer().cpu().numpy()
+        TARGETS = TARGETS.get_buffer().cpu().numpy()
         qwk = cohen_kappa_score(PREDS.astype(np.float64), TARGETS.astype(np.float64), weights='quadratic')
 
 
-    return run_loss.avg, run_acc.avg, qwk
+    return loss, acc, qwk
 
 
 def save_checkpoint(model, epoch, args, filename='model.tar', best_acc=0):
@@ -323,47 +229,11 @@ def save_checkpoint(model, epoch, args, filename='model.tar', best_acc=0):
     print('Saving checkpoint', filename)
 
 
-
-
-###  can be removed when WSIReader supports tiffile
-class LoadTiffd():
-    """
-    Load TIFF image
-
-    Args:
-        keys: keys of the corresponding items to be transformed
-            Defaults to ``['image']``.
-        level: page index to read from multi-page TIFF file, where 0 correspond to highest resolution
-            Defaults to ``1``.
-
-    """
-    def __init__( self, keys=['image'], level=1) :
-        super().__init__()
-        self.keys = keys
-        self.level=level
-
-
-    def __call__(self, data):
-
-        if isinstance(data, str):
-            data = json.loads(data)
-
-        d = dict(data)
-        for key in self.keys:
-            image_path = d[key]
-
-            image = tifffile.imread(image_path, key=self.level)
-            image = image.transpose(2,0,1) #convert to 3xWxH
-
-            d[key] = image
-
-        return d
-
 class LabelEncodeIntegerGraded(transforms.Transform):
     """
     Convert to integer label to encoded array representation of length num_classes,
-    with 1 filled in up to label index, and 0 otherwise. For example for num_classes=5,
-    embedding of 2 -> (1,1,0,0,0)
+    with 1 filled in up to label index, and 0 otherwise. For example for num_classes=5, 
+    embedding of 2 -> (1,1,0,0,0) 
 
     Args:
         num_classes: the number of classes to convert to encoded format.
@@ -379,54 +249,13 @@ class LabelEncodeIntegerGraded(transforms.Transform):
     def __call__(self, data):
 
         d = dict(data)
-
         for key in self.keys:
             label = int(d[key])
 
             lz = np.zeros(self.num_classes, dtype=np.float32)
             lz[:label] = 1.
-            # lz=(np.arange(self.num_classes)<int(label)).astype(np.float32) #same oneliner
-
+            # alternative oneliner lz=(np.arange(self.num_classes)<int(label)).astype(np.float32) #same oneliner
             d[key] = lz
-
-        return d
-
-
-# can be removed still here for speed comparison
-class SimpleTileFlip():
-    """
-    Random flip, transpose of 2D images in a batch.  It operates on the batch data,
-    and cycles through all images in the batch to apply random flips.  The flips and transpose are views (without memory copy)
-
-    Args:
-        keys: keys of the corresponding items to be transformed
-            Defaults to ``['image']``.
-        p: probability of transform
-            Defaults to ``0.5``.
-
-    """
-    def __init__( self, keys, p=0.5) :
-        super().__init__()
-        self.keys = keys
-        self.p=p
-
-    def __call__(self, data):
-
-        d = dict(data)
-
-        for key in self.keys:
-            images = d[key]
-            images2=[]
-
-            for i in range(images.shape[0]):
-
-                img = images[i]
-                if np.random.random() > self.p: img = np.flip(img, axis=1)
-                if np.random.random() > self.p: img = np.flip(img, axis=2)
-                if np.random.random() > self.p: img = np.transpose(img, axes=(0,2,1))
-                images2.append(img)
-
-            d[key] = np.stack(images2, axis=0)
 
         return d
 
@@ -434,20 +263,20 @@ class SimpleTileFlip():
 def main():
 
     args = parse_args()
-    args.mil_mode=MilMode(args.mil_mode)
 
     if args.distributed:
         ngpus_per_node = torch.cuda.device_count()
         args.optim_lr = ngpus_per_node * args.optim_lr / 2 #heuristic to scale up learning rate in multigpu setup
         args.world_size = ngpus_per_node * args.world_size
 
-        print('Multi-gpu', ngpus_per_node, 'rescaled lr', args.optim_lr)
+        print('Multigpu', ngpus_per_node, 'rescaled lr', args.optim_lr)
         mp.spawn(main_worker, nprocs=ngpus_per_node, args=(args,))
     else:
-        # Simply call main_worker function
         main_worker(0, args)
 
-from torch.utils.data.dataloader import default_collate
+#combine instances from a list of dicts into a single dict, by stacking them along first dim
+# [{'image' : 3xHxW}, {'image' : 3xHxW}, {'image' : 3xHxW}...] - > {'image' : Nx3xHxW}
+# followed by the default collate which will form a batch BxNx3xHxW
 def list_data_collate(batch: collections.abc.Sequence):
     for i, item in enumerate(batch):
         data = item[0]
@@ -455,11 +284,9 @@ def list_data_collate(batch: collections.abc.Sequence):
         batch[i] = data
     return default_collate(batch)
 
-
 def main_worker(gpu, args):
 
     args.gpu = gpu
-
 
     if args.distributed:
         args.rank = args.rank * torch.cuda.device_count() + gpu
@@ -474,73 +301,45 @@ def main_worker(gpu, args):
         print('Batch size is:', args.batch_size, 'epochs', args.epochs)
 
     #############
+    # Create MONAI dataset
+    training_list = load_decathlon_datalist(
+        data_list_file_path=args.dataset_json,
+        data_list_key="training",
+        base_dir=args.data_root,
+    )
+    validation_list = load_decathlon_datalist(
+        data_list_file_path=args.dataset_json,
+        data_list_key="validation",
+        base_dir=args.data_root,
+    )
 
-    with open('panda_training_fold0.json') as json_file:
-        training_list = json.load(json_file)
-        for d in training_list:
-            d['image'] = os.path.join(args.data_dir, d['image'])
-
-    with open('panda_validation_fold0.json') as json_file:
-        validation_list = json.load(json_file)
-        for d in validation_list:
-            d['image'] = os.path.join(args.data_dir, d['image'])
-
-
-    load_image_transform =  LoadTiffd(keys=["image"]) if args.tf else transforms.LoadImageD(keys=["image"], reader=WSIReader, backend="cuCIM", dtype=np.uint8, level=1)
-    normalize_image_transform = NormalizeBackground() if args.normback else transforms.ScaleIntensityRangeD(keys=["image"], a_min=np.float32(255), a_max=np.float32(0), b_min=np.float32(0), b_max=np.float32(1), clip=False)
-
-
-    if args.collate:
-        train_transform = transforms.Compose(
-            [
-                load_image_transform,
-                LabelEncodeIntegerGraded(keys=["label"], num_classes=args.num_classes), #encode label
-                # transforms.Lambdad(keys=["label"], func=lambda x: (np.arange(num_classes)<int(x)).astype(np.float32)), #encode label (same but can't pickle for multiprocessing in dataloader)
-                TileOnGridd(keys=["image"], tile_count=args.max_tiles, tile_size=args.tile_size, tile_random_offset=True, tile_all=False, tile_background_val=255, return_list_of_dicts=True),
-                transforms.RandFlipd(keys=["image"], spatial_axis=0, prob=0.5),
-                transforms.RandFlipd(keys=["image"], spatial_axis=1, prob=0.5),
-                transforms.RandRotate90d(keys=["image"], prob=0.5),
-                normalize_image_transform,
-                transforms.ToTensord(keys=["image", "label"]),
-            ]
-        )
-
-        valid_transform = transforms.Compose(
-            [
-                load_image_transform,
-                LabelEncodeIntegerGraded(keys=["label"], num_classes=args.num_classes), #encode label
-                TileOnGridd(keys=["image"], tile_count=args.max_tiles, tile_size=args.tile_size, tile_random_offset=False, tile_all=True, tile_background_val=255, return_list_of_dicts=True),
-                normalize_image_transform,
-                transforms.ToTensord(keys=["image", "label"]),
-            ]
-        )
-    else:
-        train_transform = transforms.Compose(
-            [
-                load_image_transform,
-                LabelEncodeIntegerGraded(keys=["label"], num_classes=args.num_classes), #encode label
-                TileOnGridd(keys=["image"], tile_count=args.max_tiles, tile_size=args.tile_size, tile_random_offset=True, tile_all=False, tile_background_val=255, return_list_of_dicts=False),
-                SimpleTileFlip(keys=["image"]),
-                normalize_image_transform,
-                transforms.ToTensord(keys=["image", "label"]),
-            ]
-        )
-
-        valid_transform = transforms.Compose(
-            [
-                load_image_transform,
-                LabelEncodeIntegerGraded(keys=["label"], num_classes=args.num_classes), #encode label
-                TileOnGridd(keys=["image"], tile_count=args.max_tiles, tile_size=args.tile_size, tile_random_offset=False, tile_all=True, tile_background_val=255, return_list_of_dicts=False),
-                normalize_image_transform,
-                transforms.ToTensord(keys=["image", "label"]),
-            ]
-        )
-
-
-
-    if args.quick: #TODO, remove later
+    if args.quick: #for debugging on a small subset
         training_list = training_list[:16]
         validation_list = validation_list[:16]
+
+
+    train_transform = transforms.Compose(
+        [
+            transforms.LoadImageD(keys=["image"], reader=WSIReader, backend="TiffFile", dtype=np.uint8, level=1, image_only=True),
+            LabelEncodeIntegerGraded(keys=["label"], num_classes=args.num_classes),
+            TileOnGridd(keys=["image"], tile_count=args.tile_count, tile_size=args.tile_size, random_offset=True, background_val=255, return_list_of_dicts=True),
+            transforms.RandFlipd(keys=["image"], spatial_axis=0, prob=0.5),
+            transforms.RandFlipd(keys=["image"], spatial_axis=1, prob=0.5),
+            transforms.RandRotate90d(keys=["image"], prob=0.5),
+            transforms.ScaleIntensityRangeD(keys=["image"], a_min=np.float32(255), a_max=np.float32(0)),
+            transforms.ToTensord(keys=["image", "label"]),
+        ]
+    )
+
+    valid_transform = transforms.Compose(
+        [
+            transforms.LoadImageD(keys=["image"], reader=WSIReader, backend="TiffFile", dtype=np.uint8, level=1, image_only=True),
+            LabelEncodeIntegerGraded(keys=["label"], num_classes=args.num_classes),
+            TileOnGridd(keys=["image"], tile_count=None, tile_size=args.tile_size, random_offset=False, background_val=255, return_list_of_dicts=True),
+            transforms.ScaleIntensityRangeD(keys=["image"], a_min=np.float32(255), a_max=np.float32(0)),
+            transforms.ToTensord(keys=["image", "label"]),
+        ]
+    )
 
     dataset_train = data.Dataset(data=training_list, transform=train_transform)
     dataset_valid = data.Dataset(data=validation_list, transform=valid_transform)
@@ -548,18 +347,11 @@ def main_worker(gpu, args):
     train_sampler = DistributedSampler(dataset_train) if args.distributed else None
     val_sampler = DistributedSampler(dataset_valid, shuffle=False) if args.distributed else None
 
-    collate_fn=None
+    train_loader = torch.utils.data.DataLoader(dataset_train, batch_size=args.batch_size, shuffle=(train_sampler is None), num_workers=args.workers, pin_memory=False, multiprocessing_context='spawn', sampler=train_sampler, collate_fn=list_data_collate)
+    valid_loader = torch.utils.data.DataLoader(dataset_valid, batch_size=1, shuffle=False, num_workers=args.workers, pin_memory=False, multiprocessing_context='spawn', sampler=val_sampler, collate_fn=list_data_collate)
 
-    if args.collate:
-        collate_fn=list_data_collate
-
-
-
-    train_loader = torch.utils.data.DataLoader(dataset_train, batch_size=args.batch_size, shuffle=(train_sampler is None), num_workers=args.workers, pin_memory=False, multiprocessing_context='spawn', sampler=train_sampler, collate_fn=collate_fn)
-    valid_loader = torch.utils.data.DataLoader(dataset_valid, batch_size=1, shuffle=False, num_workers=args.workers, pin_memory=False, multiprocessing_context='spawn', sampler=val_sampler, collate_fn=collate_fn)
-
-    print('Data train:', len(dataset_train), 'validation:', len(dataset_valid))
-
+    if args.rank==0:
+        print('Dataset training:', len(dataset_train), 'validation:', len(dataset_valid))
 
     os.environ["TORCH_HOME"] = "../../torchhome" #TODO, remove later
     model = MILModel(num_classes=args.num_classes, pretrained=True, mil_mode=args.mil_mode)
@@ -578,31 +370,29 @@ def main_worker(gpu, args):
 
     if args.distributed:
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
-        model.cuda(args.gpu)
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], output_device=args.gpu)
 
     params = model.parameters()
 
-    if args.mil_mode in [MilMode.ATT_TRANS, MilMode.ATT_TRANS_PYRAMID]:
+    if args.mil_mode in ["att_trans", "att_trans_pyramid"]:
         m = model if not args.distributed else model.module
         params = [{'params': list(m.attention.parameters()) + list(m.myfc.parameters()) + list(m.net.parameters())},
                   {'params':  list(m.transformer.parameters()), 'lr': 3e-6, 'weight_decay': 0.1 }]
 
 
-    optimizer = torch.optim.AdamW(params, lr=args.optim_lr, weight_decay = args.reg_weight)
+    optimizer = torch.optim.AdamW(params, lr=args.optim_lr, weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=0)
-
-
 
     if args.logdir is not None and args.rank == 0:
         writer = SummaryWriter(log_dir=args.logdir)
-        if args.rank==0: print('Writing Tensorboard logs to ', writer.log_dir)
+        if args.rank==0:
+            print('Writing Tensorboard logs to ', writer.log_dir)
     else:
         writer = None
 
-    if args.validation_only:
+    if args.validate:
         epoch_time = time.time()
-        val_loss, val_acc, qwk = val_epoch(model, valid_loader, epoch=0, args=args, max_tiles=args.max_tiles)
+        val_loss, val_acc, qwk = val_epoch(model, valid_loader, epoch=0, args=args, max_tiles=args.tile_count)
         if args.rank == 0:
             print('Final validation loss: {:.4f}'.format(val_loss), 'acc: {:.4f}'.format(val_acc), 'qwk: {:.4f}'.format(qwk), 'time {:.2f}s'.format(time.time() - epoch_time))
 
@@ -622,7 +412,7 @@ def main_worker(gpu, args):
 
         if args.distributed:
             train_sampler.set_epoch(epoch)
-            torch.distributed.barrier() #synch processess
+            torch.distributed.barrier()
 
         print(args.rank, time.ctime(), 'Epoch:', epoch)
 
@@ -639,7 +429,7 @@ def main_worker(gpu, args):
 
 
         if args.distributed:
-            torch.distributed.barrier() #synch processess
+            torch.distributed.barrier()
 
 
         b_new_best=False
@@ -647,7 +437,7 @@ def main_worker(gpu, args):
         if ( (epoch+1) % args.val_every == 0):
 
             epoch_time = time.time()
-            val_loss, val_acc, qwk = val_epoch(model, valid_loader, epoch=epoch, args=args, max_tiles=args.max_tiles)
+            val_loss, val_acc, qwk = val_epoch(model, valid_loader, epoch=epoch, args=args, max_tiles=args.tile_count)
             if args.rank == 0:
                 print('Final validation  {}/{}'.format(epoch, n_epochs - 1), 'loss: {:.4f}'.format(val_loss),
                       'acc: {:.4f}'.format(val_acc),'qwk: {:.4f}'.format(qwk),  'time {:.2f}s'.format(time.time() - epoch_time))

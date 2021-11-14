@@ -35,7 +35,6 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" csv_datasets.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" UNet_input_size_constrains.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" network_api.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" tcia_csv_processing.ipynb)
-doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" benchmark_global_mutual_information.ipynb)
 
 # output formatting
 separator=""
@@ -57,7 +56,11 @@ doChecks=true
 doRun=true
 autofix=false
 failfast=false
-pattern="-and -name '*' -and ! -wholename '*federated_learning*' -and ! -wholename '*unetr_btcv*' -and ! -wholename '*profiling_camelyon*' -and ! -wholename '*profiling_train_base_nvtx*'"
+pattern="-and -name '*' -and ! -wholename '*federated_learning*'\
+ -and ! -wholename '*unetr_btcv*'\
+ -and ! -wholename '*profiling_camelyon*'\
+ -and ! -wholename '*profiling_train_base_nvtx*'\
+ -and ! -wholename '*benchmark_global_mutual_information*'"
 kernelspec="python3"
 
 function print_usage {

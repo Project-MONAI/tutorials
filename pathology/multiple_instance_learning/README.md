@@ -2,7 +2,7 @@
 
 ## Description
 
-This tutorial contains a baseline method using [MONAI](https://monai.io) for Multiple Instance Learning (MIL) classification from Whole Slide Images (WSI). 
+This tutorial contains a baseline method using [MONAI](https://monai.io) for Multiple Instance Learning (MIL) classification from Whole Slide Images (WSI).
 The dataset is from  [Prostate cANcer graDe Assessment (PANDA) Challenge - 2020](https://www.kaggle.com/c/prostate-cancer-grade-assessment/) for cancer grade classification from prostate hystology WSIs.
 The implementation is based on:
 
@@ -40,7 +40,7 @@ For more information please check out [the installation guide](https://docs.mona
 ### Data
 
 Prostate biopsy WSI dataset can be downloaded from Prostate cANcer graDe Assessment (PANDA) Challenge on [Kaggle](https://www.kaggle.com/c/prostate-cancer-grade-assessment/data).
-In this tutorial, we assume it is downloaded in the /PandaChallenge2020 folder 
+In this tutorial, we assume it is downloaded in the /PandaChallenge2020 folder
 
 ### Examples
 Check all possible options
@@ -54,26 +54,26 @@ Train in multi-gpu mode with AMP using all available gpus,
 assuming the training images in /PandaChallenge2020/train_images folder,
 it will use the pre-defined 80/20 datasplit in [datalist_panda_0.json ](./datalist_panda_0.json)
 ```
-python -u panda_mil_train_evaluate_pytorch_gpu.py 
+python -u panda_mil_train_evaluate_pytorch_gpu.py
     --data_root=/PandaChallenge2020/train_images \
     --amp \
     --distributed \
     --mil_mode=att_trans \
     --batch_size=4 \
     --epochs=50 \
-    --logdir=./logs 
+    --logdir=./logs
 ```
 
 If you need to use only specific gpus, simply add CUDA_VISIBLE_DEVICES=... prefix
 ```
-CUDA_VISIBLE_DEVICES= 0,1,2,3 python -u panda_mil_train_evaluate_pytorch_gpu.py 
+CUDA_VISIBLE_DEVICES= 0,1,2,3 python -u panda_mil_train_evaluate_pytorch_gpu.py
     --data_root=/PandaChallenge2020/train_images \
     --amp \
     --distributed \
     --mil_mode=att_trans \
     --batch_size=4 \
     --epochs=50 \
-    --logdir=./logs 
+    --logdir=./logs
 ```
 
 
@@ -81,7 +81,7 @@ CUDA_VISIBLE_DEVICES= 0,1,2,3 python -u panda_mil_train_evaluate_pytorch_gpu.py
 Run inference of the best checkpoint over the validation set
 ```
 # Validate checkpoint on a single gpu
-python -u panda_mil_train_evaluate_pytorch_gpu.py 
+python -u panda_mil_train_evaluate_pytorch_gpu.py
     --data_root=/PandaChallenge2020/train_images \
     --amp \
     --mil_mode=att_trans \
@@ -93,7 +93,7 @@ python -u panda_mil_train_evaluate_pytorch_gpu.py
 Run inference on a different dataset. It's the same script as for validation,
 we just specify a different data_root and json list files
 ```
-python -u panda_mil_train_evaluate_pytorch_gpu.py 
+python -u panda_mil_train_evaluate_pytorch_gpu.py
     --data_root=/PandaChallenge2020/some_other_files \
     --dataset_json=some_other_files.json
     --amp \

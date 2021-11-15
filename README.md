@@ -208,8 +208,8 @@ A simple GAN is employed to do with a separate Generator and Discriminator netwo
 This notebook shows the `GanTrainer`, a MONAI workflow engine for modularized adversarial learning. Train a medical image reconstruction network using the MedNIST hand CT scan dataset. Dictionary version.
 #### [mednist_GAN_workflow_array](./modules/mednist_GAN_workflow_array.ipynb)
 This notebook shows the `GanTrainer`, a MONAI workflow engine for modularized adversarial learning. Train a medical image reconstruction network using the MedNIST hand CT scan dataset. Array version.
-#### [models_ensemble](./modules/models_ensemble.ipynb)
-This tutorial shows how to leverage `EnsembleEvaluator`, `MeanEnsemble` and `VoteEnsemble` modules in MONAI to set up ensemble program.
+#### [cross_validation_models_ensemble](./modules/cross_validation_models_ensemble.ipynb)
+This tutorial shows how to leverage `CrossValidation`, `EnsembleEvaluator`, `MeanEnsemble` and `VoteEnsemble` modules in MONAI to set up cross validation and ensemble program.
 #### [nifti_read_example](./modules/nifti_read_example.ipynb)
 Illustrate reading NIfTI files and iterating over image patches of the volumes loaded from them.
 #### [network_api](./modules/network_api.ipynb)

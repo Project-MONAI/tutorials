@@ -27,6 +27,9 @@ from monai.data.image_reader import WSIReader
 from monai.metrics import CumulativeAverage, Cumulative
 from monai.data import load_decathlon_datalist
 
+from monai.data.image_reader import WSIReader
+from monai.networks.nets import MilMode, MILModel #to be added
+from monai.apps.pathology.transforms import TileOnGridd #to be added
 
 def parse_args():
 

@@ -238,8 +238,8 @@ def save_checkpoint(model, epoch, args, filename='model.pt', best_acc=0):
 class LabelEncodeIntegerGraded(Transform):
     """
     Convert an integer label to encoded array representation of length num_classes,
-    with 1 filled in up to label index, and 0 otherwise. For example for num_classes=5, 
-    embedding of 2 -> (1,1,0,0,0) 
+    with 1 filled in up to label index, and 0 otherwise. For example for num_classes=5,
+    embedding of 2 -> (1,1,0,0,0)
 
     Args:
         num_classes: the number of classes to convert to encoded format.

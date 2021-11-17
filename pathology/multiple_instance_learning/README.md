@@ -1,8 +1,6 @@
-# Example of Multiple Instance Learning (MIL) for cancer classification from Whole Slide Images (WSI)
+# Multiple Instance Learning (MIL) Examples
 
-## Description
-
-This tutorial contains a baseline method using [MONAI](https://monai.io) for Multiple Instance Learning (MIL) classification from Whole Slide Images (WSI).
+This tutorial contains a baseline method of Multiple Instance Learning (MIL) classification from Whole Slide Images (WSI).
 The dataset is from  [Prostate cANcer graDe Assessment (PANDA) Challenge - 2020](https://www.kaggle.com/c/prostate-cancer-grade-assessment/) for cancer grade classification from prostate hystology WSIs.
 The implementation is based on:
 
@@ -10,10 +8,10 @@ Andriy Myronenko, Ziyue Xu, Dong Yang, Holger Roth, Daguang Xu: "Accounting for 
 
 
 <p align="center">
-  <img src="./mil_patches.png" alt="mil_patches">
+  <img src="./mil_patches.jpg" alt="mil_patches">
 </p>
 <p align="center">
-  <img src="./mil_network.png" alt="mil_network">
+  <img src="./mil_network.jpg" alt="mil_network">
 </p>
 
 
@@ -64,9 +62,9 @@ python -u panda_mil_train_evaluate_pytorch_gpu.py
     --logdir=./logs
 ```
 
-If you need to use only specific gpus, simply add CUDA_VISIBLE_DEVICES=... prefix
+If you need to use only specific gpus, simply add the prefix CUDA_VISIBLE_DEVICES=... prefi
 ```
-CUDA_VISIBLE_DEVICES= 0,1,2,3 python -u panda_mil_train_evaluate_pytorch_gpu.py
+CUDA_VISIBLE_DEVICES=0,1,2,3 python -u panda_mil_train_evaluate_pytorch_gpu.py
     --data_root=/PandaChallenge2020/train_images \
     --amp \
     --distributed \

@@ -2,38 +2,33 @@ import os
 import time
 import shutil
 import argparse
-import copy
 import collections.abc
-from typing import Dict, Hashable, Mapping, Sequence, Any, Union, Optional, List, cast
 
 import numpy as np
-from numpy.lib.stride_tricks import as_strided
 from sklearn.metrics import cohen_kappa_score
 
 import torch
 import torch.nn as nn
-from torch.utils.tensorboard import SummaryWriter
 from torch.cuda.amp import GradScaler, autocast
+
+from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data.dataloader import default_collate
 
-import torch.nn.parallel
 import torch.distributed as dist
 import torch.multiprocessing as mp
 
-
-from monai import transforms, data
+from monai.data import Dataset, load_decathlon_datalist
 from monai.data.image_reader import WSIReader
-from monai.metrics import CumulativeAverage, Cumulative
-from monai.data import load_decathlon_datalist
+from monai.metrics import Cumulative, CumulativeAverage
+from monai.transforms import Transform, Compose, LoadImageD, RandFlipd, RandRotate90d, ScaleIntensityRangeD, ToTensord
+from monai.apps.pathology.transforms import TileOnGridd
+from monai.networks.nets import milmodel
 
-from monai.data.image_reader import WSIReader
-from monai.networks.nets import MilMode, MILModel #to be added
-from monai.apps.pathology.transforms import TileOnGridd #to be added
 
 def parse_args():
 
-    parser = argparse.ArgumentParser(description='Multiple Instance Learning (MIL) example on WSI images.')
+    parser = argparse.ArgumentParser(description='Multiple Instance Learning (MIL) example of classification from WSI.')
     parser.add_argument('--data_root', default='/PandaChallenge2020/train_images/', help="path to root folder of images")
     parser.add_argument('--dataset_json', default='./datalist_panda_0.json', help="path to dataset json file")
 
@@ -42,7 +37,7 @@ def parse_args():
     parser.add_argument('--tile_count', default=44, type=int, help="number of patches (instances) to extract from WSI image")
     parser.add_argument('--tile_size', default=256, type=int, help="size of square patch (instance) in pixels")
 
-    parser.add_argument('--checkpoint', default=None, help="load existing checkpoint, otherwise random intialization")
+    parser.add_argument('--checkpoint', default=None, help="load existing checkpoint")
     parser.add_argument('--validate', action='store_true', help="run only inference on the validation set, must specify the checkpoint argument")
 
     parser.add_argument('--logdir', default=None, help="path to log directory to store Tensorboard logs")
@@ -50,6 +45,7 @@ def parse_args():
     parser.add_argument('--epochs', default=50, type=int, help="number of training epochs")
     parser.add_argument('--batch_size', default=4, type=int, help="batch size, the number of WSI images per gpu")
     parser.add_argument('--optim_lr', default=3e-5, type=float, help="initial learning rate")
+
     parser.add_argument('--weight_decay', default=0, type=float, help="optimizer weight decay")
     parser.add_argument('--amp', action='store_true', help="use AMP, recommended")
     parser.add_argument('--val_every', default=1, type=int, help="run validation after this number of epochs, default 1 to run every epoch")
@@ -62,8 +58,9 @@ def parse_args():
     parser.add_argument('--dist-url', default='tcp://127.0.0.1:23456', type=str,  help="url used to set up distributed training")
     parser.add_argument('--dist-backend', default='nccl', type=str, help="distributed backend")
 
-
     parser.add_argument('--quick', action='store_true', help="use a small subset of data for debugging") # for debugging
+
+    parser.add_argument('--optim_lr_trans', default=3e-6, type=float)
 
 
     args = parser.parse_args()
@@ -92,8 +89,9 @@ def train_epoch(model, loader, optimizer, scaler, epoch, args):
 
         data, target = batch_data['image'].cuda(args.rank),  batch_data['label'].cuda(args.rank)
 
-        for param in model.parameters():
-            param.grad = None
+        # for param in model.parameters():
+        #     param.grad = None
+        optimizer.zero_grad(set_to_none=True)
 
         with autocast(enabled=args.amp):
             logits = model(data)
@@ -142,11 +140,10 @@ def val_epoch(model, loader, epoch, args, max_tiles=None):
 
     run_loss = CumulativeAverage()
     run_acc = CumulativeAverage()
-
-    start_time = time.time()
     PREDS = Cumulative()
     TARGETS = Cumulative()
 
+    start_time = time.time()
     loss, acc = 0., 0.
 
     with torch.no_grad():
@@ -158,6 +155,10 @@ def val_epoch(model, loader, epoch, args, max_tiles=None):
             with autocast(enabled=args.amp):
 
                 if max_tiles is not None and data.shape[1] > max_tiles:
+                    # During validation, we want to use all instances/patches
+                    # and if its number is very big, we may run out of GPU memory
+                    # in this case, we first iteratively go over subsets of patches to calculate backbone features
+                    # and at the very end calculate the classification output
 
                     logits = []
                     logits2 =  []
@@ -180,7 +181,9 @@ def val_epoch(model, loader, epoch, args, max_tiles=None):
 
                     logits = calc_head(logits)
 
-                else: #
+                else:
+                    # if number of instances is not big
+                    # we can run inference directly
                     logits = model(data)
 
 
@@ -216,27 +219,27 @@ def val_epoch(model, loader, epoch, args, max_tiles=None):
     return loss, acc, qwk
 
 
-def save_checkpoint(model, epoch, args, filename='model.tar', best_acc=0):
+def save_checkpoint(model, epoch, args, filename='model.pt', best_acc=0):
     '''Save checkpoint'''
 
     state_dict = model.state_dict() if not args.distributed else  model.module.state_dict()
 
     save_dict = {
-        'epoch': epoch,
-        'best_acc': best_acc,
-        'state_dict': state_dict
-    }
+            'epoch': epoch,
+            'best_acc': best_acc,
+            'state_dict': state_dict
+            }
 
     filename=os.path.join(args.logdir, filename)
     torch.save(save_dict, filename)
     print('Saving checkpoint', filename)
 
 
-class LabelEncodeIntegerGraded(transforms.Transform):
+class LabelEncodeIntegerGraded(Transform):
     """
-    Convert to integer label to encoded array representation of length num_classes,
-    with 1 filled in up to label index, and 0 otherwise. For example for num_classes=5,
-    embedding of 2 -> (1,1,0,0,0)
+    Convert an integer label to encoded array representation of length num_classes,
+    with 1 filled in up to label index, and 0 otherwise. For example for num_classes=5, 
+    embedding of 2 -> (1,1,0,0,0) 
 
     Args:
         num_classes: the number of classes to convert to encoded format.
@@ -321,43 +324,43 @@ def main_worker(gpu, args):
         validation_list = validation_list[:16]
 
 
-    train_transform = transforms.Compose(
+    train_transform = Compose(
         [
-            transforms.LoadImageD(keys=["image"], reader=WSIReader, backend="TiffFile", dtype=np.uint8, level=1, image_only=True),
+            LoadImageD(keys=["image"], reader=WSIReader, backend="TiffFile", dtype=np.uint8, level=1, image_only=True),
             LabelEncodeIntegerGraded(keys=["label"], num_classes=args.num_classes),
             TileOnGridd(keys=["image"], tile_count=args.tile_count, tile_size=args.tile_size, random_offset=True, background_val=255, return_list_of_dicts=True),
-            transforms.RandFlipd(keys=["image"], spatial_axis=0, prob=0.5),
-            transforms.RandFlipd(keys=["image"], spatial_axis=1, prob=0.5),
-            transforms.RandRotate90d(keys=["image"], prob=0.5),
-            transforms.ScaleIntensityRangeD(keys=["image"], a_min=np.float32(255), a_max=np.float32(0)),
-            transforms.ToTensord(keys=["image", "label"]),
+            RandFlipd(keys=["image"], spatial_axis=0, prob=0.5),
+            RandFlipd(keys=["image"], spatial_axis=1, prob=0.5),
+            RandRotate90d(keys=["image"], prob=0.5),
+            ScaleIntensityRangeD(keys=["image"], a_min=np.float32(255), a_max=np.float32(0)),
+            ToTensord(keys=["image", "label"]),
         ]
     )
 
-    valid_transform = transforms.Compose(
+    valid_transform = Compose(
         [
-            transforms.LoadImageD(keys=["image"], reader=WSIReader, backend="TiffFile", dtype=np.uint8, level=1, image_only=True),
+            LoadImageD(keys=["image"], reader=WSIReader, backend="TiffFile", dtype=np.uint8, level=1, image_only=True),
             LabelEncodeIntegerGraded(keys=["label"], num_classes=args.num_classes),
             TileOnGridd(keys=["image"], tile_count=None, tile_size=args.tile_size, random_offset=False, background_val=255, return_list_of_dicts=True),
-            transforms.ScaleIntensityRangeD(keys=["image"], a_min=np.float32(255), a_max=np.float32(0)),
-            transforms.ToTensord(keys=["image", "label"]),
+            ScaleIntensityRangeD(keys=["image"], a_min=np.float32(255), a_max=np.float32(0)),
+            ToTensord(keys=["image", "label"]),
         ]
     )
 
-    dataset_train = data.Dataset(data=training_list, transform=train_transform)
-    dataset_valid = data.Dataset(data=validation_list, transform=valid_transform)
+    dataset_train = Dataset(data=training_list, transform=train_transform)
+    dataset_valid = Dataset(data=validation_list, transform=valid_transform)
 
     train_sampler = DistributedSampler(dataset_train) if args.distributed else None
     val_sampler = DistributedSampler(dataset_valid, shuffle=False) if args.distributed else None
 
-    train_loader = torch.utils.data.DataLoader(dataset_train, batch_size=args.batch_size, shuffle=(train_sampler is None), num_workers=args.workers, pin_memory=False, multiprocessing_context='spawn', sampler=train_sampler, collate_fn=list_data_collate)
-    valid_loader = torch.utils.data.DataLoader(dataset_valid, batch_size=1, shuffle=False, num_workers=args.workers, pin_memory=False, multiprocessing_context='spawn', sampler=val_sampler, collate_fn=list_data_collate)
+    train_loader = torch.utils.data.DataLoader(dataset_train, batch_size=args.batch_size, shuffle=(train_sampler is None), num_workers=args.workers, pin_memory=True, multiprocessing_context='spawn', sampler=train_sampler, collate_fn=list_data_collate)
+    valid_loader = torch.utils.data.DataLoader(dataset_valid, batch_size=1, shuffle=False, num_workers=args.workers, pin_memory=True, multiprocessing_context='spawn', sampler=val_sampler, collate_fn=list_data_collate)
 
     if args.rank==0:
         print('Dataset training:', len(dataset_train), 'validation:', len(dataset_valid))
 
-    os.environ["TORCH_HOME"] = "../../torchhome" #TODO, remove later
-    model = MILModel(num_classes=args.num_classes, pretrained=True, mil_mode=args.mil_mode)
+    # os.environ["TORCH_HOME"] = "../../torchhome" #TODO, remove later
+    model = milmodel.MILModel(num_classes=args.num_classes, pretrained=True, mil_mode=args.mil_mode)
 
     best_acc = 0
     start_epoch = 0
@@ -368,19 +371,28 @@ def main_worker(gpu, args):
         if 'best_acc' in checkpoint: best_acc = checkpoint['best_acc']
         print("=> loaded checkpoint '{}' (epoch {}) (bestacc {})".format(args.checkpoint, start_epoch, best_acc))
 
-
     model.cuda(args.gpu)
 
     if args.distributed:
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], output_device=args.gpu)
 
+    if args.validate:
+        # if we only want to validate existing checkpoint
+        epoch_time = time.time()
+        val_loss, val_acc, qwk = val_epoch(model, valid_loader, epoch=0, args=args, max_tiles=args.tile_count)
+        if args.rank == 0:
+            print('Final validation loss: {:.4f}'.format(val_loss), 'acc: {:.4f}'.format(val_acc), 'qwk: {:.4f}'.format(qwk), 'time {:.2f}s'.format(time.time() - epoch_time))
+
+        exit(0)
+
+
     params = model.parameters()
 
     if args.mil_mode in ["att_trans", "att_trans_pyramid"]:
         m = model if not args.distributed else model.module
         params = [{'params': list(m.attention.parameters()) + list(m.myfc.parameters()) + list(m.net.parameters())},
-                  {'params':  list(m.transformer.parameters()), 'lr': 3e-6, 'weight_decay': 0.1 }]
+                  {'params':  list(m.transformer.parameters()), 'lr': args.optim_lr_trans, 'weight_decay': 0.1 }]
 
 
     optimizer = torch.optim.AdamW(params, lr=args.optim_lr, weight_decay=args.weight_decay)
@@ -392,14 +404,6 @@ def main_worker(gpu, args):
             print('Writing Tensorboard logs to ', writer.log_dir)
     else:
         writer = None
-
-    if args.validate:
-        epoch_time = time.time()
-        val_loss, val_acc, qwk = val_epoch(model, valid_loader, epoch=0, args=args, max_tiles=args.tile_count)
-        if args.rank == 0:
-            print('Final validation loss: {:.4f}'.format(val_loss), 'acc: {:.4f}'.format(val_acc), 'qwk: {:.4f}'.format(qwk), 'time {:.2f}s'.format(time.time() - epoch_time))
-
-        exit(0)
 
 
     ###RUN TRAINING
@@ -452,16 +456,16 @@ def main_worker(gpu, args):
                 val_acc = qwk
 
                 if val_acc > val_acc_max:
-                    print('score2 ({:.6f} --> {:.6f}).  Saving model ...'.format(val_acc_max, val_acc))
+                    print('qwk ({:.6f} --> {:.6f})'.format(val_acc_max, val_acc))
                     val_acc_max = val_acc
                     b_new_best = True
 
 
         if args.rank == 0 and args.logdir is not None:
-            save_checkpoint(model, epoch, args, best_acc=val_acc, filename='model_final.tar')
+            save_checkpoint(model, epoch, args, best_acc=val_acc, filename='model_final.pt')
             if b_new_best:
-                print('Copying to model.tar new best model!!!!')
-                shutil.copyfile(os.path.join(args.logdir, 'model_final.tar'), os.path.join(args.logdir, 'model.tar'))
+                print('Copying to model.pt new best model!!!!')
+                shutil.copyfile(os.path.join(args.logdir, 'model_final.pt'), os.path.join(args.logdir, 'model.pt'))
 
         scheduler.step()
 

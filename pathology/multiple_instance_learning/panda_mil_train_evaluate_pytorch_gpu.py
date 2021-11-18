@@ -3,6 +3,7 @@ import time
 import shutil
 import argparse
 import collections.abc
+import gdown
 
 import numpy as np
 from sklearn.metrics import cohen_kappa_score
@@ -30,7 +31,8 @@ def parse_args():
 
     parser = argparse.ArgumentParser(description='Multiple Instance Learning (MIL) example of classification from WSI.')
     parser.add_argument('--data_root', default='/PandaChallenge2020/train_images/', help="path to root folder of images")
-    parser.add_argument('--dataset_json', default='./datalist_panda_0.json', help="path to dataset json file")
+    # parser.add_argument('--dataset_json', default='./datalist_panda_0.json', help="path to dataset json file")
+    parser.add_argument('--dataset_json', default=None, type=str, help="path to dataset json file")
 
     parser.add_argument('--num_classes', default=5, type=int, help="number of output classes")
     parser.add_argument('--mil_mode', default='att_trans', help="MIL algorithm")
@@ -89,8 +91,6 @@ def train_epoch(model, loader, optimizer, scaler, epoch, args):
 
         data, target = batch_data['image'].cuda(args.rank),  batch_data['label'].cuda(args.rank)
 
-        # for param in model.parameters():
-        #     param.grad = None
         optimizer.zero_grad(set_to_none=True)
 
         with autocast(enabled=args.amp):
@@ -238,8 +238,8 @@ def save_checkpoint(model, epoch, args, filename='model.pt', best_acc=0):
 class LabelEncodeIntegerGraded(Transform):
     """
     Convert an integer label to encoded array representation of length num_classes,
-    with 1 filled in up to label index, and 0 otherwise. For example for num_classes=5,
-    embedding of 2 -> (1,1,0,0,0)
+    with 1 filled in up to label index, and 0 otherwise. For example for num_classes=5, 
+    embedding of 2 -> (1,1,0,0,0) 
 
     Args:
         num_classes: the number of classes to convert to encoded format.
@@ -269,6 +269,15 @@ class LabelEncodeIntegerGraded(Transform):
 def main():
 
     args = parse_args()
+
+    if args.dataset_json is None:
+        #download default json datalist
+        resource = "https://drive.google.com/uc?id=1L6PtKBlHHyUgTE4rVhRuOLTQKgD4tBRK"
+        dst = "./datalist_panda_0.json"
+        if not os.path.exists(dst):
+            gdown.download(resource, dst, quiet=False)
+        args.dataset_json=dst
+
 
     if args.distributed:
         ngpus_per_node = torch.cuda.device_count()
@@ -473,3 +482,4 @@ def main_worker(gpu, args):
 
 if __name__ == '__main__':
     main()
+    

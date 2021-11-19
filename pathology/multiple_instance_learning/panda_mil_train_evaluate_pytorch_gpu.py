@@ -33,7 +33,6 @@ def parse_args():
     parser.add_argument(
         "--data_root", default="/PandaChallenge2020/train_images/", help="path to root folder of images"
     )
-    # parser.add_argument('--dataset_json', default='./datalist_panda_0.json', help="path to dataset json file")
     parser.add_argument("--dataset_json", default=None, type=str, help="path to dataset json file")
 
     parser.add_argument("--num_classes", default=5, type=int, help="number of output classes")
@@ -78,8 +77,6 @@ def parse_args():
     parser.add_argument(
         "--quick", action="store_true", help="use a small subset of data for debugging"
     )  # for debugging
-
-    parser.add_argument("--optim_lr_trans", default=3e-6, type=float)
 
     args = parser.parse_args()
 
@@ -203,8 +200,7 @@ def val_epoch(model, loader, epoch, args, max_tiles=None):
                     logits = calc_head(logits)
 
                 else:
-                    # if number of instances is not big
-                    # we can run inference directly
+                    # if number of instances is not big, we can run inference directly
                     logits = model(data)
 
                 loss = criterion(logits, target)
@@ -305,10 +301,13 @@ def main():
         main_worker(0, args)
 
 
-# combine instances from a list of dicts into a single dict, by stacking them along first dim
-# [{'image' : 3xHxW}, {'image' : 3xHxW}, {'image' : 3xHxW}...] - > {'image' : Nx3xHxW}
-# followed by the default collate which will form a batch BxNx3xHxW
 def list_data_collate(batch: collections.abc.Sequence):
+    '''
+        Combine instances from a list of dicts into a single dict, by stacking them along first dim
+        [{'image' : 3xHxW}, {'image' : 3xHxW}, {'image' : 3xHxW}...] - > {'image' : Nx3xHxW}
+        followed by the default collate which will form a batch BxNx3xHxW
+    '''
+
     for i, item in enumerate(batch):
         data = item[0]
         data["image"] = torch.stack([ix["image"] for ix in item], dim=0)
@@ -418,7 +417,6 @@ def main_worker(gpu, args):
     if args.rank == 0:
         print("Dataset training:", len(dataset_train), "validation:", len(dataset_valid))
 
-    # os.environ["TORCH_HOME"] = "../../torchhome" #TODO, remove later
     model = milmodel.MILModel(num_classes=args.num_classes, pretrained=True, mil_mode=args.mil_mode)
 
     best_acc = 0
@@ -458,7 +456,7 @@ def main_worker(gpu, args):
         m = model if not args.distributed else model.module
         params = [
             {"params": list(m.attention.parameters()) + list(m.myfc.parameters()) + list(m.net.parameters())},
-            {"params": list(m.transformer.parameters()), "lr": args.optim_lr_trans, "weight_decay": 0.1},
+            {"params": list(m.transformer.parameters()), "lr": 6e-6, "weight_decay": 0.1},
         ]
 
     optimizer = torch.optim.AdamW(params, lr=args.optim_lr, weight_decay=args.weight_decay)

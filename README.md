@@ -233,3 +233,6 @@ This tutorial uses the MedNIST scan (or alternatively the MNIST) dataset to demo
 Tutorials in this folder demonstrate model visualisation and interpretability features of MONAI. Currently, it consists of class activation mapping and occlusion sensitivity for 3D classification model visualisations and analysis.
 #### [Transfer learning with MMAR](./modules/transfer_mmar.ipynb)
 This tutorial demonstrates a transfer learning pipeline from a pretrained model in [Clara Train's Medical Model Archive format](https://docs.nvidia.com/clara/clara-train-sdk/pt/mmar.html).  The notebook also shows the use of LMDB-based dataset.
+
+#### [Transform visualization](./modules/transform_visualization.ipynb)
+This tutorial shows several visualization approaches for 3D image during transform augmentation.

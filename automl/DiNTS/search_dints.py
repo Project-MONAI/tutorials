@@ -243,7 +243,7 @@ def main():
             continue
 
         files.append({"image": str_img, "label": str_seg})
-
+    
     train_files = files
 
     random.shuffle(train_files)
@@ -261,7 +261,7 @@ def main():
     for _i in range(len(list_valid)):
         str_img = os.path.join(args.root, list_valid[_i]["image"])
         str_seg = os.path.join(args.root, list_valid[_i]["label"])
-
+                
         if (not os.path.exists(str_img)) or (not os.path.exists(str_seg)):
             continue
 
@@ -329,13 +329,13 @@ def main():
         ]
     )
 
-    train_ds_a = monai.data.CacheDataset(data=train_files_a, transform=train_transforms, cache_rate=1.0, num_workers=8)
-    train_ds_w = monai.data.CacheDataset(data=train_files_w, transform=train_transforms, cache_rate=1.0, num_workers=8)
-    val_ds = monai.data.CacheDataset(data=val_files, transform=val_transforms, cache_rate=1.0, num_workers=2)
+    # train_ds_a = monai.data.CacheDataset(data=train_files_a, transform=train_transforms, cache_rate=1.0, num_workers=8)
+    # train_ds_w = monai.data.CacheDataset(data=train_files_w, transform=train_transforms, cache_rate=1.0, num_workers=8)
+    # val_ds = monai.data.CacheDataset(data=val_files, transform=val_transforms, cache_rate=1.0, num_workers=2)
 
-    # train_ds_a = monai.data.Dataset(data=train_files_a, transform=train_transforms)
-    # train_ds_w = monai.data.Dataset(data=train_files_w, transform=train_transforms)
-    # val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
+    train_ds_a = monai.data.Dataset(data=train_files_a, transform=train_transforms)
+    train_ds_w = monai.data.Dataset(data=train_files_w, transform=train_transforms)
+    val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
 
     # train_loader_a = DataLoader(train_ds_a, batch_size=num_images_per_batch, shuffle=True, num_workers=8, pin_memory=torch.cuda.is_available())
     # train_loader_w = DataLoader(train_ds_w, batch_size=num_images_per_batch, shuffle=True, num_workers=8, pin_memory=torch.cuda.is_available())
@@ -344,7 +344,6 @@ def main():
     train_loader_a = ThreadDataLoader(train_ds_a, num_workers=0, batch_size=num_images_per_batch, shuffle=True)
     train_loader_w = ThreadDataLoader(train_ds_w, num_workers=0, batch_size=num_images_per_batch, shuffle=True)
     val_loader = ThreadDataLoader(val_ds, num_workers=0, batch_size=1, shuffle=False)
-
     grid = monai.networks.nets.DintsSearchSpace(
         channel_mul=0.5,
         num_blocks=12,
@@ -357,6 +356,14 @@ def main():
         in_channels=input_channels,
         num_classes=output_classes,
         use_downsample=True
+    )
+
+    dints_space = dints_space.to(device)
+
+    model = monai.networks.nets.DiNTS(
+        dints_space=dints_space,
+        in_channels=input_channels,
+        num_classes=output_classes,
     )
 
     model = model.to(device)
@@ -376,9 +383,15 @@ def main():
     )
 
     # optimizer
-    optimizer = torch.optim.Adam(model.weight_parameters(), lr=learning_rate)
-    arch_optimizer_a = torch.optim.Adam([model.log_alpha_a], lr=learning_rate, betas=(0.5, 0.999), weight_decay=0.0)
-    arch_optimizer_c = torch.optim.Adam([model.log_alpha_c], lr=learning_rate, betas=(0.5, 0.999), weight_decay=0.0)
+    stem_layers = []
+    for name, param in model.named_parameters():
+        if param.requires_grad == True:
+            if "stem" in name.lower():
+                stem_layers.append(param)
+
+    optimizer = torch.optim.Adam(dints_space.weight_parameters() + stem_layers, lr=learning_rate)
+    arch_optimizer_a = torch.optim.Adam([dints_space.log_alpha_a], lr=learning_rate, betas=(0.5, 0.999), weight_decay=0.0)
+    arch_optimizer_c = torch.optim.Adam([dints_space.log_alpha_c], lr=learning_rate, betas=(0.5, 0.999), weight_decay=0.0)
 
     print()
 
@@ -428,7 +441,7 @@ def main():
         #         param_group["lr"] = lr
         # else:
         #     lr = learning_rate
-
+        
         # lr = learning_rate * (learning_rate_gamma ** (epoch // learning_rate_step_size))
         # for param_group in optimizer.param_groups:
         #     param_group["lr"] = lr
@@ -452,10 +465,13 @@ def main():
             for param in model.parameters():
                 param.grad = None
 
-            for _ in model.module.weight_parameters():
+            for name, param in model.named_parameters():
+                if "stem" in name.lower():
+                    param.requires_grad == True
+            for _ in dints_space.module.weight_parameters():
                 _.requires_grad = True
-            model.module.log_alpha_a.requires_grad = False
-            model.module.log_alpha_c.requires_grad = False
+            dints_space.module.log_alpha_a.requires_grad = False
+            dints_space.module.log_alpha_c.requires_grad = False
 
             if amp:
                 with autocast():
@@ -620,7 +636,7 @@ def main():
                     )
 
                     print(_index + 1, "/", len(val_loader), value)
-
+                    
                     metric_count += len(value)
                     metric_sum += value.sum().item()
                     metric_vals = value.cpu().numpy()

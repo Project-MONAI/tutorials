@@ -336,22 +336,22 @@ def main():
     arch_code_a = ckpt['code_a']
     arch_code_c = ckpt['code_c']
 
-    dints_space = monai.networks.nets.DintsSearchSpace(
+    dints_space = monai.networks.nets.TopologySearchSpace(
+        channel_mul=1.0,
         num_blocks=12,
         num_depths=4,
-        channel_mul=1.0,
-        arch_code=[arch_code_a, arch_code_c],
         use_downsample=True,
+        arch_code=[arch_code_a, arch_code_c],
+        device = device
     )
 
     model = monai.networks.nets.DiNTS(
         dints_space=dints_space,
         in_channels=input_channels,
         num_classes=output_classes,
+        use_downsample=True
     )
 
-    arch_code_a = torch.from_numpy(arch_code_a).to(torch.float32).to(device)
-    arch_code_c = F.one_hot(torch.from_numpy(arch_code_c), dints_space.num_cell_ops).to(torch.float32).to(device)
     model = model.to(device)
     
     model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
@@ -441,21 +441,21 @@ def main():
 
             if amp:
                 with autocast():
-                    outputs = model(inputs, [node_a, arch_code_a, arch_code_c])
+                    outputs = model(inputs)
                     if output_classes == 2:
-                        loss = loss_func(torch.flip(outputs[-1], dims=[1]), 1 - labels)
+                        loss = loss_func(torch.flip(outputs, dims=[1]), 1 - labels)
                     else:
-                        loss = loss_func(outputs[-1], labels)
+                        loss = loss_func(outputs, labels)
 
                 scaler.scale(loss).backward()
                 scaler.step(optimizer)
                 scaler.update()
             else:
-                outputs = model(inputs, [node_a, arch_code_a, arch_code_c])
+                outputs = model(inputs)
                 if output_classes == 2:
-                    loss = loss_func(torch.flip(outputs[-1], dims=[1]), 1 - labels)
+                    loss = loss_func(torch.flip(outputs, dims=[1]), 1 - labels)
                 else:
-                    loss = loss_func(outputs[-1], labels)
+                    loss = loss_func(outputs, labels)
                 loss.backward()
                 optimizer.step()
 
@@ -504,7 +504,7 @@ def main():
                             val_images,
                             roi_size,
                             sw_batch_size,
-                            lambda x: model(x, [node_a, arch_code_a, arch_code_c])[-1],
+                            lambda x: model(x),
                             mode="gaussian",
                             overlap=overlap_ratio,
                         )

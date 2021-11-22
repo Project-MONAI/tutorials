@@ -344,7 +344,7 @@ def main():
     train_loader_a = ThreadDataLoader(train_ds_a, num_workers=0, batch_size=num_images_per_batch, shuffle=True)
     train_loader_w = ThreadDataLoader(train_ds_w, num_workers=0, batch_size=num_images_per_batch, shuffle=True)
     val_loader = ThreadDataLoader(val_ds, num_workers=0, batch_size=1, shuffle=False)
-    grid = monai.networks.nets.DintsSearchSpace(
+    dints_space = monai.networks.nets.TopologySearchSpace(
         channel_mul=0.5,
         num_blocks=12,
         num_depths=4,
@@ -352,18 +352,10 @@ def main():
         device=device
     )
     model = monai.networks.nets.DiNTS(
-        dints_space = grid,
+        dints_space = dints_space,
         in_channels=input_channels,
         num_classes=output_classes,
         use_downsample=True
-    )
-
-    dints_space = dints_space.to(device)
-
-    model = monai.networks.nets.DiNTS(
-        dints_space=dints_space,
-        in_channels=input_channels,
-        num_classes=output_classes,
     )
 
     model = model.to(device)
@@ -383,13 +375,7 @@ def main():
     )
 
     # optimizer
-    stem_layers = []
-    for name, param in model.named_parameters():
-        if param.requires_grad == True:
-            if "stem" in name.lower():
-                stem_layers.append(param)
-
-    optimizer = torch.optim.Adam(dints_space.weight_parameters() + stem_layers, lr=learning_rate)
+    optimizer = torch.optim.Adam(model.weight_parameters(), lr=learning_rate)
     arch_optimizer_a = torch.optim.Adam([dints_space.log_alpha_a], lr=learning_rate, betas=(0.5, 0.999), weight_decay=0.0)
     arch_optimizer_c = torch.optim.Adam([dints_space.log_alpha_c], lr=learning_rate, betas=(0.5, 0.999), weight_decay=0.0)
 
@@ -462,34 +448,28 @@ def main():
             step += 1
             inputs, labels = batch_data["image"].to(device), batch_data["label"].to(device)
 
-            for param in model.parameters():
-                param.grad = None
-
-            for name, param in model.named_parameters():
-                if "stem" in name.lower():
-                    param.requires_grad == True
-            for _ in dints_space.module.weight_parameters():
-                _.requires_grad = True
+            for name, param in model.weight_parameters():
+                param.requires_grad == True
             dints_space.module.log_alpha_a.requires_grad = False
             dints_space.module.log_alpha_c.requires_grad = False
 
             if amp:
                 with autocast():
-                    outputs = model(inputs, [node_a, arch_code_a, arch_code_c])
+                    outputs = model(inputs)
                     if output_classes == 2:
-                        loss = loss_func(torch.flip(outputs[-1], dims=[1]), 1 - labels)
+                        loss = loss_func(torch.flip(outputs, dims=[1]), 1 - labels)
                     else:
-                        loss = loss_func(outputs[-1], labels)
+                        loss = loss_func(outputs, labels)
 
                 scaler.scale(loss).backward()
                 scaler.step(optimizer)
                 scaler.update()
             else:
-                outputs = model(inputs, [node_a, arch_code_a, arch_code_c])
+                outputs = model(inputs)
                 if output_classes == 2:
-                    loss = loss_func(torch.flip(outputs[-1], dims=[1]), 1 - labels)
+                    loss = loss_func(torch.flip(outputs, dims=[1]), 1 - labels)
                 else:
-                    loss = loss_func(outputs[-1], labels)
+                    loss = loss_func(outputs, labels)
                 loss.backward()
                 optimizer.step()
 
@@ -545,11 +525,11 @@ def main():
 
             if amp:
                 with autocast():
-                    outputs_search = model(inputs_search, [node_a, arch_code_a, arch_code_c])
+                    outputs_search = model(inputs_search)
                     if output_classes == 2:
-                        loss = loss_func(torch.flip(outputs_search[-1], dims=[1]), 1 - labels_search)
+                        loss = loss_func(torch.flip(outputs_search, dims=[1]), 1 - labels_search)
                     else:
-                        loss = loss_func(outputs_search[-1], labels_search)
+                        loss = loss_func(outputs_search, labels_search)
 
                     loss += 1.0 * (1.0 * (entropy_alpha_a + entropy_alpha_c) + ram_cost_loss \
                                                     + 0.001 * topology_loss)
@@ -559,11 +539,11 @@ def main():
                 scaler.step(arch_optimizer_c)
                 scaler.update()
             else:
-                outputs_search = model(inputs_search, [node_a, arch_code_a, arch_code_c])
+                outputs_search = model(inputs_search)
                 if output_classes == 2:
-                    loss = loss_func(torch.flip(outputs_search[-1], dims=[1]), 1 - labels_search)
+                    loss = loss_func(torch.flip(outputs_search, dims=[1]), 1 - labels_search)
                 else:
-                    loss = loss_func(outputs_search[-1], labels_search)
+                    loss = loss_func(outputs_search, labels_search)
 
                 loss += 1.0 * (1.0 * (entropy_alpha_a + entropy_alpha_c) + ram_cost_loss \
                                 + 0.001 * topology_loss)
@@ -608,7 +588,7 @@ def main():
                                 val_images,
                                 roi_size,
                                 sw_batch_size,
-                                lambda x: model(x, [node_a, arch_code_a, arch_code_c])[-1],
+                                lambda x: model(x),
                                 mode="gaussian",
                                 overlap=overlap_ratio,
                             )
@@ -617,7 +597,7 @@ def main():
                             val_images,
                             roi_size,
                             sw_batch_size,
-                            lambda x: model(x, [node_a, arch_code_a, arch_code_c])[-1],
+                            lambda x: model(x),
                             mode="gaussian",
                             overlap=overlap_ratio,
                         )
@@ -671,7 +651,7 @@ def main():
                         best_metric_epoch = epoch + 1
                         best_metric_iterations = idx_iter
 
-                    node_a_d, arch_code_a_d, arch_code_c_d, arch_code_a_max_d = model.module._decode()
+                    node_a_d, arch_code_a_d, arch_code_c_d, arch_code_a_max_d = dints_space.module.decode()
                     torch.save(
                         {
                             "node_a": node_a_d,

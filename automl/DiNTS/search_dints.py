@@ -243,7 +243,7 @@ def main():
             continue
 
         files.append({"image": str_img, "label": str_seg})
-    
+
     train_files = files
 
     random.shuffle(train_files)
@@ -261,7 +261,7 @@ def main():
     for _i in range(len(list_valid)):
         str_img = os.path.join(args.root, list_valid[_i]["image"])
         str_seg = os.path.join(args.root, list_valid[_i]["label"])
-                
+
         if (not os.path.exists(str_img)) or (not os.path.exists(str_seg)):
             continue
 
@@ -467,7 +467,7 @@ def main():
         #         param_group["lr"] = lr
         # else:
         #     lr = learning_rate
-        
+
         # lr = learning_rate * (learning_rate_gamma ** (epoch // learning_rate_step_size))
         # for param_group in optimizer.param_groups:
         #     param_group["lr"] = lr
@@ -662,7 +662,7 @@ def main():
                     )
 
                     print(_index + 1, "/", len(val_loader), value)
-                    
+
                     metric_count += len(value)
                     metric_sum += value.sum().item()
                     metric_vals = value.cpu().numpy()

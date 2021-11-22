@@ -10,7 +10,7 @@
 # limitations under the License.
 
 """
-This example shows how to execute training from scratch with DiNTS's searched model with 
+This example shows how to execute training from scratch with DiNTS's searched model with
 distributed training based on PyTorch native `DistributedDataParallel` module.
 It can run on several nodes with multiple GPU devices on every node.
 This example is a real-world task based on Decathlon challenge Task09: Spleen (CT) segmentation.
@@ -241,7 +241,7 @@ def main():
             continue
 
         files.append({"image": str_img, "label": str_seg})
-    
+
     train_files = files
     train_files = partition_dataset(data=train_files, shuffle=True, num_partitions=dist.get_world_size(), even_divisible=True)[dist.get_rank()]
     print("train_files:", len(train_files))
@@ -251,7 +251,7 @@ def main():
     for _i in range(len(list_valid)):
         str_img = os.path.join(args.root, list_valid[_i]["image"])
         str_seg = os.path.join(args.root, list_valid[_i]["label"])
-                
+
         if (not os.path.exists(str_img)) or (not os.path.exists(str_seg)):
             continue
 
@@ -353,7 +353,7 @@ def main():
     arch_code_a = torch.from_numpy(arch_code_a).to(torch.float32).to(device)
     arch_code_c = F.one_hot(torch.from_numpy(arch_code_c), dints_space.num_cell_ops).to(torch.float32).to(device)
     model = model.to(device)
-    
+
     model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
 
     post_pred = Compose([EnsureType(), AsDiscrete(argmax=True, to_onehot=output_classes)])
@@ -420,7 +420,7 @@ def main():
                 param_group["lr"] = lr
         else:
             lr = learning_rate
-        
+
         lr = optimizer.param_groups[0]["lr"]
 
         if dist.get_rank() == 0:
@@ -523,7 +523,7 @@ def main():
                     )
 
                     print(_index + 1, "/", len(val_loader), value)
-                    
+
                     metric_count += len(value)
                     metric_sum += value.sum().item()
                     metric_vals = value.cpu().numpy()

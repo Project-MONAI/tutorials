@@ -243,7 +243,7 @@ def main():
             continue
 
         files.append({"image": str_img, "label": str_seg})
-
+    
     train_files = files
 
     random.shuffle(train_files)
@@ -261,7 +261,7 @@ def main():
     for _i in range(len(list_valid)):
         str_img = os.path.join(args.root, list_valid[_i]["image"])
         str_seg = os.path.join(args.root, list_valid[_i]["label"])
-
+                
         if (not os.path.exists(str_img)) or (not os.path.exists(str_seg)):
             continue
 
@@ -329,13 +329,13 @@ def main():
         ]
     )
 
-    train_ds_a = monai.data.CacheDataset(data=train_files_a, transform=train_transforms, cache_rate=1.0, num_workers=8)
-    train_ds_w = monai.data.CacheDataset(data=train_files_w, transform=train_transforms, cache_rate=1.0, num_workers=8)
-    val_ds = monai.data.CacheDataset(data=val_files, transform=val_transforms, cache_rate=1.0, num_workers=2)
+    # train_ds_a = monai.data.CacheDataset(data=train_files_a, transform=train_transforms, cache_rate=1.0, num_workers=8)
+    # train_ds_w = monai.data.CacheDataset(data=train_files_w, transform=train_transforms, cache_rate=1.0, num_workers=8)
+    # val_ds = monai.data.CacheDataset(data=val_files, transform=val_transforms, cache_rate=1.0, num_workers=2)
 
-    # train_ds_a = monai.data.Dataset(data=train_files_a, transform=train_transforms)
-    # train_ds_w = monai.data.Dataset(data=train_files_w, transform=train_transforms)
-    # val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
+    train_ds_a = monai.data.Dataset(data=train_files_a, transform=train_transforms)
+    train_ds_w = monai.data.Dataset(data=train_files_w, transform=train_transforms)
+    val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
 
     # train_loader_a = DataLoader(train_ds_a, batch_size=num_images_per_batch, shuffle=True, num_workers=8, pin_memory=torch.cuda.is_available())
     # train_loader_w = DataLoader(train_ds_w, batch_size=num_images_per_batch, shuffle=True, num_workers=8, pin_memory=torch.cuda.is_available())
@@ -345,41 +345,57 @@ def main():
     train_loader_w = ThreadDataLoader(train_ds_w, num_workers=0, batch_size=num_images_per_batch, shuffle=True)
     val_loader = ThreadDataLoader(val_ds, num_workers=0, batch_size=1, shuffle=False)
 
-    if os.path.exists(args.arch_ckpt):
-        ckpt = torch.load(args.arch_ckpt)
-        node_a = ckpt["node_a"]
-        arch_code_a = ckpt["code_a"]
-        arch_code_c = ckpt["code_c"]
-        arch_codes = [node_a, arch_code_a, arch_code_c]
+    # if os.path.exists(args.arch_ckpt):
+    #     ckpt = torch.load(args.arch_ckpt)
+    #     node_a = ckpt["node_a"]
+    #     arch_code_a = ckpt["code_a"]
+    #     arch_code_c = ckpt["code_c"]
+    #     arch_codes = [node_a, arch_code_a, arch_code_c]
 
-        arch_code_a = torch.from_numpy(arch_code_a).to(torch.float32).cuda()
-        arch_code_c = F.one_hot(torch.from_numpy(arch_code_c), model.cell_ops).to(torch.float32).cuda()
-    else:
-        arch_codes = None
+    #     arch_code_a = torch.from_numpy(arch_code_a).to(torch.float32).cuda()
+    #     arch_code_c = F.one_hot(torch.from_numpy(arch_code_c), model.cell_ops).to(torch.float32).cuda()
+    # else:
+    #     arch_codes = None
 
-    model = monai.networks.nets.DiNTS(
-        in_channels=input_channels,
-        num_classes=output_classes,
-        cell_ops=5,
+    # model = monai.networks.nets.DiNTS(
+    #     in_channels=input_channels,
+    #     num_classes=output_classes,
+    #     cell_ops=5,
+    #     num_blocks=12,
+    #     num_depths=4,
+    #     channel_mul=0.5,
+    #     arch_code=None,
+    #     use_downsample=True,
+    # )
+
+    dints_space = monai.networks.nets.DintsSearchSpace(
         num_blocks=12,
         num_depths=4,
         channel_mul=0.5,
-        arch_code=arch_codes,
+        arch_code=None,
         use_downsample=True,
+    )
+
+    dints_space = dints_space.to(device)
+
+    model = monai.networks.nets.DiNTS(
+        dints_space=dints_space,
+        in_channels=input_channels,
+        num_classes=output_classes,
     )
 
     model = model.to(device)
 
-    arch_code2out = model.arch_code2out
-    cell_ops = model.cell_ops
-    num_blocks = model.num_blocks
-    num_depths = model.num_depths
+    arch_code2out = dints_space.arch_code2out
+    num_cell_ops = dints_space.num_cell_ops
+    num_blocks = dints_space.num_blocks
+    num_depths = dints_space.num_depths
     node_a = torch.ones((num_blocks + 1, num_depths)).to(device)
     arch_code_a = torch.ones((num_blocks, len(arch_code2out))).to(device)
-    arch_code_c = torch.ones((num_blocks, len(arch_code2out), cell_ops)).to(device)
+    arch_code_c = torch.ones((num_blocks, len(arch_code2out), num_cell_ops)).to(device)
 
-    post_pred = Compose([EnsureType(), AsDiscrete(argmax=True, to_onehot=True, num_classes=output_classes)])
-    post_label = Compose([EnsureType(), AsDiscrete(to_onehot=True, num_classes=output_classes)])
+    post_pred = Compose([EnsureType(), AsDiscrete(argmax=True, to_onehot=output_classes)])
+    post_label = Compose([EnsureType(), AsDiscrete(to_onehot=output_classes)])
 
     # loss function
     loss_func = monai.losses.DiceCELoss(
@@ -393,9 +409,15 @@ def main():
     )
 
     # optimizer
-    optimizer = torch.optim.Adam(model.weight_parameters(), lr=learning_rate)
-    arch_optimizer_a = torch.optim.Adam([model.log_alpha_a], lr=learning_rate, betas=(0.5, 0.999), weight_decay=0.0)
-    arch_optimizer_c = torch.optim.Adam([model.log_alpha_c], lr=learning_rate, betas=(0.5, 0.999), weight_decay=0.0)
+    stem_layers = []
+    for name, param in model.named_parameters():
+        if param.requires_grad == True:
+            if "stem" in name.lower():
+                stem_layers.append(param)
+
+    optimizer = torch.optim.Adam(dints_space.weight_parameters() + stem_layers, lr=learning_rate)
+    arch_optimizer_a = torch.optim.Adam([dints_space.log_alpha_a], lr=learning_rate, betas=(0.5, 0.999), weight_decay=0.0)
+    arch_optimizer_c = torch.optim.Adam([dints_space.log_alpha_c], lr=learning_rate, betas=(0.5, 0.999), weight_decay=0.0)
 
     print()
 
@@ -445,7 +467,7 @@ def main():
         #         param_group["lr"] = lr
         # else:
         #     lr = learning_rate
-
+        
         # lr = learning_rate * (learning_rate_gamma ** (epoch // learning_rate_step_size))
         # for param_group in optimizer.param_groups:
         #     param_group["lr"] = lr
@@ -469,10 +491,13 @@ def main():
             for param in model.parameters():
                 param.grad = None
 
-            for _ in model.module.weight_parameters():
+            for name, param in model.named_parameters():
+                if "stem" in name.lower():
+                    param.requires_grad == True
+            for _ in dints_space.module.weight_parameters():
                 _.requires_grad = True
-            model.module.log_alpha_a.requires_grad = False
-            model.module.log_alpha_c.requires_grad = False
+            dints_space.module.log_alpha_a.requires_grad = False
+            dints_space.module.log_alpha_c.requires_grad = False
 
             if amp:
                 with autocast():
@@ -637,7 +662,7 @@ def main():
                     )
 
                     print(_index + 1, "/", len(val_loader), value)
-
+                    
                     metric_count += len(value)
                     metric_sum += value.sum().item()
                     metric_vals = value.cpu().numpy()

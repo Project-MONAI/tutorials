@@ -127,7 +127,7 @@ def get_post_transforms():
         [
             EnsureTyped(keys="pred"),
             Activationsd(keys="pred", sigmoid=True),
-            AsDiscreted(keys="pred", threshold_values=True, logit_thresh=0.5),
+            AsDiscreted(keys="pred", threshold=0.5),
         ]
     )
 

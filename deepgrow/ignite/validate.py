@@ -60,7 +60,7 @@ def create_validator(args, click):
     post_transform_list = [
         EnsureTyped(keys='pred'),
         Activationsd(keys='pred', sigmoid=True),
-        AsDiscreted(keys='pred', threshold_values=True, logit_thresh=0.5)
+        AsDiscreted(keys='pred', threshold=0.5)
     ]
 
     if args.save_seg:

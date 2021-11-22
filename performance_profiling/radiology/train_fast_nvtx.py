@@ -195,9 +195,9 @@ dice_metric = DiceMetric(
 )
 
 post_pred = Compose(
-    [EnsureType(), AsDiscrete(argmax=True, to_onehot=True, n_classes=2)]
+    [EnsureType(), AsDiscrete(argmax=True, to_onehot=2)]
 )
-post_label = Compose([EnsureType(), AsDiscrete(to_onehot=True, n_classes=2)])
+post_label = Compose([EnsureType(), AsDiscrete(to_onehot=2)])
 
 best_metric = -1
 best_metric_epoch = -1

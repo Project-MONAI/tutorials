@@ -282,7 +282,7 @@ def main(cfg):
     postprocess = Compose(
         [
             Activations(sigmoid=True),
-            AsDiscrete(threshold_values=True),
+            AsDiscrete(threshold=0.5),
         ]
     )
 

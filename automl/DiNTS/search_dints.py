@@ -345,38 +345,21 @@ def main():
     train_loader_w = ThreadDataLoader(train_ds_w, num_workers=0, batch_size=num_images_per_batch, shuffle=True)
     val_loader = ThreadDataLoader(val_ds, num_workers=0, batch_size=1, shuffle=False)
 
-    if os.path.exists(args.arch_ckpt):
-        ckpt = torch.load(args.arch_ckpt)
-        node_a = ckpt["node_a"]
-        arch_code_a = ckpt["code_a"]
-        arch_code_c = ckpt["code_c"]
-        arch_codes = [node_a, arch_code_a, arch_code_c]
-
-        arch_code_a = torch.from_numpy(arch_code_a).to(torch.float32).cuda()
-        arch_code_c = F.one_hot(torch.from_numpy(arch_code_c), model.cell_ops).to(torch.float32).cuda()
-    else:
-        arch_codes = None
-
-    model = monai.networks.nets.DiNTS(
-        in_channels=input_channels,
-        num_classes=output_classes,
-        cell_ops=5,
+    grid = monai.networks.nets.DintsSearchSpace(
+        channel_mul=0.5,
         num_blocks=12,
         num_depths=4,
-        channel_mul=0.5,
-        arch_code=arch_codes,
         use_downsample=True,
+        device=device
+    )
+    model = monai.networks.nets.DiNTS(
+        dints_space = grid,
+        in_channels=input_channels,
+        num_classes=output_classes,
+        use_downsample=True
     )
 
     model = model.to(device)
-
-    arch_code2out = model.arch_code2out
-    cell_ops = model.cell_ops
-    num_blocks = model.num_blocks
-    num_depths = model.num_depths
-    node_a = torch.ones((num_blocks + 1, num_depths)).to(device)
-    arch_code_a = torch.ones((num_blocks, len(arch_code2out))).to(device)
-    arch_code_c = torch.ones((num_blocks, len(arch_code2out), cell_ops)).to(device)
 
     post_pred = Compose([EnsureType(), AsDiscrete(argmax=True, to_onehot=True, num_classes=output_classes)])
     post_label = Compose([EnsureType(), AsDiscrete(to_onehot=True, num_classes=output_classes)])

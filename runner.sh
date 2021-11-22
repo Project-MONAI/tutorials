@@ -35,6 +35,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" csv_datasets.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" UNet_input_size_constrains.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" network_api.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" tcia_csv_processing.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" transform_visualization.ipynb)
 
 # output formatting
 separator=""

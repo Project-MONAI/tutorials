@@ -3,7 +3,7 @@ clear
 
 TASK="Task09_Spleen"
 
-ARCH_CKPT="../arch_codes/search_code_20000.pth"
+ARCH_CKPT="arch_code.pth"
 CONFIG="../configs/config_${TASK}.yaml"
 DATA_ROOT="/home/dongy/Data/MSD/${TASK}"
 JSON_PATH="${DATA_ROOT}/dataset.json"
@@ -25,7 +25,7 @@ then
     export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 fi
 
-CHECKPOINT_ROOT="../models/${TASK}_Fold${FOLD}"
+CHECKPOINT_ROOT="models/${TASK}_fold${FOLD}"
 CHECKPOINT="${CHECKPOINT_ROOT}/best_metric_model.pth"
 JSON_KEY="training"
 OUTPUT_ROOT="models/${TASK}_fold${FOLD}"

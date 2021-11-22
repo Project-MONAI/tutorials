@@ -4,7 +4,6 @@ clear
 # TASK="Task07_Pancreas"
 TASK="Task09_Spleen"
 
-ARCH_CKPT="search_code_20000.pth"
 CONFIG="../config.yaml"
 DATA_ROOT="/home/dongy/Data/MSD/${TASK}"
 JSON_PATH="${DATA_ROOT}/dataset.json"
@@ -37,8 +36,7 @@ python -m torch.distributed.launch \
     --node_rank=0 \
     --master_addr=localhost \
     --master_port=1234 \
-    search_dints.py --arch_ckpt=${ARCH_CKPT} \
-                    --checkpoint=${CHECKPOINT} \
+    search_dints.py --checkpoint=${CHECKPOINT} \
                     --fold=${FOLD} \
                     --json=${JSON_PATH} \
                     --json_key=${JSON_KEY} \

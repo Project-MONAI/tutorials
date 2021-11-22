@@ -9,6 +9,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+This example shows how to execute the DiNTS algorithm to search the optimal neural architecture with
+distributed training based on PyTorch native `DistributedDataParallel` module.
+It can run on several nodes with multiple GPU devices on every node.
+This example is a real-world task based on Decathlon challenge Task09: Spleen (CT) segmentation.
+Under default settings, each single GPU needs to use ~13GB memory for network training.
+Main steps to set up the distributed training:
+- Execute `torch.distributed.launch` to create processes on every node for every GPU.
+  It receives parameters as below:
+  `--nproc_per_node=NUM_GPUS_PER_NODE`
+  `--nnodes=NUM_NODES`
+  `--node_rank=INDEX_CURRENT_NODE`
+  `--master_addr="192.168.1.1"`
+  `--master_port=1234`
+  For more details, refer to https://github.com/pytorch/pytorch/blob/master/torch/distributed/launch.py.
+- Use `init_process_group` to initialize every process, every GPU runs in a separate process with unique rank.
+  Here we use `NVIDIA NCCL` as the backend and must set `init_method="env://"` if use `torch.distributed.launch`.
+- Wrap the model with `DistributedDataParallel` after moving to expected device.
+- Partition dataset before training, so every rank process will only handle its own data partition.
+Note:
+    `torch.distributed.launch` will launch `nnodes * nproc_per_node = world_size` processes in total.
+    Suggest setting exactly the same software environment for every node, especially `PyTorch`, `nccl`, etc.
+    A good practice is to use the same MONAI docker image for all nodes directly.
+    Example script to execute this program on every node:
+    python -m torch.distributed.launch --nproc_per_node=NUM_GPUS_PER_NODE
+           --nnodes=NUM_NODES --node_rank=INDEX_CURRENT_NODE
+           --master_addr="192.168.1.1" --master_port=1234
+           brats_training_ddp.py -d DIR_OF_TESTDATA
+    This example was tested with [Ubuntu 16.04/20.04], [NCCL 2.6.3].
+Referring to: https://pytorch.org/tutorials/intermediate/ddp_tutorial.html
+Some codes are taken from https://github.com/pytorch/examples/blob/master/imagenet/main.py
+
+"""
+
 import argparse
 import copy
 import json
@@ -94,12 +128,12 @@ from scipy import ndimage
 
 def main():
     parser = argparse.ArgumentParser(description="training")
-    parser.add_argument(
-        "--arch_ckpt",
-        action="store",
-        required=True,
-        help="data root",
-    )
+    # parser.add_argument(
+    #     "--arch_ckpt",
+    #     action="store",
+    #     required=True,
+    #     help="data root",
+    # )
     parser.add_argument(
         "--checkpoint",
         type=str,
@@ -182,6 +216,16 @@ def main():
     dist.init_process_group(backend="nccl", init_method="env://")
 
     # data
+    if dist.get_rank() == 0:
+        resource = "https://msd-for-monai.s3-us-west-2.amazonaws.com/" + args.root.split(os.sep)[-1] + ".tar"
+        compressed_file = args.root + ".tar"
+        data_dir = args.root
+        root_dir = os.path.join(*args.root.split(os.sep)[:-1])
+        if not os.path.exists(data_dir):
+            download_and_extract(resource, compressed_file, root_dir)
+
+    dist.barrier()
+
     with open(args.json, "r") as f:
         json_data = json.load(f)
 
@@ -199,7 +243,7 @@ def main():
             continue
 
         files.append({"image": str_img, "label": str_seg})
-
+    
     train_files = files
 
     random.shuffle(train_files)
@@ -217,7 +261,7 @@ def main():
     for _i in range(len(list_valid)):
         str_img = os.path.join(args.root, list_valid[_i]["image"])
         str_seg = os.path.join(args.root, list_valid[_i]["label"])
-
+                
         if (not os.path.exists(str_img)) or (not os.path.exists(str_seg)):
             continue
 
@@ -401,7 +445,7 @@ def main():
         #         param_group["lr"] = lr
         # else:
         #     lr = learning_rate
-
+        
         # lr = learning_rate * (learning_rate_gamma ** (epoch // learning_rate_step_size))
         # for param_group in optimizer.param_groups:
         #     param_group["lr"] = lr
@@ -593,7 +637,7 @@ def main():
                     )
 
                     print(_index + 1, "/", len(val_loader), value)
-
+                    
                     metric_count += len(value)
                     metric_sum += value.sum().item()
                     metric_vals = value.cpu().numpy()

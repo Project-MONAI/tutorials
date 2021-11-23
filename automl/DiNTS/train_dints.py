@@ -191,11 +191,11 @@ def main():
     determ = False
     fold = int(args.fold)
     input_channels = 1
-    learning_rate = 0.00002
+    learning_rate = 0.0001
     learning_rate_final = 0.00001
     num_images_per_batch = 2
-    num_epochs = 100
-    num_epochs_per_validation = 10
+    num_epochs = 8000
+    num_epochs_per_validation = 40
     num_folds = int(args.num_folds)
     num_patches_per_image = 1
     num_sw_batch_size = 6
@@ -319,11 +319,11 @@ def main():
         ]
     )
 
-    train_ds = monai.data.Dataset(data=train_files, transform=train_transforms)
-    val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
+    # train_ds = monai.data.Dataset(data=train_files, transform=train_transforms)
+    # val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
 
-    # train_ds = monai.data.CacheDataset(data=train_files, transform=train_transforms, cache_rate=1.0, num_workers=8)
-    # val_ds = monai.data.CacheDataset(data=val_files, transform=val_transforms, cache_rate=1.0, num_workers=2)
+    train_ds = monai.data.CacheDataset(data=train_files, transform=train_transforms, cache_rate=1.0, num_workers=8)
+    val_ds = monai.data.CacheDataset(data=val_files, transform=val_transforms, cache_rate=1.0, num_workers=2)
 
     # train_loader = DataLoader(train_ds, batch_size=num_images_per_batch, shuffle=True, num_workers=8, pin_memory=torch.cuda.is_available())
     # val_loader = DataLoader(val_ds, batch_size=1, shuffle=False, num_workers=2, pin_memory=torch.cuda.is_available())
@@ -342,14 +342,16 @@ def main():
         num_depths=4,
         use_downsample=True,
         arch_code=[arch_code_a, arch_code_c],
-        device = device
+        device=device,
     )
+    dints_space.is_search = False
 
     model = monai.networks.nets.DiNTS(
         dints_space=dints_space,
         in_channels=input_channels,
         num_classes=output_classes,
-        use_downsample=True
+        use_downsample=True,
+        node_a=node_a,
     )
 
     model = model.to(device)

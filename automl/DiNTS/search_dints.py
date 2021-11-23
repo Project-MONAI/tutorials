@@ -197,8 +197,8 @@ def main():
     learning_rate_step_size = 1000
     num_images_per_batch = 1
     num_epochs = 10000
-    num_epochs_per_validation = 20
-    num_epochs_warmup = 2000
+    num_epochs_per_validation = 2
+    num_epochs_warmup = 1
     num_folds = int(args.num_folds)
     num_patches_per_image = 1
     num_sw_batch_size = 6
@@ -329,13 +329,13 @@ def main():
         ]
     )
 
-    # train_ds_a = monai.data.CacheDataset(data=train_files_a, transform=train_transforms, cache_rate=1.0, num_workers=8)
-    # train_ds_w = monai.data.CacheDataset(data=train_files_w, transform=train_transforms, cache_rate=1.0, num_workers=8)
-    # val_ds = monai.data.CacheDataset(data=val_files, transform=val_transforms, cache_rate=1.0, num_workers=2)
+    train_ds_a = monai.data.CacheDataset(data=train_files_a, transform=train_transforms, cache_rate=1.0, num_workers=8)
+    train_ds_w = monai.data.CacheDataset(data=train_files_w, transform=train_transforms, cache_rate=1.0, num_workers=8)
+    val_ds = monai.data.CacheDataset(data=val_files, transform=val_transforms, cache_rate=1.0, num_workers=2)
 
-    train_ds_a = monai.data.Dataset(data=train_files_a, transform=train_transforms)
-    train_ds_w = monai.data.Dataset(data=train_files_w, transform=train_transforms)
-    val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
+    # train_ds_a = monai.data.Dataset(data=train_files_a, transform=train_transforms)
+    # train_ds_w = monai.data.Dataset(data=train_files_w, transform=train_transforms)
+    # val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
 
     # train_loader_a = DataLoader(train_ds_a, batch_size=num_images_per_batch, shuffle=True, num_workers=8, pin_memory=torch.cuda.is_available())
     # train_loader_w = DataLoader(train_ds_w, batch_size=num_images_per_batch, shuffle=True, num_workers=8, pin_memory=torch.cuda.is_available())
@@ -344,24 +344,26 @@ def main():
     train_loader_a = ThreadDataLoader(train_ds_a, num_workers=0, batch_size=num_images_per_batch, shuffle=True)
     train_loader_w = ThreadDataLoader(train_ds_w, num_workers=0, batch_size=num_images_per_batch, shuffle=True)
     val_loader = ThreadDataLoader(val_ds, num_workers=0, batch_size=1, shuffle=False)
+
     dints_space = monai.networks.nets.TopologySearchSpace(
         channel_mul=0.5,
         num_blocks=12,
         num_depths=4,
         use_downsample=True,
-        device=device
+        device=device,
     )
+
     model = monai.networks.nets.DiNTS(
         dints_space = dints_space,
         in_channels=input_channels,
         num_classes=output_classes,
-        use_downsample=True
+        use_downsample=True,
     )
 
     model = model.to(device)
 
-    post_pred = Compose([EnsureType(), AsDiscrete(argmax=True, to_onehot=True, num_classes=output_classes)])
-    post_label = Compose([EnsureType(), AsDiscrete(to_onehot=True, num_classes=output_classes)])
+    post_pred = Compose([EnsureType(), AsDiscrete(argmax=True, to_onehot=output_classes)])
+    post_label = Compose([EnsureType(), AsDiscrete(to_onehot=output_classes)])
 
     # loss function
     loss_func = monai.losses.DiceCELoss(
@@ -442,16 +444,18 @@ def main():
         model.train()
         epoch_loss = 0
         loss_torch = torch.zeros(2, dtype=torch.float, device=device)
+        epoch_loss_arch = 0
+        loss_torch_arch = torch.zeros(2, dtype=torch.float, device=device)
         step = 0
 
         for batch_data in train_loader_w:
             step += 1
             inputs, labels = batch_data["image"].to(device), batch_data["label"].to(device)
 
-            for name, param in model.weight_parameters():
-                param.requires_grad == True
-            dints_space.module.log_alpha_a.requires_grad = False
-            dints_space.module.log_alpha_c.requires_grad = False
+            for _ in model.module.weight_parameters():
+                _.requires_grad = True
+            dints_space.log_alpha_a.requires_grad = False
+            dints_space.log_alpha_c.requires_grad = False
 
             if amp:
                 with autocast():
@@ -483,7 +487,7 @@ def main():
                 print("[{0}] ".format(str(datetime.now())[:19]) + f"{step}/{epoch_len}, train_loss: {loss.item():.4f}")
                 writer.add_scalar("train_loss", loss.item(), epoch_len * epoch + step)
 
-            if (epoch + 1) < num_epochs_warmup:
+            if epoch < num_epochs_warmup:
                 continue
 
             try:
@@ -495,8 +499,8 @@ def main():
 
             for _ in model.module.weight_parameters():
                 _.requires_grad = False
-            model.module.log_alpha_a.requires_grad = True
-            model.module.log_alpha_c.requires_grad = True
+            dints_space.log_alpha_a.requires_grad = True
+            dints_space.log_alpha_c.requires_grad = True
 
              # linear increase topology and RAM loss
             entropy_alpha_c = torch.tensor(0.).cuda()
@@ -506,15 +510,15 @@ def main():
             ram_cost_loss = torch.tensor(0.).cuda()
             topology_loss = torch.tensor(0.).cuda()
 
-            probs_a, arch_code_prob_a = model.module.get_prob_a(child=True)
+            probs_a, arch_code_prob_a = dints_space.get_prob_a(child=True)
             entropy_alpha_a = -((probs_a)*torch.log(probs_a + 1e-5)).mean()
-            entropy_alpha_c = -(F.softmax(model.module.log_alpha_c, dim=-1) * \
-                F.log_softmax(model.module.log_alpha_c, dim=-1)).mean()
-            topology_loss =  model.module.get_topology_entropy(probs_a)
+            entropy_alpha_c = -(F.softmax(dints_space.log_alpha_c, dim=-1) * \
+                F.log_softmax(dints_space.log_alpha_c, dim=-1)).mean()
+            topology_loss = dints_space.get_topology_entropy(probs_a)
 
-            # ram_cost_full = model.module.get_ram_cost_usage(inputs.shape, True, cell_ram_cost=args.cell_ram_cost)
-            ram_cost_full = model.module.get_ram_cost_usage(inputs.shape, full=True, cell_ram_cost=False)
-            ram_cost_usage = model.module.get_ram_cost_usage(inputs.shape)
+            # ram_cost_full = dints_space.get_ram_cost_usage(inputs.shape, True, cell_ram_cost=args.cell_ram_cost)
+            ram_cost_full = dints_space.get_ram_cost_usage(inputs.shape, full=True)
+            ram_cost_usage = dints_space.get_ram_cost_usage(inputs.shape)
 
             # if args.use_ram_cost:
             #     ram_cost_loss = torch.abs(args.ram_cost - ram_cost_usage/ram_cost_full)
@@ -552,13 +556,28 @@ def main():
                 arch_optimizer_a.step()
                 arch_optimizer_c.step()
 
+            epoch_loss_arch += loss.item()
+            loss_torch_arch[0] += loss.item()
+            loss_torch_arch[1] += 1.0
+
+            if dist.get_rank() == 0:
+                print("[{0}] ".format(str(datetime.now())[:19]) + f"{step}/{epoch_len}, train_loss_arch: {loss.item():.4f}")
+                writer.add_scalar("train_loss_arch", loss.item(), epoch_len * epoch + step)
+
         # synchronizes all processes and reduce results
         dist.barrier()
         dist.all_reduce(loss_torch, op=torch.distributed.ReduceOp.SUM)
         loss_torch = loss_torch.tolist()
+        loss_torch_arch = loss_torch_arch.tolist()
         if dist.get_rank() == 0:
             loss_torch_epoch = loss_torch[0] / loss_torch[1]
             print(f"epoch {epoch + 1} average loss: {loss_torch_epoch:.4f}, best mean dice: {best_metric:.4f} at epoch {best_metric_epoch}")
+
+            if epoch < num_epochs_warmup:
+                continue
+
+            loss_torch_arch_epoch = loss_torch_arch[0] / loss_torch_arch[1]
+            print(f"epoch {epoch + 1} average arch loss: {loss_torch_arch_epoch:.4f}, best mean dice: {best_metric:.4f} at epoch {best_metric_epoch}")
 
         if (epoch + 1) >= num_epochs_warmup and (epoch + 1) % val_interval == 0:
             torch.cuda.empty_cache()
@@ -580,8 +599,6 @@ def main():
                     roi_size = patch_size_valid
                     sw_batch_size = num_sw_batch_size
 
-                    # test time augmentation
-                    ct = 1.0
                     if amp:
                         with torch.cuda.amp.autocast():
                             pred = sliding_window_inference(
@@ -601,8 +618,7 @@ def main():
                             mode="gaussian",
                             overlap=overlap_ratio,
                         )
-
-                    val_outputs = pred / ct
+                    val_outputs = pred
 
                     val_outputs = post_pred(val_outputs[0, ...])
                     val_outputs = val_outputs[None, ...]
@@ -651,7 +667,7 @@ def main():
                         best_metric_epoch = epoch + 1
                         best_metric_iterations = idx_iter
 
-                    node_a_d, arch_code_a_d, arch_code_c_d, arch_code_a_max_d = dints_space.module.decode()
+                    node_a_d, arch_code_a_d, arch_code_c_d, arch_code_a_max_d = dints_space.decode()
                     torch.save(
                         {
                             "node_a": node_a_d,

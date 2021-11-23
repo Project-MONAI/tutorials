@@ -101,6 +101,17 @@ python -u panda_mil_train_evaluate_pytorch_gpu.py
     --validate
 ```
 
+### Stats
+
+Expected train and validation loss curves
+
+![mil_train_loss](./mil_train_loss.png)
+![mil_val_loss](./mil_val_loss.png)
+
+Expected validation QWK metric
+
+![mil_val_qwk](./mil_val_qwk.png)
+
 ## Questions and bugs
 
 - For questions relating to the use of MONAI, please us our [Discussions tab](https://github.com/Project-MONAI/MONAI/discussions) on the main repository of MONAI.

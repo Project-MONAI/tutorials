@@ -22,12 +22,12 @@ The script is tested with:
 ## Dependencies and installation
 
 ### MONAI
-
-```bash
-pip install "git+https://github.com/Project-MONAI/MONAI#egg=monai[tifffile,imagecodecs]"
+Please install the required dependencies
+```
+pip install tifffile
+pip install imagecodecs
 ```
 
-For more information please check out [the installation guide](https://docs.monai.io/en/latest/installation.html).
 
 ### Data
 

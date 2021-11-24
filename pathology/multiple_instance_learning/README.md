@@ -1,3 +1,4 @@
+
 # Multiple Instance Learning (MIL) Examples
 
 This tutorial contains a baseline method of Multiple Instance Learning (MIL) classification from Whole Slide Images (WSI).
@@ -22,12 +23,15 @@ The script is tested with:
 ## Dependencies and installation
 
 ### MONAI
+
 Please install the required dependencies
-```
+
+```bash
 pip install tifffile
 pip install imagecodecs
 ```
 
+For more information please check out [the installation guide](https://docs.monai.io/en/latest/installation.html).
 
 ### Data
 

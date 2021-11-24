@@ -4,7 +4,6 @@ clear
 # TASK="Task07_Pancreas"
 TASK="Task09_Spleen"
 
-CONFIG="../config.yaml"
 DATA_ROOT="/home/dongy/Data/MSD/${TASK}"
 JSON_PATH="${DATA_ROOT}/dataset.json"
 

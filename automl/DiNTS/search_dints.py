@@ -128,12 +128,6 @@ from scipy import ndimage
 
 def main():
     parser = argparse.ArgumentParser(description="training")
-    # parser.add_argument(
-    #     "--arch_ckpt",
-    #     action="store",
-    #     required=True,
-    #     help="data root",
-    # )
     parser.add_argument(
         "--checkpoint",
         type=str,
@@ -192,9 +186,8 @@ def main():
     determ = False
     fold = int(args.fold)
     input_channels = 1
-    learning_rate = 0.0001
-    learning_rate_gamma = 1.0
-    learning_rate_step_size = 1000
+    learning_rate = 0.025
+    learning_rate_final = 0.00001
     num_images_per_batch = 1
     num_epochs = 10000
     num_epochs_per_validation = 2
@@ -345,7 +338,7 @@ def main():
     train_loader_w = ThreadDataLoader(train_ds_w, num_workers=0, batch_size=num_images_per_batch, shuffle=True)
     val_loader = ThreadDataLoader(val_ds, num_workers=0, batch_size=1, shuffle=False)
 
-    dints_space = monai.networks.nets.TopologySearchSpace(
+    dints_space = monai.networks.nets.TopologySearch(
         channel_mul=0.5,
         num_blocks=12,
         num_depths=4,
@@ -377,9 +370,9 @@ def main():
     )
 
     # optimizer
-    optimizer = torch.optim.Adam(model.weight_parameters(), lr=learning_rate)
-    arch_optimizer_a = torch.optim.Adam([dints_space.log_alpha_a], lr=learning_rate, betas=(0.5, 0.999), weight_decay=0.0)
-    arch_optimizer_c = torch.optim.Adam([dints_space.log_alpha_c], lr=learning_rate, betas=(0.5, 0.999), weight_decay=0.0)
+    optimizer = torch.optim.SGD(model.weight_parameters(), lr=learning_rate, momentum=0.9, weight_decay=0.00004)
+    arch_optimizer_a = torch.optim.Adam([dints_space.log_alpha_a], lr=0.001, betas=(0.5, 0.999), weight_decay=0.0)
+    arch_optimizer_c = torch.optim.Adam([dints_space.log_alpha_c], lr=0.001, betas=(0.5, 0.999), weight_decay=0.0)
 
     print()
 
@@ -420,19 +413,13 @@ def main():
     dataloader_a_iterator = iter(train_loader_a)
 
     start_time = time.time()
-    # for epoch in range(num_epochs // num_epochs_per_validation):
     for epoch in range(num_epochs):
-        # if learning_rate_final > -0.000001 and learning_rate_final < learning_rate:
-        #     # lr = learning_rate - epoch / (num_epochs - 1) * (learning_rate - learning_rate_final)
-        #     lr = (learning_rate - learning_rate_final) * (1 - epoch / (num_epochs - 1)) ** 0.9 + learning_rate_final
-        #     for param_group in optimizer.param_groups:
-        #         param_group["lr"] = lr
-        # else:
-        #     lr = learning_rate
-
-        # lr = learning_rate * (learning_rate_gamma ** (epoch // learning_rate_step_size))
-        # for param_group in optimizer.param_groups:
-        #     param_group["lr"] = lr
+        if learning_rate_final > -0.000001 and learning_rate_final < learning_rate:
+            lr = (learning_rate - learning_rate_final) * (1 - epoch / (num_epochs - 1)) ** 0.9 + learning_rate_final
+            for param_group in optimizer.param_groups:
+                param_group["lr"] = lr
+        else:
+            lr = learning_rate
 
         lr = optimizer.param_groups[0]["lr"]
 

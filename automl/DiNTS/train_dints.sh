@@ -4,11 +4,10 @@ clear
 TASK="Task09_Spleen"
 
 ARCH_CKPT="arch_code.pth"
-CONFIG="../configs/config_${TASK}.yaml"
 DATA_ROOT="/home/dongy/Data/MSD/${TASK}"
 JSON_PATH="${DATA_ROOT}/dataset.json"
 
-FOLD=0
+FOLD=4
 NUM_FOLDS=5
 
 NUM_GPUS_PER_NODE=4

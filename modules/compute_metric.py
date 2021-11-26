@@ -99,7 +99,7 @@ def compute(args):
             EnsureChannelFirstd(keys=["pred", "label"]),
             ScaleIntensityd(keys="pred"),
             EnsureTyped(keys=["pred", "label"]),
-            AsDiscreted(keys="pred", threshold_values=True),
+            AsDiscreted(keys="pred", threshold=0.5),
             KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
         ]
     )

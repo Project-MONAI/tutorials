@@ -65,7 +65,7 @@ def main(tempdir):
     roi_size = (96, 96, 96)
     sw_batch_size = 4
 
-    post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+    post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
     save_image = SaveImage(output_dir="tempdir", output_ext=".nii.gz", output_postfix="seg")
 
     def _sliding_window_processor(engine, batch):

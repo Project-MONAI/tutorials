@@ -84,7 +84,7 @@ def main(tempdir):
                                    # to ensure a smooth output, then execute `AsDiscreted` transform
             to_tensor=True,  # convert to PyTorch Tensor after inverting
         ),
-        AsDiscreted(keys="pred", threshold_values=True),
+        AsDiscreted(keys="pred", threshold=0.5),
         SaveImaged(keys="pred", meta_keys="pred_meta_dict", output_dir="./out", output_postfix="seg", resample=False),
     ])
 

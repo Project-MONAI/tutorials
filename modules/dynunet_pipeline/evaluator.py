@@ -86,8 +86,8 @@ class DynUNetEvaluator(SupervisedEvaluator):
         if not isinstance(num_classes, int):
             num_classes = int(num_classes)
         self.num_classes = num_classes
-        self.post_pred = AsDiscrete(argmax=True, to_onehot=True, num_classes=num_classes)
-        self.post_label = AsDiscrete(to_onehot=True, num_classes=num_classes)
+        self.post_pred = AsDiscrete(argmax=True, to_onehot=num_classes)
+        self.post_label = AsDiscrete(to_onehot=num_classes)
         self.tta_val = tta_val
 
     def _iteration(

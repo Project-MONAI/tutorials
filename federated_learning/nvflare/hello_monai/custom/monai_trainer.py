@@ -77,7 +77,7 @@ class MONAITrainer(Executor):
         # it will be completely terminated after the current iteration is finished.
         self.train_engine = conf.train_engine
         self.eval_engine = conf.eval_engine
-        
+
 
     def assign_current_model(self, model_weights: Dict[str, np.ndarray]):
         """

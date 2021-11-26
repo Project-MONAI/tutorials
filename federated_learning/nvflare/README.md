@@ -52,4 +52,3 @@ and enter the following link:
 `http://localhost:8888/?token=MONAIFLExample`
 
 Then run `1-Server.ipynb`. You should follow the steps in the notebook, which will guide you through the process of building an FL experiment based on 2 clients and 1 server.
-

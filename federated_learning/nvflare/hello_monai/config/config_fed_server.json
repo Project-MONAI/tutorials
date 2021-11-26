@@ -35,8 +35,8 @@
       "name": "AccumulateWeightedAggregator",
       "args": {
         "aggregation_weights": {
-          "org1-a": 1.0,
-          "org1-b": 0.5
+          "site-1": 1.0,
+          "site-2": 0.5
         },
         "expected_data_kind": "WEIGHTS"
       }
@@ -45,7 +45,7 @@
   "workflows": [
       {
         "id": "scatter_and_gather",
-        "path": "nvflare.app_common.workflows.scatter_and_gather.ScatterAndGather",
+        "name": "ScatterAndGather",
         "args": {
             "min_clients" : 1,
             "num_rounds" : 100,

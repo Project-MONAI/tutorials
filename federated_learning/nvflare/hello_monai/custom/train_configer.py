@@ -10,11 +10,9 @@
 # limitations under the License.
 
 import json
-import logging
 import os
 
 import torch
-import torch.distributed as dist
 from monai.apps.utils import download_and_extract
 from monai.data import CacheDataset, DataLoader, load_decathlon_datalist
 from monai.engines import SupervisedEvaluator, SupervisedTrainer
@@ -79,7 +77,7 @@ class TrainConfiger:
             ckpt_dir: the directory to save the checkpoint.
             amp: whether to enable auto-mixed-precision training.
             use_gpu: whether to use GPU in training.
-            multi_gpu: whether to use multiple GPUs for distributed training.
+
         """
         self.max_epochs = wf_config["max_epochs"]
         self.learning_rate = wf_config["learning_rate"]
@@ -88,7 +86,6 @@ class TrainConfiger:
         self.ckpt_dir = wf_config["ckpt_dir"]
         self.amp = wf_config["amp"]
         self.use_gpu = wf_config["use_gpu"]
-        self.multi_gpu = wf_config["multi_gpu"]
         self.local_rank = local_rank
         self.app_root = app_root
         self.dataset_folder_name = dataset_folder_name
@@ -96,12 +93,6 @@ class TrainConfiger:
             self.download_spleen_dataset()
 
     def set_device(self):
-        # if self.multi_gpu:
-        #     # initialize distributed training
-        #     dist.init_process_group(backend="nccl", init_method="env://")
-        #     device = torch.device(f"cuda:{self.local_rank}")
-        #     torch.cuda.set_device(device)
-        # else:
         device = torch.device("cuda" if self.use_gpu else "cpu")
         self.device = device
 
@@ -109,9 +100,7 @@ class TrainConfiger:
         url = "https://msd-for-monai.s3-us-west-2.amazonaws.com/Task09_Spleen.tar"
         name = os.path.join(self.app_root, self.dataset_folder_name)
         tarfile_name = f"{name}.tar"
-        download_and_extract(
-            url=url, filepath=tarfile_name, output_dir=self.app_root
-        )
+        download_and_extract(url=url, filepath=tarfile_name, output_dir=self.app_root)
 
     def configure(self):
         self.set_device()
@@ -124,13 +113,6 @@ class TrainConfiger:
             num_res_units=2,
             norm=Norm.BATCH,
         ).to(self.device)
-        # if self.multi_gpu:
-        #     network = DistributedDataParallel(
-        #         module=network,
-        #         device_ids=[self.device],
-        #         find_unused_parameters=False,
-        #     )
-
         train_transforms = Compose(
             [
                 LoadImaged(keys=("image", "label")),
@@ -176,13 +158,6 @@ class TrainConfiger:
             data_list_key="validation",
             base_dir=os.path.join(self.app_root, self.dataset_folder_name),
         )
-        # if self.multi_gpu:
-        #     train_datalist = partition_dataset(
-        #         data=train_datalist,
-        #         shuffle=True,
-        #         num_partitions=dist.get_world_size(),
-        #         even_divisible=True,
-        #     )[dist.get_rank()]
         train_ds = CacheDataset(
             data=train_datalist,
             transform=train_transforms,
@@ -303,7 +278,3 @@ class TrainConfiger:
             train_handlers=train_handlers,
             amp=self.amp,
         )
-
-        # if self.local_rank > 0:
-        #     self.train_engine.logger.setLevel(logging.WARNING)
-        #     self.eval_engine.logger.setLevel(logging.WARNING)

@@ -14,7 +14,7 @@ from typing import Dict
 
 import numpy as np
 import torch
-from nvflare.apis.dxo import DXO, DataKind, from_shareable, MetaKey
+from nvflare.apis.dxo import DXO, DataKind, MetaKey, from_shareable
 from nvflare.apis.event_type import EventType
 from nvflare.apis.executor import Executor
 from nvflare.apis.fl_constant import FLContextKey, ReturnCode
@@ -35,9 +35,10 @@ class MONAITrainer(Executor):
 
     """
 
-    def __init__(self,
+    def __init__(
+        self,
         aggregation_epochs: int = 1,
-        train_task_name = AppConstants.TASK_TRAIN,
+        train_task_name: str = AppConstants.TASK_TRAIN,
     ):
         super().__init__()
         """
@@ -56,8 +57,9 @@ class MONAITrainer(Executor):
         # Initialize train and evaluation engines.
         app_root = fl_ctx.get_prop(FLContextKey.APP_ROOT)
         fl_args = fl_ctx.get_prop(FLContextKey.ARGS)
-        num_gpus = fl_ctx.get_prop(AppConstants.NUMBER_OF_GPUS, 1)
-        self.multi_gpu = num_gpus > 1
+        # will update multi-gpu supports later
+        # num_gpus = fl_ctx.get_prop(AppConstants.NUMBER_OF_GPUS, 1)
+        # self.multi_gpu = num_gpus > 1
         self.client_name = fl_ctx.get_identity_name()
         self.log_info(
             fl_ctx,
@@ -77,7 +79,6 @@ class MONAITrainer(Executor):
         # it will be completely terminated after the current iteration is finished.
         self.train_engine = conf.train_engine
         self.eval_engine = conf.eval_engine
-        
 
     def assign_current_model(self, model_weights: Dict[str, np.ndarray]):
         """
@@ -88,8 +89,6 @@ class MONAITrainer(Executor):
 
         """
         net = self.train_engine.network
-        # if self.multi_gpu:
-        #     net = net.module
 
         local_var_dict = net.state_dict()
         model_keys = model_weights.keys()
@@ -115,8 +114,6 @@ class MONAITrainer(Executor):
         The extracted weights will be converted into a numpy array based dict.
         """
         net = self.train_engine.network
-        # if self.multi_gpu:
-        #     net = net.module
         local_state_dict = net.state_dict()
         local_model_dict = {}
         for var_name in local_state_dict:
@@ -139,9 +136,7 @@ class MONAITrainer(Executor):
         """
         # update meta, NUM_STEPS_CURRENT_ROUND is needed for aggregation.
         if self.achieved_meta is None:
-            meta = {
-                MetaKey.NUM_STEPS_CURRENT_ROUND: self.current_iters
-            }
+            meta = {MetaKey.NUM_STEPS_CURRENT_ROUND: self.current_iters}
         else:
             meta = self.achieved_meta
             meta[MetaKey.NUM_STEPS_CURRENT_ROUND] = self.current_iters
@@ -188,7 +183,11 @@ class MONAITrainer(Executor):
         return shareable
 
     def execute(
-        self, task_name: str, shareable: Shareable, fl_ctx: FLContext, abort_signal: Signal
+        self,
+        task_name: str,
+        shareable: Shareable,
+        fl_ctx: FLContext,
+        abort_signal: Signal,
     ) -> Shareable:
         """
         This function is an extended function from the super class.
@@ -212,13 +211,18 @@ class MONAITrainer(Executor):
             dxo = from_shareable(shareable)
             # check if dxo is valid.
             if not isinstance(dxo, DXO):
-                self.log_exception(fl_ctx, f"dxo excepted type DXO. Got {type(dxo)} instead.")
+                self.log_exception(
+                    fl_ctx, f"dxo excepted type DXO. Got {type(dxo)} instead."
+                )
                 shareable.set_return_code(ReturnCode.EXECUTION_EXCEPTION)
                 return shareable
 
             # ensure data kind is weights.
             if not dxo.data_kind == DataKind.WEIGHTS:
-                self.log_exception(fl_ctx, f"data_kind expected WEIGHTS but got {dxo.data_kind} instead.")
+                self.log_exception(
+                    fl_ctx,
+                    f"data_kind expected WEIGHTS but got {dxo.data_kind} instead.",
+                )
                 shareable.set_return_code(ReturnCode.EXECUTION_EXCEPTION)
                 return shareable
 

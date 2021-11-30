@@ -4,16 +4,20 @@ clear
 TASK="Task09_Spleen"
 
 ARCH_CKPT="arch_code.pth"
-DATA_ROOT="/home/dongy/Data/MSD/${TASK}"
+# DATA_ROOT="/home/dongy/Data/MSD/${TASK}"
+DATA_ROOT="/workspace/data_msd/${TASK}"
 JSON_PATH="${DATA_ROOT}/dataset.json"
 
-FOLD=4
+FOLD=0
 NUM_FOLDS=5
 
-NUM_GPUS_PER_NODE=4
+NUM_GPUS_PER_NODE=8
 NUM_NODES=1
 
-if [ ${NUM_GPUS_PER_NODE} -eq 2 ]
+if [ ${NUM_GPUS_PER_NODE} -eq 1 ]
+then
+    export CUDA_VISIBLE_DEVICES=0
+elif [ ${NUM_GPUS_PER_NODE} -eq 2 ]
 then
     export CUDA_VISIBLE_DEVICES=0,1
 elif [ ${NUM_GPUS_PER_NODE} -eq 4 ]

@@ -194,13 +194,13 @@ def main():
     learning_rate = 0.0001
     learning_rate_final = 0.00001
     num_images_per_batch = 2
-    num_epochs = 8000
-    num_epochs_per_validation = 20
+    num_epochs = 13500
+    num_epochs_per_validation = 50
     num_folds = int(args.num_folds)
     num_patches_per_image = 1
     num_sw_batch_size = 6
     output_classes = 2
-    overlap_ratio = 0.625
+    overlap_ratio = 0.5
     patch_size = (96, 96, 96)
     patch_size_valid = (96, 96, 96)
     spacing = [1.0, 1.0, 1.0]
@@ -292,7 +292,7 @@ def main():
             ),
             Lambdad(keys=["label4crop"], func=lambda x: 0),
             RandRotated(keys=["image", "label"], range_x=0.3, range_y=0.3, range_z=0.3, mode=["bilinear", "nearest"], prob=0.2),
-            RandZoomd(keys=["image", "label"],min_zoom=0.8,max_zoom=1.2,mode=["trilinear", "nearest"], align_corners=[True, None], prob=0.16),
+            RandZoomd(keys=["image", "label"], min_zoom=0.8, max_zoom=1.2, mode=["trilinear", "nearest"], align_corners=[True, None], prob=0.16),
             RandGaussianSmoothd(keys=["image"], sigma_x=(0.5,1.15), sigma_y=(0.5,1.15), sigma_z=(0.5,1.15), prob=0.15),
             RandScaleIntensityd(keys=["image"], factors=0.3, prob=0.5),
             RandShiftIntensityd(keys=["image"], offsets=0.1, prob=0.5),

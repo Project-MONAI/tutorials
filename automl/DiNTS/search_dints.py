@@ -68,12 +68,12 @@ from datetime import datetime
 from glob import glob
 from torch import nn
 from torch.nn.parallel import DistributedDataParallel
+from monai.apps import download_and_extract
 from monai.data import (
     DataLoader,
     ThreadDataLoader,
     decollate_batch,
 )
-# from torch.utils.data.distributed import DistributedSampler
 from torch.utils.tensorboard import SummaryWriter
 from monai.transforms import (
     apply_transform,
@@ -184,18 +184,19 @@ def main():
 
     amp = True
     determ = False
+    factor_ram_cost = 0.2
     fold = int(args.fold)
     input_channels = 1
-    learning_rate = 0.025
+    learning_rate = 0.001
     learning_rate_final = 0.00001
     num_images_per_batch = 1
-    num_epochs = 10000
-    num_epochs_per_validation = 2
-    num_epochs_warmup = 1
+    num_epochs = 1430
+    num_epochs_per_validation = 60
+    num_epochs_warmup = 715
     num_folds = int(args.num_folds)
     num_patches_per_image = 1
     num_sw_batch_size = 6
-    output_classes = 2
+    output_classes = 3
     overlap_ratio = 0.625
     patch_size = (96, 96, 96)
     patch_size_valid = (96, 96, 96)
@@ -274,7 +275,7 @@ def main():
             Orientationd(keys=["image", "label"], axcodes="RAS"),
             Spacingd(keys=["image", "label"], pixdim=spacing, mode=("bilinear", "nearest"), align_corners=(True, True)),
             CastToTyped(keys=["image"], dtype=(torch.float32)),
-            ScaleIntensityRanged(keys=["image"], a_min=-125.0, a_max=275.0, b_min=0.0, b_max=1.0, clip=True),
+            ScaleIntensityRanged(keys=["image"], a_min=-87.0, a_max=199.0, b_min=0.0, b_max=1.0, clip=True),
             CastToTyped(keys=["image", "label"], dtype=(np.float16, np.uint8)),
             CopyItemsd(keys=["label"], times=1, names=["label4crop"]),
             Lambdad(
@@ -295,7 +296,7 @@ def main():
             ),
             Lambdad(keys=["label4crop"], func=lambda x: 0),
             RandRotated(keys=["image", "label"], range_x=0.3, range_y=0.3, range_z=0.3, mode=["bilinear", "nearest"], prob=0.2),
-            RandZoomd(keys=["image", "label"],min_zoom=0.8,max_zoom=1.2,mode=["trilinear", "nearest"], align_corners=[True, None], prob=0.16),
+            RandZoomd(keys=["image", "label"], min_zoom=0.8, max_zoom=1.2, mode=["trilinear", "nearest"], align_corners=[True, None], prob=0.16),
             RandGaussianSmoothd(keys=["image"], sigma_x=(0.5,1.15), sigma_y=(0.5,1.15), sigma_z=(0.5,1.15), prob=0.15),
             RandScaleIntensityd(keys=["image"], factors=0.3, prob=0.5),
             RandShiftIntensityd(keys=["image"], offsets=0.1, prob=0.5),
@@ -315,7 +316,7 @@ def main():
             Orientationd(keys=["image", "label"], axcodes="RAS"),
             Spacingd(keys=["image", "label"], pixdim=spacing, mode=("bilinear", "nearest"), align_corners=(True, True)),
             CastToTyped(keys=["image"], dtype=(torch.float32)),
-            ScaleIntensityRanged(keys=["image"], a_min=-125.0, a_max=275.0, b_min=0.0, b_max=1.0, clip=True),
+            ScaleIntensityRanged(keys=["image"], a_min=-87.0, a_max=199.0, b_min=0.0, b_max=1.0, clip=True),
             CastToTyped(keys=["image", "label"], dtype=(np.float32, np.uint8)),
             EnsureTyped(keys=["image", "label"]),
             ToTensord(keys=["image", "label"])
@@ -354,6 +355,8 @@ def main():
     )
 
     model = model.to(device)
+
+    model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
 
     post_pred = Compose([EnsureType(), AsDiscrete(argmax=True, to_onehot=output_classes)])
     post_label = Compose([EnsureType(), AsDiscrete(to_onehot=output_classes)])
@@ -435,87 +438,98 @@ def main():
         loss_torch_arch = torch.zeros(2, dtype=torch.float, device=device)
         step = 0
 
-        for batch_data in train_loader_w:
-            step += 1
-            inputs, labels = batch_data["image"].to(device), batch_data["label"].to(device)
+        with torch.autograd.set_detect_anomaly(True):
+            for batch_data in train_loader_w:
+                step += 1
+                inputs, labels = batch_data["image"].to(device), batch_data["label"].to(device)
 
-            for _ in model.module.weight_parameters():
-                _.requires_grad = True
-            dints_space.log_alpha_a.requires_grad = False
-            dints_space.log_alpha_c.requires_grad = False
+                for _ in model.module.weight_parameters():
+                    _.requires_grad = True
+                dints_space.log_alpha_a.requires_grad = False
+                dints_space.log_alpha_c.requires_grad = False
 
-            if amp:
-                with autocast():
+                if amp:
+                    with autocast():
+                        outputs = model(inputs)
+                        if output_classes == 2:
+                            loss = loss_func(torch.flip(outputs, dims=[1]), 1 - labels)
+                        else:
+                            loss = loss_func(outputs, labels)
+
+                    scaler.scale(loss).backward()
+                    scaler.step(optimizer)
+                    scaler.update()
+                else:
                     outputs = model(inputs)
                     if output_classes == 2:
                         loss = loss_func(torch.flip(outputs, dims=[1]), 1 - labels)
                     else:
                         loss = loss_func(outputs, labels)
+                    loss.backward()
+                    optimizer.step()
 
-                scaler.scale(loss).backward()
-                scaler.step(optimizer)
-                scaler.update()
-            else:
-                outputs = model(inputs)
-                if output_classes == 2:
-                    loss = loss_func(torch.flip(outputs, dims=[1]), 1 - labels)
+                epoch_loss += loss.item()
+                loss_torch[0] += loss.item()
+                loss_torch[1] += 1.0
+                epoch_len = len(train_loader_w)
+                idx_iter += 1
+
+                if dist.get_rank() == 0:
+                    print("[{0}] ".format(str(datetime.now())[:19]) + f"{step}/{epoch_len}, train_loss: {loss.item():.4f}")
+                    writer.add_scalar("train_loss", loss.item(), epoch_len * epoch + step)
+
+                if epoch < num_epochs_warmup:
+                    continue
+
+                try:
+                    sample_a = next(dataloader_a_iterator)
+                except StopIteration:
+                    dataloader_a_iterator = iter(train_loader_a)
+                    sample_a = next(dataloader_a_iterator)
+                inputs_search, labels_search = sample_a["image"].to(device), sample_a["label"].to(device)
+
+                for _ in model.module.weight_parameters():
+                    _.requires_grad = False
+                dints_space.log_alpha_a.requires_grad = True
+                dints_space.log_alpha_c.requires_grad = True
+
+                # linear increase topology and RAM loss
+                entropy_alpha_c = torch.tensor(0.).cuda()
+                entropy_alpha_a = torch.tensor(0.).cuda()
+                ram_cost_full = torch.tensor(0.).cuda()
+                ram_cost_usage = torch.tensor(0.).cuda()
+                ram_cost_loss = torch.tensor(0.).cuda()
+                topology_loss = torch.tensor(0.).cuda()
+
+                probs_a, arch_code_prob_a = dints_space.get_prob_a(child=True)
+                entropy_alpha_a = -((probs_a)*torch.log(probs_a + 1e-5)).mean()
+                entropy_alpha_c = -(F.softmax(dints_space.log_alpha_c, dim=-1) * \
+                    F.log_softmax(dints_space.log_alpha_c, dim=-1)).mean()
+                topology_loss = dints_space.get_topology_entropy(probs_a)
+
+                ram_cost_full = dints_space.get_ram_cost_usage(inputs.shape, full=True)
+                ram_cost_usage = dints_space.get_ram_cost_usage(inputs.shape)
+                ram_cost_loss = torch.abs(factor_ram_cost - ram_cost_usage / ram_cost_full)
+
+                arch_optimizer_a.zero_grad()
+                arch_optimizer_c.zero_grad()
+
+                if amp:
+                    with autocast():
+                        outputs_search = model(inputs_search)
+                        if output_classes == 2:
+                            loss = loss_func(torch.flip(outputs_search, dims=[1]), 1 - labels_search)
+                        else:
+                            loss = loss_func(outputs_search, labels_search)
+
+                        loss += 1.0 * (1.0 * (entropy_alpha_a + entropy_alpha_c) + ram_cost_loss \
+                                                        + 0.001 * topology_loss)
+
+                    scaler.scale(loss).backward()
+                    scaler.step(arch_optimizer_a)
+                    scaler.step(arch_optimizer_c)
+                    scaler.update()
                 else:
-                    loss = loss_func(outputs, labels)
-                loss.backward()
-                optimizer.step()
-
-            epoch_loss += loss.item()
-            loss_torch[0] += loss.item()
-            loss_torch[1] += 1.0
-            epoch_len = len(train_loader_w)
-            idx_iter += 1
-
-            if dist.get_rank() == 0:
-                print("[{0}] ".format(str(datetime.now())[:19]) + f"{step}/{epoch_len}, train_loss: {loss.item():.4f}")
-                writer.add_scalar("train_loss", loss.item(), epoch_len * epoch + step)
-
-            if epoch < num_epochs_warmup:
-                continue
-
-            try:
-                sample_a = next(dataloader_a_iterator)
-            except StopIteration:
-                dataloader_a_iterator = iter(train_loader_a)
-                sample_a = next(dataloader_a_iterator)
-            inputs_search, labels_search = sample_a["image"].to(device), sample_a["label"].to(device)
-
-            for _ in model.module.weight_parameters():
-                _.requires_grad = False
-            dints_space.log_alpha_a.requires_grad = True
-            dints_space.log_alpha_c.requires_grad = True
-
-             # linear increase topology and RAM loss
-            entropy_alpha_c = torch.tensor(0.).cuda()
-            entropy_alpha_a = torch.tensor(0.).cuda()
-            ram_cost_full = torch.tensor(0.).cuda()
-            ram_cost_usage = torch.tensor(0.).cuda()
-            ram_cost_loss = torch.tensor(0.).cuda()
-            topology_loss = torch.tensor(0.).cuda()
-
-            probs_a, arch_code_prob_a = dints_space.get_prob_a(child=True)
-            entropy_alpha_a = -((probs_a)*torch.log(probs_a + 1e-5)).mean()
-            entropy_alpha_c = -(F.softmax(dints_space.log_alpha_c, dim=-1) * \
-                F.log_softmax(dints_space.log_alpha_c, dim=-1)).mean()
-            topology_loss = dints_space.get_topology_entropy(probs_a)
-
-            # ram_cost_full = dints_space.get_ram_cost_usage(inputs.shape, True, cell_ram_cost=args.cell_ram_cost)
-            ram_cost_full = dints_space.get_ram_cost_usage(inputs.shape, full=True)
-            ram_cost_usage = dints_space.get_ram_cost_usage(inputs.shape)
-
-            # if args.use_ram_cost:
-            #     ram_cost_loss = torch.abs(args.ram_cost - ram_cost_usage/ram_cost_full)
-            ram_cost_loss = torch.abs(0.80 - ram_cost_usage / ram_cost_full)
-
-            arch_optimizer_a.zero_grad()
-            arch_optimizer_c.zero_grad()
-
-            if amp:
-                with autocast():
                     outputs_search = model(inputs_search)
                     if output_classes == 2:
                         loss = loss_func(torch.flip(outputs_search, dims=[1]), 1 - labels_search)
@@ -523,33 +537,19 @@ def main():
                         loss = loss_func(outputs_search, labels_search)
 
                     loss += 1.0 * (1.0 * (entropy_alpha_a + entropy_alpha_c) + ram_cost_loss \
-                                                    + 0.001 * topology_loss)
+                                    + 0.001 * topology_loss)
 
-                scaler.scale(loss).backward()
-                scaler.step(arch_optimizer_a)
-                scaler.step(arch_optimizer_c)
-                scaler.update()
-            else:
-                outputs_search = model(inputs_search)
-                if output_classes == 2:
-                    loss = loss_func(torch.flip(outputs_search, dims=[1]), 1 - labels_search)
-                else:
-                    loss = loss_func(outputs_search, labels_search)
+                    loss.backward()
+                    arch_optimizer_a.step()
+                    arch_optimizer_c.step()
 
-                loss += 1.0 * (1.0 * (entropy_alpha_a + entropy_alpha_c) + ram_cost_loss \
-                                + 0.001 * topology_loss)
+                epoch_loss_arch += loss.item()
+                loss_torch_arch[0] += loss.item()
+                loss_torch_arch[1] += 1.0
 
-                loss.backward()
-                arch_optimizer_a.step()
-                arch_optimizer_c.step()
-
-            epoch_loss_arch += loss.item()
-            loss_torch_arch[0] += loss.item()
-            loss_torch_arch[1] += 1.0
-
-            if dist.get_rank() == 0:
-                print("[{0}] ".format(str(datetime.now())[:19]) + f"{step}/{epoch_len}, train_loss_arch: {loss.item():.4f}")
-                writer.add_scalar("train_loss_arch", loss.item(), epoch_len * epoch + step)
+                if dist.get_rank() == 0:
+                    print("[{0}] ".format(str(datetime.now())[:19]) + f"{step}/{epoch_len}, train_loss_arch: {loss.item():.4f}")
+                    writer.add_scalar("train_loss_arch", loss.item(), epoch_len * epoch + step)
 
         # synchronizes all processes and reduce results
         dist.barrier()

@@ -1,4 +1,4 @@
-# Federated learning with [NVIDIA FLARE](./federated_learning/nvflare)**
+# Federated learning with NVIDIA FLARE
 
 ## Brief Introduction
 

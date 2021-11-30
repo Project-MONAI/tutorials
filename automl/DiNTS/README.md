@@ -1,6 +1,6 @@
 # Automated Deep Netork Search Examples
 
-In this tutorial, we present an automated deep network design (AutoML) pipeline for 3D meidcal image segmentation. The dataset used in this tutorial is the Task09 spleen CT image from [Medical Segmentation Decathlon](http://medicaldecathlon.com/). The implementation is based on:
+In this tutorial, we present an automated deep network design (AutoML) pipeline for 3D meidcal image segmentation. The dataset used in this tutorial is the Task09 spleen CT image and Task07 pancreas MRI image from [Medical Segmentation Decathlon](http://medicaldecathlon.com/). The implementation is based on:
 
 Yufan He, Dong Yang, Holger Roth, Can Zhao, Daguang Xu: "DiNTS: Differentiable Neural Network Topology Search for 3D Medical Image Segmentation". In CVPR (2021). [paper](https://openaccess.thecvf.com/content/CVPR2021/papers/He_DiNTS_Differentiable_Neural_Network_Topology_Search_for_3D_Medical_Image_CVPR_2021_paper.pdf)
 
@@ -34,7 +34,8 @@ bash install.sh
 
 
 ## Data
-[Spleen CT dataset](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2) from [Medical Segmentation Decathlon](http://medicaldecathlon.com/) is used. You can manually download it and save it to args.root. Otherwise, the script will automatic 
+[Spleen CT dataset](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2) and [Pancreas MRI dataset](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2)
+from [Medical Segmentation Decathlon](http://medicaldecathlon.com/) is used. You can manually download it and save it to args.root. Otherwise, the script will automatic 
 download the dataset.
 
 ## Examples
@@ -59,6 +60,10 @@ bash search_dints.sh
 ```
 
 ### Training
+- Add the following script to the commands of running into docker (Optional)
+```
+-v /your_downloaded_data_root/Task09_Spleen/:/workspace/data_msd/Task09_Spleen/
+```
 - Change ``ARCH_CKPT`` to point to the architecture file (.pth) from the searching stage.
 - Change ``NUM_GPUS_PER_NODE`` to your GPU number.
 - Run 

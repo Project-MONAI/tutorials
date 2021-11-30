@@ -182,12 +182,12 @@ def main():
     if not os.path.exists(args.output_root):
         os.makedirs(args.output_root)
 
-    amp = True
+    amp = False
     determ = False
     factor_ram_cost = 0.2
     fold = int(args.fold)
     input_channels = 1
-    learning_rate = 0.001
+    learning_rate = 0.0002
     learning_rate_final = 0.00001
     num_images_per_batch = 1
     num_epochs = 1430
@@ -566,7 +566,7 @@ def main():
             loss_torch_arch_epoch = loss_torch_arch[0] / loss_torch_arch[1]
             print(f"epoch {epoch + 1} average arch loss: {loss_torch_arch_epoch:.4f}, best mean dice: {best_metric:.4f} at epoch {best_metric_epoch}")
 
-        if (epoch + 1) >= num_epochs_warmup and (epoch + 1) % val_interval == 0:
+        if (epoch + 1) % val_interval == 0:
             torch.cuda.empty_cache()
             model.eval()
             with torch.no_grad():

@@ -191,7 +191,7 @@ def main():
     determ = False
     fold = int(args.fold)
     input_channels = 1
-    learning_rate = 0.0001
+    learning_rate = 0.0002
     learning_rate_final = 0.00001
     num_images_per_batch = 2
     num_epochs = 13500

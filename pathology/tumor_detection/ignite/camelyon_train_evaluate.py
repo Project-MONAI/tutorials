@@ -195,7 +195,7 @@ def train(cfg):
         TensorBoardStatsHandler(log_dir=log_dir, output_transform=lambda x: None),
     ]
     val_postprocessing = Compose(
-        [ActivationsD(keys="pred", sigmoid=True), AsDiscreteD(keys="pred", threshold_values=True)]
+        [ActivationsD(keys="pred", sigmoid=True), AsDiscreteD(keys="pred", threshold=0.5)]
     )
     evaluator = SupervisedEvaluator(
         device=device,
@@ -220,7 +220,7 @@ def train(cfg):
         ),
     ]
     train_postprocessing = Compose(
-        [ActivationsD(keys="pred", sigmoid=True), AsDiscreteD(keys="pred", threshold_values=True)]
+        [ActivationsD(keys="pred", sigmoid=True), AsDiscreteD(keys="pred", threshold=0.5)]
     )
 
     trainer = SupervisedTrainer(

@@ -172,7 +172,7 @@ def train(data_folder=".", model_folder="runs"):
 
     # create evaluator (to be used to measure model quality during training
     val_post_transform = monai.transforms.Compose(
-        [EnsureTyped(keys=("pred", "label")), AsDiscreted(keys=("pred", "label"), argmax=(True, False), to_onehot=True, num_classes=2)]
+        [EnsureTyped(keys=("pred", "label")), AsDiscreted(keys=("pred", "label"), argmax=(True, False), to_onehot=2)]
     )
     val_handlers = [
         ProgressBar(),

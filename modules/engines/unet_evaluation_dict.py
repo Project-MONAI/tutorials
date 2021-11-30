@@ -87,7 +87,7 @@ def main(tempdir):
         [
             EnsureTyped(keys="pred"),
             Activationsd(keys="pred", sigmoid=True),
-            AsDiscreted(keys="pred", threshold_values=True),
+            AsDiscreted(keys="pred", threshold=0.5),
             KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
             SaveImaged(keys="pred", meta_keys="image_meta_dict", output_dir="./runs/")
         ]

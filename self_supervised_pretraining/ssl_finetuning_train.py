@@ -210,8 +210,8 @@ def main():
     torch.backends.cudnn.benchmark = True
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-5)
 
-    post_label = AsDiscrete(to_onehot=True, num_classes=14)
-    post_pred = AsDiscrete(argmax=True, to_onehot=True, num_classes=14)
+    post_label = AsDiscrete(to_onehot=14)
+    post_pred = AsDiscrete(argmax=True, to_onehot=14)
     dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
     global_step = 0
     dice_val_best = 0.0

@@ -209,7 +209,7 @@ def train(cfg):
     val_postprocessing = Compose(
         [
             ActivationsD(keys="pred", sigmoid=True),
-            AsDiscreteD(keys="pred", threshold_values=True),
+            AsDiscreteD(keys="pred", threshold=0.5),
         ]
     )
     evaluator = SupervisedEvaluator(
@@ -245,7 +245,7 @@ def train(cfg):
         [
             RangePushD("Postprocessing"),
             Range()(ActivationsD(keys="pred", sigmoid=True)),
-            Range()(AsDiscreteD(keys="pred", threshold_values=True)),
+            Range()(AsDiscreteD(keys="pred", threshold=0.5)),
             RangePopD(),
         ]
     )

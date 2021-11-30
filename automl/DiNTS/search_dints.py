@@ -182,7 +182,7 @@ def main():
     if not os.path.exists(args.output_root):
         os.makedirs(args.output_root)
 
-    amp = False
+    amp = True
     determ = False
     factor_ram_cost = 0.2
     fold = int(args.fold)

@@ -418,7 +418,10 @@ def main():
     start_time = time.time()
     for epoch in range(num_epochs):
         if learning_rate_final > -0.000001 and learning_rate_final < learning_rate:
-            lr = (learning_rate - learning_rate_final) * (1 - epoch / (num_epochs - 1)) ** 0.9 + learning_rate_final
+            # lr = (learning_rate - learning_rate_final) * (1 - epoch / (num_epochs - 1)) ** 0.9 + learning_rate_final
+            milestones = np.array([0.4, 0.8])
+            decay = 0.5 ** np.sum([(epoch - num_epochs_warmup) / (num_epochs - num_epochs_warmup) > milestones])
+            lr = lr * decay
             for param_group in optimizer.param_groups:
                 param_group["lr"] = lr
         else:

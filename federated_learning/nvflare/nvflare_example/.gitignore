@@ -1,8 +1,0 @@
-# virtual environments
-nvflare_monai
-# workspace
-fl_workspace
-# data
-*.nii.gz
-# pycharm
-.idea

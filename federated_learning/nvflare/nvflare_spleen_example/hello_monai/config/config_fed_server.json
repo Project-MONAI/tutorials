@@ -1,0 +1,63 @@
+{
+  "format_version": 2,
+
+  "server": {
+    "heart_beat_timeout": 600
+  },
+  "task_data_filters": [],
+  "task_result_filters": [],
+  "components": [
+    {
+      "id": "persistor",
+      "name": "PTFileModelPersistor",
+      "args": {
+      "model": {
+            "path": "monai.networks.nets.unet.UNet",
+            "args": {
+              "dimensions": 3,
+              "in_channels": 1,
+              "out_channels": 2,
+              "channels": [16, 32, 64, 128, 256],
+              "strides": [2, 2, 2, 2],
+              "num_res_units": 2,
+              "norm": "batch"
+            }
+          }
+      }
+    },
+    {
+      "id": "shareable_generator",
+      "name": "FullModelShareableGenerator",
+      "args": {}
+    },
+    {
+      "id": "aggregator",
+      "name": "AccumulateWeightedAggregator",
+      "args": {
+        "aggregation_weights": {
+          "site-1": 1.0,
+          "site-2": 0.5
+        },
+        "expected_data_kind": "WEIGHTS"
+      }
+    }
+  ],
+  "workflows": [
+      {
+        "id": "scatter_and_gather",
+        "name": "ScatterAndGather",
+        "args": {
+            "min_clients" : 1,
+            "num_rounds" : 100,
+            "start_round": 0,
+            "wait_time_after_min_received": 10,
+            "aggregator_id": "aggregator",
+            "persistor_id": "persistor",
+            "shareable_generator_id": "shareable_generator",
+            "train_task_name": "train",
+            "train_timeout": 0,
+            "ignore_result_error": true
+        }
+      }
+  ]
+}

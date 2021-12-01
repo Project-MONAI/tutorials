@@ -63,7 +63,7 @@ import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
 import yaml
-
+import pdb
 from datetime import datetime
 from glob import glob
 from torch import nn
@@ -219,7 +219,8 @@ def main():
             download_and_extract(resource, compressed_file, root_dir)
 
     dist.barrier()
-
+    world_size = dist.get_world_size()
+    
     with open(args.json, "r") as f:
         json_data = json.load(f)
 
@@ -243,11 +244,11 @@ def main():
     random.shuffle(train_files)
 
     train_files_w = train_files[:len(train_files)//2]
-    train_files_w = partition_dataset(data=train_files_w, shuffle=True, num_partitions=dist.get_world_size(), even_divisible=True)[dist.get_rank()]
+    train_files_w = partition_dataset(data=train_files_w, shuffle=True, num_partitions=world_size, even_divisible=True)[dist.get_rank()]
     print("train_files_w:", len(train_files_w))
 
     train_files_a = train_files[len(train_files)//2:]
-    train_files_a = partition_dataset(data=train_files_a, shuffle=True, num_partitions=dist.get_world_size(), even_divisible=True)[dist.get_rank()]
+    train_files_a = partition_dataset(data=train_files_a, shuffle=True, num_partitions=world_size, even_divisible=True)[dist.get_rank()]
     print("train_files_a:", len(train_files_a))
 
     # validation data
@@ -261,7 +262,7 @@ def main():
 
         files.append({"image": str_img, "label": str_seg})
     val_files = files
-    val_files = partition_dataset(data=val_files, shuffle=False, num_partitions=dist.get_world_size(), even_divisible=False)[dist.get_rank()]
+    val_files = partition_dataset(data=val_files, shuffle=False, num_partitions=world_size, even_divisible=False)[dist.get_rank()]
     print("val_files:", len(val_files))
 
     # network architecture
@@ -331,8 +332,8 @@ def main():
     # train_ds_w = monai.data.Dataset(data=train_files_w, transform=train_transforms)
     # val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
 
-    # train_loader_a = DataLoader(train_ds_a, batch_size=num_images_per_batch, shuffle=True, num_workers=8, pin_memory=torch.cuda.is_available())
-    # train_loader_w = DataLoader(train_ds_w, batch_size=num_images_per_batch, shuffle=True, num_workers=8, pin_memory=torch.cuda.is_available())
+    # train_loader_a = DataLoader(train_ds_a, batch_size=num_images_per_batch, shuffle=True, num_workers=2, pin_memory=torch.cuda.is_available())
+    # train_loader_w = DataLoader(train_ds_w, batch_size=num_images_per_batch, shuffle=True, num_workers=2, pin_memory=torch.cuda.is_available())
     # val_loader = DataLoader(val_ds, batch_size=1, shuffle=False, num_workers=2, pin_memory=torch.cuda.is_available())
 
     train_loader_a = ThreadDataLoader(train_ds_a, num_workers=0, batch_size=num_images_per_batch, shuffle=True)
@@ -444,12 +445,14 @@ def main():
         for batch_data in train_loader_w:
             step += 1
             inputs, labels = batch_data["image"].to(device), batch_data["label"].to(device)
-
-            for _ in model.module.weight_parameters():
-                _.requires_grad = True
+            if world_size == 1:
+                for _ in model.weight_parameters():
+                    _.requires_grad = True 
+            else:               
+                for _ in model.module.weight_parameters():
+                    _.requires_grad = True
             dints_space.log_alpha_a.requires_grad = False
             dints_space.log_alpha_c.requires_grad = False
-
             if amp:
                 with autocast():
                     outputs = model(inputs)
@@ -489,9 +492,12 @@ def main():
                 dataloader_a_iterator = iter(train_loader_a)
                 sample_a = next(dataloader_a_iterator)
             inputs_search, labels_search = sample_a["image"].to(device), sample_a["label"].to(device)
-
-            for _ in model.module.weight_parameters():
-                _.requires_grad = False
+            if world_size == 1:
+                for _ in model.weight_parameters():
+                    _.requires_grad = False
+            else:
+                for _ in model.module.weight_parameters():
+                    _.requires_grad = False
             dints_space.log_alpha_a.requires_grad = True
             dints_space.log_alpha_c.requires_grad = True
 

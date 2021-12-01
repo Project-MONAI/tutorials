@@ -421,7 +421,7 @@ def main():
             # lr = (learning_rate - learning_rate_final) * (1 - epoch / (num_epochs - 1)) ** 0.9 + learning_rate_final
             milestones = np.array([0.4, 0.8])
             decay = 0.5 ** np.sum([(epoch - num_epochs_warmup) / (num_epochs - num_epochs_warmup) > milestones])
-            lr = lr * decay
+            lr = learning_rate * decay
             for param_group in optimizer.param_groups:
                 param_group["lr"] = lr
         else:

@@ -23,7 +23,7 @@ logdir_path in 'ssl_finetuning_train.py'\
 
 ### 1.Data
 Pre-training Dataset: The TCIA Covid-19 dataset was used for generating the
-[pre-trained weights](https://drive.google.com/file/d/1z0BouIiQ9oLizubOIH9Rlpad5Kk_2RtY/view?usp=sharing).
+[pre-trained weights](https://drive.google.com/file/d/1D7G1FhgZfBhql4djMfiSy0xODVXnLlpd/view?usp=sharing).
 The dataset contains a total of 771 3D CT Volumes. The volumes were split into training and validation sets
 of 600 and 171 3D volumes correspondingly. The data is available for download at this
 [link](https://wiki.cancerimagingarchive.net/display/Public/CT+Images+in+COVID-19).

@@ -1,6 +1,6 @@
-# Automated Deep Netork Search Examples
+# Automated Deep Network Search Examples
 
-In this tutorial, we present a novel neural architecture search algorithm for 3D meidcal image segmentation. The datasets used in this tutorial are Task07 Pancreas (CT images) and Task09 Spleen (CT images) from [Medical Segmentation Decathlon](http://medicaldecathlon.com/). The implementation is based on:
+In this tutorial, we present a novel neural architecture search algorithm for 3D medical image segmentation. The datasets used in this tutorial are Task07 Pancreas (CT images) and Task09 Spleen (CT images) from [Medical Segmentation Decathlon](http://medicaldecathlon.com/). The implementation is based on:
 
 Yufan He, Dong Yang, Holger Roth, Can Zhao, Daguang Xu: "[DiNTS: Differentiable Neural Network Topology Search for 3D Medical Image Segmentation.](https://openaccess.thecvf.com/content/CVPR2021/papers/He_DiNTS_Differentiable_Neural_Network_Topology_Search_for_3D_Medical_Image_CVPR_2021_paper.pdf)" In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pp. 5841-5850. 2021.
 
@@ -10,7 +10,7 @@ Yufan He, Dong Yang, Holger Roth, Can Zhao, Daguang Xu: "[DiNTS: Differentiable 
 ## Requirements
 The script is tested with:
 - `Ubuntu 20.04` |  `CUDA 11` 
-- The seaching and training stage requires at least two 16GB GPUs.
+- The searching and training stage requires at least two 16GB GPUs.
 
 ## Dependencies and installation
 ### [Install Nvidia Docker]()
@@ -39,7 +39,7 @@ from [Medical Segmentation Decathlon](http://medicaldecathlon.com/) is used. You
 download the dataset.
 
 ## Examples
-The tutorial contains two stages: searching stage and training stage. An architecture is searched and saved into a .pth file using search_dints.py. The searched archtecture will be loaded by train_dints.py and re-trained for spleen segmentation.
+The tutorial contains two stages: searching stage and training stage. An architecture is searched and saved into a .pth file using search_dints.py. The searched architecture will be loaded by train_dints.py and re-trained for spleen segmentation.
 
 Check all possible options
 ```bash
@@ -71,7 +71,7 @@ bash search_dints.sh
 bash train_dints.sh
 ```
 
-Traning loss and validation metric curves are shown as follows. The experiments utlized 8 NVIDIA A100 GPUs.
+Training loss and validation metric curves are shown as follows. The experiments utilized 8 NVIDIA A100 GPUs.
 
 ![training_loss](./Figures/training_loss.png)
 
@@ -79,6 +79,6 @@ Traning loss and validation metric curves are shown as follows. The experiments 
 
 ## Questions and bugs
 
-- For questions relating to the use of MONAI, please us our [Discussions tab](https://github.com/Project-MONAI/MONAI/discussions) on the main repository of MONAI.
+- For questions relating to the use of MONAI, please use our [Discussions tab](https://github.com/Project-MONAI/MONAI/discussions) on the main repository of MONAI.
 - For bugs relating to MONAI functionality, please create an issue on the [main repository](https://github.com/Project-MONAI/MONAI/issues).
 - For bugs relating to the running of a tutorial, please create an issue in [this repository](https://github.com/Project-MONAI/Tutorials/issues).

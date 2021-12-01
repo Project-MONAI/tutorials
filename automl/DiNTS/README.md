@@ -1,11 +1,11 @@
 # Automated Deep Netork Search Examples
 
-In this tutorial, we present an automated deep network design (AutoML) pipeline for 3D meidcal image segmentation. The dataset used in this tutorial is the Task09 spleen CT image and Task07 pancreas MRI image from [Medical Segmentation Decathlon](http://medicaldecathlon.com/). The implementation is based on:
+In this tutorial, we present a novel neural architecture search algorithm for 3D meidcal image segmentation. The datasets used in this tutorial are Task07 Pancreas (CT images) and Task09 Spleen (CT images) from [Medical Segmentation Decathlon](http://medicaldecathlon.com/). The implementation is based on:
 
-Yufan He, Dong Yang, Holger Roth, Can Zhao, Daguang Xu: "DiNTS: Differentiable Neural Network Topology Search for 3D Medical Image Segmentation". In CVPR (2021). [paper](https://openaccess.thecvf.com/content/CVPR2021/papers/He_DiNTS_Differentiable_Neural_Network_Topology_Search_for_3D_Medical_Image_CVPR_2021_paper.pdf)
+Yufan He, Dong Yang, Holger Roth, Can Zhao, Daguang Xu: "[DiNTS: Differentiable Neural Network Topology Search for 3D Medical Image Segmentation.](https://openaccess.thecvf.com/content/CVPR2021/papers/He_DiNTS_Differentiable_Neural_Network_Topology_Search_for_3D_Medical_Image_CVPR_2021_paper.pdf)" In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pp. 5841-5850. 2021.
 
-![0.8](./img/0.8.png)
-![space](./img/space.png)
+![0.8](./Figures/arch_ram-cost-0.8.png)
+![space](./Figures/search_space.png)
 
 ## Requirements
 The script is tested with:

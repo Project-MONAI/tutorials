@@ -1,4 +1,4 @@
-# Automated Deep Network Search Examples
+# Examples of DiNTS: Differentiable neural network topology search
 
 In this tutorial, we present a novel neural architecture search algorithm for 3D medical image segmentation. The datasets used in this tutorial are Task07 Pancreas (CT images) and Task09 Spleen (CT images) from [Medical Segmentation Decathlon](http://medicaldecathlon.com/). The implementation is based on:
 
@@ -9,29 +9,26 @@ Yufan He, Dong Yang, Holger Roth, Can Zhao, Daguang Xu: "[DiNTS: Differentiable 
 
 ## Requirements
 The script is tested with:
-- `Ubuntu 20.04` |  `CUDA 11`
+- `Ubuntu 20.04` and  `CUDA 11`
 - The searching and training stage requires at least two 16GB GPUs.
 
 ## Dependencies and installation
-### [Install Nvidia Docker]()
-### Download pytorch docker
+### Download and install Nvidia PyTorch Docker
 ```bash
 docker pull nvcr.io/nvidia/pytorch:21.10-py3
 ```
 ### Download the repository
 ```bash
-cd ~
 git clone https://github.com/Project-MONAI/tutorials.git
 ```
 ### Run into Docker
 ```
-sudo docker run -it --gpus all --pid=host --shm-size 16G -v /home/your_userID/tutorials/automl/DiNTS/:/workspace/DiNTS/  nvcr.io/nvidia/pytorch:21.10-py3
+sudo docker run -it --gpus all --pid=host --shm-size 16G -v /location/to/tutorials/automl/DiNTS/:/workspace/DiNTS/  nvcr.io/nvidia/pytorch:21.10-py3
 ```
 ### Install MONAI and dependencies
 ```bash
 bash install.sh
 ```
-
 
 ## Data
 [Spleen CT dataset](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2) and [Pancreas MRI dataset](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2)

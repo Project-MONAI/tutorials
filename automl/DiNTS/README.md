@@ -9,7 +9,7 @@ Yufan He, Dong Yang, Holger Roth, Can Zhao, Daguang Xu: "[DiNTS: Differentiable 
 
 ## Requirements
 The script is tested with:
-- `Ubuntu 20.04` |  `CUDA 11` 
+- `Ubuntu 20.04` |  `CUDA 11`
 - The searching and training stage requires at least two 16GB GPUs.
 
 ## Dependencies and installation
@@ -35,7 +35,7 @@ bash install.sh
 
 ## Data
 [Spleen CT dataset](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2) and [Pancreas MRI dataset](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2)
-from [Medical Segmentation Decathlon](http://medicaldecathlon.com/) is used. You can manually download it and save it to args.root. Otherwise, the script will automatic 
+from [Medical Segmentation Decathlon](http://medicaldecathlon.com/) is used. You can manually download it and save it to args.root. Otherwise, the script will automatic
 download the dataset.
 
 ## Examples
@@ -54,7 +54,7 @@ python train_dints.py -h
 -v /your_downloaded_data_root/Task07_Pancreas/:/workspace/data_msd/Task07_Pancreas/
 ```
 - Change ``NUM_GPUS_PER_NODE`` to your GPU number.
-- Run 
+- Run
 ```
 bash search_dints.sh
 ```
@@ -66,7 +66,7 @@ bash search_dints.sh
 ```
 - Change ``ARCH_CKPT`` to point to the architecture file (.pth) from the searching stage.
 - Change ``NUM_GPUS_PER_NODE`` to your GPU number.
-- Run 
+- Run
 ```
 bash train_dints.sh
 ```

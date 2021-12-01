@@ -220,7 +220,7 @@ def main():
 
     dist.barrier()
     world_size = dist.get_world_size()
-    
+
     with open(args.json, "r") as f:
         json_data = json.load(f)
 
@@ -447,8 +447,8 @@ def main():
             inputs, labels = batch_data["image"].to(device), batch_data["label"].to(device)
             if world_size == 1:
                 for _ in model.weight_parameters():
-                    _.requires_grad = True 
-            else:               
+                    _.requires_grad = True
+            else:
                 for _ in model.module.weight_parameters():
                     _.requires_grad = True
             dints_space.log_alpha_a.requires_grad = False

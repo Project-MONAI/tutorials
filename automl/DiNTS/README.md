@@ -71,6 +71,12 @@ bash search_dints.sh
 bash train_dints.sh
 ```
 
+Traning loss and validation metric curves are shown as follows. The experiments utlized 8 NVIDIA A100 GPUs.
+
+![training_loss](./Figures/training_loss.png)
+
+![validation_metric](./Figures/validation_metric.png)
+
 ## Questions and bugs
 
 - For questions relating to the use of MONAI, please us our [Discussions tab](https://github.com/Project-MONAI/MONAI/discussions) on the main repository of MONAI.

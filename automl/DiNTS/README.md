@@ -36,9 +36,10 @@ from [Medical Segmentation Decathlon](http://medicaldecathlon.com/) is used. You
 download the dataset.
 
 ## Examples
-The tutorial contains two stages: searching stage and training stage. An architecture is searched and saved into a .pth file using search_dints.py. The searched architecture will be loaded by train_dints.py and re-trained for spleen segmentation.
+The tutorial contains two stages: searching stage and training stage. An architecture is searched and saved into a `.pth` file using `search_dints.py`.
+The searched architecture will be loaded by `train_dints.py` and re-trained for spleen segmentation.
 
-Check all possible options
+Check all possible options:
 ```bash
 cd ./DiNTS/
 python search_dints.py -h
@@ -46,15 +47,12 @@ python train_dints.py -h
 ```
 
 ### Searching
-- Add the following script to the commands of running into docker (Optional)
+- Add the following script to the commands of running into docker (optional)
 ```
 -v /your_downloaded_data_root/Task07_Pancreas/:/workspace/data_msd/Task07_Pancreas/
 ```
-- Change ``NUM_GPUS_PER_NODE`` to your GPU number.
-- Run
-```
-bash search_dints.sh
-```
+- Change ``NUM_GPUS_PER_NODE`` to your number of GPUs.
+- Run `bash search_dints.sh`
 
 ### Training
 - Add the following script to the commands of running into docker (Optional)
@@ -62,11 +60,8 @@ bash search_dints.sh
 -v /your_downloaded_data_root/Task09_Spleen/:/workspace/data_msd/Task09_Spleen/
 ```
 - Change ``ARCH_CKPT`` to point to the architecture file (.pth) from the searching stage.
-- Change ``NUM_GPUS_PER_NODE`` to your GPU number.
-- Run
-```
-bash train_dints.sh
-```
+- Change ``NUM_GPUS_PER_NODE`` to your number of GPUs.
+- Run `bash train_dints.sh`
 
 Training loss and validation metric curves are shown as follows. The experiments utilized 8 NVIDIA A100 GPUs.
 

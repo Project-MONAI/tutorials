@@ -180,18 +180,19 @@ def main():
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
     if not os.path.exists(args.output_root):
-        os.makedirs(args.output_root)
+        os.makedirs(args.output_root, exist_ok=True)
 
     amp = True
     determ = False
     factor_ram_cost = 0.2
     fold = int(args.fold)
     input_channels = 1
-    learning_rate = 0.0002
+    learning_rate = 0.025
+    learning_rate_arch = 0.001
     learning_rate_final = 0.00001
     num_images_per_batch = 1
     num_epochs = 1430
-    num_epochs_per_validation = 60
+    num_epochs_per_validation = 100
     num_epochs_warmup = 715
     num_folds = int(args.num_folds)
     num_patches_per_image = 1
@@ -210,13 +211,13 @@ def main():
     dist.init_process_group(backend="nccl", init_method="env://")
 
     # data
-    if dist.get_rank() == 0:
-        resource = "https://msd-for-monai.s3-us-west-2.amazonaws.com/" + args.root.split(os.sep)[-1] + ".tar"
-        compressed_file = args.root + ".tar"
-        data_dir = args.root
-        root_dir = os.path.join(*args.root.split(os.sep)[:-1])
-        if not os.path.exists(data_dir):
-            download_and_extract(resource, compressed_file, root_dir)
+    # if dist.get_rank() == 0:
+    #     resource = "https://msd-for-monai.s3-us-west-2.amazonaws.com/" + args.root.split(os.sep)[-1] + ".tar"
+    #     compressed_file = args.root + ".tar"
+    #     data_dir = args.root
+    #     root_dir = os.path.join(*args.root.split(os.sep)[:-1])
+    #     if not os.path.exists(data_dir):
+    #         download_and_extract(resource, compressed_file, root_dir)
 
     dist.barrier()
     world_size = dist.get_world_size()
@@ -374,9 +375,9 @@ def main():
     )
 
     # optimizer
-    optimizer = torch.optim.SGD(model.weight_parameters(), lr=learning_rate, momentum=0.9, weight_decay=0.00004)
-    arch_optimizer_a = torch.optim.Adam([dints_space.log_alpha_a], lr=0.001, betas=(0.5, 0.999), weight_decay=0.0)
-    arch_optimizer_c = torch.optim.Adam([dints_space.log_alpha_c], lr=0.001, betas=(0.5, 0.999), weight_decay=0.0)
+    optimizer = torch.optim.SGD(model.weight_parameters(), lr=learning_rate * world_size, momentum=0.9, weight_decay=0.00004)
+    arch_optimizer_a = torch.optim.Adam([dints_space.log_alpha_a], lr=learning_rate_arch * world_size, betas=(0.5, 0.999), weight_decay=0.0)
+    arch_optimizer_c = torch.optim.Adam([dints_space.log_alpha_c], lr=learning_rate_arch * world_size, betas=(0.5, 0.999), weight_decay=0.0)
 
     print()
 
@@ -453,6 +454,7 @@ def main():
                     _.requires_grad = True
             dints_space.log_alpha_a.requires_grad = False
             dints_space.log_alpha_c.requires_grad = False
+            optimizer.zero_grad()
             if amp:
                 with autocast():
                     outputs = model(inputs)
@@ -522,6 +524,7 @@ def main():
             arch_optimizer_a.zero_grad()
             arch_optimizer_c.zero_grad()
 
+            entropy_weights = (epoch - num_epochs_warmup) / (num_epochs - num_epochs_warmup)
             if amp:
                 with autocast():
                     outputs_search = model(inputs_search)
@@ -530,7 +533,7 @@ def main():
                     else:
                         loss = loss_func(outputs_search, labels_search)
 
-                    loss += 1.0 * (1.0 * (entropy_alpha_a + entropy_alpha_c) + ram_cost_loss \
+                    loss += 1.0 * (entropy_weights * (entropy_alpha_a + entropy_alpha_c) + ram_cost_loss \
                                                     + 0.001 * topology_loss)
 
                 scaler.scale(loss).backward()
@@ -544,7 +547,7 @@ def main():
                 else:
                     loss = loss_func(outputs_search, labels_search)
 
-                loss += 1.0 * (1.0 * (entropy_alpha_a + entropy_alpha_c) + ram_cost_loss \
+                loss += 1.0 * (entropy_weights * (entropy_alpha_a + entropy_alpha_c) + ram_cost_loss \
                                 + 0.001 * topology_loss)
 
                 loss.backward()
@@ -567,12 +570,9 @@ def main():
         if dist.get_rank() == 0:
             loss_torch_epoch = loss_torch[0] / loss_torch[1]
             print(f"epoch {epoch + 1} average loss: {loss_torch_epoch:.4f}, best mean dice: {best_metric:.4f} at epoch {best_metric_epoch}")
-
-            if epoch < num_epochs_warmup:
-                continue
-
-            loss_torch_arch_epoch = loss_torch_arch[0] / loss_torch_arch[1]
-            print(f"epoch {epoch + 1} average arch loss: {loss_torch_arch_epoch:.4f}, best mean dice: {best_metric:.4f} at epoch {best_metric_epoch}")
+            if epoch >= num_epochs_warmup:           
+                loss_torch_arch_epoch = loss_torch_arch[0] / loss_torch_arch[1]
+                print(f"epoch {epoch + 1} average arch loss: {loss_torch_arch_epoch:.4f}, best mean dice: {best_metric:.4f} at epoch {best_metric_epoch}")
 
         if (epoch + 1) % val_interval == 0:
             torch.cuda.empty_cache()
@@ -666,9 +666,9 @@ def main():
                     torch.save(
                         {
                             "node_a": node_a_d,
-                            "code_a": arch_code_a_d,
-                            "code_a_max": arch_code_a_max_d,
-                            "code_c": arch_code_c_d,
+                            "arch_code_a": arch_code_a_d,
+                            "arch_code_a_max": arch_code_a_max_d,
+                            "arch_code_c": arch_code_c_d,
                             "iter_num": idx_iter,
                             "epochs": epoch + 1,
                             "best_dsc": best_metric,

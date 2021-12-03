@@ -27,9 +27,9 @@ from monai.transforms import (
 def main():
 
     #TODO Defining file paths & output directory path
-    json_Path = os.path.normpath('/to/be/defined')
-    data_Root = os.path.normpath('/to/be/defined')
-    logdir_path = os.path.normpath('/to/be/defined')
+    json_Path = os.path.normpath('/scratch/data_2021/tcia_covid19/dataset_split_debug.json')
+    data_Root = os.path.normpath('/scratch/data_2021/tcia_covid19')
+    logdir_path = os.path.normpath('/home/vishwesh/monai_tutorial_testing/issue_467')
 
     if os.path.exists(logdir_path)==False:
         os.mkdir(logdir_path)
@@ -55,7 +55,7 @@ def main():
     print('#' * 10)
 
     # Set Determinism
-    set_determinism(seed=453)
+    set_determinism(seed=123)
 
     # Define Training Transforms
     train_Transforms = Compose(
@@ -73,13 +73,23 @@ def main():
         RandSpatialCropSamplesd(keys=["image"], roi_size=(96, 96, 96), random_size=False, num_samples=2),
         CopyItemsd(keys=["image"], times=2, names=["gt_image", "image_2"], allow_missing_keys=False),
         OneOf(transforms=[
-            RandCoarseDropoutd(keys=["image", "image_2"], prob=1.0, holes=6, spatial_size=5, dropout_holes=True,
+            RandCoarseDropoutd(keys=["image"], prob=1.0, holes=6, spatial_size=5, dropout_holes=True,
                                max_spatial_size=32),
-            RandCoarseDropoutd(keys=["image", "image_2"], prob=1.0, holes=6, spatial_size=20, dropout_holes=False,
+            RandCoarseDropoutd(keys=["image"], prob=1.0, holes=6, spatial_size=20, dropout_holes=False,
                                max_spatial_size=64),
             ]
         ),
-        RandCoarseShuffled(keys=["image", "image_2"], prob=0.8, holes=10, spatial_size=8)
+        RandCoarseShuffled(keys=["image"], prob=0.8, holes=10, spatial_size=8),
+        # Please note that that if image, image_2 are called via the same transform call because of the determinism
+        # they will get augmented the exact same way which is not the required case here, hence two calls are made
+        OneOf(transforms=[
+            RandCoarseDropoutd(keys=["image_2"], prob=1.0, holes=6, spatial_size=5, dropout_holes=True,
+                               max_spatial_size=32),
+            RandCoarseDropoutd(keys=["image_2"], prob=1.0, holes=6, spatial_size=20, dropout_holes=False,
+                               max_spatial_size=64),
+        ]
+        ),
+        RandCoarseShuffled(keys=["image_2"], prob=0.8, holes=10, spatial_size=8)
         ]
     )
 

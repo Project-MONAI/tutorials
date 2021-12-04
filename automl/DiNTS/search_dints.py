@@ -183,7 +183,7 @@ def main():
         os.makedirs(args.output_root, exist_ok=True)
 
     amp = True
-    determ = False
+    determ = True
     factor_ram_cost = 0.2
     fold = int(args.fold)
     input_channels = 1
@@ -504,12 +504,12 @@ def main():
             dints_space.log_alpha_c.requires_grad = True
 
             # linear increase topology and RAM loss
-            entropy_alpha_c = torch.tensor(0.).cuda()
-            entropy_alpha_a = torch.tensor(0.).cuda()
-            ram_cost_full = torch.tensor(0.).cuda()
-            ram_cost_usage = torch.tensor(0.).cuda()
-            ram_cost_loss = torch.tensor(0.).cuda()
-            topology_loss = torch.tensor(0.).cuda()
+            entropy_alpha_c = torch.tensor(0.).to(device)
+            entropy_alpha_a = torch.tensor(0.).to(device)
+            ram_cost_full = torch.tensor(0.).to(device)
+            ram_cost_usage = torch.tensor(0.).to(device)
+            ram_cost_loss = torch.tensor(0.).to(device)
+            topology_loss = torch.tensor(0.).to(device)
 
             probs_a, arch_code_prob_a = dints_space.get_prob_a(child=True)
             entropy_alpha_a = -((probs_a)*torch.log(probs_a + 1e-5)).mean()
@@ -524,7 +524,7 @@ def main():
             arch_optimizer_a.zero_grad()
             arch_optimizer_c.zero_grad()
 
-            entropy_weights = (epoch - num_epochs_warmup) / (num_epochs - num_epochs_warmup)
+            combination_weights = (epoch - num_epochs_warmup) / (num_epochs - num_epochs_warmup)
             if amp:
                 with autocast():
                     outputs_search = model(inputs_search)
@@ -533,7 +533,7 @@ def main():
                     else:
                         loss = loss_func(outputs_search, labels_search)
 
-                    loss += 1.0 * (entropy_weights * (entropy_alpha_a + entropy_alpha_c) + ram_cost_loss \
+                    loss += combination_weights * ((entropy_alpha_a + entropy_alpha_c) + ram_cost_loss \
                                                     + 0.001 * topology_loss)
 
                 scaler.scale(loss).backward()
@@ -547,7 +547,7 @@ def main():
                 else:
                     loss = loss_func(outputs_search, labels_search)
 
-                loss += 1.0 * (entropy_weights * (entropy_alpha_a + entropy_alpha_c) + ram_cost_loss \
+                loss += 1.0 * (combination_weights * (entropy_alpha_a + entropy_alpha_c) + ram_cost_loss \
                                 + 0.001 * topology_loss)
 
                 loss.backward()

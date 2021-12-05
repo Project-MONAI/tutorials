@@ -184,14 +184,14 @@ def main():
 
     amp = True
     determ = True
-    factor_ram_cost = 0.2
+    factor_ram_cost = 0.8
     fold = int(args.fold)
     input_channels = 1
     learning_rate = 0.025
     learning_rate_arch = 0.001
-    learning_rate_final = 0.00001
+    learning_rate_milestones = np.array([0.4, 0.8])
     num_images_per_batch = 1
-    num_epochs = 1430
+    num_epochs = 1430 # around 20k iteration 
     num_epochs_per_validation = 100
     num_epochs_warmup = 715
     num_folds = int(args.num_folds)
@@ -419,17 +419,10 @@ def main():
 
     start_time = time.time()
     for epoch in range(num_epochs):
-        if learning_rate_final > -0.000001 and learning_rate_final < learning_rate:
-            # lr = (learning_rate - learning_rate_final) * (1 - epoch / (num_epochs - 1)) ** 0.9 + learning_rate_final
-            milestones = np.array([0.4, 0.8])
-            decay = 0.5 ** np.sum([(epoch - num_epochs_warmup) / (num_epochs - num_epochs_warmup) > milestones])
-            lr = learning_rate * decay
-            for param_group in optimizer.param_groups:
-                param_group["lr"] = lr
-        else:
-            lr = learning_rate
-
-        lr = optimizer.param_groups[0]["lr"]
+        decay = 0.5 ** np.sum([(epoch - num_epochs_warmup) / (num_epochs - num_epochs_warmup) > learning_rate_milestones])
+        lr = learning_rate * decay
+        for param_group in optimizer.param_groups:
+            param_group["lr"] = lr
 
         if dist.get_rank() == 0:
             print("-" * 10)

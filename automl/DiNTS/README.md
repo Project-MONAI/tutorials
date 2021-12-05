@@ -66,6 +66,9 @@ python train_dints.py -h
 - Change ``NUM_GPUS_PER_NODE`` to your number of GPUs.
 - Run `bash search_dints.sh`
 - Call the function in `decode_plot.py` to visualize the searched model in a vector image (graphvis needs to be installed).
+The searched archtecture with ram cost 0.8 and 0.2 are shown below:
+![0.2 search](./Figures/search_0.2.png)
+![0.8 search](./Figures/search_0.8.png)
 
 ### Training
 - Add the following script to the commands of running into docker (Optional)

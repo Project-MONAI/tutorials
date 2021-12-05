@@ -1,5 +1,26 @@
 from graphviz import Digraph 
 import torch
+import argparse
+
+parser = argparse.ArgumentParser(description="training")
+parser.add_argument(
+"--checkpoint",
+type=str,
+default=None,
+help="checkpoint full path",
+)
+parser.add_argument(
+"--directory",
+type=str,
+default='./',
+help="directory to save",
+)
+parser.add_argument(
+"--filename",
+type=str,
+default='graph',
+help="directory to save",
+)
 
 def plot_graph(codepath, filename='graph', directory='./',
                code2in = [0,1,0,1,2,1,2,3,2,3], code2out = [0,0,1,1,1,2,2,2,3,3]):
@@ -39,3 +60,7 @@ def plot_graph(codepath, filename='graph', directory='./',
                 inputs = outputs
     ga.render(filename=filename, directory=directory, cleanup=True, format='png')
     return ga
+    
+if __name__ == '__main__':
+    args = parser.parse_args()
+    plot_graph(codepath=args.checkpoint, filename=args.filename, directory=args.directory)

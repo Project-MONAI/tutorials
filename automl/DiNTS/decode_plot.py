@@ -1,4 +1,4 @@
-from graphviz import Digraph 
+from graphviz import Digraph
 import torch
 import argparse
 
@@ -52,15 +52,15 @@ def plot_graph(codepath, filename='graph', directory='./',
             with g.subgraph(name='cluster'+str(blk_idx)) as c:
                 outputs = [str((blk_idx,_)) for _ in range(depth)]
                 for idx, _ in enumerate(outputs):
-                    c.node(_,pos=str(2+2*blk_idx)+','+str(depth-idx)+'!')           
+                    c.node(_,pos=str(2+2*blk_idx)+','+str(depth-idx)+'!')
                 for res_idx, activation in enumerate(arch_code_a[blk_idx]):
                     if activation:
                         c.edge(inputs[code2in[res_idx]], outputs[code2out[res_idx]], \
-                            label=str(arch_code_c[blk_idx][res_idx]))          
+                            label=str(arch_code_c[blk_idx][res_idx]))
                 inputs = outputs
     ga.render(filename=filename, directory=directory, cleanup=True, format='png')
     return ga
-    
+
 if __name__ == '__main__':
     args = parser.parse_args()
     plot_graph(codepath=args.checkpoint, filename=args.filename, directory=args.directory)

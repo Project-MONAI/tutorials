@@ -191,7 +191,7 @@ def main():
     learning_rate_arch = 0.001
     learning_rate_milestones = np.array([0.4, 0.8])
     num_images_per_batch = 1
-    num_epochs = 1430 # around 20k iteration 
+    num_epochs = 1430 # around 20k iteration
     num_epochs_per_validation = 100
     num_epochs_warmup = 715
     num_folds = int(args.num_folds)
@@ -558,7 +558,7 @@ def main():
             loss_torch_epoch = loss_torch[0] / loss_torch[1]
             print(f"epoch {epoch + 1} average loss: {loss_torch_epoch:.4f}, best mean dice: {best_metric:.4f} at epoch {best_metric_epoch}")
 
-            if epoch >= num_epochs_warmup:           
+            if epoch >= num_epochs_warmup:
                 loss_torch_arch_epoch = loss_torch_arch[0] / loss_torch_arch[1]
                 print(f"epoch {epoch + 1} average arch loss: {loss_torch_arch_epoch:.4f}, best mean dice: {best_metric:.4f} at epoch {best_metric_epoch}")
 

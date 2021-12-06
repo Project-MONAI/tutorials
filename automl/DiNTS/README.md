@@ -13,34 +13,22 @@ The script is tested with:
 - The searching and training stage requires at least two 16GB GPUs.
 
 ## Dependencies and installation
-You can use nvidia docker or conda environments to install the dependencies.
-- ### Using Docker Image 
-#### Download and install Nvidia PyTorch Docker
+### Download and install Nvidia PyTorch Docker
 ```bash
 docker pull nvcr.io/nvidia/pytorch:21.10-py3
-```
-#### Run into Docker
-```
-sudo docker run -it --gpus all --pid=host --shm-size 16G -v /location/to/tutorials/automl/DiNTS/:/workspace/DiNTS/  nvcr.io/nvidia/pytorch:21.10-py3
-```
-#### Install required package in docker
-```bash
-bash install.sh
 ```
 ### Download the repository
 ```bash
 git clone https://github.com/Project-MONAI/tutorials.git
 ```
-- ### Using Conda 
-#### Install Pytorch > 1.6
-```bash
-conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
+### Run into Docker
 ```
-#### Install MONAI and dependencies
+sudo docker run -it --gpus all --pid=host --shm-size 16G -v /location/to/tutorials/automl/DiNTS/:/workspace/DiNTS/  nvcr.io/nvidia/pytorch:21.10-py3
+```
+### Install MONAI and dependencies
 ```bash
 bash install.sh
 ```
-- ### Install [Graphviz](https://graphviz.org/download/) for visualization (needed in decode_plot.py)
 
 ## Data
 [Spleen CT dataset](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2) and [Pancreas MRI dataset](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2)
@@ -65,10 +53,6 @@ python train_dints.py -h
 ```
 - Change ``NUM_GPUS_PER_NODE`` to your number of GPUs.
 - Run `bash search_dints.sh`
-- Call the function in `decode_plot.py` to visualize the searched model in a vector image (graphvis needs to be installed).
-The searched archtecture with ram cost 0.8 and 0.2 are shown below:
-![0.2 search](./Figures/search_0.2.png)
-![0.8 search](./Figures/search_0.8.png)
 
 ### Training
 - Add the following script to the commands of running into docker (Optional)

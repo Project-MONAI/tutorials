@@ -1,4 +1,4 @@
-# Examples of DiNTS: Differentiable neural network topology search
+# Examples of DiNTS: Differentiable Neural Network Topology Search
 
 In this tutorial, we present a novel neural architecture search algorithm for 3D medical image segmentation. The datasets used in this tutorial are Task07 Pancreas (CT images) and Task09 Spleen (CT images) from [Medical Segmentation Decathlon](http://medicaldecathlon.com/). The implementation is based on:
 
@@ -68,6 +68,18 @@ Training loss and validation metric curves are shown as follows. The experiments
 ![training_loss](./Figures/training_loss.png)
 
 ![validation_metric](./Figures/validation_metric.png)
+
+## Citation
+If you use this code in your work, please cite:
+```
+@inproceedings{he2021dints,
+  title={DiNTS: Differentiable Neural Network Topology Search for 3D Medical Image Segmentation},
+  author={He, Yufan and Yang, Dong and Roth, Holger and Zhao, Can and Xu, Daguang},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+  pages={5841--5850},
+  year={2021}
+}
+```
 
 ## Questions and bugs
 

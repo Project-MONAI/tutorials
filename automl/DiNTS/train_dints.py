@@ -212,17 +212,9 @@ def main():
     # initialize the distributed training process, every GPU runs in a process
     dist.init_process_group(backend="nccl", init_method="env://")
 
-    # download data
-    # if dist.get_rank() == 0:
-    #     resource = "https://msd-for-monai.s3-us-west-2.amazonaws.com/" + args.root.split(os.sep)[-1] + ".tar"
-    #     compressed_file = args.root + ".tar"
-    #     data_dir = args.root
-    #     root_dir = os.path.join(*args.root.split(os.sep)[:-1])
-    #     if not os.path.exists(data_dir):
-    #         download_and_extract(resource, compressed_file, root_dir)
-
     dist.barrier()
     world_size = dist.get_world_size()
+
     # load data list (.json)
     with open(args.json, "r") as f:
         json_data = json.load(f)
@@ -418,6 +410,7 @@ def main():
         lr = learning_rate * decay
         for param_group in optimizer.param_groups:
             param_group["lr"] = lr
+
         if dist.get_rank() == 0:
             print("-" * 10)
             print(f"epoch {epoch + 1}/{num_epochs}")

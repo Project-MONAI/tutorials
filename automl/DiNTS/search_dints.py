@@ -210,15 +210,6 @@ def main():
     # initialize the distributed training process, every GPU runs in a process
     dist.init_process_group(backend="nccl", init_method="env://")
 
-    # data
-    # if dist.get_rank() == 0:
-    #     resource = "https://msd-for-monai.s3-us-west-2.amazonaws.com/" + args.root.split(os.sep)[-1] + ".tar"
-    #     compressed_file = args.root + ".tar"
-    #     data_dir = args.root
-    #     root_dir = os.path.join(*args.root.split(os.sep)[:-1])
-    #     if not os.path.exists(data_dir):
-    #         download_and_extract(resource, compressed_file, root_dir)
-
     dist.barrier()
     world_size = dist.get_world_size()
 
@@ -447,7 +438,9 @@ def main():
                     _.requires_grad = True
             dints_space.log_alpha_a.requires_grad = False
             dints_space.log_alpha_c.requires_grad = False
+
             optimizer.zero_grad()
+
             if amp:
                 with autocast():
                     outputs = model(inputs)
@@ -518,6 +511,7 @@ def main():
             arch_optimizer_c.zero_grad()
 
             combination_weights = (epoch - num_epochs_warmup) / (num_epochs - num_epochs_warmup)
+
             if amp:
                 with autocast():
                     outputs_search = model(inputs_search)
@@ -563,6 +557,7 @@ def main():
         if dist.get_rank() == 0:
             loss_torch_epoch = loss_torch[0] / loss_torch[1]
             print(f"epoch {epoch + 1} average loss: {loss_torch_epoch:.4f}, best mean dice: {best_metric:.4f} at epoch {best_metric_epoch}")
+
             if epoch >= num_epochs_warmup:           
                 loss_torch_arch_epoch = loss_torch_arch[0] / loss_torch_arch[1]
                 print(f"epoch {epoch + 1} average arch loss: {loss_torch_arch_epoch:.4f}, best mean dice: {best_metric:.4f} at epoch {best_metric_epoch}")

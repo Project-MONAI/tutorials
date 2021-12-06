@@ -185,7 +185,7 @@ def main():
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
     if not os.path.exists(args.output_root):
-        os.makedirs(args.output_root)
+        os.makedirs(args.output_root, exist_ok=True)
 
     amp = True
     determ = True

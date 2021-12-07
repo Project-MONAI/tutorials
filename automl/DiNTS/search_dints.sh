@@ -3,8 +3,7 @@ clear
 
 TASK="Task07_Pancreas"
 
-DATA_ROOT="/home/dongy/Data/MSD/${TASK}"
-# DATA_ROOT="/workspace/data_msd/${TASK}"
+DATA_ROOT="/workspace/data_msd/${TASK}"
 JSON_PATH="${DATA_ROOT}/dataset.json"
 
 FOLD=4

@@ -2,7 +2,7 @@
 
 Here we showcase the most recent AutoML techniques in medical imaging based on MONAI modules.
 
-## [DiNTS: Differentiable neural network topology search](./DiNTS)
+## [DiNTS: Differentiable Neural Network Topology Search](./DiNTS)
 Recently, neural architecture search (NAS) has been applied to automatically
 search high-performance networks for medical image segmentation. The NAS search
 space usually contains a network topology level (controlling connections among

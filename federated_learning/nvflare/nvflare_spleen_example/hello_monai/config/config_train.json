@@ -1,9 +1,0 @@
-{
-  "max_epochs": 100,
-  "learning_rate": 2e-4,
-  "amp": true,
-  "use_gpu": true,
-  "val_interval": 5,
-  "data_list_json_file": "config/dataset_part1.json",
-  "ckpt_dir": "models"
-}

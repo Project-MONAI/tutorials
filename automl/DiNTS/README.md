@@ -37,6 +37,7 @@ conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
 ```
 2. #### Install MONAI and dependencies
 ```bash
+pip install monai==0.8.0
 bash install.sh
 ```
 - ### Install [Graphviz](https://graphviz.org/download/) for visualization (needed in decode_plot.py)

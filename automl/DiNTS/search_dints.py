@@ -135,6 +135,12 @@ def main():
         help="checkpoint full path",
     )
     parser.add_argument(
+        "--factor_ram_cost",
+        default=0.0,
+        type=float,
+        help="factor to determine RAM cost in the searched architecture",
+    )
+    parser.add_argument(
         "--fold",
         action="store",
         required=True,
@@ -184,7 +190,7 @@ def main():
 
     amp = True
     determ = True
-    factor_ram_cost = 0.8
+    factor_ram_cost = args.factor_ram_cost
     fold = int(args.fold)
     input_channels = 1
     learning_rate = 0.025
@@ -203,6 +209,8 @@ def main():
     patch_size_valid = (96, 96, 96)
     spacing = [1.0, 1.0, 1.0]
 
+    print("factor_ram_cost", factor_ram_cost)
+
     # deterministic training
     if determ:
         set_determinism(seed=0)
@@ -210,7 +218,7 @@ def main():
     # initialize the distributed training process, every GPU runs in a process
     dist.init_process_group(backend="nccl", init_method="env://")
 
-    dist.barrier()
+    # dist.barrier()
     world_size = dist.get_world_size()
 
     with open(args.json, "r") as f:
@@ -230,7 +238,6 @@ def main():
             continue
 
         files.append({"image": str_img, "label": str_seg})
-
     train_files = files
 
     random.shuffle(train_files)
@@ -320,17 +327,19 @@ def main():
     train_ds_w = monai.data.CacheDataset(data=train_files_w, transform=train_transforms, cache_rate=1.0, num_workers=8)
     val_ds = monai.data.CacheDataset(data=val_files, transform=val_transforms, cache_rate=1.0, num_workers=2)
 
+    # monai.data.Dataset can be used as alternatives when debugging or RAM space is limited.
     # train_ds_a = monai.data.Dataset(data=train_files_a, transform=train_transforms)
     # train_ds_w = monai.data.Dataset(data=train_files_w, transform=train_transforms)
     # val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
 
-    # train_loader_a = DataLoader(train_ds_a, batch_size=num_images_per_batch, shuffle=True, num_workers=2, pin_memory=torch.cuda.is_available())
-    # train_loader_w = DataLoader(train_ds_w, batch_size=num_images_per_batch, shuffle=True, num_workers=2, pin_memory=torch.cuda.is_available())
-    # val_loader = DataLoader(val_ds, batch_size=1, shuffle=False, num_workers=2, pin_memory=torch.cuda.is_available())
-
     train_loader_a = ThreadDataLoader(train_ds_a, num_workers=0, batch_size=num_images_per_batch, shuffle=True)
     train_loader_w = ThreadDataLoader(train_ds_w, num_workers=0, batch_size=num_images_per_batch, shuffle=True)
     val_loader = ThreadDataLoader(val_ds, num_workers=0, batch_size=1, shuffle=False)
+
+    # DataLoader can be used as alternatives when ThreadDataLoader is less efficient.
+    # train_loader_a = DataLoader(train_ds_a, batch_size=num_images_per_batch, shuffle=True, num_workers=2, pin_memory=torch.cuda.is_available())
+    # train_loader_w = DataLoader(train_ds_w, batch_size=num_images_per_batch, shuffle=True, num_workers=2, pin_memory=torch.cuda.is_available())
+    # val_loader = DataLoader(val_ds, batch_size=1, shuffle=False, num_workers=2, pin_memory=torch.cuda.is_available())
 
     dints_space = monai.networks.nets.TopologySearch(
         channel_mul=0.5,

@@ -3,14 +3,14 @@ clear
 
 TASK="Task07_Pancreas"
 
-# DATA_ROOT="/home/dongy/Data/MSD/${TASK}"
-DATA_ROOT="/workspace/data_msd/${TASK}"
+DATA_ROOT="/home/dongy/Data/MSD/${TASK}"
+# DATA_ROOT="/workspace/data_msd/${TASK}"
 JSON_PATH="${DATA_ROOT}/dataset.json"
 
 FOLD=4
 NUM_FOLDS=5
 
-NUM_GPUS_PER_NODE=8
+NUM_GPUS_PER_NODE=4
 NUM_NODES=1
 
 if [ ${NUM_GPUS_PER_NODE} -eq 1 ]
@@ -29,8 +29,9 @@ fi
 
 CHECKPOINT_ROOT="models/search_${TASK}_fold${FOLD}"
 CHECKPOINT="${CHECKPOINT_ROOT}/best_metric_model.pth"
+FACTOR_RAM_COST=0.8
 JSON_KEY="training"
-OUTPUT_ROOT="models/search_${TASK}_fold${FOLD}"
+OUTPUT_ROOT="models/search_${TASK}_fold${FOLD}_ram${FACTOR_RAM_COST}"
 
 python -m torch.distributed.launch \
     --nproc_per_node=${NUM_GPUS_PER_NODE} \
@@ -39,6 +40,7 @@ python -m torch.distributed.launch \
     --master_addr=localhost \
     --master_port=1234 \
     search_dints.py --checkpoint=${CHECKPOINT} \
+                    --factor_ram_cost=${FACTOR_RAM_COST} \
                     --fold=${FOLD} \
                     --json=${JSON_PATH} \
                     --json_key=${JSON_KEY} \

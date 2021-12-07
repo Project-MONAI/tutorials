@@ -185,17 +185,17 @@ def main():
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
     if not os.path.exists(args.output_root):
-        os.makedirs(args.output_root)
+        os.makedirs(args.output_root, exist_ok=True)
 
     amp = True
-    determ = False
+    determ = True
     fold = int(args.fold)
     input_channels = 1
-    learning_rate = 0.0002
-    learning_rate_final = 0.00001
+    learning_rate = 0.025
+    learning_rate_milestones = np.array([0.2, 0.4, 0.6, 0.8])
     num_images_per_batch = 2
     num_epochs = 13500
-    num_epochs_per_validation = 50
+    num_epochs_per_validation = 500
     num_folds = int(args.num_folds)
     num_patches_per_image = 1
     num_sw_batch_size = 6
@@ -212,16 +212,8 @@ def main():
     # initialize the distributed training process, every GPU runs in a process
     dist.init_process_group(backend="nccl", init_method="env://")
 
-    # download data
-    if dist.get_rank() == 0:
-        resource = "https://msd-for-monai.s3-us-west-2.amazonaws.com/" + args.root.split(os.sep)[-1] + ".tar"
-        compressed_file = args.root + ".tar"
-        data_dir = args.root
-        root_dir = os.path.join(*args.root.split(os.sep)[:-1])
-        if not os.path.exists(data_dir):
-            download_and_extract(resource, compressed_file, root_dir)
-
     dist.barrier()
+    world_size = dist.get_world_size()
 
     # load data list (.json)
     with open(args.json, "r") as f:
@@ -243,7 +235,7 @@ def main():
         files.append({"image": str_img, "label": str_seg})
 
     train_files = files
-    train_files = partition_dataset(data=train_files, shuffle=True, num_partitions=dist.get_world_size(), even_divisible=True)[dist.get_rank()]
+    train_files = partition_dataset(data=train_files, shuffle=True, num_partitions=world_size, even_divisible=True)[dist.get_rank()]
     print("train_files:", len(train_files))
 
     # validation data
@@ -257,7 +249,7 @@ def main():
 
         files.append({"image": str_img, "label": str_seg})
     val_files = files
-    val_files = partition_dataset(data=val_files, shuffle=False, num_partitions=dist.get_world_size(), even_divisible=False)[dist.get_rank()]
+    val_files = partition_dataset(data=val_files, shuffle=False, num_partitions=world_size, even_divisible=False)[dist.get_rank()]
     print("val_files:", len(val_files))
 
     # network architecture
@@ -330,8 +322,8 @@ def main():
 
     ckpt = torch.load(args.arch_ckpt)
     node_a = ckpt['node_a']
-    arch_code_a = ckpt['code_a']
-    arch_code_c = ckpt['code_c']
+    arch_code_a = ckpt['arch_code_a']
+    arch_code_c = ckpt['arch_code_c']
 
     dints_space = monai.networks.nets.TopologyInstance(
         channel_mul=1.0,
@@ -369,9 +361,11 @@ def main():
     )
 
     # optimizer
-    optimizer = torch.optim.AdamW(
+    optimizer = torch.optim.SGD(
         model.parameters(),
-        lr=learning_rate
+        lr=learning_rate * world_size,
+        momentum=0.9,
+        weight_decay=0.00004
     )
 
     print()
@@ -412,14 +406,10 @@ def main():
 
     start_time = time.time()
     for epoch in range(num_epochs):
-        if learning_rate_final > -0.000001 and learning_rate_final < learning_rate:
-            lr = (learning_rate - learning_rate_final) * (1 - epoch / (num_epochs - 1)) ** 0.9 + learning_rate_final
-            for param_group in optimizer.param_groups:
-                param_group["lr"] = lr
-        else:
-            lr = learning_rate
-
-        lr = optimizer.param_groups[0]["lr"]
+        decay = 0.5 ** np.sum([epoch / num_epochs > learning_rate_milestones])
+        lr = learning_rate * decay * world_size
+        for param_group in optimizer.param_groups:
+            param_group["lr"] = lr
 
         if dist.get_rank() == 0:
             print("-" * 10)

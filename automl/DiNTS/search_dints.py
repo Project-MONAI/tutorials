@@ -135,6 +135,12 @@ def main():
         help="checkpoint full path",
     )
     parser.add_argument(
+        "--factor_ram_cost",
+        default=0.0,
+        type=float,
+        help="factor to determine RAM cost in the searched architecture",
+    )
+    parser.add_argument(
         "--fold",
         action="store",
         required=True,
@@ -180,18 +186,19 @@ def main():
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
     if not os.path.exists(args.output_root):
-        os.makedirs(args.output_root)
+        os.makedirs(args.output_root, exist_ok=True)
 
     amp = True
-    determ = False
-    factor_ram_cost = 0.2
+    determ = True
+    factor_ram_cost = args.factor_ram_cost
     fold = int(args.fold)
     input_channels = 1
-    learning_rate = 0.0002
-    learning_rate_final = 0.00001
+    learning_rate = 0.025
+    learning_rate_arch = 0.001
+    learning_rate_milestones = np.array([0.4, 0.8])
     num_images_per_batch = 1
-    num_epochs = 1430
-    num_epochs_per_validation = 60
+    num_epochs = 1430 # around 20k iteration
+    num_epochs_per_validation = 100
     num_epochs_warmup = 715
     num_folds = int(args.num_folds)
     num_patches_per_image = 1
@@ -202,6 +209,8 @@ def main():
     patch_size_valid = (96, 96, 96)
     spacing = [1.0, 1.0, 1.0]
 
+    print("factor_ram_cost", factor_ram_cost)
+
     # deterministic training
     if determ:
         set_determinism(seed=0)
@@ -209,16 +218,7 @@ def main():
     # initialize the distributed training process, every GPU runs in a process
     dist.init_process_group(backend="nccl", init_method="env://")
 
-    # data
-    if dist.get_rank() == 0:
-        resource = "https://msd-for-monai.s3-us-west-2.amazonaws.com/" + args.root.split(os.sep)[-1] + ".tar"
-        compressed_file = args.root + ".tar"
-        data_dir = args.root
-        root_dir = os.path.join(*args.root.split(os.sep)[:-1])
-        if not os.path.exists(data_dir):
-            download_and_extract(resource, compressed_file, root_dir)
-
-    dist.barrier()
+    # dist.barrier()
     world_size = dist.get_world_size()
 
     with open(args.json, "r") as f:
@@ -238,7 +238,6 @@ def main():
             continue
 
         files.append({"image": str_img, "label": str_seg})
-
     train_files = files
 
     random.shuffle(train_files)
@@ -328,17 +327,19 @@ def main():
     train_ds_w = monai.data.CacheDataset(data=train_files_w, transform=train_transforms, cache_rate=1.0, num_workers=8)
     val_ds = monai.data.CacheDataset(data=val_files, transform=val_transforms, cache_rate=1.0, num_workers=2)
 
+    # monai.data.Dataset can be used as alternatives when debugging or RAM space is limited.
     # train_ds_a = monai.data.Dataset(data=train_files_a, transform=train_transforms)
     # train_ds_w = monai.data.Dataset(data=train_files_w, transform=train_transforms)
     # val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
 
-    # train_loader_a = DataLoader(train_ds_a, batch_size=num_images_per_batch, shuffle=True, num_workers=2, pin_memory=torch.cuda.is_available())
-    # train_loader_w = DataLoader(train_ds_w, batch_size=num_images_per_batch, shuffle=True, num_workers=2, pin_memory=torch.cuda.is_available())
-    # val_loader = DataLoader(val_ds, batch_size=1, shuffle=False, num_workers=2, pin_memory=torch.cuda.is_available())
-
     train_loader_a = ThreadDataLoader(train_ds_a, num_workers=0, batch_size=num_images_per_batch, shuffle=True)
     train_loader_w = ThreadDataLoader(train_ds_w, num_workers=0, batch_size=num_images_per_batch, shuffle=True)
     val_loader = ThreadDataLoader(val_ds, num_workers=0, batch_size=1, shuffle=False)
+
+    # DataLoader can be used as alternatives when ThreadDataLoader is less efficient.
+    # train_loader_a = DataLoader(train_ds_a, batch_size=num_images_per_batch, shuffle=True, num_workers=2, pin_memory=torch.cuda.is_available())
+    # train_loader_w = DataLoader(train_ds_w, batch_size=num_images_per_batch, shuffle=True, num_workers=2, pin_memory=torch.cuda.is_available())
+    # val_loader = DataLoader(val_ds, batch_size=1, shuffle=False, num_workers=2, pin_memory=torch.cuda.is_available())
 
     dints_space = monai.networks.nets.TopologySearch(
         channel_mul=0.5,
@@ -374,9 +375,9 @@ def main():
     )
 
     # optimizer
-    optimizer = torch.optim.SGD(model.weight_parameters(), lr=learning_rate, momentum=0.9, weight_decay=0.00004)
-    arch_optimizer_a = torch.optim.Adam([dints_space.log_alpha_a], lr=0.001, betas=(0.5, 0.999), weight_decay=0.0)
-    arch_optimizer_c = torch.optim.Adam([dints_space.log_alpha_c], lr=0.001, betas=(0.5, 0.999), weight_decay=0.0)
+    optimizer = torch.optim.SGD(model.weight_parameters(), lr=learning_rate * world_size, momentum=0.9, weight_decay=0.00004)
+    arch_optimizer_a = torch.optim.Adam([dints_space.log_alpha_a], lr=learning_rate_arch * world_size, betas=(0.5, 0.999), weight_decay=0.0)
+    arch_optimizer_c = torch.optim.Adam([dints_space.log_alpha_c], lr=learning_rate_arch * world_size, betas=(0.5, 0.999), weight_decay=0.0)
 
     print()
 
@@ -418,17 +419,10 @@ def main():
 
     start_time = time.time()
     for epoch in range(num_epochs):
-        if learning_rate_final > -0.000001 and learning_rate_final < learning_rate:
-            # lr = (learning_rate - learning_rate_final) * (1 - epoch / (num_epochs - 1)) ** 0.9 + learning_rate_final
-            milestones = np.array([0.4, 0.8])
-            decay = 0.5 ** np.sum([(epoch - num_epochs_warmup) / (num_epochs - num_epochs_warmup) > milestones])
-            lr = learning_rate * decay
-            for param_group in optimizer.param_groups:
-                param_group["lr"] = lr
-        else:
-            lr = learning_rate
-
-        lr = optimizer.param_groups[0]["lr"]
+        decay = 0.5 ** np.sum([(epoch - num_epochs_warmup) / (num_epochs - num_epochs_warmup) > learning_rate_milestones])
+        lr = learning_rate * decay
+        for param_group in optimizer.param_groups:
+            param_group["lr"] = lr
 
         if dist.get_rank() == 0:
             print("-" * 10)
@@ -453,6 +447,9 @@ def main():
                     _.requires_grad = True
             dints_space.log_alpha_a.requires_grad = False
             dints_space.log_alpha_c.requires_grad = False
+
+            optimizer.zero_grad()
+
             if amp:
                 with autocast():
                     outputs = model(inputs)
@@ -502,12 +499,12 @@ def main():
             dints_space.log_alpha_c.requires_grad = True
 
             # linear increase topology and RAM loss
-            entropy_alpha_c = torch.tensor(0.).cuda()
-            entropy_alpha_a = torch.tensor(0.).cuda()
-            ram_cost_full = torch.tensor(0.).cuda()
-            ram_cost_usage = torch.tensor(0.).cuda()
-            ram_cost_loss = torch.tensor(0.).cuda()
-            topology_loss = torch.tensor(0.).cuda()
+            entropy_alpha_c = torch.tensor(0.).to(device)
+            entropy_alpha_a = torch.tensor(0.).to(device)
+            ram_cost_full = torch.tensor(0.).to(device)
+            ram_cost_usage = torch.tensor(0.).to(device)
+            ram_cost_loss = torch.tensor(0.).to(device)
+            topology_loss = torch.tensor(0.).to(device)
 
             probs_a, arch_code_prob_a = dints_space.get_prob_a(child=True)
             entropy_alpha_a = -((probs_a)*torch.log(probs_a + 1e-5)).mean()
@@ -522,6 +519,8 @@ def main():
             arch_optimizer_a.zero_grad()
             arch_optimizer_c.zero_grad()
 
+            combination_weights = (epoch - num_epochs_warmup) / (num_epochs - num_epochs_warmup)
+
             if amp:
                 with autocast():
                     outputs_search = model(inputs_search)
@@ -530,7 +529,7 @@ def main():
                     else:
                         loss = loss_func(outputs_search, labels_search)
 
-                    loss += 1.0 * (1.0 * (entropy_alpha_a + entropy_alpha_c) + ram_cost_loss \
+                    loss += combination_weights * ((entropy_alpha_a + entropy_alpha_c) + ram_cost_loss \
                                                     + 0.001 * topology_loss)
 
                 scaler.scale(loss).backward()
@@ -544,7 +543,7 @@ def main():
                 else:
                     loss = loss_func(outputs_search, labels_search)
 
-                loss += 1.0 * (1.0 * (entropy_alpha_a + entropy_alpha_c) + ram_cost_loss \
+                loss += 1.0 * (combination_weights * (entropy_alpha_a + entropy_alpha_c) + ram_cost_loss \
                                 + 0.001 * topology_loss)
 
                 loss.backward()
@@ -568,11 +567,9 @@ def main():
             loss_torch_epoch = loss_torch[0] / loss_torch[1]
             print(f"epoch {epoch + 1} average loss: {loss_torch_epoch:.4f}, best mean dice: {best_metric:.4f} at epoch {best_metric_epoch}")
 
-            if epoch < num_epochs_warmup:
-                continue
-
-            loss_torch_arch_epoch = loss_torch_arch[0] / loss_torch_arch[1]
-            print(f"epoch {epoch + 1} average arch loss: {loss_torch_arch_epoch:.4f}, best mean dice: {best_metric:.4f} at epoch {best_metric_epoch}")
+            if epoch >= num_epochs_warmup:
+                loss_torch_arch_epoch = loss_torch_arch[0] / loss_torch_arch[1]
+                print(f"epoch {epoch + 1} average arch loss: {loss_torch_arch_epoch:.4f}, best mean dice: {best_metric:.4f} at epoch {best_metric_epoch}")
 
         if (epoch + 1) % val_interval == 0:
             torch.cuda.empty_cache()
@@ -666,9 +663,9 @@ def main():
                     torch.save(
                         {
                             "node_a": node_a_d,
-                            "code_a": arch_code_a_d,
-                            "code_a_max": arch_code_a_max_d,
-                            "code_c": arch_code_c_d,
+                            "arch_code_a": arch_code_a_d,
+                            "arch_code_a_max": arch_code_a_max_d,
+                            "arch_code_c": arch_code_c_d,
                             "iter_num": idx_iter,
                             "epochs": epoch + 1,
                             "best_dsc": best_metric,

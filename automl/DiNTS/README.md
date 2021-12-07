@@ -12,7 +12,7 @@ Yufan He, Dong Yang, Holger Roth, Can Zhao, Daguang Xu: "[DiNTS: Differentiable 
 The script is tested with: `Ubuntu 20.04` and  `CUDA 11`
 
 You can use nvidia docker or conda environments to install the dependencies.
-- ### Using Docker Image 
+- ### Using Docker Image
 1. #### Download and install Nvidia PyTorch Docker
 ```bash
 docker pull nvcr.io/nvidia/pytorch:21.10-py3
@@ -30,7 +30,7 @@ sudo docker run -it --gpus all --pid=host --shm-size 16G -v /location/to/tutoria
 bash install.sh
 ```
 
-- ### Using Conda 
+- ### Using Conda
 1. #### Install Pytorch >= 1.6
 ```bash
 conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch

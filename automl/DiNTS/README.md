@@ -7,28 +7,39 @@ Yufan He, Dong Yang, Holger Roth, Can Zhao, Daguang Xu: "[DiNTS: Differentiable 
 ![0.8](./Figures/arch_ram-cost-0.8.png)
 ![space](./Figures/search_space.png)
 
-## Requirements
-The script is tested with:
-- `Ubuntu 20.04` and  `CUDA 11`
-- The searching and training stage requires at least two 16GB GPUs.
 
 ## Dependencies and installation
-### Download and install NVIDIA PyTorch Docker
+The script is tested with: `Ubuntu 20.04` and  `CUDA 11`
+
+You can use nvidia docker or conda environments to install the dependencies.
+- ### Using Docker Image 
+1. #### Download and install Nvidia PyTorch Docker
 ```bash
 docker pull nvcr.io/nvidia/pytorch:21.10-py3
 ```
-### Download the repository
+2. #### Download the repository
 ```bash
 git clone https://github.com/Project-MONAI/tutorials.git
 ```
-### Run into Docker
+3. #### Run into Docker
 ```
 sudo docker run -it --gpus all --pid=host --shm-size 16G -v /location/to/tutorials/automl/DiNTS/:/workspace/DiNTS/  nvcr.io/nvidia/pytorch:21.10-py3
 ```
-### Install MONAI and dependencies
+4. #### Install required package in docker
 ```bash
 bash install.sh
 ```
+
+- ### Using Conda 
+1. #### Install Pytorch >= 1.6
+```bash
+conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
+```
+2. #### Install MONAI and dependencies
+```bash
+bash install.sh
+```
+- ### Install [Graphviz](https://graphviz.org/download/) for visualization (needed in decode_plot.py)
 
 ## Data
 [Spleen CT dataset](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2) and [Pancreas MRI dataset](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2)
@@ -56,6 +67,10 @@ python train_dints.py -h
 ```
 - Change ``NUM_GPUS_PER_NODE`` to your number of GPUs.
 - Run `bash search_dints.sh`
+- Call the function in `decode_plot.py` to visualize the searched model in a vector image (graphvis needs to be installed).
+The searched archtecture with ram cost 0.2 and 0.8 are shown below:
+![0.2 search](./Figures/search_0.2.png)
+![0.8 search](./Figures/search_0.8.png)
 
 ### Training
 - Add the following script to the commands of running into docker (Optional)

@@ -407,7 +407,7 @@ def main():
     start_time = time.time()
     for epoch in range(num_epochs):
         decay = 0.5 ** np.sum([epoch / num_epochs > learning_rate_milestones])
-        lr = learning_rate * decay
+        lr = learning_rate * decay * world_size
         for param_group in optimizer.param_groups:
             param_group["lr"] = lr
 

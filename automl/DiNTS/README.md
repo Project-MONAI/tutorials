@@ -15,7 +15,7 @@ You can use nvidia docker or conda environments to install the dependencies.
 - ### Using Docker Image
 1. #### Download and install Nvidia PyTorch Docker
 ```bash
-docker pull nvcr.io/nvidia/pytorch:21.10-py3
+docker pull projectmonai/monai:0.8.0
 ```
 2. #### Download the repository
 ```bash
@@ -23,7 +23,7 @@ git clone https://github.com/Project-MONAI/tutorials.git
 ```
 3. #### Run into Docker
 ```
-sudo docker run -it --gpus all --pid=host --shm-size 16G -v /location/to/tutorials/automl/DiNTS/:/workspace/DiNTS/  nvcr.io/nvidia/pytorch:21.10-py3
+sudo docker run -it --gpus all --pid=host --shm-size 16G -v /location/to/tutorials/automl/DiNTS/:/workspace/DiNTS/ projectmonai/monai:0.8.0
 ```
 4. #### Install required package in docker
 ```bash

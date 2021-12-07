@@ -15,7 +15,7 @@ You can use nvidia docker or conda environments to install the dependencies.
 - ### Using Docker Image
 1. #### Download and install Nvidia PyTorch Docker
 ```bash
-docker pull nvcr.io/nvidia/pytorch:21.10-py3
+docker pull projectmonai/monai:0.8.0
 ```
 2. #### Download the repository
 ```bash
@@ -23,7 +23,7 @@ git clone https://github.com/Project-MONAI/tutorials.git
 ```
 3. #### Run into Docker
 ```
-sudo docker run -it --gpus all --pid=host --shm-size 16G -v /location/to/tutorials/automl/DiNTS/:/workspace/DiNTS/  nvcr.io/nvidia/pytorch:21.10-py3
+sudo docker run -it --gpus all --pid=host --shm-size 16G -v /location/to/tutorials/automl/DiNTS/:/workspace/DiNTS/ projectmonai/monai:0.8.0
 ```
 4. #### Install required package in docker
 ```bash
@@ -37,6 +37,7 @@ conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
 ```
 2. #### Install MONAI and dependencies
 ```bash
+pip install monai==0.8.0
 bash install.sh
 ```
 - ### Install [Graphviz](https://graphviz.org/download/) for visualization (needed in decode_plot.py)
@@ -68,7 +69,7 @@ python train_dints.py -h
 - Change ``NUM_GPUS_PER_NODE`` to your number of GPUs.
 - Run `bash search_dints.sh`
 - Call the function in `decode_plot.py` to visualize the searched model in a vector image (graphvis needs to be installed).
-The searched archtecture with ram cost 0.2 and 0.8 are shown below:
+The searched architecture with ram cost 0.2 and 0.8 are shown below:
 ![0.2 search](./Figures/search_0.2.png)
 ![0.8 search](./Figures/search_0.8.png)
 
@@ -77,7 +78,7 @@ The searched archtecture with ram cost 0.2 and 0.8 are shown below:
 ```
 -v /your_downloaded_data_root/Task09_Spleen/:/workspace/data_msd/Task09_Spleen/
 ```
-- Change ``ARCH_CKPT`` to point to the architecture file (.pth) from the searching stage.
+- Change ``ARCH_CKPT`` to point to the architecture file (.pth) from the searching stage. 'arch_code_cvpr.pth' is the searched architecture in DiNTS CVPR2021 paper.
 - Change ``NUM_GPUS_PER_NODE`` to your number of GPUs.
 - Run `bash train_dints.sh`
 

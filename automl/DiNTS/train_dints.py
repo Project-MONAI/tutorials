@@ -311,11 +311,12 @@ def main():
         ]
     )
 
-    # train_ds = monai.data.Dataset(data=train_files, transform=train_transforms)
-    # val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
-
     train_ds = monai.data.CacheDataset(data=train_files, transform=train_transforms, cache_rate=1.0, num_workers=8)
     val_ds = monai.data.CacheDataset(data=val_files, transform=val_transforms, cache_rate=1.0, num_workers=2)
+
+    # monai.data.Dataset can be used as alternatives when debugging or RAM space is limited.
+    # train_ds = monai.data.Dataset(data=train_files, transform=train_transforms)
+    # val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
 
     train_loader = ThreadDataLoader(train_ds, num_workers=0, batch_size=num_images_per_batch, shuffle=True)
     val_loader = ThreadDataLoader(val_ds, num_workers=0, batch_size=1, shuffle=False)

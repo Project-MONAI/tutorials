@@ -13,7 +13,7 @@ The script is tested with:
 - The searching and training stage requires at least two 16GB GPUs.
 
 ## Dependencies and installation
-### Download and install Nvidia PyTorch Docker
+### Download and install NVIDIA PyTorch Docker
 ```bash
 docker pull nvcr.io/nvidia/pytorch:21.10-py3
 ```
@@ -32,8 +32,11 @@ bash install.sh
 
 ## Data
 [Spleen CT dataset](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2) and [Pancreas MRI dataset](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2)
-from [Medical Segmentation Decathlon](http://medicaldecathlon.com/) is used. You can manually download it and save it to args.root. Otherwise, the script will automatic
-download the dataset.
+from [Medical Segmentation Decathlon](http://medicaldecathlon.com/) is used for this tutorial. You can manually download it and save it to args.root. Or you can use the script `download_msd_datasets.py` to download the MSD datasets of 10 segmentation tasks.
+```bash
+python download_msd_datasets.py --msd_task "Task07_Pancreas" \
+                                --root "/workspace/data_msd"
+```
 
 ## Examples
 The tutorial contains two stages: searching stage and training stage. An architecture is searched and saved into a `.pth` file using `search_dints.py`.

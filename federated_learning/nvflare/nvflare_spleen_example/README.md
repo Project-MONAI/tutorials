@@ -2,13 +2,15 @@
 
 ## Brief Introduction
 
-This repository contains an end-to-end Federated training example based on MONAI trainers and [NVIDIA FLARE](https://github.com/nvidia/nvflare).
+This repository contains an end-to-end Federated training example based on MONAI trainers and [NVIDIA FLARE](https://github.com/nvidia/nvflare). Please also download the `hello-monai` folder in [NVFlare/examples](https://github.com/NVIDIA/NVFlare/tree/main/examples/hello-monai), and copy it into this directory.
+
+
 
 This example requires Python 3.8.10
 
-Inside this folder:
+Inside this directory:
 - All Jupiter notebooks are used to build an FL experiment step-by-step.
-- `hello-monai` is a folder containing all required config files for the experiment (in `config/`) and the customized trainer (in `custom`) and its components.
+- hello-monai (needs to be downloaded) is a folder containing all required config files for the experiment (in `config/`) and the customized trainer (in `custom`) and its components.
 
 ## Installation
 

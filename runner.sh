@@ -294,7 +294,7 @@ for file in "${files[@]}"; do
 		fi
 
 		# Set some variables to 1 to speed up proceedings
-		strings_to_replace=(max_epochs val_interval disc_train_interval disc_train_steps)
+		strings_to_replace=(max_epochs val_interval disc_train_interval disc_train_steps num_batches_for_histogram)
 		for s in "${strings_to_replace[@]}"; do
 			replace_text
 		done

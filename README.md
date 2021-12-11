@@ -121,6 +121,9 @@ This notebook shows a quick demo for learning based affine registration of `64 x
 #### [3D registration using paired lung CT](./3d_registration/paired_lung_ct.ipynb)
 This tutorial shows how to use MONAI to register lung CT volumes acquired at different time points for a single patient.
 
+#### [DeepAtlas](./deep_atlas/deep_atlas_tutorial.ipynb)
+This tutorial demonstrates the use of MONAI for training of registration and segmentation models _together_. The DeepAtlas approach, in which the two models serve as a source of weakly supervised learning for each other, is useful in situations where one has many unlabeled images and just a few images with segmentation labels. The notebook works with 3D images from the OASIS-1 brain MRI dataset.
+
 **deepgrow**
 #### [Deepgrow](./deepgrow)
 The example show how to train/validate a 2D/3D deepgrow model.  It also demonstrates running an inference for trained deepgrow models.

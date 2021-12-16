@@ -26,12 +26,17 @@ def main():
     parser.add_argument('--meta', '-e', type=str, help='file path of the meta data')
     args = parser.parse_args()
 
+    # load config file
     with open(args.config, "r") as f:
         cofnig_dict = json.load(f)
+    # load meta data
+    with open(args.meta, "r") as f:
+        meta_dict = json.load(f)
 
     net: torch.nn.Module = None
     # TODO: parse network definiftion from config file and construct network instance
-    # net = parse_config(config_dict).get_component("network")
+    # config_parser = ConfigParser(config_dict, meta_dict)
+    # net = config_parser.get_component("network")
 
     checkpoint = torch.load(args.weights)
     # here we use ignite Checkpoint to support nested weights and be compatible with MONAI CheckpointSaver
@@ -39,10 +44,6 @@ def main():
 
     # convert to TorchScript model and save with meta data
     net = convert_to_torchscript(model=net)
-
-    # load meta data
-    with open(args.meta, "r") as f:
-        meta_dict = json.load(f)
 
     save_net_with_metadata(
         jit_obj=net,

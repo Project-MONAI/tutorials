@@ -1,9 +1,7 @@
 {
     "multi_gpu": false,
     "amp": true,
-    "model": {
-        "ts_path": "../models/model.ts"
-    },
+    "model": "monai.data.load_net_with_metadata('../models/model.ts')[0]",
     "network": {
         "name": "UNet",
         "args": {

@@ -10,4 +10,49 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# TODO
+import argparse
+import json
+
+import torch
+from ignite.handlers import Checkpoint
+from monai.data import save_net_with_metadata
+from monai.networks import convert_to_torchscript
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--weights', '-w', type=str, help='file path of the trained model weights', required=True)
+    parser.add_argument('--config', '-c', type=str, help='file path of config file that defines network', required=True)
+    parser.add_argument('--meta', '-e', type=str, help='file path of the meta data')
+    args = parser.parse_args()
+
+    with open(args.config, "r") as f:
+        cofnig_dict = json.load(f)
+
+    net: torch.nn.Module = None
+    # TODO: parse network definiftion from config file and construct network instance
+    # net = parse_config(config_dict).get_component("network")
+
+    checkpoint = torch.load(args.weights)
+    # here we use ignite Checkpoint to support nested weights and be compatible with MONAI CheckpointSaver
+    Checkpoint.load_objects(to_load={"model": net}, checkpoint=checkpoint)
+
+    # convert to TorchScript model and save with meta data
+    net = convert_to_torchscript(model=net)
+
+    # load meta data
+    with open(args.meta, "r") as f:
+        meta_dict = json.load(f)
+
+    save_net_with_metadata(
+        jit_obj=net,
+        filename_prefix_or_stream="model.ts",
+        include_config_vals=False,
+        append_timestamp=False,
+        meta_values=meta_dict,
+        more_extra_files={args.config: json.dumps(cofnig_dict).encode()},
+    )
+
+
+if __name__ == '__main__':
+    main()

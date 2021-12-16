@@ -1,0 +1,1 @@
+python ../programs/inference.py

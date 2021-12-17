@@ -38,13 +38,13 @@ def main():
     net: torch.nn.Module = None
     dataloader: torch.utils.data.DataLoader = None
     inferer: Inferer = None
-    post_transforms: Transform = None
+    postprocessing: Transform = None
     # TODO: parse inference config file and construct instances
     # config_parser = ConfigParser(config_dict, meta_dict)
     # net = config_parser.get_component("model").to(device)
     # dataloader = config_parser.get_component("dataloader")
     # inferer = config_parser.get_component("inferer")
-    # post_transforms = config_parser.get_component("post_transforms")
+    # postprocessing = config_parser.get_component("postprocessing")
 
     net.eval()
     with torch.no_grad():
@@ -53,7 +53,7 @@ def main():
             # define sliding window size and batch size for windows inference
             d[CommonKeys.PRED] = inferer(inputs=images, predictor=net)
             # decollate the batch data into a list of dictionaries, then execute postprocessing transforms
-            d = [post_transforms(i) for i in decollate_batch(d)]
+            d = [postprocessing(i) for i in decollate_batch(d)]
 
 
 if __name__ == '__main__':

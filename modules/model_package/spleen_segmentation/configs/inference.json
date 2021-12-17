@@ -14,7 +14,7 @@
             "norm": "batch"
         }
     },
-    "pre_transforms": [
+    "preprocessing": [
         {
             "name": "LoadImaged",
             "args": {
@@ -81,7 +81,7 @@
         "name": "Dataset",
         "args": {
             "data": "@datalist",
-            "transform": "@pre_transforms"
+            "transform": "@preprocessing"
         }
     },
     "dataloader": {
@@ -101,7 +101,7 @@
             "overlap": 0.5
         }
     },
-    "post_transforms": [
+    "postprocessing": [
         {
             "name": "Activationsd",
             "args": {
@@ -113,7 +113,7 @@
             "name": "Invertd",
             "args": {
                 "keys": "pred",
-                "transform": "@pre_transforms",
+                "transform": "@preprocessing",
                 "orig_keys": "image",
                 "meta_keys": "pred_meta_dict",
                 "nearest_interp": false,

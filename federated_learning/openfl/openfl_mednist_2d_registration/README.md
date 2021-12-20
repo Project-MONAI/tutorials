@@ -18,7 +18,7 @@ First of all, clone the repository and go to [openfl_mednist_2d_registration](./
 
 ```sh
 git clone https://github.com/Project-MONAI/tutorials.git
-cd tutorials/federated_learning/openfl/openfl_mednist_2d_registration/ 
+cd tutorials/federated_learning/openfl/openfl_mednist_2d_registration/
 ```
 Then follow the steps to set up federation and run your experiment.
 ### Virtual Environment
@@ -94,7 +94,7 @@ source envoy_two_env/bin/activate
 pip install -r requirements.txt
 cd envoy_two
 pip install -r sd_requirements.txt
-``` 
+```
 
 - Run the next command from `envoy_two` directory to start envoy:
 ```sh
@@ -131,7 +131,7 @@ source workspace_env/bin/activate
 3. Install required packages:
 ```sh
 pip install -r requirements.txt
-``` 
+```
 
 4. Run `Monai_MedNIST.ipynb` jupyter notebook:
 ```sh

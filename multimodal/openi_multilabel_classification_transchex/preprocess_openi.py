@@ -117,4 +117,3 @@ for dataset in datasets:
     create_report(dataset["img_name"], dataset["report"], dataset["gt"], dataset["save_add"])
 
 print('Processed Dataset Files Are Saved !')
-

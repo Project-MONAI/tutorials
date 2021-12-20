@@ -18,7 +18,7 @@ completed, the dataset can be readily used for the tutorial.
 to 'monai_data' directory and extract it. 
 3) Download the reports in XML format from this [link](https://openi.nlm.nih.gov/imgs/collections/NLMCXR_reports.tgz). Copy the downloaded file (NLMCXR_reports.tgz)
 to 'monai_data' directory and extract it.
-4) Download the splits of train, validation and test datasets from this [link](https://drive.google.com/u/1/uc?id=1_CThgwbDQPeTrr2Gvi6zflqr32_5t87j&export=download). Copy the downloaded file (TransChex_openi.zip)
+4) Download the splits of train, validation and test datasets from this [link](https://drive.google.com/u/1/uc?id=1jvT0jVl9mgtWy4cS7LYbF43bQE4mrXAY&export=download). Copy the downloaded file (TransChex_openi.zip)
 to 'monai_data' directory and extract it.
 5) Run 'preprocess_openi.py' to process the images and reports.  
 

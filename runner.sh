@@ -59,6 +59,7 @@ doRun=true
 autofix=false
 failfast=false
 pattern="-and -name '*' -and ! -wholename '*federated_learning*'\
+ -and ! -wholename '*transchex_openi*'\
  -and ! -wholename '*unetr_btcv*'\
  -and ! -wholename '*profiling_camelyon*'\
  -and ! -wholename '*profiling_train_base_nvtx*'\

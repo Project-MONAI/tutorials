@@ -1,0 +1,13 @@
+params:
+  cuda_devices: [0, ]
+
+optional_plugin_components:
+ cuda_device_monitor:
+   template: openfl.plugins.processing_units_monitor.pynvml_monitor.PynvmlCUDADeviceMonitor
+   settings: []
+
+shard_descriptor:
+  template: mednist_dataset_shard_descriptor.MedNistShardDescriptor
+  params:
+    data_folder: './'
+    rank_worldsize: 1,2

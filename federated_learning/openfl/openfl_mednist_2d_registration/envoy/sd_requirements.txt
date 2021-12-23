@@ -1,0 +1,4 @@
+gdown
+pynvml
+monai==0.8.0
+scikit-image==0.19.0

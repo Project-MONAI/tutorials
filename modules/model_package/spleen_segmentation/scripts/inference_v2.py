@@ -23,7 +23,8 @@ from monai.utils.enums import CommonKeys
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', '-c', type=str, help='config file that defines components', required=True)
+    parser.add_argument('--base_config', '-c', type=str, help='file path of base config', required=False)
+    parser.add_argument('--config', '-c', type=str, help='config file to override base config', required=True)
     parser.add_argument('--meta', '-e', type=str, help='file path of the meta data')
     args = parser.parse_args()
 
@@ -33,7 +34,10 @@ def main():
     # load meta data
     with open(args.meta, "r") as f:
         configs.update(json.load(f))
-    # load config file, can override meta data in config
+    # load base config file, can override meta data in config
+    with open(args.base_config, "r") as f:
+        configs.update(json.load(f))
+    # load config file, add or override the content of base config
     with open(args.config, "r") as f:
         configs.update(json.load(f))
 
@@ -43,13 +47,8 @@ def main():
     postprocessing: Transform = None
     # TODO: parse inference config file and construct instances
     config_parser = ConfigParser(configs)
-
-    # change JSON config content in python code, lazy instantiation
-    model_conf = config_parser.get_config("model")
-    model_conf["disabled"] = False
-    model = config_parser.build(model_conf).to(device)
-
     # instantialize the components immediately
+    model = config_parser.get_instance("model").to(device)
     dataloader = config_parser.get_instance("dataloader")
     inferer = config_parser.get_instance("inferer")
     postprocessing = config_parser.get_instance("postprocessing")

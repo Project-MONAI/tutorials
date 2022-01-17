@@ -16,9 +16,7 @@ import json
 import torch
 from monai.apps import ConfigParser
 from monai.data import decollate_batch
-from monai.inferers import Inferer
 from monai.transforms import Transform
-from monai.utils.enums import CommonKeys
 
 
 def main():
@@ -37,31 +35,24 @@ def main():
     with open(args.config, "r") as f:
         configs.update(json.load(f))
 
-    model: torch.nn.Module = None
-    dataloader: torch.utils.data.DataLoader = None
-    inferer: Inferer = None
+    # fake code to simulate TensorRT and DALI logic
+    model: TRTModel = None
+    dataloader: DALIpipeline = None
+    inferer: TRTInfer = None
     postprocessing: Transform = None
     # TODO: parse inference config file and construct instances
     config_parser = ConfigParser(configs)
 
-    # change JSON config content in python code, lazy instantiation
-    model_conf = config_parser.get_config("model")
-    model_conf["disabled"] = False
-    model = config_parser.build(model_conf).to(device)
-
     # instantialize the components immediately
+    model = config_parser.get_instance("model").to(device)
     dataloader = config_parser.get_instance("dataloader")
     inferer = config_parser.get_instance("inferer")
     postprocessing = config_parser.get_instance("postprocessing")
 
-    model.eval()
-    with torch.no_grad():
-        for d in dataloader:
-            images = d[CommonKeys.IMAGE].to(device)
-            # define sliding window size and batch size for windows inference
-            d[CommonKeys.PRED] = inferer(inputs=images, predictor=model)
-            # decollate the batch data into a list of dictionaries, then execute postprocessing transforms
-            [postprocessing(i) for i in decollate_batch(d)]
+    # simuluate TensorRT and DALI logic
+    for d in dataloader:
+        r = inferer(inputs=d, predictor=model)
+        [postprocessing(i) for i in decollate_batch(r)]
 
 
 if __name__ == '__main__':

@@ -39,7 +39,11 @@ def main():
         configs.update(json.load(f))
     # load config file, add or override the content of base config
     with open(args.config, "r") as f:
-        configs.update(json.load(f))
+        new_configs = json.load(f)
+    # override the inferer with other args
+    configs["inferer"] = new_configs["inferer"]
+    # override spacing transform with other pixdims
+    configs["preprocessing"][1] = new_configs["preprocessing"]
 
     model: torch.nn.Module = None
     dataloader: torch.utils.data.DataLoader = None

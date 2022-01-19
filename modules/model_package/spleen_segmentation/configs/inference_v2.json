@@ -1,15 +1,10 @@
 {
-    "amp": false,
-    "network": {
-        "name": "UNet",
+    "preprocessing": {
+        "name": "Spacingd",
         "args": {
-            "spatial_dims": 3,
-            "in_channels": 1,
-            "out_channels": 2,
-            "channels": [32, 64, 128, 256, 512],
-            "strides": [2, 2, 2, 2],
-            "num_res_units": 2,
-            "norm": "group"
+            "keys": "image",
+            "pixdim": [1.0, 1.0, 1.0],
+            "mode": "bilinear"
         }
     },
     "inferer": {

@@ -138,6 +138,9 @@ This uses the previous notebook's trained network to demonstrate deployment a we
 #### [NVFlare](./federated_learning/nvflare)
 The examples show how to train federated learning models with [NVFlare](https://pypi.org/project/nvflare/) and MONAI-based trainers.
 
+#### [OpenFL](./federated_learning/openfl)
+The examples show how to train federated learning models based on [OpenFL](https://github.com/intel/openfl) and MONAI.
+
 #### [Substra](./federated_learning/substra)
 The example show how to execute the 3d segmentation torch tutorial on a federated learning platform, Substra.
 

@@ -21,8 +21,8 @@ from monai.transforms import (
     Orientationd,
     NormalizeIntensityd
 )
-from detection_networks.nets.detection.retinanet import retinanet_resnet50_fpn
-from detection_networks.nets.detection.anchor_utils import AnchorGenerator
+from monai.apps.detection.networks.nets.detection.retinanet import retinanet_resnet50_fpn
+from monai.apps.detection.networks.nets.detection.anchor_utils import AnchorGenerator
 
 
 def main():

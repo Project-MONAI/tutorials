@@ -28,8 +28,8 @@ from monai.transforms import (
     RandShiftIntensityd
 )
 
-from detection_networks.nets.detection.retinanet import retinanet_resnet50_fpn
-from detection_networks.nets.detection.anchor_utils import AnchorGenerator
+from monai.apps.detection.networks.nets.detection.retinanet import retinanet_resnet50_fpn
+from monai.apps.detection.etworks.nets.detection.anchor_utils import AnchorGenerator
 
 def main():
     parser = argparse.ArgumentParser(description="PyTorch Object Detection Training")

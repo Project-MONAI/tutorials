@@ -1,0 +1,13 @@
+{
+	"maskBool": false,
+	"num_classes": 1,
+	"n_input_channels": 1,
+	"spatial_dims": 3,
+	"score_thresh": 0.8,
+	"nms_thresh": 0.1,
+	"returned_layers": [1,2,3],
+	"base_anchor_size": [12, 24, 48, 96],
+	"base_aspect_ratios": [[0.5,0.5], [1.0, 1.0]],
+	"fg_iou_thresh": 0.5,
+    "bg_iou_thresh": 0.3
+}

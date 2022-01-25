@@ -1,13 +1,13 @@
 {
     "multi_gpu": false,
     "amp": true,
-    "model": "#monai.data.load_net_with_metadata('../models/model.ts')[0]",
+    "model": "$monai.data.load_net_with_metadata('../models/model.ts')[0]",
     "network": {
         "name": "UNet",
         "args": {
             "spatial_dims": 3,
-            "in_channels": 1,
-            "out_channels": 2,
+            "in_channels": "@network_data_format#inputs#image#num_channels",
+            "out_channels": "@network_data_format#outputs#pred#num_channels",
             "channels": [16, 32, 64, 128, 256],
             "strides": [2, 2, 2, 2],
             "num_res_units": 2,
@@ -70,7 +70,7 @@
     "datalist": {
         "name": "DatasetFunc",
         "args": {
-            "data": "#@dataset_dir + '/dataset.json'",
+            "data": "$@dataset_dir + '/dataset.json'",
             "func": "monai.data.load_decathlon_datalist",
             "is_segmentation": true,
             "data_list_key": "test",
@@ -96,7 +96,7 @@
     "inferer": {
         "name": "SlidingWindowInferer",
         "args": {
-            "roi_size": [160, 160, 160],
+            "roi_size": "@network_data_format#inputs#image#spatial_shape",
             "sw_batch_size": 4,
             "overlap": 0.5
         }

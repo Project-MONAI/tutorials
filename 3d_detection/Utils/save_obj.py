@@ -90,7 +90,7 @@ def main():
                 xmin = vec[0]
                 xmax = vec[1]
                 ymin = vec[2]
-                ymax = vec[3]                
+                ymax = vec[3]
                 zmin = vec[4]
                 zmax = vec[5]
 

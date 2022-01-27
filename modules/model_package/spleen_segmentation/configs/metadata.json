@@ -13,6 +13,7 @@
     "authorship": "MONAI team",
     "copyright": "Copyright (c) MONAI Consortium",
     "data_source": "Task09_Spleen.tar from http://medicaldecathlon.com/",
+    "data_type": "dicom",
     "dataset_dir": "/workspace/data/Task09_Spleen",
     "image_classes": "single channel data, intensity scaled to [0, 1]",
     "label_classes": "single channel data, 1 is spleen, 0 is everything else",

@@ -3,8 +3,8 @@
     "amp": true,
     "model": "$monai.data.load_net_with_metadata('../models/model.ts')[0]",
     "network": {
-        "name": "UNet",
-        "args": {
+        "<name>": "UNet",
+        "<args>": {
             "spatial_dims": 3,
             "in_channels": "@network_data_format#inputs#image#num_channels",
             "out_channels": "@network_data_format#outputs#pred#num_channels",
@@ -16,35 +16,35 @@
     },
     "preprocessing": [
         {
-            "name": "LoadImaged",
-            "args": {
+            "<name>": "LoadImaged",
+            "<args>": {
                 "keys": "image"
             }
         },
         {
-            "name": "Spacingd",
-            "args": {
+            "<name>": "Spacingd",
+            "<args>": {
                 "keys": "image",
                 "pixdim": [1.5, 1.5, 2],
                 "mode": "bilinear"
             }
         },
         {
-            "name": "Orientationd",
-            "args": {
+            "<name>": "Orientationd",
+            "<args>": {
                 "keys": "image",
                 "axcodes": "RAS"
             }
         },
         {
-            "name": "EnsureChannelFirstd",
-            "args": {
+            "<name>": "EnsureChannelFirstd",
+            "<args>": {
                 "keys": "image"
             }
         },
         {
-            "name": "ScaleIntensityRanged",
-            "args": {
+            "<name>": "ScaleIntensityRanged",
+            "<args>": {
                 "keys": "image",
                 "a_min": -57,
                 "a_max": 164,
@@ -54,22 +54,22 @@
             }
         },
         {
-            "name": "CropForegroundd",
-            "args": {
+            "<name>": "CropForegroundd",
+            "<args>": {
                 "keys": "image",
                 "source_key": "image"
             }
         },
         {
-            "name": "ToTensord",
-            "args": {
+            "<name>": "ToTensord",
+            "<args>": {
                 "keys": "image"
             }
         }
     ],
     "datalist": {
-        "name": "DatasetFunc",
-        "args": {
+        "<name>": "DatasetFunc",
+        "<args>": {
             "data": "$@dataset_dir + '/dataset.json'",
             "func": "monai.data.load_decathlon_datalist",
             "is_segmentation": true,
@@ -78,15 +78,15 @@
         }
     },
     "dataset": {
-        "name": "Dataset",
-        "args": {
+        "<name>": "Dataset",
+        "<args>": {
             "data": "@datalist",
             "transform": "@preprocessing"
         }
     },
     "dataloader": {
-        "name": "DataLoader",
-        "args": {
+        "<name>": "DataLoader",
+        "<args>": {
             "dataset": "@dataset",
             "batch_size": 1,
             "shuffle": false,
@@ -94,8 +94,8 @@
         }
     },
     "inferer": {
-        "name": "SlidingWindowInferer",
-        "args": {
+        "<name>": "SlidingWindowInferer",
+        "<args>": {
             "roi_size": "@network_data_format#inputs#image#spatial_shape",
             "sw_batch_size": 4,
             "overlap": 0.5
@@ -103,15 +103,15 @@
     },
     "postprocessing": [
         {
-            "name": "Activationsd",
-            "args": {
+            "<name>": "Activationsd",
+            "<args>": {
                 "keys": "pred",
                 "softmax": true
             }
         },
         {
-            "name": "Invertd",
-            "args": {
+            "<name>": "Invertd",
+            "<args>": {
                 "keys": "pred",
                 "transform": "@preprocessing",
                 "orig_keys": "image",
@@ -122,15 +122,15 @@
             }
         },
         {
-            "name": "AsDiscreted",
-            "args": {
+            "<name>": "AsDiscreted",
+            "<args>": {
                 "keys": "pred",
                 "argmax": true
             }
         },
         {
-            "name": "SaveImaged",
-            "args": {
+            "<name>": "SaveImaged",
+            "<args>": {
                 "keys": "pred",
                 "meta_keys": "pred_meta_dict",
                 "output_dir": "{MMAR_EVAL_OUTPUT_PATH}",
@@ -138,5 +138,25 @@
                 "squeeze_end_dims": true
             }
         }
-    ]
+    ],
+    "handlers": [
+        {
+            "<name>": "StatsHandler",
+            "<args>": {
+                "output_transform": "lambda x: None"
+            }
+        }
+      ],
+    "evaluator": {
+        "<name>": "SupervisedEvaluator",
+        "<args>": {
+            "device": "cuda",
+            "val_data_loader": "@dataloader",
+            "network": "@model",
+            "inferer": "@inferer",
+            "postprocessing": "@postprocessing",
+            "val_handlers": "@handlers",
+            "amp": "@amp"
+        }
+    }
 }

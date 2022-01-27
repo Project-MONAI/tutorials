@@ -1,8 +1,0 @@
-{
-    "preprocessing#1#<args>#pixdim": [1.0, 1.0, 1.0],
-    "inferer#<args>": {
-        "roi_size": [96, 96, 96],
-        "sw_batch_size": 4,
-        "overlap": 0.6
-    }
-}

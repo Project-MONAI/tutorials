@@ -1,0 +1,11 @@
+{
+    "preprocessing#1#<args>#pixdim": [1.0, 1.0, 1.0],
+    "inferer": {
+        "<path>": "custom_inferer.TensorRTInferer",
+        "<args>": {
+            "roi_size": [200, 200, 200],
+            "sw_batch_size": 4,
+            "overlap": 0.6
+        }
+    }
+}

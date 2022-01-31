@@ -2,5 +2,6 @@
 	"model_path": "best_model.pt",
 	"tfevent_path": "tfevent_train/",
 	"data_base_dir": "/home/canz/Projects/MONAI_detection/Data/SyntheticData",
-	"data_list_file_path": "/home/canz/Projects/MONAI_detection/Data/SyntheticData/dataset_synthetic.json"
+	"data_list_file_path": "/home/canz/Projects/MONAI_detection/Data/SyntheticData/dataset_synthetic.json",
+	"result_list_file_path": "/home/canz/Projects/MONAI_detection/Data/SyntheticData/result_synthetic.json"
 }

@@ -1,5 +1,7 @@
 import argparse
 import json
+import logging
+import sys
 
 import monai
 import numpy as np
@@ -8,10 +10,11 @@ from monai.apps.detection.networks.nets.detection.retinanet import (
     retinanet_resnet50_fpn,
 )
 from monai.config import print_config
-from monai.data import DataLoader, Dataset, load_decathlon_datalist
+from monai.data import DataLoader, Dataset, box_utils, load_decathlon_datalist
 from monai.data.utils import no_collation
+from monai.metrics.detection.coco_evaluator import COCOMetric
+from monai.metrics.detection.matching import matching_batch
 from monai.transforms import (
-    AddChanneld,
     BoxClipToImaged,
     BoxConvertToStandardd,
     Compose,
@@ -19,11 +22,17 @@ from monai.transforms import (
     EnsureTyped,
     LoadImaged,
     NormalizeIntensityd,
-    Orientationd,
-    ScaleIntensityRanged,
+    # Orientationd,
 )
 
 import torch
+
+
+def box_iou_np(bbox1: np.array, bbox2: np.array, **kwargs):
+    return (
+        box_utils.box_iou(torch.FloatTensor(bbox1), torch.FloatTensor(bbox2), **kwargs)
+        .cpu().detach().numpy()
+    )
 
 
 def main():
@@ -80,7 +89,7 @@ def main():
     )
     val_loader = DataLoader(
         val_ds,
-        batch_size=1,
+        batch_size=2,
         num_workers=1,
         pin_memory=torch.cuda.is_available(),
         collate_fn=no_collation,
@@ -111,74 +120,69 @@ def main():
     model.load_state_dict(torch.load(envDict["model_path"]))
 
     # 4. apply trained model
-    results_dict = {}
+    results_dict = {"validation": []}
+    val_outputs_all = []
+    val_targets_all = []
     model.eval()
+
+    coco_metric = COCOMetric(classes=["nodule"], iou_list=[0.1, 0.3], max_detection=[7])
     with torch.no_grad():
         for val_data in val_loader:
+            val_img_filenames = [
+                val_data_i["image_meta_dict"]["filename_or_obj"]
+                for val_data_i in val_data
+            ]
             val_inputs = [val_data_i["image"].to(device) for val_data_i in val_data]
             val_outputs = model(val_inputs)
-            print(val_outputs)
-            exit(0)
-            final_outputs = postprocessing(val_outputs)
 
-        results_dict.update(
-            {img_id: result for img_id, result in zip(img_ids, final_outputs)}
-        )
+            val_outputs_all += [
+                {
+                    "labels": val_data_i["labels"].cpu().detach().numpy(),
+                    "boxes": val_data_i["boxes"].cpu().detach().numpy(),
+                    "scores": val_data_i["scores"].cpu().detach().numpy(),
+                }
+                for val_data_i in val_outputs
+            ]
+            val_targets_all += [
+                {
+                    "labels": val_data_i["label"].cpu().detach().numpy(),
+                    "boxes": val_data_i["box"].cpu().detach().numpy(),
+                    "ignore": np.zeros(val_data_i["box"].shape[0]),
+                }
+                for val_data_i in val_data
+            ]
 
-    # 5. save prediction
-    predict_summary = {}
-    with open(test_annFile) as test_json:
-        # read all test data json
-        test_summary = json.load(test_json)
-        predict_summary = test_summary
-        if labelList is None:
-            labelList = test_summary["labelList"]
+            for val_img_filename, result in zip(val_img_filenames, val_outputs):
+                result.update({"image": val_img_filename})
+                for k, v in result.items():
+                    if isinstance(v, torch.Tensor):
+                        result[k] = v.detach().cpu().tolist()
+                results_dict["validation"].append(result)
 
-        if predictMaskRootPath != None:
-            predict_summary["root"]["mask"] = predictMaskRootPath
-        predict_summary["labelList"] = labelList
-        predict_summary["info"]["model"] = model_path
-        predict_summary["info"]["model_config"] = model_configFile
-        # substitute predicted scores, bbox, mask into predict_summary
-        for (subj_id, test_subject_info) in test_summary["subjects"].items():
-            prediction = final_predictionsDic[int(subj_id)]
-            for (l, label) in enumerate(labelList):
-                if l + 1 in prediction["score"].keys():
-                    predict_summary["subjects"][subj_id][label][
-                        "pred_confidence"
-                    ] = prediction["score"][l + 1]
-                    predict_summary["subjects"][subj_id][label][
-                        "pred_bbox"
-                    ] = prediction["bbox"][l + 1]
-                    predict_mask_array = prediction["mask"][l + 1]
-                    if predict_mask_array != None:
-                        # *******************************
-                        # TO DO: if using mask R-CNN, we need to save the predicted mask array into a nifti file
-                        # *******************************
-                        predict_mask_file = os.path.join(
-                            predict_summary["root"]["mask"],
-                            predict_summary["subjects"][subj_id]["dataset"],
-                            label,
-                            os.path.split(
-                                predict_summary["subjects"][subj_id]["data_file"]
-                            )[-1],
-                        )
-                    else:
-                        # if using Faster R-CNN, the mask_file is null
-                        predict_summary["subjects"][subj_id][label][
-                            "pred_mask_file"
-                        ] = None
-                else:
-                    predict_summary["subjects"][subj_id][label]["pred_confidence"] = 0
-                    predict_summary["subjects"][subj_id][label]["pred_bbox"] = None
-                    predict_summary["subjects"][subj_id][label]["pred_mask_file"] = None
-    # save json
-    with open(predict_annFile, "w") as outfile:
-        json.dump(predict_summary, outfile, indent=4)
+    with open(args.result_list_file_path, "w") as outfile:
+        json.dump(results_dict, outfile, indent=4)
 
-    # 6. evaluate results
-    eveluate_from_json(predict_annFile, test_annFile, maskBool=False)
+    results_metric = matching_batch(
+        iou_fn=box_iou_np,
+        iou_thresholds=coco_metric.iou_thresholds,
+        pred_boxes=[val_data_i["boxes"] for val_data_i in val_outputs_all],
+        pred_classes=[val_data_i["labels"] for val_data_i in val_outputs_all],
+        pred_scores=[val_data_i["scores"] for val_data_i in val_outputs_all],
+        gt_boxes=[val_data_i["boxes"] for val_data_i in val_targets_all],
+        gt_classes=[val_data_i["labels"] for val_data_i in val_targets_all],
+        gt_ignore=[val_data_i["ignore"] for val_data_i in val_targets_all],
+    )
+
+    final_metric = coco_metric(results_metric)
+
+    print(final_metric)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        stream=sys.stdout,
+        level=logging.INFO,
+        format="[%(asctime)s.%(msecs)03d][%(levelname)5s](%(name)s) - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
     main()

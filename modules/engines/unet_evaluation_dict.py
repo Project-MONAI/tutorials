@@ -96,6 +96,7 @@ def main(tempdir):
         ]
     )
     val_handlers = [
+        # use the logger "eval_log" defined at the beginning of this program
         StatsHandler(name="eval_log", output_transform=lambda x: None),
         CheckpointLoader(load_path=model_file, load_dict={"net": net}),
     ]

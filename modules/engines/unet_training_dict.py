@@ -122,6 +122,7 @@ def main(tempdir):
         ]
     )
     val_handlers = [
+        # use the logger "train_log" defined at the beginning of this program
         StatsHandler(name="train_log", output_transform=lambda x: None),
         TensorBoardStatsHandler(log_dir="./runs/", output_transform=lambda x: None),
         TensorBoardImageHandler(
@@ -157,6 +158,7 @@ def main(tempdir):
     train_handlers = [
         LrScheduleHandler(lr_scheduler=lr_scheduler, print_lr=True),
         ValidationHandler(validator=evaluator, interval=2, epoch_level=True),
+        # use the logger "train_log" defined at the beginning of this program
         StatsHandler(name="train_log", tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
         TensorBoardStatsHandler(log_dir="./runs/", tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
         CheckpointSaver(save_dir="./runs/", save_dict={"net": net, "opt": opt}, save_interval=2, epoch_level=True),

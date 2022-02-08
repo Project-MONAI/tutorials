@@ -21,9 +21,10 @@ import torch
 from ignite.metrics import Accuracy
 
 import monai
+from monai.apps import get_logger
 from monai.data import create_test_image_3d
 from monai.engines import SupervisedEvaluator
-from monai.handlers import CheckpointLoader, MeanDice, SegmentationSaver, StatsHandler, from_engine
+from monai.handlers import CheckpointLoader, MeanDice, StatsHandler, from_engine
 from monai.inferers import SlidingWindowInferer
 from monai.transforms import (
     Activationsd,
@@ -40,7 +41,9 @@ from monai.transforms import (
 
 def main(tempdir):
     monai.config.print_config()
+    # set root log level to INFO and init a evaluation logger, will be used in `StatsHandler`
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    get_logger("eval_log")
 
     # create a temporary directory and 40 random image, mask pairs
     print(f"generating synthetic data to {tempdir} (this may take a while)")
@@ -93,7 +96,8 @@ def main(tempdir):
         ]
     )
     val_handlers = [
-        StatsHandler(output_transform=lambda x: None),
+        # use the logger "eval_log" defined at the beginning of this program
+        StatsHandler(name="eval_log", output_transform=lambda x: None),
         CheckpointLoader(load_path=model_file, load_dict={"net": net}),
     ]
 

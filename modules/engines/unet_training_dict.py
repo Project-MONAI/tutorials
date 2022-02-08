@@ -21,6 +21,7 @@ import torch
 from ignite.metrics import Accuracy
 
 import monai
+from monai.apps import get_logger
 from monai.data import create_test_image_3d
 from monai.engines import SupervisedEvaluator, SupervisedTrainer
 from monai.handlers import (
@@ -50,7 +51,9 @@ from monai.transforms import (
 
 def main(tempdir):
     monai.config.print_config()
+    # set root log level to INFO and init a train logger, will be used in `StatsHandler`
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    get_logger("train_log")
 
     # create a temporary directory and 40 random image, mask pairs
     print(f"generating synthetic data to {tempdir} (this may take a while)")
@@ -119,7 +122,8 @@ def main(tempdir):
         ]
     )
     val_handlers = [
-        StatsHandler(output_transform=lambda x: None),
+        # use the logger "train_log" defined at the beginning of this program
+        StatsHandler(name="train_log", output_transform=lambda x: None),
         TensorBoardStatsHandler(log_dir="./runs/", output_transform=lambda x: None),
         TensorBoardImageHandler(
             log_dir="./runs/",
@@ -154,7 +158,8 @@ def main(tempdir):
     train_handlers = [
         LrScheduleHandler(lr_scheduler=lr_scheduler, print_lr=True),
         ValidationHandler(validator=evaluator, interval=2, epoch_level=True),
-        StatsHandler(tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
+        # use the logger "train_log" defined at the beginning of this program
+        StatsHandler(name="train_log", tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
         TensorBoardStatsHandler(log_dir="./runs/", tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
         CheckpointSaver(save_dir="./runs/", save_dict={"net": net, "opt": opt}, save_interval=2, epoch_level=True),
     ]

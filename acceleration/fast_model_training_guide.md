@@ -260,8 +260,8 @@ For example:
 train_transforms = [
     LoadImaged(...),
     AddChanneld(...),
-    Spacingd(...),
     Orientationd(...),
+    Spacingd(...),
     ScaleIntensityRanged(...),
     CropForegroundd(...),
     FgBgToIndicesd(...),

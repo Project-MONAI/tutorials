@@ -59,12 +59,12 @@ def main():
         [
             LoadImaged(keys=["image", "label"]),
             AddChanneld(keys=["image", "label"]),
+            Orientationd(keys=["image", "label"], axcodes="RAS"),
             Spacingd(
                 keys=["image", "label"],
                 pixdim=(1.5, 1.5, 2.0),
                 mode=("bilinear", "nearest"),
             ),
-            Orientationd(keys=["image", "label"], axcodes="RAS"),
             ScaleIntensityRanged(
                 keys=["image"],
                 a_min=-175,
@@ -116,12 +116,12 @@ def main():
         [
             LoadImaged(keys=["image", "label"]),
             AddChanneld(keys=["image", "label"]),
+            Orientationd(keys=["image", "label"], axcodes="RAS"),
             Spacingd(
                 keys=["image", "label"],
                 pixdim=(1.5, 1.5, 2.0),
                 mode=("bilinear", "nearest"),
             ),
-            Orientationd(keys=["image", "label"], axcodes="RAS"),
             ScaleIntensityRanged(
                 keys=["image"], a_min=-175, a_max=250, b_min=0.0, b_max=1.0, clip=True
             ),

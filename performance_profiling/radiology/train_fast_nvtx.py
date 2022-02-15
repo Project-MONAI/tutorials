@@ -82,6 +82,7 @@ train_transforms = Compose(
     [
         Range("LoadImage")(LoadImaged(keys=["image", "label"])),
         Range()(EnsureChannelFirstd(keys=["image", "label"])),
+        Range()(Orientationd(keys=["image", "label"], axcodes="RAS")),
         Range("Spacing")(
             Spacingd(
                 keys=["image", "label"],
@@ -89,7 +90,6 @@ train_transforms = Compose(
                 mode=("bilinear", "nearest"),
             )
         ),
-        Range()(Orientationd(keys=["image", "label"], axcodes="RAS")),
         Range()(
             ScaleIntensityRanged(
                 keys=["image"],
@@ -132,12 +132,12 @@ val_transforms = Compose(
     [
         LoadImaged(keys=["image", "label"]),
         EnsureChannelFirstd(keys=["image", "label"]),
+        Orientationd(keys=["image", "label"], axcodes="RAS"),
         Spacingd(
             keys=["image", "label"],
             pixdim=(1.5, 1.5, 2.0),
             mode=("bilinear", "nearest"),
         ),
-        Orientationd(keys=["image", "label"], axcodes="RAS"),
         ScaleIntensityRanged(
             keys=["image"],
             a_min=-57,

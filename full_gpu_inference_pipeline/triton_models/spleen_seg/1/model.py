@@ -102,7 +102,7 @@ class TritonPythonModel:
         elif self.inference_device_kind == 'GPU':
             self.inference_device_id = args.get('model_instance_device_id', '0')
             logger.info(f"Inference device id: {self.inference_device_id}")
-            
+
         infer_transforms = []
         if(self.inference_device_kind == 'GPU'):
             # print("*********************I'm here********************8")
@@ -131,7 +131,7 @@ class TritonPythonModel:
         self.post_transforms = Compose([
 
         ])
-        
+
     def GetLargestConnectedComponent(self, x):
         x_cupy = ToCupy()(x)
         x_cupy_dtype = x_cupy.dtype

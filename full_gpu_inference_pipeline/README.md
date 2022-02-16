@@ -13,7 +13,7 @@
 
 ## overview
 
-This repository is to implement 3D medical imaging AI inference pipeline using the model and transforms of MONAI and Triton. the goal of it is to test the influence brought by different features in MONAI and Triton for medical imaging AI inference, especially for the pipelines with large 3D images. 
+This repository is to implement 3D medical imaging AI inference pipeline using the model and transforms of MONAI and Triton. the goal of it is to test the influence brought by different features in MONAI and Triton for medical imaging AI inference, especially for the pipelines with large 3D images.
 
 In this repository, I will try and compare the following features:
 - [Python backend BLS](https://github.com/triton-inference-server/python_backend#business-logic-scripting) (Triton)
@@ -53,7 +53,7 @@ We can set up Triton environment by running a Triton docker container:
 ```bash
 docker run --gpus=1 -it --name='triton_monai' -ipc=host -p18100:8000 -p18101:8001 -p18102:8002 --shm-size=1g -v /yourfolderpath:/triton_monai nvcr.io/nvidia/tritonserver:21.12-py3
 ```
-Please note that when starting the docker container, --ipc=host should be set, so that we can use shared memory to do the data transmission between server and client. Also you should allocate a relatively large shared memory using --shm-size option, because starting from 21.04 release, Python backend uses shared memory to connect user's code to Triton. 
+Please note that when starting the docker container, --ipc=host should be set, so that we can use shared memory to do the data transmission between server and client. Also you should allocate a relatively large shared memory using --shm-size option, because starting from 21.04 release, Python backend uses shared memory to connect user's code to Triton.
 ### Setup python execution environment
 Since we will use MONAI transforms in Triton python backend, we should set up the python execution environment in Triton container by following the instructions in Triton python backend repository. For the installation steps of MONAI, you can refer to [monai install](https://docs.monai.io/en/latest/installation.html "monai install"). Below are the steps I use to set up the proper environments for the experiments:
 
@@ -64,7 +64,7 @@ Install the software packages below:
 - conda-pack
 Create and activate a conda environment.
 ```bash
-conda create -n monai python=3.8 
+conda create -n monai python=3.8
 conda activate monai
 ```
 Since I'm using 21.12 NGC docker image, in which python 3.8 is used, I create a conda env of python3.8 for convenience. You can also specify other python versions. If the python version you use is not equal to that of triton container's, please make sure you go through these extra [steps](https://github.com/triton-inference-server/python_backend#1-building-custom-python-backend-stub "steps"). 
@@ -131,7 +131,7 @@ key: "EXECUTION_ENV_PATH",
 value: {string_value: "$$TRITON_MODEL_DIRECTORY/monai.tar.gz"}
 }
 ```
-Also, please note that in the config.pbtxt, the parameter `FORCE_CPU_ONLY_INPUT_TENSORS` is set to `no`, so that Triton will not move input tensors to CPU for the Python model. Instead, Triton will provide the input tensors to the Python model in either CPU or GPU memory, depending on how those tensors were last used. 
+Also, please note that in the config.pbtxt, the parameter `FORCE_CPU_ONLY_INPUT_TENSORS` is set to `no`, so that Triton will not move input tensors to CPU for the Python model. Instead, Triton will provide the input tensors to the Python model in either CPU or GPU memory, depending on how those tensors were last used.
 And the file structure of the model repository should be:
 ```
 triton_models/

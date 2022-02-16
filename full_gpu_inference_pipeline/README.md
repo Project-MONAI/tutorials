@@ -1,0 +1,169 @@
+# Deploy MONAI pipeline by Triton and run the full pipeline on GPU step by step
+## overview
+
+This repository is to implement 3D medical imaging AI inference pipeline using the model and transforms of MONAI and Triton. the goal of it is to test the influence brought by different features in MONAI and Triton for medical imaging AI inference, especially for the pipelines with large 3D images. 
+
+In this repository, I will try and compare the following features:
+- [Python backend BLS](https://github.com/triton-inference-server/python_backend#business-logic-scripting) (Triton)
+- Transforms on GPU and CPU (MONAI)
+
+Before start, I highly recommand you to read the the following to links to catch up the basic features as well as usage of Triton python backend and MONAI:
+- https://github.com/triton-inference-server/python_backend
+- https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_model_training_guide.md
+
+**Table of Contents**
+
+[TOC]
+
+## Prepare the model repository
+The full pipeline is as below:
+
+<img src="https://gitlab-master.nvidia.com/menzhang/triton_monai/-/raw/main/pics/WeChat%20Image_20220207104403.png">
+
+### Prepare the model repository file directories
+The model repository of the experiments can be fast set up by: 
+```bash
+git clone https://gitlab-master.nvidia.com/menzhang/triton_monai.git
+cd triton_monai/
+```
+The model repository is in folder triton_models. The file structure of the model repository should be:
+```
+triton_models/
+├── segmentation_3d
+│   ├── 1
+│   │   └── model.pt
+│   └── config.pbtxt
+└── spleen_seg
+├── 1
+│   └── model.py
+└── config.pbtxt
+```
+
+## Environment Setup
+### Setup Triton environment
+We can set up Triton environment by running a Triton docker container:
+```bash
+docker run --gpus=1 -it --name='triton_monai' -ipc=host -p18100:8000 -p18101:8001 -p18102:8002 --shm-size=1g -v /yourfolderpath:/triton_monai nvcr.io/nvidia/tritonserver:21.12-py3
+```
+Please note that when starting the docker container, --ipc=host should be set, so that we can use shared memory to do the data transmission between server and client. Also you should allocate a relatively large shared memory using --shm-size option, because starting from 21.04 release, Python backend uses shared memory to connect user's code to Triton. 
+### Setup python execution environment
+Since we will use MONAI transforms in Triton python backend, we should set up the python execution environment in Triton container by following the instructions in Triton python backend repository. For the installation steps of MONAI, you can refer to [monai install](https://docs.monai.io/en/latest/installation.html "monai install"). Below are the steps I use to set up the proper environments for the experiments:
+
+Install the software packages below:
+- conda
+- cmake
+- rapidjson and libarchive ([instructions](https://github.com/triton-inference-server/python_backend#building-from-source "instructions") for installing these packages in Ubuntu or Debian are included in Building from Source Section)
+- conda-pack
+Create and activate a conda environment.
+```bash
+conda create -n monai python=3.8 
+conda activate monai
+```
+Since I'm using 21.12 NGC docker image, in which python 3.8 is used, I create a conda env of python3.8 for convenience. You can also specify other python versions. If the python version you use is not equal to that of triton container's, please make sure you go through these extra [steps](https://github.com/triton-inference-server/python_backend#1-building-custom-python-backend-stub "steps"). 
+Before installing the packages in your conda environment, make sure that you have exported PYTHONNOUSERSITE environment variable:
+```bash
+export PYTHONNOUSERSITE=True
+```
+If this variable is not exported and similar packages are installed outside your conda environment, your tar file may not contain all the dependencies required for an isolated Python environment.
+Install Pytorch with CUDA 11.3 support. 
+```bash
+pip install torch==1.10.1+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
+```
+Install MONAI and the recommended dependencies.
+```bash
+BUILD_MONAI=1 pip install --no-build-isolation git+https://github.com/Project-MONAI/MONAI#egg=monai
+```
+Then we can verify the installation of MONAI and all its dependencies:
+```bash
+python -c 'import monai; monai.config.print_config()'
+```
+You'll see the output below, which lists the versions of MONAI and relevant dependencies.
+
+```bash
+MONAI version: 0.8.0+65.g4bd13fe
+Numpy version: 1.21.4
+Pytorch version: 1.10.1+cu113
+MONAI flags: HAS_EXT = True, USE_COMPILED = False
+MONAI rev id: 4bd13fefbafbd0076063201f0982a2af8b56ff09
+MONAI __file__: /usr/local/lib/python3.8/dist-packages/monai/__init__.py
+Optional dependencies:
+Pytorch Ignite version: NOT INSTALLED or UNKNOWN VERSION.
+Nibabel version: 3.2.1
+scikit-image version: 0.19.1
+Pillow version: 9.0.0
+Tensorboard version: NOT INSTALLED or UNKNOWN VERSION.
+gdown version: NOT INSTALLED or UNKNOWN VERSION.
+TorchVision version: NOT INSTALLED or UNKNOWN VERSION.
+tqdm version: NOT INSTALLED or UNKNOWN VERSION.
+lmdb version: NOT INSTALLED or UNKNOWN VERSION.
+psutil version: NOT INSTALLED or UNKNOWN VERSION.
+pandas version: NOT INSTALLED or UNKNOWN VERSION.
+einops version: NOT INSTALLED or UNKNOWN VERSION.
+transformers version: NOT INSTALLED or UNKNOWN VERSION.
+mlflow version: NOT INSTALLED or UNKNOWN VERSION.
+
+For details about installing the optional dependencies, please visit:
+    https://docs.monai.io/en/latest/installation.html#installing-the-recommended-dependencies
+```
+Install the dependencies of MONAI:
+```bash
+pip install nibabel scikit-image pillow tensorboard gdown ignite torchvision itk tqdm lmdb psutil cucim  pandas einops transformers mlflow matplotlib tensorboardX tifffile cupy
+```
+Next, we should package the conda environment by using `conda-pack` command, which will produce a package of monai.tar.gz. This file contains all the environments needed by the python backend model and is portable. In the config file of the python backend model, we should specify the path of monai.tar.gz as below:
+```bash
+parameters: {
+key: "EXECUTION_ENV_PATH",
+value: {string_value: "PATH_OF_THE_PACK_FILE/monai.tar.gz"}
+}
+```
+In this experiment, we put the monai.tar.gz under the spleen_seg folder, so the config.pbtxt should be set as:
+```bash
+parameters: {
+key: "EXECUTION_ENV_PATH",
+value: {string_value: "$$TRITON_MODEL_DIRECTORY/monai.tar.gz"}
+}
+```
+Also, please note that in the config.pbtxt, the parameter `FORCE_CPU_ONLY_INPUT_TENSORS` is set to `no`, so that Triton will not move input tensors to CPU for the Python model. Instead, Triton will provide the input tensors to the Python model in either CPU or GPU memory, depending on how those tensors were last used. 
+And the file structure of the model repository should be:
+```
+triton_models/
+├── segmentation_3d
+│   ├── 1
+│   │   └── model.pt
+│   └── config.pbtxt
+└── spleen_seg
+├── 1
+│   └── model.py
+├── config.pbtxt
+└── monai.tar.gz
+```
+
+Then you can start the triton server by the command:
+```bash
+tritonserver --model-repository=/ROOT_PATH_OF_YOUR_MODEL_REPOSITORY
+```
+## Benchmark
+The benchmark was run on RTX 8000. The benchmark is tested by using perf_analyzer. The easiest way to use perf_analyzer is through NGC docker image:
+```bash
+nvidia-docker run -it --ipc=host --shm-size=1g --name=triton_client --net=host triton_monai_client:21.12
+perf_analyzer -m spleen_seg -u yourServerIP:18100 --input-data zero --shape "INPUT0":512,512,114 --shared-memory system
+```
+Please note that when starting the docker container, --ipc=host should be set, so that we can use shared memory to do the data transmission between server and client.
+### Understanding the benchmark output
+- HTTP: send/recvindicates the time on the client spent sending the request and receiving the response. response waitindicates time waiting for the response from the server.
+- GRPC: (un)marshal request/responseindicates the time spent marshalling the request data into the GRPC protobuf and unmarshalling the response data from the GRPC protobuf. response waitindicates time writing the GRPC request to the network, waiting for the response, and reading the GRPC response from the network.
+- compute_input : The count and cumulative duration to prepare input tensor data as required by the model framework / backend. For example, this duration should include the time to copy input tensor data to the GPU.
+- compute_infer : The count and cumulative duration to execute the model.
+- compute_output : The count and cumulative duration to extract output tensor data produced by the model framework / backend. For example, this duration should include the time to copy output tensor data from the GPU.
+
+### HTTP vs. gRPC vs. shared memory
+Since 3D medical images are generally big, the overhead brought by protocols cannot be ignored. For most common cases of medical image AI, the clients are on the same machine as the server, so shared memory is an appliable way to reduce the send/receive overhead. In this experiment, perf_analyzer is used to compare different ways of communicating between client and server.
+Note that all the processes (pre/post and AI inference) are on GPU.
+From the result, we can come to a conclusion that using shared memory will greatly reduce the latency when data transfer is huge.
+
+![](https://gitlab-master.nvidia.com/menzhang/triton_monai/-/raw/main/pics/Picture2.png)
+
+### Pre/Post-processing on GPU vs. CPU 
+After doing pre and post-processing on GPU, we can get a 12x speedup for the full pipeline.
+
+![](https://gitlab-master.nvidia.com/menzhang/triton_monai/-/raw/main/pics/Picture1.png)

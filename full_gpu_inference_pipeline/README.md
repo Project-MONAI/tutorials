@@ -158,7 +158,7 @@ Then you can run the jupyter nootbook in the client folder of this example.
 Please note that when starting the docker container, --ipc=host should be set, so that we can use shared memory to do the data transmission between server and client.
 
 ## Benchmark
-The benchmark was run on RTX 8000 and tested by using perf_analyzer. 
+The benchmark was run on RTX 8000 and tested by using perf_analyzer.
 ```bash
 perf_analyzer -m spleen_seg -u localhost:18100 --input-data zero --shape "INPUT0":512,512,114 --shared-memory system
 ```

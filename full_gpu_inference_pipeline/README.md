@@ -29,7 +29,7 @@ The full pipeline is as below:
 <img src="https://github.com/zmsunnyday/tutorials/raw/full_gpu_inference_pipeline/full_gpu_inference_pipeline/pics/Picture3.png">
 
 ### Prepare the model repository file directories
-The Triton model repository of the experiments can be fast set up by: 
+The Triton model repository of the experiment can be fast set up by: 
 ```bash
 git clone https://gitlab-master.nvidia.com/menzhang/triton_monai.git
 cd triton_monai/
@@ -55,7 +55,7 @@ docker run --gpus=1 -it --name='triton_monai' -ipc=host -p18100:8000 -p18101:800
 ```
 Please note that when starting the docker container, --ipc=host should be set, so that shared memory can be used to do the data transmission between server and client. Also you should allocate a relatively large shared memory using --shm-size option, because starting from 21.04 release, Python backend uses shared memory to connect user's code to Triton.
 ### Setup python execution environment
-Since we will use MONAI transforms in Triton python backend, we should set up the python execution environment in Triton container by following the instructions in [Triton python backend repository](https://github.com/triton-inference-server/python_backend#using-custom-python-execution-environments). For the installation steps of MONAI, you can refer to [monai install](https://docs.monai.io/en/latest/installation.html "monai install"). Below are the steps used to setup the proper environments for this experiments:
+Since we will use MONAI transforms in Triton python backend, we should set up the python execution environment in Triton container by following the instructions in [Triton python backend repository](https://github.com/triton-inference-server/python_backend#using-custom-python-execution-environments). For the installation steps of MONAI, you can refer to [monai install](https://docs.monai.io/en/latest/installation.html "monai install"). Below are the steps used to setup the proper environments for this experiment:
 
 Install the software packages below:
 - conda

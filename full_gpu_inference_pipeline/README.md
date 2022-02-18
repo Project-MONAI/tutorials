@@ -31,8 +31,10 @@ The full pipeline is as below:
 ### Prepare the model repository file directories
 The Triton model repository of the experiment can be fast set up by: 
 ```bash
-git clone https://gitlab-master.nvidia.com/menzhang/triton_monai.git
-cd triton_monai/
+git clone https://github.com/zmsunnyday/tutorials.git
+cd tutorials/
+git checkout full_gpu_inference_pipeline
+cd full_gpu_inference_pipeline
 ```
 The model repository is in folder triton_models. The file structure of the model repository should be:
 ```
@@ -51,7 +53,7 @@ triton_models/
 ### Setup Triton environment
 Triton environment can be quickly setup by running a Triton docker container:
 ```bash
-docker run --gpus=1 -it --name='triton_monai' -ipc=host -p18100:8000 -p18101:8001 -p18102:8002 --shm-size=1g -v /yourfolderpath:/triton_monai nvcr.io/nvidia/tritonserver:21.12-py3
+docker run --gpus=1 -it --name='triton_monai' --ipc=host -p18100:8000 -p18101:8001 -p18102:8002 --shm-size=1g -v /yourfolderpath:/triton_monai nvcr.io/nvidia/tritonserver:21.12-py3
 ```
 Please note that when starting the docker container, --ipc=host should be set, so that shared memory can be used to do the data transmission between server and client. Also you should allocate a relatively large shared memory using --shm-size option, because starting from 21.04 release, Python backend uses shared memory to connect user's code to Triton.
 ### Setup python execution environment
@@ -62,6 +64,7 @@ Install the software packages below:
 - cmake
 - rapidjson and libarchive ([instructions](https://github.com/triton-inference-server/python_backend#building-from-source "instructions") for installing these packages in Ubuntu or Debian are included in Building from Source Section)
 - conda-pack
+
 Create and activate a conda environment.
 ```bash
 conda create -n monai python=3.8
@@ -138,18 +141,28 @@ triton_models/
 ├── config.pbtxt
 └── monai.tar.gz
 ```
-
+## Run Triton server
 Then you can start the triton server by the command:
 ```bash
 tritonserver --model-repository=/ROOT_PATH_OF_YOUR_MODEL_REPOSITORY
 ```
-## Benchmark
-The benchmark was run on RTX 8000 and tested by using perf_analyzer. The easiest way to use perf_analyzer is through NGC docker image:
+## Run Triton Client
+We assume that the server and client are both on the same machine. Open a new bash terminal and run the commands below to setup the client environment.
 ```bash
-nvidia-docker run -it --ipc=host --shm-size=1g --name=triton_client --net=host triton_monai_client:21.12
-perf_analyzer -m spleen_seg -u yourServerIP:18100 --input-data zero --shape "INPUT0":512,512,114 --shared-memory system
+nvidia-docker run -it --ipc=host --shm-size=1g --name=triton_client --net=host nvcr.io/nvidia/tritonserver:21.12-py3-sdk
+pip install monai
+pip install nibabel
+pip install jupyter
 ```
+Then you can run the jupyter nootbook in the client folder of this example.
 Please note that when starting the docker container, --ipc=host should be set, so that we can use shared memory to do the data transmission between server and client.
+
+## Benchmark
+The benchmark was run on RTX 8000 and tested by using perf_analyzer. 
+```bash
+perf_analyzer -m spleen_seg -u localhost:18100 --input-data zero --shape "INPUT0":512,512,114 --shared-memory system
+```
+
 ### Understanding the benchmark output
 - HTTP: `send/recv` indicates the time on the client spent sending the request and receiving the response. `response wait` indicates time waiting for the response from the server.
 - GRPC: `(un)marshal request/response` indicates the time spent marshalling the request data into the GRPC protobuf and unmarshalling the response data from the GRPC protobuf. `response wait` indicates time writing the GRPC request to the network, waiting for the response, and reading the GRPC response from the network.

@@ -6,6 +6,8 @@
   * [Environment Setup](#environment-setup)
     + [Setup Triton environment](#setup-triton-environment)
     + [Setup python execution environment](#setup-python-execution-environment)
+  * [Run Triton server](#run-triton-server)
+  * [Run Triton client](#run-triton-client)
   * [Benchmark](#benchmark)
     + [Understanding the benchmark output](#understanding-the-benchmark-output)
     + [HTTP vs. gRPC vs. shared memory](#http-vs-grpc-vs-shared-memory)

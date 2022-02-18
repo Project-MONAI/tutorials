@@ -13,11 +13,11 @@
 
 ## overview
 
-This example is to implement a 3D medical imaging AI inference pipeline using the model and transforms of MONAI, and deploy the pipeline using Triton. the goal of it is to test the influence brought by different features of MONAI and Triton to medical imaging AI inference performance. 
+This example is to implement a 3D medical imaging AI inference pipeline using the model and transforms of MONAI, and deploy the pipeline using Triton. the goal of it is to test the influence brought by different features of MONAI and Triton to medical imaging AI inference performance.
 
 In this repository, I will try following features:
-- [Python backend BLS](https://github.com/triton-inference-server/python_backend#business-logic-scripting) (Triton), which allows you to execute inference requests on other models being served by Triton as a part of executing your Python model. 
-- Transforms on GPU(MONAI), by using which, you can compose GPU accelerated pre/post processing chains. 
+- [Python backend BLS](https://github.com/triton-inference-server/python_backend#business-logic-scripting) (Triton), which allows you to execute inference requests on other models being served by Triton as a part of executing your Python model.
+- Transforms on GPU(MONAI), by using which, you can compose GPU accelerated pre/post processing chains.
 
 Before starting, I highly recommand you to read the the following two links to get familiar with the basic features of Triton python backend and MONAI:
 - https://github.com/triton-inference-server/python_backend

@@ -217,7 +217,7 @@ def main(cfg):
                 RandCuCIM(name="image_flip", apply_prob=cfg["prob"], spatial_axis=-1),
                 RandCuCIM(name="rand_image_rotate_90", prob=cfg["prob"], max_k=3, spatial_axis=(-2, -1)),
                 CastToType(dtype=np.float32),
-                RandCuCIM(name="rand_zoom", min_zoom=0.9, max_zoom=1.1),
+                RandCuCIM(name="rand_zoom", prob=cfg["prob"], min_zoom=0.9, max_zoom=1.1),
                 CuCIM(name="scale_intensity_range", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0),
                 ToTensor(device=device),
             ]

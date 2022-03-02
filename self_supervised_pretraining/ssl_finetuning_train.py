@@ -198,7 +198,7 @@ def main():
         vit_weights = {k: v for k, v in vit_weights.items() if k in model_dict}
         model_dict.update(vit_weights)
         model.vit.load_state_dict(model_dict)
-        del vit_weights, vit_dict
+        del model_dict, vit_weights, vit_dict
         print('Pretrained Weights Succesfully Loaded !')
 
     elif use_pretrained==0:

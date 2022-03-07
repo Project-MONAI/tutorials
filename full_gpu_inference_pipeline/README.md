@@ -35,6 +35,7 @@ The Triton model repository of the experiment can be fast set up by: 
 ```bash
 git clone https://github.com/Project-MONAI/tutorials.git
 cd full_gpu_inference_pipeline
+bash download_model_repo.sh
 ```
 The model repository is in folder triton_models. The file structure of the model repository should be:
 ```

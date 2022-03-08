@@ -1,18 +1,17 @@
 import os
-from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
 import torch
 import torch.nn as nn
 from ignite.engine import Engine
-from ignite.metrics import Metric
 from monai.data import decollate_batch
 from monai.data.nifti_writer import write_nifti
 from monai.engines import SupervisedEvaluator
-from monai.engines.utils import IterationEvents, default_prepare_batch
+from monai.engines.utils import IterationEvents
 from monai.inferers import Inferer
 from monai.networks.utils import eval_mode
-from monai.transforms import AsDiscrete, Transform
+from monai.transforms import AsDiscrete
 from torch.utils.data import DataLoader
 
 from transforms import recovery_prediction
@@ -21,7 +20,11 @@ from transforms import recovery_prediction
 class DynUNetInferrer(SupervisedEvaluator):
     """
     This class inherits from SupervisedEvaluator in MONAI, and is used with DynUNet
-    on Decathlon datasets.
+    on Decathlon datasets. As a customized inferrer, some of the arguments from
+    SupervisedEvaluator are not supported. For example, the actual
+    post processing method used is hard coded in the `_iteration` function, thus the
+    argument `postprocessing` from SupervisedEvaluator is not exist. If you need
+    to change the post processing way, please modify the `_iteration` function directly.
 
     Args:
         device: an object representing the device on which to run.
@@ -30,22 +33,7 @@ class DynUNetInferrer(SupervisedEvaluator):
         network: use the network to run model forward.
         output_dir: the path to save inferred outputs.
         num_classes: the number of classes (output channels) for the task.
-        epoch_length: number of iterations for one epoch, default to
-            `len(val_data_loader)`.
-        non_blocking: if True and this copy is between CPU and GPU, the copy may occur asynchronously
-            with respect to the host. For other cases, this argument has no effect.
-        prepare_batch: function to parse image and label for current iteration.
-        iteration_update: the callable function for every iteration, expect to accept `engine`
-            and `batchdata` as input parameters. if not provided, use `self._iteration()` instead.
         inferer: inference method that execute model forward on input data, like: SlidingWindow, etc.
-        postprocessing: execute additional transformation for the model output data.
-            Typically, several Tensor based transforms composed by `Compose`.
-        key_val_metric: compute metric when every iteration completed, and save average value to
-            engine.state.metrics when epoch completed. key_val_metric is the main metric to compare and save the
-            checkpoint into files.
-        additional_metrics: more Ignite metrics that also attach to Ignite Engine.
-        val_handlers: every handler is a set of Ignite Event-Handlers, must have `attach` function, like:
-            CheckpointHandler, StatsHandler, SegmentationSaver, etc.
         amp: whether to enable auto-mixed-precision evaluation, default is False.
         tta_val: whether to do the 8 flips (8 = 2 ** 3, where 3 represents the three dimensions)
             test time augmentation, default is False.
@@ -59,15 +47,7 @@ class DynUNetInferrer(SupervisedEvaluator):
         network: torch.nn.Module,
         output_dir: str,
         num_classes: Union[str, int],
-        epoch_length: Optional[int] = None,
-        non_blocking: bool = False,
-        prepare_batch: Callable = default_prepare_batch,
-        iteration_update: Optional[Callable] = None,
         inferer: Optional[Inferer] = None,
-        postprocessing: Optional[Transform] = None,
-        key_val_metric: Optional[Dict[str, Metric]] = None,
-        additional_metrics: Optional[Dict[str, Metric]] = None,
-        val_handlers: Optional[Sequence] = None,
         amp: bool = False,
         tta_val: bool = False,
     ) -> None:
@@ -75,15 +55,7 @@ class DynUNetInferrer(SupervisedEvaluator):
             device=device,
             val_data_loader=val_data_loader,
             network=network,
-            epoch_length=epoch_length,
-            non_blocking=non_blocking,
-            prepare_batch=prepare_batch,
-            iteration_update=iteration_update,
             inferer=inferer,
-            postprocessing=postprocessing,
-            key_val_metric=key_val_metric,
-            additional_metrics=additional_metrics,
-            val_handlers=val_handlers,
             amp=amp,
         )
 

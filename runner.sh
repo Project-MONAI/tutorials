@@ -66,7 +66,8 @@ pattern="-and -name '*' -and ! -wholename '*federated_learning*'\
  -and ! -wholename '*profiling_train_base_nvtx*'\
  -and ! -wholename '*cats_and_dogs*'\
  -and ! -wholename '*benchmark_global_mutual_information*'\
- -and ! -wholename '*deep_atlas_tutorial*'"
+ -and ! -wholename '*deep_atlas_tutorial*'\
+ -and ! -wholename '*full_gpu_inference_pipeline*'"
 kernelspec="python3"
 
 function print_usage {

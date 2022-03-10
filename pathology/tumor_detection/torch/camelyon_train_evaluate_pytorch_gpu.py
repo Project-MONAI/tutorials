@@ -422,12 +422,12 @@ def main(cfg):
     # Save the best and final model
     if cfg["validate"] is True:
         copyfile(
-            os.path.join(log_dir, f"model_epoch_{metric_summary['best_epoch']}.pth"),
-            os.path.join(log_dir, "model_best.pth"),
+            os.path.join(log_dir, f"model_epoch_{metric_summary['best_epoch']}.pt"),
+            os.path.join(log_dir, "model_best.pt"),
         )
         copyfile(
-            os.path.join(log_dir, f"model_epoch_{cfg['n_epochs']}.pth"),
-            os.path.join(log_dir, "model_final.pth"),
+            os.path.join(log_dir, f"model_epoch_{cfg['n_epochs']}.pt"),
+            os.path.join(log_dir, "model_final.pt"),
         )
 
     # Final prints

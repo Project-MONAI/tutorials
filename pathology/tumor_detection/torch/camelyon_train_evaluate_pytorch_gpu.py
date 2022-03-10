@@ -78,12 +78,16 @@ def training(
     writer: SummaryWriter,
     print_step,
 ):
+    summary["epoch"] += 1
+
     model.train()
 
     n_steps = len(dataloader)
     iter_data = iter(dataloader)
 
     for step in range(n_steps):
+        summary["step"] += 1
+
         batch = next(iter_data)
         x = batch["image"].to(device)
         y = batch["label"].to(device)
@@ -120,9 +124,6 @@ def training(
                 f"train_loss: {loss_data:.5f}, train_acc: {acc_data:.3f}"
             )
 
-        summary["step"] += 1
-
-    summary["epoch"] += 1
     return summary
 
 
@@ -347,7 +348,7 @@ def main(cfg):
     # -------------------------------------------------------------------------
     # Training/Evaluating
     # -------------------------------------------------------------------------
-    train_counter = {"n_epochs": cfg["n_epochs"], "epoch": 1, "step": 1}
+    train_counter = {"n_epochs": cfg["n_epochs"], "epoch": 0, "step": 0}
 
     total_valid_time, total_train_time = 0.0, 0.0
     t_start = time.perf_counter()

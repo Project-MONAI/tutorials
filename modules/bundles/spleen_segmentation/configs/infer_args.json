@@ -1,5 +1,5 @@
 {
     "meta_file": "configs/metadata.json",
     "config_file": "configs/inference.json",
-    "target": "evaluator"
+    "runner_id": "evaluator"
 }

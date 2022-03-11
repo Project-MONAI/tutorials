@@ -1,0 +1,6 @@
+{
+    "meta_file": "configs/metadata.json",
+    "schema_url": "https://github.com/Project-MONAI/MONAI-extra-test-data/releases/download/0.8.1/meta_schema_202202281232.json",
+    "filepath": "eval/schema.json",
+    "result_path": "eval/results.txt"
+}

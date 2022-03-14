@@ -88,6 +88,8 @@ Training, evaluation and inference examples of 3D segmentation based on UNet3D a
 The examples are standard PyTorch programs and have both dictionary-based and array-based versions.
 #### [brats_segmentation_3d](./3d_segmentation/brats_segmentation_3d.ipynb)
 This tutorial shows how to construct a training workflow of multi-labels segmentation task based on [MSD Brain Tumor dataset](http://medicaldecathlon.com).
+#### [spleen_segmentation_3d_aim](./3d_segmentation/spleen_segmentation_3d_visualization_basic.ipynb)
+This notebook shows how MONAI may be used in conjunction with the [`aimhubio/aim`](https://github.com/aimhubio/aim).
 #### [spleen_segmentation_3d_lightning](./3d_segmentation/spleen_segmentation_3d_lightning.ipynb)
 This notebook shows how MONAI may be used in conjunction with the [PyTorch Lightning](https://github.com/PyTorchLightning/pytorch-lightning) framework.
 #### [spleen_segmentation_3d](./3d_segmentation/spleen_segmentation_3d.ipynb)

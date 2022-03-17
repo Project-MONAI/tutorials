@@ -8,7 +8,7 @@ This model is trained using the runnerup [1] awarded pipeline of the "Medical Se
 The training dataset is Task09_Spleen.tar from http://medicaldecathlon.com/.
 
 ## Training configuration
-The training was performed with command train.sh, which required 12GB-memory GPUs.
+The training was performed with at least 12GB-memory GPUs.
 
 Actual Model Input: 96 x 96 x 96
 
@@ -21,6 +21,14 @@ Output: 2 channels: Label 1: spleen; Label 0: everything else
 This model achieve the following Dice score on the validation data (our own split from the training dataset):
 
 Mean dice = 0.96
+
+## commands example
+Execute inference:
+`python -m monai.bundle run evaluator --meta_file configs/metadata.json --config_file configs/inference.json`
+Verify the metadata format:
+`python -m monai.bundle verify_metadata --meta_file configs/metadata.json --filepath eval/schema.json`
+Verify the data shape of network:
+`python -m monai.bundle verify_net_in_out network_def --meta_file configs/metadata.json --config_file configs/inference.json`
 
 # Disclaimer
 This is an example, not to be used for diagnostic purposes.

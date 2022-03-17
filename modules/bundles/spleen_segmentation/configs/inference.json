@@ -50,10 +50,10 @@
             }
         ]
     },
-    "datalist": "$[{'image': i} for i in sorted(__import__('glob').glob(@dataset_dir + '/imagesTs/*.nii.gz'))]",
+    "datalist": "$list(sorted(__import__('glob').glob(@dataset_dir + '/imagesTs/*.nii.gz')))",
     "dataset": {
         "_target_": "Dataset",
-        "data": "@datalist",
+        "data": "$[{'image': i} for i in @datalist]",
         "transform": "@preprocessing"
     },
     "dataloader": {

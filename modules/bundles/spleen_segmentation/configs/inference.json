@@ -36,6 +36,17 @@
                 "keys": "image"
             },
             {
+                "_target_": "Orientationd",
+                "keys": "image",
+                "axcodes": "RAS"
+            },
+            {
+                "_target_": "Spacingd",
+                "keys": "image",
+                "pixdim": [1.5, 1.5, 2.0],
+                "mode": "bilinear"
+            },
+            {
                 "_target_": "ScaleIntensityRanged",
                 "keys": "image",
                 "a_min": -57,
@@ -82,6 +93,15 @@
                 "softmax": true
             },
             {
+                "_target_": "Invertd",
+                "keys": "pred",
+                "transform": "@preprocessing",
+                "orig_keys": "image",
+                "meta_key_postfix": "meta_dict",
+                "nearest_interp": false,
+                "to_tensor": true
+            },
+            {
                 "_target_": "AsDiscreted",
                 "keys": "pred",
                 "argmax": true
@@ -89,11 +109,12 @@
             {
                 "_target_": "SaveImaged",
                 "keys": "pred",
-                "meta_keys": "image_meta_dict",
+                "meta_keys": "pred_meta_dict",
                 "output_dir": "eval"
             }
         ]
     },
+
     "evaluator": {
         "_target_": "SupervisedEvaluator",
         "device": "@device",

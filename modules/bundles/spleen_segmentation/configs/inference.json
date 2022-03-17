@@ -1,6 +1,6 @@
 {
     "dataset_dir": "/workspace/data/medical/Task09_Spleen",
-
+    "datalist": "$list(sorted(__import__('glob').glob(@dataset_dir + '/imagesTs/*.nii.gz')))",
     "device": "$torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')",
     "network_def": {
         "_target_": "UNet",
@@ -61,7 +61,6 @@
             }
         ]
     },
-    "datalist": "$list(sorted(__import__('glob').glob(@dataset_dir + '/imagesTs/*.nii.gz')))",
     "dataset": {
         "_target_": "Dataset",
         "data": "$[{'image': i} for i in @datalist]",

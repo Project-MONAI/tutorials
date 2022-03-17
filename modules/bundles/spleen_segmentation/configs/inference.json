@@ -1,5 +1,6 @@
 {
-    "dataset_dir": "/workspace/data/medical/spleen",
+    "dataset_dir": "/workspace/data/medical/Task09_Spleen",
+
     "device": "$torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')",
     "network_def": {
         "_target_": "UNet",
@@ -49,14 +50,7 @@
             }
         ]
     },
-    "datalist": {
-        "_target_": "DatasetFunc",
-        "data": "$@dataset_dir + '/dataset.json'",
-        "func": "$monai.data.load_decathlon_datalist",
-        "is_segmentation": true,
-        "data_list_key": "test",
-        "base_dir": "@dataset_dir"
-    },
+    "datalist": "$[{'image': i} for i in sorted(__import__('glob').glob(@dataset_dir + '/imagesTs/*.nii.gz'))]",
     "dataset": {
         "_target_": "Dataset",
         "data": "@datalist",

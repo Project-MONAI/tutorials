@@ -1,7 +1,9 @@
 {
     "dataset_dir": "/workspace/data/medical/Task09_Spleen",
-    "datalist": "$list(sorted(__import__('glob').glob(@dataset_dir + '/imagesTs/*.nii.gz')))",
+    "ckpt_path": "../models/model.pt",
+    "log": "$__import__('logging').basicConfig(level=20)",
     "device": "$torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')",
+    "datalist": "$list(sorted(__import__('glob').glob(@dataset_dir + '/imagesTs/*.nii.gz')))",
     "network_def": {
         "_target_": "UNet",
         "spatial_dims": 3,
@@ -113,7 +115,19 @@
             }
         ]
     },
-
+    "handlers": [
+        {
+            "_target_": "CheckpointLoader",
+            "_disabled_": "$not __import__('os').path.exists(@ckpt_path)",
+            "load_path": "@ckpt_path",
+            "load_dict": {"model": "@network"}
+        },
+        {
+            "_target_": "StatsHandler",
+            "_disabled_": "@log",
+            "iteration_log": false
+        }
+    ],
     "evaluator": {
         "_target_": "SupervisedEvaluator",
         "device": "@device",
@@ -121,6 +135,7 @@
         "network": "@network",
         "inferer": "@inferer",
         "postprocessing": "@postprocessing",
+        "val_handlers": "@handlers",
         "amp": false
     }
 }

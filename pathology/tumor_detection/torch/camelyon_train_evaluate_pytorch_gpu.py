@@ -214,7 +214,7 @@ def main(cfg):
         preprocess_gpu_train = Compose(
             [
                 ToCupy(),
-                RandCuCIM(name="color_jitter", brightness=64.0 / 255.0, contrast=0.75, saturation=0.25, hue=0.04),
+                RandCuCIM(name="rand_color_jitter", prob=cfg["prob"], brightness=64.0 / 255.0, contrast=0.75, saturation=0.25, hue=0.04),
                 RandCuCIM(name="rand_image_flip", prob=cfg["prob"], spatial_axis=-1),
                 RandCuCIM(name="rand_image_rotate_90", prob=cfg["prob"], max_k=3, spatial_axis=(-2, -1)),
                 CastToType(dtype=np.float32),
@@ -404,7 +404,7 @@ def main(cfg):
             writer.add_scalar("valid/accuracy", valid_acc, train_counter["epoch"])
 
             logging.info(
-                f"[Epoch: {train_counter['epoch']}/{cfg['n_epochs']}] loss: {valid_loss:.3f}, accuracy: {valid_acc:.2f}, "
+                f"[Epoch: {train_counter['epoch']}/{cfg['n_epochs']}] loss: {valid_loss:.3f}, accuracy: {valid_acc:.3f}, "
                 f"time: {t_valid - t_epoch:.1f}s (train: {train_time:.1f}s, valid: {valid_time:.1f}s)"
             )
         else:
@@ -479,7 +479,7 @@ def parse_arguments():
     parser.add_argument("--optimized", action="store_true", help="use optimized parameters")
     parser.add_argument("-b", "--backend", type=str, dest="backend", help="backend for transforms")
 
-    parser.add_argument("--cpu", type=int, default=10, dest="num_workers", help="number of workers")
+    parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")
     parser.add_argument("--gpu", type=str, default="0", dest="gpu", help="which gpu to use")
 
     args = parser.parse_args()

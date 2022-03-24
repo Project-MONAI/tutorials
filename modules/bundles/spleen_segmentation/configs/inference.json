@@ -4,9 +4,9 @@
         "$import logging",
         "$import os"
     ],
+    "cudnn_opt": "#setattr(torch.backends.cudnn, 'benchmark', True)",
     "dataset_dir": "/workspace/data/medical/Task09_Spleen",
     "ckpt_path": "/workspace/data/medical/tutorials/modules/bundles/spleen_segmentation/models/model.pt",
-    "log": "$logging.basicConfig(level=20)",
     "device": "$torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')",
     "datalist": "$list(sorted(glob.glob(@dataset_dir + '/imagesTs/*.nii.gz')))",
     "network_def": {
@@ -129,12 +129,12 @@
         },
         {
             "_target_": "StatsHandler",
-            "_disabled_": "@log",
             "iteration_log": false
         }
     ],
     "evaluator": {
         "_target_": "SupervisedEvaluator",
+        "_requires_": "cudnn_opt",
         "device": "@device",
         "val_data_loader": "@dataloader",
         "network": "@network",

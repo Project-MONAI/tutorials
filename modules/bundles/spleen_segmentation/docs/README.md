@@ -2,7 +2,7 @@
 A pre-trained model for volumetric (3D) segmentation of the spleen from CT image.
 
 # Model Overview
-This model is trained using the runnerup [1] awarded pipeline of the "Medical Segmentation Decathlon Challenge 2018" using the UNet architecture [2] with 32 training images and 9 validation images.
+This model is trained using the runner-up [1] awarded pipeline of the "Medical Segmentation Decathlon Challenge 2018" using the UNet architecture [2] with 32 training images and 9 validation images.
 
 ## Data
 The training dataset is Task09_Spleen.tar from http://medicaldecathlon.com/.
@@ -18,19 +18,27 @@ Input: 1 channel CT image
 Output: 2 channels: Label 1: spleen; Label 0: everything else
 
 ## Scores
-This model achieve the following Dice score on the validation data (our own split from the training dataset):
+This model achieves the following Dice score on the validation data (our own split from the training dataset):
 
-Mean dice = 0.96
+Mean Dice = 0.96
 
 ## commands example
 Execute inference:
-`python -m monai.bundle run evaluator --meta_file configs/metadata.json --config_file configs/inference.json --logging_file configs/logging.conf`
+```
+python -m monai.bundle run evaluator --meta_file configs/metadata.json --config_file configs/inference.json --logging_file configs/logging.conf
+```
 Verify the metadata format:
-`python -m monai.bundle verify_metadata --meta_file configs/metadata.json --filepath eval/schema.json`
+```
+python -m monai.bundle verify_metadata --meta_file configs/metadata.json --filepath eval/schema.json
+```
 Verify the data shape of network:
-`python -m monai.bundle verify_net_in_out network_def --meta_file configs/metadata.json --config_file configs/inference.json`
+```
+python -m monai.bundle verify_net_in_out network_def --meta_file configs/metadata.json --config_file configs/inference.json
+```
 Export checkpoint to TorchScript file:
-`python -m monai.bundle export network_def --filepath models/model.ts --ckpt_file models/model.pt --meta_file configs/metadata.json --config_file configs/inference.json`
+```
+python -m monai.bundle export network_def --filepath models/model.ts --ckpt_file models/model.pt --meta_file configs/metadata.json --config_file configs/inference.json
+```
 
 # Disclaimer
 This is an example, not to be used for diagnostic purposes.

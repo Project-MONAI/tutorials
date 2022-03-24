@@ -78,12 +78,16 @@ def training(
     writer: SummaryWriter,
     print_step,
 ):
+    summary["epoch"] += 1
+
     model.train()
 
     n_steps = len(dataloader)
     iter_data = iter(dataloader)
 
     for step in range(n_steps):
+        summary["step"] += 1
+
         batch = next(iter_data)
         x = batch["image"].to(device)
         y = batch["label"].to(device)
@@ -120,9 +124,6 @@ def training(
                 f"train_loss: {loss_data:.5f}, train_acc: {acc_data:.3f}"
             )
 
-        summary["step"] += 1
-
-    summary["epoch"] += 1
     return summary
 
 
@@ -213,8 +214,8 @@ def main(cfg):
         preprocess_gpu_train = Compose(
             [
                 ToCupy(),
-                RandCuCIM(name="color_jitter", brightness=64.0 / 255.0, contrast=0.75, saturation=0.25, hue=0.04),
-                RandCuCIM(name="image_flip", apply_prob=cfg["prob"], spatial_axis=-1),
+                RandCuCIM(name="rand_color_jitter", prob=cfg["prob"], brightness=64.0 / 255.0, contrast=0.75, saturation=0.25, hue=0.04),
+                RandCuCIM(name="rand_image_flip", prob=cfg["prob"], spatial_axis=-1),
                 RandCuCIM(name="rand_image_rotate_90", prob=cfg["prob"], max_k=3, spatial_axis=(-2, -1)),
                 CastToType(dtype=np.float32),
                 RandCuCIM(name="rand_zoom", prob=cfg["prob"], min_zoom=0.9, max_zoom=1.1),
@@ -347,7 +348,7 @@ def main(cfg):
     # -------------------------------------------------------------------------
     # Training/Evaluating
     # -------------------------------------------------------------------------
-    train_counter = {"n_epochs": cfg["n_epochs"], "epoch": 1, "step": 1}
+    train_counter = {"n_epochs": cfg["n_epochs"], "epoch": 0, "step": 0}
 
     total_valid_time, total_train_time = 0.0, 0.0
     t_start = time.perf_counter()
@@ -403,7 +404,7 @@ def main(cfg):
             writer.add_scalar("valid/accuracy", valid_acc, train_counter["epoch"])
 
             logging.info(
-                f"[Epoch: {train_counter['epoch']}/{cfg['n_epochs']}] loss: {valid_loss:.3f}, accuracy: {valid_acc:.2f}, "
+                f"[Epoch: {train_counter['epoch']}/{cfg['n_epochs']}] loss: {valid_loss:.3f}, accuracy: {valid_acc:.3f}, "
                 f"time: {t_valid - t_epoch:.1f}s (train: {train_time:.1f}s, valid: {valid_time:.1f}s)"
             )
         else:
@@ -421,12 +422,12 @@ def main(cfg):
     # Save the best and final model
     if cfg["validate"] is True:
         copyfile(
-            os.path.join(log_dir, f"model_epoch_{metric_summary['best_epoch']}.pth"),
-            os.path.join(log_dir, "model_best.pth"),
+            os.path.join(log_dir, f"model_epoch_{metric_summary['best_epoch']}.pt"),
+            os.path.join(log_dir, "model_best.pt"),
         )
         copyfile(
-            os.path.join(log_dir, f"model_epoch_{cfg['n_epochs']}.pth"),
-            os.path.join(log_dir, "model_final.pth"),
+            os.path.join(log_dir, f"model_epoch_{cfg['n_epochs']}.pt"),
+            os.path.join(log_dir, "model_final.pt"),
         )
 
     # Final prints
@@ -478,7 +479,7 @@ def parse_arguments():
     parser.add_argument("--optimized", action="store_true", help="use optimized parameters")
     parser.add_argument("-b", "--backend", type=str, dest="backend", help="backend for transforms")
 
-    parser.add_argument("--cpu", type=int, default=10, dest="num_workers", help="number of workers")
+    parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")
     parser.add_argument("--gpu", type=str, default="0", dest="gpu", help="which gpu to use")
 
     args = parser.parse_args()

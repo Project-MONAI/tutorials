@@ -24,7 +24,7 @@ Mean dice = 0.96
 
 ## commands example
 Execute inference:
-`python -m monai.bundle run evaluator --meta_file configs/metadata.json --config_file configs/inference.json`
+`python -m monai.bundle run evaluator --meta_file configs/metadata.json --config_file configs/inference.json --logging_file configs/logging.conf`
 Verify the metadata format:
 `python -m monai.bundle verify_metadata --meta_file configs/metadata.json --filepath eval/schema.json`
 Verify the data shape of network:

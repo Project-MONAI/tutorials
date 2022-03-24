@@ -13,7 +13,7 @@
     },
     "task": "Decathlon spleen segmentation",
     "description": "A pre-trained model for volumetric (3D) segmentation of the spleen from CT image",
-    "authorship": "MONAI team",
+    "authors": "MONAI team",
     "copyright": "Copyright (c) MONAI Consortium",
     "data_source": "Task09_Spleen.tar from http://medicaldecathlon.com/",
     "data_type": "dicom",

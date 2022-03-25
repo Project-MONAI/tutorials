@@ -4,8 +4,9 @@
         "$import os"
     ],
     "cudnn_opt": "$setattr(torch.backends.cudnn, 'benchmark', True)",
-    "dataset_dir": "/workspace/data/medical/Task09_Spleen",
-    "ckpt_path": "/workspace/data/medical/tutorials/modules/bundles/spleen_segmentation/models/model.pt",
+    "dataset_dir": "/workspace/data/Task09_Spleen",
+    "ckpt_path": "/workspace/data/tutorials/modules/bundles/spleen_segmentation/models/model.pt",
+    "download_ckpt": "$monai.apps.utils.download_url('https://huggingface.co/MONAI/example_spleen_segmentation/resolve/main/model.pt', @ckpt_path)",
     "device": "$torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')",
     "datalist": "$list(sorted(glob.glob(@dataset_dir + '/imagesTs/*.nii.gz')))",
     "network_def": {
@@ -122,6 +123,7 @@
     "handlers": [
         {
             "_target_": "CheckpointLoader",
+            "_requires_": "@download_ckpt",
             "_disabled_": "$not os.path.exists(@ckpt_path)",
             "load_path": "@ckpt_path",
             "load_dict": {"model": "@network"}

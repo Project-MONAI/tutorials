@@ -3,5 +3,5 @@ pytorch-ignite
 nibabel
 tqdm
 nvidia-pyindex
-nvidia-dlprof[pytorch]
+nvidia-dlprof[pytorch]==1.4.0
 nvtx

@@ -143,7 +143,7 @@ train_ds = CacheDataset(
     num_workers=8
 )
 train_loader = DataLoader(
-    train_ds, num_workers=8, batch_size=4, shuffle=True
+    train_ds, num_workers=0, batch_size=4, shuffle=True
 )
 val_ds = CacheDataset(
     data=val_files,
@@ -152,7 +152,7 @@ val_ds = CacheDataset(
     num_workers=8
 )
 val_loader = DataLoader(
-    val_ds, num_workers=8, batch_size=1
+    val_ds, num_workers=0, batch_size=1
 )
 
 # standard PyTorch program style: create UNet, DiceLoss and Adam optimizer

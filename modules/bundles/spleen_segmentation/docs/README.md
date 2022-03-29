@@ -23,6 +23,12 @@ This model achieves the following Dice score on the validation data (our own spl
 Mean Dice = 0.96
 
 ## commands example
+Execute training:
+
+```
+python -m monai.bundle run "'train#trainer'" --meta_file configs/metadata.json --config_file configs/train.json --logging_file configs/logging.conf
+```
+
 Execute inference:
 
 ```

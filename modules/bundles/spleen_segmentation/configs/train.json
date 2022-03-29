@@ -112,7 +112,7 @@
                     "_target_": "AsDiscreted",
                     "keys": ["pred", "label"],
                     "argmax": [true, false],
-                    "to_onehot": 2          
+                    "to_onehot": 2
                 }
             ]
         },
@@ -230,6 +230,6 @@
             "additional_metrics": "@validate#additional_metrics",
             "val_handlers": "@validate#handlers",
             "amp": true
-        }      
+        }
     }
 }

@@ -22,7 +22,6 @@ from torch.optim import Adam
 from torch.utils.tensorboard import SummaryWriter
 torch.backends.cudnn.benchmark = True
 
-import nvidia_dlprof_pytorch_nvtx
 import nvtx
 
 from monai.apps import download_and_extract
@@ -51,7 +50,6 @@ from monai.transforms import (
 from monai.utils import set_determinism
 from monai.utils.nvtx import Range
 
-nvidia_dlprof_pytorch_nvtx.init()
 
 # set directories
 random.seed(0)

@@ -15,19 +15,19 @@ For training and validation steps, they are easier to track by setting NVTX anno
 
 # Profiling Spleen Segmentation Pipeline
 ## Run Nsight Profiling
-With environment prepared `requirements.txt`, we run DLprof (v1.4.0 / r21.08) on the trainer under basic settings for 6 epochs (with validation every 2 epochs). All results shown below are from experiments performed on a DGX-2 workstation using a single V-100 GPU.
+With environment prepared `requirements.txt`, we use `nsys profile` on the trainer under basic settings for 6 epochs (with validation every 2 epochs). All results shown below are from experiments performed on a DGX-2 workstation using a single V-100 GPU.
 
 ```python
-!dlprof --mode pytorch \
-        --reports=summary \
-        --formats json \
-        --output_path ./outputs_base \
-        python3 train_base_nvtx.py
+nsys profile \
+     --output ./output_base \
+     --force-overwrite true \
+     --trace-fork-before-exec true \
+     python3 train_base_nvtx.py
 ```
 
 # Identify Potential Performance Improvements
 ## Profile Results
-After profiling, DLProf provides summary regarding the training process. Also, the computing details can be visualized via Nsight System GUI. (The version of Nsight used in the tutorial is 2021.3.1.54-ee9c30a OSX)
+After profiling, the computing details can be visualized via Nsight System GUI. (The version of Nsight used in the tutorial is 2021.3.1.54-ee9c30a OSX)
 
 ![png](Figure/nsight_base.png)
 
@@ -59,14 +59,14 @@ One optimized solution can be found [here](https://github.com/Project-MONAI/tuto
 
 # Analyzing Performance Improvement
 ## Profile Results
-We again use DLProf to further analyze the optimized training script.
+We again use `nsys profile` to further analyze the optimized training script.
 
 ```python
-!dlprof --mode pytorch \
-        --reports=summary \
-        --formats json \
-        --output_path ./outputs_fast \
-        python3 train_fast_nvtx.py
+nsys profile \
+     --output ./outputs_fast \
+     --force-overwrite true \
+     --trace-fork-before-exec true \
+     python3 train_fast_nvtx.py
 ```
 And the profiling result is
 

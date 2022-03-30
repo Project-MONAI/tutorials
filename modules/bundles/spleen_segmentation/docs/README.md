@@ -23,19 +23,32 @@ This model achieves the following Dice score on the validation data (our own spl
 Mean Dice = 0.96
 
 ## commands example
+Execute training:
+
+```
+python -m monai.bundle run "'train#trainer'" --meta_file configs/metadata.json --config_file configs/train.json --logging_file configs/logging.conf
+```
+
 Execute inference:
+
 ```
 python -m monai.bundle run evaluator --meta_file configs/metadata.json --config_file configs/inference.json --logging_file configs/logging.conf
 ```
+
 Verify the metadata format:
+
 ```
 python -m monai.bundle verify_metadata --meta_file configs/metadata.json --filepath eval/schema.json
 ```
+
 Verify the data shape of network:
+
 ```
 python -m monai.bundle verify_net_in_out network_def --meta_file configs/metadata.json --config_file configs/inference.json
 ```
+
 Export checkpoint to TorchScript file:
+
 ```
 python -m monai.bundle export network_def --filepath models/model.ts --ckpt_file models/model.pt --meta_file configs/metadata.json --config_file configs/inference.json
 ```

@@ -38,6 +38,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" tcia_csv_processing
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" transform_visualization.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 2d_inference_3d_volume.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" resample_benchmark.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" get_started.ipynb)
 
 # output formatting
 separator=""

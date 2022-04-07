@@ -7,8 +7,8 @@
     "determinism": "$monai.utils.set_determinism(seed=123)",
     "cudnn_opt": "$setattr(torch.backends.cudnn, 'benchmark', True)",
     "device": "$torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')",
-    "ckpt_path": "/workspace/data/medical/tutorials/modules/bundles/spleen_segmentation/models/model.pt",
-    "dataset_dir": "/workspace/data/medical/Task09_Spleen",
+    "ckpt_path": "/workspace/data/tutorials/modules/bundles/spleen_segmentation/models/model.pt",
+    "dataset_dir": "/workspace/data/Task09_Spleen",
     "images": "$list(sorted(glob.glob(@dataset_dir + '/imagesTr/*.nii.gz')))",
     "labels": "$list(sorted(glob.glob(@dataset_dir + '/labelsTr/*.nii.gz')))",
     "network_def": {

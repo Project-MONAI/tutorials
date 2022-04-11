@@ -18,14 +18,12 @@ def get_kernels_strides(task_id):
     sizes, spacings = patch_size[task_id], spacing[task_id]
     input_size = sizes
     strides, kernels = [], []
-    min_patch_size = [1, 1, 1] * len(sizes)
     while True:
         spacing_ratio = [sp / min(spacings) for sp in spacings]
         stride = [
             2 if ratio <= 2 and size >= 8 else 1
             for (ratio, size) in zip(spacing_ratio, sizes)
         ]
-        min_patch_size = [i * j for i, j in zip(min_patch_size, stride)]
         kernel = [3 if ratio <= 2 else 1 for ratio in spacing_ratio]
         if all(s == 1 for s in stride):
             break

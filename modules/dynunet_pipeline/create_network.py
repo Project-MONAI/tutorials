@@ -32,7 +32,7 @@ def get_kernels_strides(task_id):
         for idx, (i, j) in enumerate(zip(sizes, stride)):
             if i % j != 0:
                 raise ValueError(
-                    f"patch size error, please try to modify the size {input_size[idx]} in dimension {idx}."
+                    f"patch size error, please try to modify the size {input_size[idx]} in the spatial dimension {idx}."
                 )
         sizes = [i / j for i, j in zip(sizes, stride)]
         spacings = [i * j for i, j in zip(spacings, stride)]

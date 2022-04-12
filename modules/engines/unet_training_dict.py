@@ -26,6 +26,7 @@ from monai.data import create_test_image_3d
 from monai.engines import SupervisedEvaluator, SupervisedTrainer
 from monai.handlers import (
     CheckpointSaver,
+    EarlyStopHandler,
     LrScheduleHandler,
     MeanDice,
     StatsHandler,
@@ -122,6 +123,8 @@ def main(tempdir):
         ]
     )
     val_handlers = [
+        # apply “EarlyStop” logic based on the validation metrics
+        EarlyStopHandler(trainer=None, patience=2, score_function=lambda x: x.state.metrics["val_mean_dice"]),
         # use the logger "train_log" defined at the beginning of this program
         StatsHandler(name="train_log", output_transform=lambda x: None),
         TensorBoardStatsHandler(log_dir="./runs/", output_transform=lambda x: None),
@@ -155,7 +158,10 @@ def main(tempdir):
             KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
         ]
     )
+
     train_handlers = [
+        # apply “EarlyStop” logic based on the loss value, use “-” negative value because smaller loss is better
+        EarlyStopHandler(trainer=None, patience=20, score_function=lambda x: -x.state.output[0]["loss"], epoch_level=False),
         LrScheduleHandler(lr_scheduler=lr_scheduler, print_lr=True),
         ValidationHandler(validator=evaluator, interval=2, epoch_level=True),
         # use the logger "train_log" defined at the beginning of this program
@@ -178,6 +184,9 @@ def main(tempdir):
         # if no FP16 support in GPU or PyTorch version < 1.6, will not enable AMP training
         amp=True if monai.utils.get_torch_version_tuple() >= (1, 6) else False,
     )
+    # set initialized trainer for "early stop" handlers
+    val_handlers[0].set_trainer(trainer=trainer)
+    train_handlers[0].set_trainer(trainer=trainer)
     trainer.run()
 
 

@@ -7,7 +7,7 @@
     "determinism": "$monai.utils.set_determinism(seed=123)",
     "cudnn_opt": "$setattr(torch.backends.cudnn, 'benchmark', True)",
     "device": "$torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')",
-    "ckpt_path": "/workspace/data/tutorials/modules/bundles/spleen_segmentation/models/model.pt",
+    "ckpt_dir": "/workspace/data/tutorials/modules/bundles/spleen_segmentation/models",
     "dataset_dir": "/workspace/data/Task09_Spleen",
     "images": "$list(sorted(glob.glob(@dataset_dir + '/imagesTr/*.nii.gz')))",
     "labels": "$list(sorted(glob.glob(@dataset_dir + '/labelsTr/*.nii.gz')))",
@@ -201,9 +201,10 @@
             },
             {
                 "_target_": "CheckpointSaver",
-                "save_dir": "@ckpt_path",
+                "save_dir": "@ckpt_dir",
                 "save_dict": {"model": "@network"},
-                "save_key_metric": true
+                "save_key_metric": true,
+                "key_metric_filename": "model.pt"
             }
         ],
         "key_metric": {

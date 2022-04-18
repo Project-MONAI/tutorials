@@ -50,7 +50,7 @@ python -m monai.bundle verify_net_in_out network_def --meta_file configs/metadat
 Export checkpoint to TorchScript file:
 
 ```
-python -m monai.bundle export network_def --filepath models/model.ts --ckpt_file models/model.pt --meta_file configs/metadata.json --config_file configs/inference.json
+python -m monai.bundle ckpt_export network_def --filepath models/model.ts --ckpt_file models/model.pt --meta_file configs/metadata.json --config_file configs/inference.json
 ```
 
 # Disclaimer

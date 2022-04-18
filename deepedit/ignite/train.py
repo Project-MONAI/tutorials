@@ -302,7 +302,8 @@ def create_trainer(args):
     train_handlers = train_handlers if local_rank == 0 else train_handlers[:2]
 
     all_train_metrics = dict()
-    all_train_metrics["train_dice"] = MeanDice(output_transform=from_engine(["pred", "label"]), include_background=False)
+    all_train_metrics["train_dice"] = MeanDice(output_transform=from_engine(["pred", "label"]),
+                                               include_background=False)
     for key_label in args.labels:
         if key_label != "background":
             all_train_metrics[key_label + "_dice"] = MeanDice(

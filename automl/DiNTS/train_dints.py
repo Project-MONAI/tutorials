@@ -318,8 +318,8 @@ def main():
     # train_ds = monai.data.Dataset(data=train_files, transform=train_transforms)
     # val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
 
-    train_loader = ThreadDataLoader(train_ds, num_workers=0, batch_size=num_images_per_batch, shuffle=True)
-    val_loader = ThreadDataLoader(val_ds, num_workers=0, batch_size=1, shuffle=False)
+    train_loader = ThreadDataLoader(train_ds, num_workers=8, batch_size=num_images_per_batch, shuffle=True)
+    val_loader = ThreadDataLoader(val_ds, num_workers=4, batch_size=1, shuffle=False)
 
     ckpt = torch.load(args.arch_ckpt)
     node_a = ckpt['node_a']

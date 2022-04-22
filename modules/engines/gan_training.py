@@ -55,7 +55,7 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # load real data
-    mednist_url = "https://www.dropbox.com/s/5wwskxctvcxiuea/MedNIST.tar.gz?dl=1"
+    mednist_url = "https://github.com/Project-MONAI/MONAI-extra-test-data/releases/download/0.8.1/MedNIST.tar.gz"
     md5_value = "0bc7306e7427e00ad1c5526a6677552d"
     extract_dir = "data"
     tar_save_path = os.path.join(extract_dir, "MedNIST.tar.gz")

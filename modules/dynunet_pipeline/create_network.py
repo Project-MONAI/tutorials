@@ -2,14 +2,21 @@ import os
 
 import torch
 from monai.networks.nets import DynUNet
-
 from task_params import deep_supr_num, patch_size, spacing
 
 
 def get_kernels_strides(task_id):
-    sizes, spacings = patch_size[task_id], spacing[task_id]
-    strides, kernels = [], []
+    """
+    This function is only used for decathlon datasets with the provided patch sizes.
+    When refering this method for other tasks, please ensure that the patch size for each spatial dimension should
+    be divisible by the product of all strides in the corresponding dimension.
+    In addition, the minimal spatial size should have at least one dimension that has twice the size of
+    the product of all strides. For patch sizes that cannot find suitable strides, an error will be raised.
 
+    """
+    sizes, spacings = patch_size[task_id], spacing[task_id]
+    input_size = sizes
+    strides, kernels = [], []
     while True:
         spacing_ratio = [sp / min(spacings) for sp in spacings]
         stride = [
@@ -19,10 +26,16 @@ def get_kernels_strides(task_id):
         kernel = [3 if ratio <= 2 else 1 for ratio in spacing_ratio]
         if all(s == 1 for s in stride):
             break
+        for idx, (i, j) in enumerate(zip(sizes, stride)):
+            if i % j != 0:
+                raise ValueError(
+                    f"Patch size is not supported, please try to modify the size {input_size[idx]} in the spatial dimension {idx}."
+                )
         sizes = [i / j for i, j in zip(sizes, stride)]
         spacings = [i * j for i, j in zip(spacings, stride)]
         kernels.append(kernel)
         strides.append(stride)
+
     strides.insert(0, len(spacings) * [1])
     kernels.append(len(spacings) * [3])
     return kernels, strides

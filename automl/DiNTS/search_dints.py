@@ -332,14 +332,14 @@ def main():
     # train_ds_w = monai.data.Dataset(data=train_files_w, transform=train_transforms)
     # val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
 
-    train_loader_a = ThreadDataLoader(train_ds_a, num_workers=0, batch_size=num_images_per_batch, shuffle=True)
-    train_loader_w = ThreadDataLoader(train_ds_w, num_workers=0, batch_size=num_images_per_batch, shuffle=True)
-    val_loader = ThreadDataLoader(val_ds, num_workers=0, batch_size=1, shuffle=False)
+    train_loader_a = ThreadDataLoader(train_ds_a, num_workers=4, batch_size=num_images_per_batch, shuffle=True)
+    train_loader_w = ThreadDataLoader(train_ds_w, num_workers=4, batch_size=num_images_per_batch, shuffle=True)
+    val_loader = ThreadDataLoader(val_ds, num_workers=4, batch_size=1, shuffle=False)
 
     # DataLoader can be used as alternatives when ThreadDataLoader is less efficient.
-    # train_loader_a = DataLoader(train_ds_a, batch_size=num_images_per_batch, shuffle=True, num_workers=2, pin_memory=torch.cuda.is_available())
-    # train_loader_w = DataLoader(train_ds_w, batch_size=num_images_per_batch, shuffle=True, num_workers=2, pin_memory=torch.cuda.is_available())
-    # val_loader = DataLoader(val_ds, batch_size=1, shuffle=False, num_workers=2, pin_memory=torch.cuda.is_available())
+    # train_loader_a = DataLoader(train_ds_a, batch_size=num_images_per_batch, shuffle=True, num_workers=4, pin_memory=torch.cuda.is_available())
+    # train_loader_w = DataLoader(train_ds_w, batch_size=num_images_per_batch, shuffle=True, num_workers=4, pin_memory=torch.cuda.is_available())
+    # val_loader = DataLoader(val_ds, batch_size=1, shuffle=False, num_workers=4, pin_memory=torch.cuda.is_available())
 
     dints_space = monai.networks.nets.TopologySearch(
         channel_mul=0.5,

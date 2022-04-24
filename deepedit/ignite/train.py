@@ -8,9 +8,9 @@ import glob
 
 import torch
 import torch.distributed as dist
-from custom_interaction import Interaction
+from monai.apps.deepedit.interaction import Interaction
 
-from custom_transforms import (
+from monai.apps.deepedit.transforms import (
     AddGuidanceSignalCustomd,
     AddRandomGuidanceCustomd,
     FindDiscrepancyRegionsCustomd,
@@ -395,7 +395,7 @@ def main():
     parser.add_argument(
         "-i",
         "--input",
-        default="/home/andres/Documents/tutorials/deepedit/dataset/Task09_Spleen",
+        default="/home/andres/Documents/workspace/Datasets/MSD_datasets/Task09_Spleen",
     )
     parser.add_argument("-o", "--output", default="output")
 

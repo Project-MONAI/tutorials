@@ -2,11 +2,14 @@
     "imports": [
         "$import glob",
         "$import os",
-        "$import ignite"
+        "$import ignite",
+        "$import torch.distributed as dist"
     ],
+    "ddp_init": "$dist.init_process_group(backend='nccl', init_method='env://')",
     "determinism": "$monai.utils.set_determinism(seed=123)",
     "cudnn_opt": "$setattr(torch.backends.cudnn, 'benchmark', True)",
-    "device": "$torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')",
+    "device": "$torch.device(f'cuda:{dist.get_rank()}')",
+    "set_device": "$torch.cuda.set_device(@device)",
     "ckpt_dir": "/workspace/data/medical/tutorials/modules/bundles/spleen_segmentation/models",
     "dataset_dir": "/workspace/data/medical/Task09_Spleen",
     "images": "$list(sorted(glob.glob(@dataset_dir + '/imagesTr/*.nii.gz')))",
@@ -21,7 +24,7 @@
         "num_res_units": 2,
         "norm": "batch"
     },
-    "network": "$@network_def.to(@device)",
+    "gpu_net": "$@network_def.to(@device)",
     "loss": {
         "_target_": "DiceCELoss",
         "to_onehot_y": true,
@@ -31,8 +34,13 @@
     },
     "optimizer": {
         "_target_": "torch.optim.Adam",
-        "params": "$@network.parameters()",
+        "params": "$@gpu_net.parameters()",
         "lr": 1e-4
+    },
+    "network": {
+        "_target_": "torch.nn.parallel.DistributedDataParallel",
+        "module": "@gpu_net",
+        "device_ids": ["@device"]
     },
     "train": {
         "preprocessing": {
@@ -90,11 +98,18 @@
             "cache_rate": 1.0,
             "num_workers": 4
         },
+        "sampler": {
+            "_target_": "DistributedSampler",
+            "dataset": "@train#dataset",
+            "even_divisible": true,
+            "shuffle": true
+        },
         "dataloader": {
             "_target_": "DataLoader",
             "dataset": "@train#dataset",
+            "sampler": "@train#sampler",
             "batch_size": 2,
-            "shuffle": true,
+            "shuffle": false,
             "num_workers": 4
         },
         "inferer": {
@@ -125,11 +140,13 @@
             },
             {
                 "_target_": "StatsHandler",
+                "_disabled_": "$dist.get_rank() > 0",
                 "tag_name": "train_loss",
                 "output_transform": "$monai.handlers.from_engine(['loss'], first=True)"
             },
             {
                 "_target_": "TensorBoardStatsHandler",
+                "_disabled_": "$dist.get_rank() > 0",
                 "log_dir": "eval",
                 "tag_name": "train_loss",
                 "output_transform": "$monai.handlers.from_engine(['loss'], first=True)"
@@ -143,7 +160,7 @@
         },
         "trainer": {
             "_target_": "SupervisedTrainer",
-            "_requires_": ["@ddp_init", "@determinism", "@cudnn_opt"],
+            "_requires_": ["@ddp_init", "@set_device", "@determinism", "@cudnn_opt"],
             "max_epochs": 100,
             "device": "@device",
             "train_data_loader": "@train#dataloader",
@@ -175,9 +192,16 @@
             "transform": "@validate#preprocessing",
             "cache_rate": 1.0
         },
+        "sampler": {
+            "_target_": "DistributedSampler",
+            "dataset": "@validate#dataset",
+            "even_divisible": false,
+            "shuffle": false
+        },
         "dataloader": {
             "_target_": "DataLoader",
             "dataset": "@validate#dataset",
+            "sampler": "@validate#sampler",
             "batch_size": 1,
             "shuffle": false,
             "num_workers": 4
@@ -229,7 +253,7 @@
             "postprocessing": "@validate#postprocessing",
             "key_val_metric": "@validate#key_metric",
             "additional_metrics": "@validate#additional_metrics",
-            "val_handlers": "@validate#handlers",
+            "val_handlers": "$@validate#handlers if dist.get_rank() > 0 else None",
             "amp": true
         }
     }

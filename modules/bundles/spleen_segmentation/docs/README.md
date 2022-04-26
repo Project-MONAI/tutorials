@@ -32,13 +32,13 @@ python -m monai.bundle run training --meta_file configs/metadata.json --config_f
 Execute multi-GPU training:
 
 ```
-torchrun --nproc_per_node=2 -m monai.bundle run training --meta_file configs/metadata.json --config_file configs/train_multi_gpu.json --logging_file configs/logging.conf
+torchrun --standalone --nnodes=1 --nproc_per_node=2 -m monai.bundle run training --meta_file configs/metadata.json --config_file configs/train_multi_gpu.json --logging_file configs/logging.conf
 ```
 
 Execute inference:
 
 ```
-python -m monai.bundle run evaluator --meta_file configs/metadata.json --config_file configs/inference.json --logging_file configs/logging.conf
+python -m monai.bundle run evaluating --meta_file configs/metadata.json --config_file configs/inference.json --logging_file configs/logging.conf
 ```
 
 Verify the metadata format:

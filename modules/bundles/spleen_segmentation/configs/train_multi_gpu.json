@@ -5,12 +5,12 @@
         "$import ignite",
         "$import torch.distributed as dist"
     ],
-    "device": "$torch.device(f'cuda:{dist.get_rank()}')",
-    "bundle_root": "/workspace/data/medical/tutorials/modules/bundles/spleen_segmentation",
+    "bundle_root": "/workspace/data/tutorials/modules/bundles/spleen_segmentation",
     "ckpt_dir": "$@bundle_root + '/models'",
-    "dataset_dir": "/workspace/data/medical/Task09_Spleen",
+    "dataset_dir": "/workspace/data/Task09_Spleen",
     "images": "$list(sorted(glob.glob(@dataset_dir + '/imagesTr/*.nii.gz')))",
     "labels": "$list(sorted(glob.glob(@dataset_dir + '/labelsTr/*.nii.gz')))",
+    "device": "$torch.device(f'cuda:{dist.get_rank()}')",
     "network_def": {
         "_target_": "UNet",
         "spatial_dims": 3,
@@ -255,7 +255,7 @@
         }
     },
     "training": [
-        "$dist.init_process_group(backend='nccl', init_method='env://')",
+        "$dist.init_process_group(backend='nccl')",
         "$torch.cuda.set_device(@device)",
         "$monai.utils.set_determinism(seed=123)",
         "$setattr(torch.backends.cudnn, 'benchmark', True)",

@@ -3,12 +3,12 @@
         "$import glob",
         "$import os"
     ],
-    "cudnn_opt": "$setattr(torch.backends.cudnn, 'benchmark', True)",
-    "device": "$torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')",
-    "ckpt_path": "/workspace/data/tutorials/modules/bundles/spleen_segmentation/models/model.pt",
+    "bundle_root": "/workspace/data/tutorials/modules/bundles/spleen_segmentation",
+    "ckpt_path": "$@bundle_root + '/models/model.pt'",
     "download_ckpt": "$monai.apps.utils.download_url('https://huggingface.co/MONAI/example_spleen_segmentation/resolve/main/model.pt', @ckpt_path)",
     "dataset_dir": "/workspace/data/Task09_Spleen",
     "datalist": "$list(sorted(glob.glob(@dataset_dir + '/imagesTs/*.nii.gz')))",
+    "device": "$torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')",
     "network_def": {
         "_target_": "UNet",
         "spatial_dims": 3,
@@ -120,7 +120,6 @@
     ],
     "evaluator": {
         "_target_": "SupervisedEvaluator",
-        "_requires_": "@cudnn_opt",
         "device": "@device",
         "val_data_loader": "@dataloader",
         "network": "@network",
@@ -128,5 +127,9 @@
         "postprocessing": "@postprocessing",
         "val_handlers": "@handlers",
         "amp": true
-    }
+    },
+    "evaluating": [
+        "$setattr(torch.backends.cudnn, 'benchmark', True)",
+        "$@evaluator.run()"
+    ]
 }

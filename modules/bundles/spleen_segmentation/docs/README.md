@@ -26,7 +26,13 @@ Mean Dice = 0.96
 Execute training:
 
 ```
-python -m monai.bundle run "'train#trainer'" --meta_file configs/metadata.json --config_file configs/train.json --logging_file configs/logging.conf
+python -m monai.bundle run training --meta_file configs/metadata.json --config_file configs/train.json --logging_file configs/logging.conf
+```
+
+Execute multi-GPU training:
+
+```
+torchrun --nproc_per_node=2 -m monai.bundle run training --meta_file configs/metadata.json --config_file configs/train_multi_gpu.json --logging_file configs/logging.conf
 ```
 
 Execute inference:

@@ -5,12 +5,9 @@
         "$import ignite",
         "$import torch.distributed as dist"
     ],
-    "ddp_init": "$dist.init_process_group(backend='nccl', init_method='env://')",
-    "determinism": "$monai.utils.set_determinism(seed=123)",
-    "cudnn_opt": "$setattr(torch.backends.cudnn, 'benchmark', True)",
     "device": "$torch.device(f'cuda:{dist.get_rank()}')",
-    "set_device": "$torch.cuda.set_device(@device)",
-    "ckpt_dir": "/workspace/data/medical/tutorials/modules/bundles/spleen_segmentation/models",
+    "bundle_root": "/workspace/data/medical/tutorials/modules/bundles/spleen_segmentation",
+    "ckpt_dir": "$@bundle_root + '/models'",
     "dataset_dir": "/workspace/data/medical/Task09_Spleen",
     "images": "$list(sorted(glob.glob(@dataset_dir + '/imagesTr/*.nii.gz')))",
     "labels": "$list(sorted(glob.glob(@dataset_dir + '/labelsTr/*.nii.gz')))",
@@ -160,7 +157,6 @@
         },
         "trainer": {
             "_target_": "SupervisedTrainer",
-            "_requires_": ["@ddp_init", "@set_device", "@determinism", "@cudnn_opt"],
             "max_epochs": 100,
             "device": "@device",
             "train_data_loader": "@train#dataloader",
@@ -176,6 +172,7 @@
     },
     "validate": {
         "preprocessing": {
+
             "_target_": "Compose",
             "transforms": [
                 "%train#preprocessing#transforms#0",
@@ -256,5 +253,13 @@
             "val_handlers": "$@validate#handlers if dist.get_rank() > 0 else None",
             "amp": true
         }
-    }
+    },
+    "training": [
+        "$dist.init_process_group(backend='nccl', init_method='env://')",
+        "$torch.cuda.set_device(@device)",
+        "$monai.utils.set_determinism(seed=123)",
+        "$setattr(torch.backends.cudnn, 'benchmark', True)",
+        "$@train#trainer.run()",
+        "$dist.destroy_process_group()"
+    ]
 }

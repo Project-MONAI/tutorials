@@ -250,7 +250,7 @@
             "postprocessing": "@validate#postprocessing",
             "key_val_metric": "@validate#key_metric",
             "additional_metrics": "@validate#additional_metrics",
-            "val_handlers": "$@validate#handlers if dist.get_rank() > 0 else None",
+            "val_handlers": "$None if dist.get_rank() > 0 else @validate#handlers",
             "amp": true
         }
     },

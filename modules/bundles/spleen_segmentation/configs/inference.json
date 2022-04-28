@@ -4,8 +4,7 @@
         "$import os"
     ],
     "bundle_root": "/workspace/data/tutorials/modules/bundles/spleen_segmentation",
-    "ckpt_path": "$@bundle_root + '/models/model.pt'",
-    "download_ckpt": "$monai.apps.utils.download_url('https://huggingface.co/MONAI/example_spleen_segmentation/resolve/main/model.pt', @ckpt_path)",
+    "output_dir": "$@bundle_root + '/eval'",
     "dataset_dir": "/workspace/data/Task09_Spleen",
     "datalist": "$list(sorted(glob.glob(@dataset_dir + '/imagesTs/*.nii.gz')))",
     "device": "$torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')",
@@ -101,16 +100,14 @@
                 "_target_": "SaveImaged",
                 "keys": "pred",
                 "meta_keys": "pred_meta_dict",
-                "output_dir": "eval"
+                "output_dir": "@output_dir"
             }
         ]
     },
     "handlers": [
         {
             "_target_": "CheckpointLoader",
-            "_requires_": "@download_ckpt",
-            "_disabled_": "$not os.path.exists(@ckpt_path)",
-            "load_path": "@ckpt_path",
+            "load_path": "$@bundle_root + '/models/model.pt'",
             "load_dict": {"model": "@network"}
         },
         {

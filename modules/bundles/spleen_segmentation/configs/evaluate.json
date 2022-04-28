@@ -30,7 +30,7 @@
                 "resample": false,
                 "squeeze_end_dims": true
             }
-        ]        
+        ]
     },
     "validate#handlers": [
         {
@@ -50,7 +50,7 @@
             "batch_transform": "$monai.handlers.from_engine(['image_meta_dict'])",
             "summary_ops": "*"
         }
-      ],    
+      ],
     "evaluating": [
         "$setattr(torch.backends.cudnn, 'benchmark', True)",
         "$@validate#evaluator.run()"

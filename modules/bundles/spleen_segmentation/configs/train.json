@@ -6,6 +6,7 @@
     ],
     "bundle_root": "/workspace/data/tutorials/modules/bundles/spleen_segmentation",
     "ckpt_dir": "$@bundle_root + '/models'",
+    "output_dir": "$@bundle_root + '/eval'",
     "dataset_dir": "/workspace/data/Task09_Spleen",
     "images": "$list(sorted(glob.glob(@dataset_dir + '/imagesTr/*.nii.gz')))",
     "labels": "$list(sorted(glob.glob(@dataset_dir + '/labelsTr/*.nii.gz')))",
@@ -129,7 +130,7 @@
             },
             {
                 "_target_": "TensorBoardStatsHandler",
-                "log_dir": "eval",
+                "log_dir": "@output_dir",
                 "tag_name": "train_loss",
                 "output_transform": "$monai.handlers.from_engine(['loss'], first=True)"
             }
@@ -194,7 +195,7 @@
             },
             {
                 "_target_": "TensorBoardStatsHandler",
-                "log_dir": "eval",
+                "log_dir": "@output_dir",
                 "iteration_log": false
             },
             {

@@ -6,14 +6,18 @@ This example mainly shows 2 typical use cases of hybrid programming with MONAI b
 Please note that this example depends on the `spleen_segmentation` bundle example and show the hybrid programming via overriding the config file of it.
 
 ## commands example
-Override the `train` config with customized `transforms` and execute training:
-
+Export the customized python code to `PYTHONPATH`:
 ```
-python -m monai.bundle run training --meta_file configs/metadata.json --config_file "['configs/train.json','configs/custom_train.json']" --logging_file configs/logging.conf
+export PYTHONPATH=$PYTHONPATH:"<path to 'hybrid_programming/scripts'>"
+```
+
+Override the `train` config with customized `transforms` and execute training:
+```
+python -m monai.bundle run training --meta_file <spleen_configs_path>/metadata.json --config_file "['<spleen_configs_path>/train.json','configs/custom_train.json']" --logging_file <spleen_configs_path>/logging.conf
 ```
 
 Parse the config in the python program and execute inference from the program:
 
 ```
-python -m scripts.inference.run --config_file configs/inference.json
+python -m scripts.inference run --config_file <spleen_configs_path>/inference.json --ckpt_path <path_to_checkpoint>
 ```

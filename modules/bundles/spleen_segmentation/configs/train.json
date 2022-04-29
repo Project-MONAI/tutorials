@@ -4,13 +4,13 @@
         "$import os",
         "$import ignite"
     ],
-    "determinism": "$monai.utils.set_determinism(seed=123)",
-    "cudnn_opt": "$setattr(torch.backends.cudnn, 'benchmark', True)",
-    "device": "$torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')",
-    "ckpt_dir": "/workspace/data/tutorials/modules/bundles/spleen_segmentation/models",
+    "bundle_root": "/workspace/data/tutorials/modules/bundles/spleen_segmentation",
+    "ckpt_dir": "$@bundle_root + '/models'",
+    "output_dir": "$@bundle_root + '/eval'",
     "dataset_dir": "/workspace/data/Task09_Spleen",
     "images": "$list(sorted(glob.glob(@dataset_dir + '/imagesTr/*.nii.gz')))",
     "labels": "$list(sorted(glob.glob(@dataset_dir + '/labelsTr/*.nii.gz')))",
+    "device": "$torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')",
     "network_def": {
         "_target_": "UNet",
         "spatial_dims": 3,
@@ -94,7 +94,7 @@
             "_target_": "DataLoader",
             "dataset": "@train#dataset",
             "batch_size": 2,
-            "shuffle": false,
+            "shuffle": true,
             "num_workers": 4
         },
         "inferer": {
@@ -130,7 +130,7 @@
             },
             {
                 "_target_": "TensorBoardStatsHandler",
-                "log_dir": "eval",
+                "log_dir": "@output_dir",
                 "tag_name": "train_loss",
                 "output_transform": "$monai.handlers.from_engine(['loss'], first=True)"
             }
@@ -143,7 +143,6 @@
         },
         "trainer": {
             "_target_": "SupervisedTrainer",
-            "_requires_": ["@determinism", "@cudnn_opt"],
             "max_epochs": 100,
             "device": "@device",
             "train_data_loader": "@train#dataloader",
@@ -196,7 +195,7 @@
             },
             {
                 "_target_": "TensorBoardStatsHandler",
-                "log_dir": "eval",
+                "log_dir": "@output_dir",
                 "iteration_log": false
             },
             {
@@ -232,5 +231,10 @@
             "val_handlers": "@validate#handlers",
             "amp": true
         }
-    }
+    },
+    "training": [
+        "$monai.utils.set_determinism(seed=123)",
+        "$setattr(torch.backends.cudnn, 'benchmark', True)",
+        "$@train#trainer.run()"
+    ]
 }

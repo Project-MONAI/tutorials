@@ -6,10 +6,10 @@ Please note that this example depends on the `spleen_segmentation` bundle exampl
 ## commands example
 Export the customized python code to `PYTHONPATH`:
 ```
-export PYTHONPATH=$PYTHONPATH:"<path to 'hybrid_programming/scripts'>"
+export PYTHONPATH=$PYTHONPATH:"<path to 'custom_component/scripts'>"
 ```
 
-Override the `train` config with one customized `transform` and execute training:
+Override the `train` config with the customized `transform` and execute training:
 ```
 python -m monai.bundle run training --meta_file <spleen_configs_path>/metadata.json --config_file "['<spleen_configs_path>/train.json','configs/custom_train.json']" --logging_file <spleen_configs_path>/logging.conf
 ```

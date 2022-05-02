@@ -9,24 +9,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Sequence, Union
+
 import torch
 from monai.bundle import ConfigParser
 from monai.data import decollate_batch
 from monai.utils.enums import CommonKeys
 
 
-def run(config_file: str, ckpt_path: str):
+def run(config_file: Union[str, Sequence[str]], ckpt_path: str):
     parser = ConfigParser()
     parser.read_config(config_file)
     # edit the config content at runtime and lazy instantiation
     parser["inferer"]["roi_size"] = [160, 160, 160]
 
-    device = parser.get_parsed_content("device")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # instantialize the components
-    model = parser.get_parsed_content("network")
+    model = parser.get_parsed_content("network").to(device)
     model.load_state_dict(torch.load(ckpt_path))
 
     dataloader = parser.get_parsed_content("dataloader")
+    if len(dataloader) == 0:
+        raise ValueError("no data found in the dataloader, please ensure the input image paths are accessable.")
     inferer = parser.get_parsed_content("inferer")
     postprocessing = parser.get_parsed_content("postprocessing")
 

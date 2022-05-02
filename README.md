@@ -161,7 +161,7 @@ The example is a PyTorch Ignite program and shows several key features of MONAI,
 #### [COVID 19-20 challenge baseline](./3d_segmentation/challenge_baseline)
 This folder provides a simple baseline method for training, validation, and inference for [COVID-19 LUNG CT LESION SEGMENTATION CHALLENGE - 2020](https://covid-segmentation.grand-challenge.org/COVID-19-20/) (a MICCAI Endorsed Event).
 
-此文件夹为 [COVID-19 肺部 CT 病变分割挑战 - 2020] (https://covid-segmentation.grand-challenge.org/COVID-19-20/) 提供了一种简单的基线方法，用于训练、验证和推理（ MICCAI 认可的活动）。
+此文件夹为 [COVID-19 肺部 CT 病变分割挑战 - 2020](https://covid-segmentation.grand-challenge.org/COVID-19-20/) 提供了一种简单的基线方法，用于训练、验证和推理（ MICCAI 认可的活动）。
 
 #### [unetr_btcv_segmentation_3d](./3d_segmentation/unetr_btcv_segmentation_3d.ipynb)
 This notebook demonstrates how to construct a training workflow of UNETR on multi-organ segmentation task using the BTCV challenge dataset.

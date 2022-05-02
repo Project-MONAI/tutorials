@@ -10,17 +10,22 @@
 # limitations under the License.
 
 from typing import Sequence, Union
+import glob
 
 import torch
 from monai.bundle import ConfigParser
 from monai.data import decollate_batch
-from monai.utils.enums import CommonKeys
 
 
 def run(config_file: Union[str, Sequence[str]], ckpt_path: str):
     parser = ConfigParser()
     parser.read_config(config_file)
-    # edit the config content at runtime and lazy instantiation
+    # edit the config content at runtime for input / output information and lazy instantiation
+    datalist = list(sorted(glob.glob("/workspace/data/Task09_Spleen/imagesTs/*.nii.gz")))
+    input_data = [{f"{parser['image_key']}": i} for i in datalist]
+    output_dir = "/workspace/data/tutorials/modules/bundle/hybrid_programming/eval"
+    parser["input_data"] = input_data
+    parser["output_dir"] = output_dir
     parser["inferer"]["roi_size"] = [160, 160, 160]
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -37,9 +42,9 @@ def run(config_file: Union[str, Sequence[str]], ckpt_path: str):
     model.eval()
     with torch.no_grad():
         for d in dataloader:
-            images = d[CommonKeys.IMAGE].to(device)
+            images = d[parser["image_key"]].to(device)
             # define sliding window size and batch size for windows inference
-            d[CommonKeys.PRED] = inferer(inputs=images, network=model)
+            d[parser["pred_key"]] = inferer(inputs=images, network=model)
             # decollate the batch data into a list of dictionaries, then execute postprocessing transforms
             [postprocessing(i) for i in decollate_batch(d)]
 

@@ -1,35 +1,30 @@
 {
-    "imports": [
-        "$import glob",
-        "$import os"
-    ],
-    "dataset_dir": "/workspace/data/Task09_Spleen",
-    "datalist": "$list(sorted(glob.glob(@dataset_dir + '/imagesTs/*.nii.gz')))",
+    "image_key": "image",
     "preprocessing": {
         "_target_": "Compose",
         "transforms": [
             {
                 "_target_": "LoadImaged",
-                "keys": "image"
+                "keys": "@image_key"
             },
             {
                 "_target_": "EnsureChannelFirstd",
-                "keys": "image"
+                "keys": "@image_key"
             },
             {
                 "_target_": "Orientationd",
-                "keys": "image",
+                "keys": "@image_key",
                 "axcodes": "RAS"
             },
             {
                 "_target_": "Spacingd",
-                "keys": "image",
+                "keys": "@image_key",
                 "pixdim": [1.5, 1.5, 2.0],
                 "mode": "bilinear"
             },
             {
                 "_target_": "ScaleIntensityRanged",
-                "keys": "image",
+                "keys": "@image_key",
                 "a_min": -57,
                 "a_max": 164,
                 "b_min": 0,
@@ -38,13 +33,13 @@
             },
             {
                 "_target_": "EnsureTyped",
-                "keys": "image"
+                "keys": "@image_key"
             }
         ]
     },
     "dataset": {
         "_target_": "Dataset",
-        "data": "$[{'image': i} for i in @datalist]",
+        "data": "@input_data",
         "transform": "@preprocessing"
     },
     "dataloader": {

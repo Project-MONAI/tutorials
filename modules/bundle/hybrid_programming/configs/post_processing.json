@@ -1,30 +1,30 @@
 {
-    "output_dir": "/workspace/data/tutorials/modules/bundle/hybrid_programming/eval",
+    "pred_key": "pred",
     "postprocessing": {
         "_target_": "Compose",
         "transforms": [
             {
                 "_target_": "Activationsd",
-                "keys": "pred",
+                "keys": "@pred_key",
                 "softmax": true
             },
             {
                 "_target_": "Invertd",
-                "keys": "pred",
+                "keys": "@pred_key",
                 "transform": "@preprocessing",
-                "orig_keys": "image",
+                "orig_keys": "@image_key",
                 "meta_key_postfix": "meta_dict",
                 "nearest_interp": false,
                 "to_tensor": true
             },
             {
                 "_target_": "AsDiscreted",
-                "keys": "pred",
+                "keys": "@pred_key",
                 "argmax": true
             },
             {
                 "_target_": "SaveImaged",
-                "keys": "pred",
+                "keys": "@pred_key",
                 "meta_keys": "pred_meta_dict",
                 "output_dir": "@output_dir"
             }

@@ -1,0 +1,3 @@
+# Ignore the following files/folders during docker build
+
+__pycache__/

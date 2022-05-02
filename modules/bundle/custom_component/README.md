@@ -1,5 +1,5 @@
 # Description
-This example mainly shows a typical use case that applies customized python component(like: transform, network, metrics, etc.) in the `train` config.
+This example mainly shows a typical use case that brings customized python component(like: transform, network, metrics, etc.) in the `train` config.
 
 Please note that this example depends on the `spleen_segmentation` bundle example and executes via overriding the config file of it.
 

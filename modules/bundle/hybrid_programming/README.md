@@ -1,5 +1,5 @@
 # Description
-This example mainly shows a typical use case that parses the config files in your own python program, instantiate necessary components with python program and execute the inference.
+This example mainly shows a typical use case that parses the config files in your own python program, instantiates necessary components with python program and executes the inference.
 
 ## commands example
 

@@ -8,7 +8,7 @@ To run the workflow with customized components, `PYTHONPATH` should be revised t
 ```
 export PYTHONPATH=$PYTHONPATH:"<path to 'custom_component/scripts'>"
 ```
-And please make sure the folder `custom_component/scripts` is a valid python module (it has a __init__.py file in the folder).
+And please make sure the folder `custom_component/scripts` is a valid python module (it has a `__init__.py` file in the folder).
 
 Override the `train` config with the customized `transform` and execute training:
 ```

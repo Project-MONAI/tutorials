@@ -6,5 +6,5 @@ This example mainly shows a typical use case that parses the config files in you
 Parse the config files in the python program and execute inference from the python program:
 
 ```
-python -m scripts.inference run --config_file "['configs/data_loading.json','configs/net_inferer.json','configs/post_processing.json']" --ckpt_path <path_to_checkpoint>
+python -m scripts.inference run --config_file "['configs/data_loading.json','configs/net_inferer.yaml','configs/post_processing.json']" --ckpt_path <path_to_checkpoint>
 ```

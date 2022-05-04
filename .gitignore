@@ -138,3 +138,13 @@ tests/testing_data/*Hippocampus*
 # Ignore torch saves
 */torch/runs
 logs
+*/runs
+lightning_logs
+
+# ignore automatically created files
+*.ts
+nohup.out
+deepgrow/ignite/_image.nii.gz
+*.zip
+deployment/bentoml/mednist_classifier_bentoml.py
+deployment/ray/mednist_classifier_start.py

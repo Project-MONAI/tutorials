@@ -1,0 +1,7 @@
+{
+    "train#preprocessing#transforms#6":
+    {
+        "_target_": "scripts.custom_transforms.PrintEnsureTyped",
+        "keys": ["image", "label"]
+    }
+}

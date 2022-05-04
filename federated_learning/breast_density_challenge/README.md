@@ -33,7 +33,7 @@ Do not change the locations given in [config_fed_client.json](./code/configs/mam
 ```
 
 ### 1.2 Build container
-The argument specifies the FQDN of the FL server. Use `localhost` when simulating FL on your machine.
+The argument specifies the FQDN (Fully Qualified Domain Name) of the FL server. Use `localhost` when simulating FL on your machine.
 ```
 ./build_docker.sh localhost
 ```

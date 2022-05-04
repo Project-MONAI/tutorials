@@ -1,0 +1,88 @@
+{
+  "format_version": 2,
+
+  "min_clients": 3,
+  "num_rounds": 100,
+
+  "server": {
+    "heart_beat_timeout": 600
+  },
+  "task_data_filters": [],
+  "task_result_filters": [],
+  "components": [
+    {
+      "id": "persistor",
+      "name": "PTFileModelPersistor",
+      "args": {
+        "model": {
+          "path": "monai.networks.nets.TorchVisionFCModel",
+	      "args": {
+            "model_name": "resnet18",
+            "n_classes": 4,
+            "use_conv": false,
+            "pretrained": true,
+            "pool": null
+          }
+        }
+      }
+    },
+    {
+      "id": "shareable_generator",
+      "name": "FullModelShareableGenerator",
+      "args": {}
+    },
+    {
+      "id": "aggregator",
+      "name": "InTimeAccumulateWeightedAggregator",
+      "args": {}
+    },
+    {
+      "id": "model_selector",
+      "name": "IntimeModelSelectionHandler",
+      "args": {}
+    },
+    {
+      "id": "model_locator",
+      "name": "PTFileModelLocator",
+      "args": {
+        "pt_persistor_id": "persistor"
+      }
+    },
+    {
+      "id": "json_generator",
+      "name": "ValidationJsonGenerator",
+      "args": {}
+    },
+    {
+      "id": "tb_analytics_receive",
+      "name": "TBAnalyticsReceiver",
+      "args": {"events": ["fed.analytix_log_stats"]}
+    }
+  ],
+  "workflows": [
+      {
+        "id": "scatter_gather_ctl",
+        "name": "ScatterAndGather",
+        "args": {
+            "min_clients" : "{min_clients}",
+            "num_rounds" : "{num_rounds}",
+            "start_round": 0,
+            "wait_time_after_min_received": 10,
+            "aggregator_id": "aggregator",
+            "persistor_id": "persistor",
+            "shareable_generator_id": "shareable_generator",
+            "train_task_name": "train",
+            "train_timeout": 0
+        }
+      },
+      {
+        "id": "global_model_eval",
+        "name": "GlobalModelEval",
+        "args": {
+          "model_locator_id": "model_locator",
+          "validation_timeout": 6000,
+          "cleanup_models": true
+        }
+    }
+  ]
+}

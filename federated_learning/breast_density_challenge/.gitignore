@@ -1,0 +1,12 @@
+# IDE
+.idea/
+
+# artifacts
+poc/
+*.pyc
+result_*
+*.pth
+logs
+
+# example data
+*preprocessed*

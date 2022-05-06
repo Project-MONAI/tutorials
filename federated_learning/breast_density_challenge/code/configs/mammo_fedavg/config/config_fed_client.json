@@ -1,0 +1,51 @@
+{
+  "format_version": 2,
+
+  "DATASET_ROOT": "/data/preprocessed",
+  "DATALIST_PREFIX": "/data/dataset_blinded_",
+
+  "executors": [
+    {
+      "tasks": [
+        "train", "submit_model", "validate"
+      ],
+      "executor": {
+        "id": "Executor",
+        "path": "nvflare.app_common.executors.learner_executor.LearnerExecutor",
+        "args": {
+          "learner_id": "learner"
+        }
+      }
+    }
+  ],
+
+  "task_result_filters": [
+  ],
+  "task_data_filters": [
+  ],
+
+  "components": [
+    {
+      "id": "learner",
+      "path": "pt.learners.mammo_learner.MammoLearner",
+      "args": {
+        "dataset_root": "{DATASET_ROOT}",
+        "datalist_prefix": "{DATALIST_PREFIX}",
+        "aggregation_epochs": 1,
+        "lr": 2e-3,
+        "batch_size": 64,
+        "val_frac": 0.1
+      }
+    },
+    {
+      "id": "analytic_sender",
+      "name": "AnalyticsSender",
+      "args": {}
+    },
+    {
+      "id": "event_to_fed",
+      "name": "ConvertToFedEvent",
+      "args": {"events_to_convert": ["analytix_log_stats"], "fed_event_prefix": "fed."}
+    }
+  ]
+}

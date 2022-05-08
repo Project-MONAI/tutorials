@@ -15,7 +15,10 @@ DeepEdit can also be used for multi-label segmentation problems, allowing the us
 all labels simultaneously instead of one label at a time.
 
 This tutorial contains an example to train a DeepEdit model and a notebook to run inference
-over a pre-trained model. More information about the transforms used in DeepEdit are also in the Notebook.
+over a pre-trained model. The train file reads images and labels folders (imagesTr, labelsTr) as they come in the
+[Medical Segmentation Decathlon](http://medicaldecathlon.com/).
+
+More information about the transforms used in DeepEdit are also in the Notebook.
 
 **_Important note:_**
 

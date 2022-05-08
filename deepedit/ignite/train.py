@@ -11,9 +11,9 @@ import torch.distributed as dist
 from monai.apps.deepedit.interaction import Interaction
 
 from monai.apps.deepedit.transforms import (
-    AddGuidanceSignalCustomd,
-    AddRandomGuidanceCustomd,
-    FindDiscrepancyRegionsCustomd,
+    AddGuidanceSignalDeepEditd,
+    AddRandomGuidanceDeepEditd,
+    FindDiscrepancyRegionsDeepEditd,
     NormalizeLabelsInDatasetd,
     FindAllValidSlicesMissingLabelsd,
     AddInitialSeedPointMissingLabelsd,
@@ -101,7 +101,7 @@ def get_pre_transforms(labels, spatial_size):
         # Transforms for click simulation
         FindAllValidSlicesMissingLabelsd(keys="label", sids="sids"),
         AddInitialSeedPointMissingLabelsd(keys="label", guidance="guidance", sids="sids"),
-        AddGuidanceSignalCustomd(keys="image", guidance="guidance"),
+        AddGuidanceSignalDeepEditd(keys="image", guidance="guidance"),
         #
         ToTensord(keys=("image", "label")),
     ]
@@ -115,14 +115,14 @@ def get_click_transforms():
         AsDiscreted(keys="pred", argmax=True),
         ToNumpyd(keys=("image", "label", "pred")),
         # Transforms for click simulation
-        FindDiscrepancyRegionsCustomd(keys="label", pred="pred", discrepancy="discrepancy"),
-        AddRandomGuidanceCustomd(
+        FindDiscrepancyRegionsDeepEditd(keys="label", pred="pred", discrepancy="discrepancy"),
+        AddRandomGuidanceDeepEditd(
             keys="NA",
             guidance="guidance",
             discrepancy="discrepancy",
             probability="probability",
         ),
-        AddGuidanceSignalCustomd(keys="image", guidance="guidance"),
+        AddGuidanceSignalDeepEditd(keys="image", guidance="guidance"),
         #
         ToTensord(keys=("image", "label")),
     ]
@@ -177,7 +177,7 @@ def get_loaders(args, pre_transforms, train=True):
             train_datalist, pre_transforms, cache_dir=args.cache_dir
         )
         train_loader = DataLoader(
-            train_ds, shuffle=True, num_workers=32
+            train_ds, shuffle=True, num_workers=2
         )
         logging.info(
             "{}:: Total Records used for Training is: {}/{}".format(
@@ -189,7 +189,7 @@ def get_loaders(args, pre_transforms, train=True):
         val_datalist = datalist
 
     val_ds = PersistentDataset(val_datalist, pre_transforms, cache_dir=args.cache_dir)
-    val_loader = DataLoader(val_ds, num_workers=16)
+    val_loader = DataLoader(val_ds, num_workers=2)
     logging.info(
         "{}:: Total Records used for Validation is: {}/{}".format(
             local_rank, len(val_ds), total_l

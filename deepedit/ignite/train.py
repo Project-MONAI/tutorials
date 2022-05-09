@@ -1,3 +1,14 @@
+# Copyright (c) MONAI Consortium
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import argparse
 import distutils.util
 import logging
@@ -74,9 +85,9 @@ def get_network(network, labels, spatial_size):
             spatial_dims=3,
             in_channels=len(labels) + 1,
             out_channels=len(labels),
-            kernel_size=[[3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3]],
-            strides=[[1, 1, 1], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 1]],
-            upsample_kernel_size=[[2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 1]],
+            kernel_size=[3, 3, 3, 3, 3, 3],
+            strides=[1, 2, 2, 2, 2, [2, 2, 1]],
+            upsample_kernel_size=[2, 2, 2, 2, [2, 2, 1]],
             norm_name="instance",
             deep_supervision=False,
             res_block=True,
@@ -144,7 +155,7 @@ def get_post_transforms(labels):
     return Compose(t)
 
 
-def get_loaders(args, pre_transforms, train=True):
+def get_loaders(args, pre_transforms):
     multi_gpu = args.multi_gpu
     local_rank = args.local_rank
 
@@ -165,28 +176,24 @@ def get_loaders(args, pre_transforms, train=True):
             seed=args.seed,
         )[local_rank]
 
-    if train:
-        train_datalist, val_datalist = partition_dataset(
-            datalist,
-            ratios=[args.split, (1 - args.split)],
-            shuffle=True,
-            seed=args.seed,
-        )
+    train_datalist, val_datalist = partition_dataset(
+        datalist,
+        ratios=[args.split, (1 - args.split)],
+        shuffle=True,
+        seed=args.seed,
+    )
 
-        train_ds = PersistentDataset(
-            train_datalist, pre_transforms, cache_dir=args.cache_dir
+    train_ds = PersistentDataset(
+        train_datalist, pre_transforms, cache_dir=args.cache_dir
+    )
+    train_loader = DataLoader(
+        train_ds, shuffle=True, num_workers=2
+    )
+    logging.info(
+        "{}:: Total Records used for Training is: {}/{}".format(
+            local_rank, len(train_ds), total_l
         )
-        train_loader = DataLoader(
-            train_ds, shuffle=True, num_workers=2
-        )
-        logging.info(
-            "{}:: Total Records used for Training is: {}/{}".format(
-                local_rank, len(train_ds), total_l
-            )
-        )
-    else:
-        train_loader = None
-        val_datalist = datalist
+    )
 
     val_ds = PersistentDataset(val_datalist, pre_transforms, cache_dir=args.cache_dir)
     val_loader = DataLoader(val_ds, num_workers=2)

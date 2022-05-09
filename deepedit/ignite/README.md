@@ -16,7 +16,7 @@ all labels simultaneously instead of one label at a time.
 
 This tutorial contains an example to train a DeepEdit model and a notebook to run inference
 over a pre-trained model. The train file reads images and labels folders (imagesTr, labelsTr) as they come in the
-[Medical Segmentation Decathlon](http://medicaldecathlon.com/).
+[Medical Segmentation Decathlon](https://msd-for-monai.s3-us-west-2.amazonaws.com/Task09_Spleen.tar).
 
 More information about the transforms used in DeepEdit are also in the Notebook.
 

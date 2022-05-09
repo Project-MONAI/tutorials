@@ -132,7 +132,7 @@ The example show how to train/validate a 2D/3D deepgrow model.  It also demonstr
 
 **DeepEdit**
 #### [DeepEdit](./deepedit/ignite)
-This example shows how to train/test a DeepEdit model. In this tutorial there is a Notebook that shows how to run 
+This example shows how to train/test a DeepEdit model. In this tutorial there is a Notebook that shows how to run
 inference on a pretrained DeepEdit model.
 
 

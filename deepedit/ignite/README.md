@@ -65,7 +65,7 @@ This is an extension for [train.py](./train.py) that redefines basic default arg
 python ./train.py -h
 
 # Train a DeepEdit model
-python ./train_3d.py
+python ./train.py
     --input       deepedit/Task09_Spleen \
     --output      deepedit_model/ \
     --epochs      100

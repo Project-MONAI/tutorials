@@ -130,6 +130,12 @@ This tutorial demonstrates the use of MONAI for training of registration and seg
 #### [Deepgrow](./deepgrow)
 The example show how to train/validate a 2D/3D deepgrow model.  It also demonstrates running an inference for trained deepgrow models.
 
+**DeepEdit**
+#### [DeepEdit](./deepedit/ignite)
+This example shows how to train/test a DeepEdit model. In this tutorial there is a Notebook that shows how to run
+inference on a pretrained DeepEdit model.
+
+
 **deployment**
 #### [BentoML](./deployment/bentoml)
 This is a simple example of training and deploying a MONAI network with [BentoML](https://www.bentoml.ai/) as a web server, either locally using the BentoML respository or as a containerized service.

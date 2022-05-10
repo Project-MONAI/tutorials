@@ -2,9 +2,9 @@
 A pre-trained model for 3D segmentation of the spleen from CT image using DeepEdit.
 
 # Model Overview
-DeepEdit is an algorithm that combines the power of two models in one single architecture. 
-It allows the user to perform inference, as a standard segmentation method (i.e. UNet), and also to interactively 
-segment part of an image using clicks [2]. 
+DeepEdit is an algorithm that combines the power of two models in one single architecture.
+It allows the user to perform inference, as a standard segmentation method (i.e. UNet), and also to interactively
+segment part of an image using clicks [2].
 
 DeepEdit aims to facilitate the user experience and at the same time the development of new active learning techniques.
 

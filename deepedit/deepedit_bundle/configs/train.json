@@ -1,0 +1,347 @@
+{
+    "imports": [
+        "$import glob",
+        "$import os",
+        "$import ignite"
+    ],
+    "bundle_root": "/home/andres/Documents/workspace/tutorials/deepedit/deepedit_bundle",
+    "ckpt_dir": "$@bundle_root + '/models'",
+    "output_dir": "$@bundle_root + '/eval'",
+    "dataset_dir": "/home/andres/Documents/workspace/Datasets/MSD_datasets/Task09_Spleen",
+    "images": "$list(sorted(glob.glob(@dataset_dir + '/imagesTr/*.nii.gz')))",
+    "labels": "$list(sorted(glob.glob(@dataset_dir + '/labelsTr/*.nii.gz')))",
+    "label_names": "{'spleen': 1, 'background': 0}",
+    "spatial_size": [128, 128, 128],
+    "number_intensity_ch": 1,
+    "deepgrow_probability_train": 0.4,
+    "device": "$torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')",
+    "network_def": {
+        "_target_": "DynUNet",
+        "spatial_dims": 3,
+        "in_channels": "$len(@label_names) + @number_intensity_ch",
+        "out_channels": "$len(@label_names)",
+        "kernel_size": [3, 3, 3, 3, 3, 3],
+        "strides": [1, 2, 2, 2, 2, [2, 2, 1]],
+        "upsample_kernel_size": [2, 2, 2, 2, [2, 2, 1]],
+        "norm_name": "instance",
+        "deep_supervision": false,
+        "res_block": true
+    },
+    "network": "$@network_def.to(@device)",
+    "loss": {
+        "_target_": "DiceCELoss",
+        "to_onehot_y": true,
+        "softmax": true
+    },
+    "optimizer": {
+        "_target_": "torch.optim.Adam",
+        "params": "$@network.parameters()",
+        "lr": 1e-4
+    },
+    "train": {
+        "pre_transforms": {
+            "_target_": "Compose",
+            "transforms": [
+                {
+                    "_target_": "LoadImaged",
+                    "keys": ["image", "label"],
+                    "reader": "ITKReader"
+                },
+                {
+                    "_target_": "NormalizeLabelsInDatasetd",
+                    "keys": "label",
+                    "label_names": "@label_names"
+                },
+                {
+                    "_target_": "EnsureChannelFirstd",
+                    "keys": ["image", "label"]
+                },
+                {
+                    "_target_": "Orientationd",
+                    "keys": ["image", "label"],
+                    "axcodes": "RAS"
+                },
+                {
+                    "_target_": "ScaleIntensityRanged",
+                    "keys": "image",
+                    "a_min":-175,
+                    "a_max": 250,
+                    "b_min": 0.0,
+                    "b_max": 1.0,
+                    "clip": true
+                },
+                {
+                    "_target_": "RandFlipd",
+                    "keys": ["image", "label"],
+                    "spatial_axis": [0],
+                    "prob": 0.10
+                },
+                {
+                    "_target_": "RandFlipd",
+                    "keys": ["image", "label"],
+                    "spatial_axis": [1],
+                    "prob": 0.10
+                },
+                {
+                    "_target_": "RandFlipd",
+                    "keys": ["image", "label"],
+                    "spatial_axis": [2],
+                    "prob": 0.10
+                },
+                {
+                    "_target_": "RandRotate90d",
+                    "keys": ["image", "label"],
+                    "prob": 0.10,
+                    "max_k": 3
+                },
+                {
+                    "_target_": "RandShiftIntensityd",
+                    "keys": "image",
+                    "offsets": 0.10,
+                    "prob": 0.50
+                },
+                {
+                    "_target_": "Resized",
+                    "keys":  ["image", "label"],
+                    "spatial_size": "@spatial_size",
+                    "mode": "('area', 'nearest')"
+                },
+                {
+                    "_target_": "FindAllValidSlicesMissingLabelsd",
+                    "keys": "label",
+                    "sids": "sids"
+                },
+                {
+                    "_target_": "AddInitialSeedPointMissingLabelsd",
+                    "keys": "label",
+                    "guidance": "guidance",
+                    "sids": "sids"
+                },
+                {
+                    "_target_": "AddGuidanceSignalDeepEditd",
+                    "keys": "image",
+                    "guidance": "guidance",
+                    "number_intensity_ch": "@number_intensity_ch"
+                },
+                {
+                    "_target_": "ToTensord",
+                    "keys": ["image", "label"]
+                }
+            ]
+        },
+        "click_transforms": {
+            "_target_": "Compose",
+            "transforms": [
+                {
+                    "_target_": "Activationsd",
+                    "keys": "pred",
+                    "softmax": true
+                },
+                {
+                    "_target_": "AsDiscreted",
+                    "keys": "pred",
+                    "argmax": true
+                },
+                {
+                    "_target_": "ToNumpyd",
+                    "keys": ["image", "label", "pred"]
+                },
+                {
+                    "_target_": "FindDiscrepancyRegionsDeepEditd",
+                    "keys": "label",
+                    "pred": "pred",
+                    "discrepancy": "discrepancy"
+                },
+                {
+                    "_target_": "AddRandomGuidanceDeepEditd",
+                    "keys": "NA",
+                    "guidance": "guidance",
+                    "discrepancy": "discrepancy",
+                    "probability": "probability"
+                },
+                {
+                    "_target_": "AddGuidanceSignalDeepEditd",
+                    "keys": "image",
+                    "guidance": "guidance",
+                    "number_intensity_ch": "@number_intensity_ch"
+                },
+                {
+                    "_target_": "ToTensord",
+                    "keys": ["image", "label"]
+                }
+            ]
+        },
+        "dataset": {
+            "_target_": "CacheDataset",
+            "data": "$[{'image': i, 'label': l} for i, l in zip(@images[:-9], @labels[:-9])]",
+            "transform": "@train#pre_transforms",
+            "cache_rate": 1.0,
+            "num_workers": 2
+        },
+        "dataloader": {
+            "_target_": "DataLoader",
+            "dataset": "@train#dataset",
+            "batch_size": 1,
+            "shuffle": true,
+            "num_workers": 2
+        },
+        "inferer": {
+            "_target_": "SimpleInferer"
+        },
+        "post_transforms": {
+            "_target_": "Compose",
+            "transforms": [
+                {
+                    "_target_": "Activationsd",
+                    "keys": "pred",
+                    "softmax": true
+                },
+                {
+                    "_target_": "AsDiscreted",
+                    "keys": ["pred", "label"],
+                    "argmax": [true, false],
+                    "to_onehot": "$len(@label_names)+1"
+                }
+            ]
+        },
+        "handlers": [
+            {
+                "_target_": "LrScheduleHandler",
+                "lr_scheduler": "$torch.optim.lr_scheduler.StepLR(@optimizer, step_size=1000, gamma=0.1)",
+                "print_lr": true
+            },
+            {
+                "_target_": "ValidationHandler",
+                "validator": "@validate#evaluator",
+                "epoch_level": true,
+                "interval": 1
+            },
+            {
+                "_target_": "StatsHandler",
+                "tag_name": "train_loss",
+                "output_transform": "$monai.handlers.from_engine(['loss'], first=True)"
+            },
+            {
+                "_target_": "TensorBoardStatsHandler",
+                "log_dir": "@output_dir",
+                "tag_name": "train_loss",
+                "output_transform": "$monai.handlers.from_engine(['loss'], first=True)"
+            }
+        ],
+        "key_metric": {
+            "train_dice": {
+                "_target_": "MeanDice",
+                "output_transform": "$monai.handlers.from_engine(['pred', 'label'])"
+            }
+        },
+        "train_iteration_update": {
+             "_target_": "Interaction",
+            "deepgrow_probability": "@deepgrow_probability_train",
+            "transforms": "@train#click_transforms",
+            "click_probability_key": "probability",
+            "train": true,
+            "label_names": "@label_names"
+
+        },
+        "trainer": {
+            "_target_": "SupervisedTrainer",
+            "device": "@device",
+            "max_epochs": 500,
+            "train_data_loader": "@train#dataloader",
+            "network": "@network",
+            "optimizer": "@optimizer",
+            "loss_function": "@loss",
+            "inferer": "@train#inferer",
+            "amp": true,
+            "postprocessing": "@train#post_transforms",
+            "key_train_metric": "@train#key_metric",
+            "train_handlers": "@train#handlers",
+            "iteration_update": "@train#train_iteration_update"
+        }
+    },
+    "validate": {
+        "pre_transforms": {
+            "_target_": "Compose",
+            "transforms": [
+                "%train#pre_transforms#transforms#0",
+                "%train#pre_transforms#transforms#1",
+                "%train#pre_transforms#transforms#2",
+                "%train#pre_transforms#transforms#3",
+                "%train#pre_transforms#transforms#4",
+                "%train#pre_transforms#transforms#10",
+                "%train#pre_transforms#transforms#11",
+                "%train#pre_transforms#transforms#12",
+                "%train#pre_transforms#transforms#13",
+                "%train#pre_transforms#transforms#14"
+
+            ]
+        },
+        "dataset": {
+            "_target_": "CacheDataset",
+            "data": "$[{'image': i, 'label': l} for i, l in zip(@images[-9:], @labels[-9:])]",
+            "transform": "@validate#pre_transforms",
+            "cache_rate": 1.0
+        },
+        "dataloader": {
+            "_target_": "DataLoader",
+            "dataset": "@validate#dataset",
+            "batch_size": 1,
+            "shuffle": false,
+            "num_workers": 2
+        },
+        "inferer": {
+            "_target_": "SimpleInferer"
+        },
+        "post_transforms": "%train#post_transforms",
+        "handlers": [
+            {
+                "_target_": "StatsHandler",
+                "iteration_log": false
+            },
+            {
+                "_target_": "TensorBoardStatsHandler",
+                "log_dir": "@output_dir",
+                "iteration_log": false
+            },
+            {
+                "_target_": "CheckpointSaver",
+                "save_dir": "@ckpt_dir",
+                "save_dict": {"model": "@network"},
+                "save_key_metric": true,
+                "key_metric_filename": "model.pt"
+            }
+        ],
+        "key_metric": {
+            "val_mean_dice": {
+                "_target_": "MeanDice",
+                "output_transform": "$monai.handlers.from_engine(['pred', 'label'])"
+            }
+        },
+        "val_iteration_update": {
+             "_target_": "Interaction",
+            "deepgrow_probability": "@deepgrow_probability_train",
+            "transforms": "@train#click_transforms",
+            "click_probability_key": "probability",
+            "train": false,
+            "label_names": "@label_names"
+
+        },
+        "evaluator": {
+            "_target_": "SupervisedEvaluator",
+            "device": "@device",
+            "val_data_loader": "@validate#dataloader",
+            "network": "@network",
+            "inferer": "@validate#inferer",
+            "postprocessing": "@validate#post_transforms",
+            "key_val_metric": "@validate#key_metric",
+            "val_handlers": "@validate#handlers",
+            "iteration_update": "@validate#val_iteration_update",
+            "amp": true
+        }
+    },
+    "training": [
+        "$monai.utils.set_determinism(seed=123)",
+        "$setattr(torch.backends.cudnn, 'benchmark', True)",
+        "$@train#trainer.run()"
+    ]
+}

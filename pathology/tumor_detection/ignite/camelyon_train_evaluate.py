@@ -191,12 +191,7 @@ def train(cfg):
         StatsHandler(output_transform=lambda x: None),
         TensorBoardStatsHandler(log_dir=log_dir, output_transform=lambda x: None),
     ]
-    val_postprocessing = Compose(
-        [
-            ActivationsD(keys="pred", sigmoid=True),
-            AsDiscreteD(keys="pred", threshold=0.5),
-        ]
-    )
+    val_postprocessing = Compose([ActivationsD(keys="pred", sigmoid=True), AsDiscreteD(keys="pred", threshold=0.5)])
     evaluator = SupervisedEvaluator(
         device=device,
         val_data_loader=valid_dataloader,
@@ -211,25 +206,15 @@ def train(cfg):
     train_handlers = [
         LrScheduleHandler(lr_scheduler=scheduler, print_lr=True),
         CheckpointSaver(
-            save_dir=cfg["logdir"],
-            save_dict={"net": model, "opt": optimizer},
-            save_interval=1,
-            epoch_level=True,
+            save_dir=cfg["logdir"], save_dict={"net": model, "opt": optimizer}, save_interval=1, epoch_level=True
         ),
         StatsHandler(tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
         ValidationHandler(validator=evaluator, interval=1, epoch_level=True),
         TensorBoardStatsHandler(
-            log_dir=cfg["logdir"],
-            tag_name="train_loss",
-            output_transform=from_engine(["loss"], first=True),
+            log_dir=cfg["logdir"], tag_name="train_loss", output_transform=from_engine(["loss"], first=True)
         ),
     ]
-    train_postprocessing = Compose(
-        [
-            ActivationsD(keys="pred", sigmoid=True),
-            AsDiscreteD(keys="pred", threshold=0.5),
-        ]
-    )
+    train_postprocessing = Compose([ActivationsD(keys="pred", sigmoid=True), AsDiscreteD(keys="pred", threshold=0.5)])
 
     trainer = SupervisedTrainer(
         device=device,

@@ -351,7 +351,7 @@ def run(args):
             "{}:: Loading PT Model from: {}".format(args.local_rank, args.input)
         )
         device = torch.device("cuda" if args.use_gpu else "cpu")
-        network = get_network(args.network, args.channels, args.dimensions).to(device)
+        network = get_network(args.network, args.labels, args.spatial_size).to(device)
 
         map_location = {"cuda:0": "cuda:{}".format(args.local_rank)}
         network.load_state_dict(torch.load(args.input, map_location=map_location))

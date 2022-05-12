@@ -1,0 +1,60 @@
+api_version: 2
+name: fl_project
+description: NVFlare sample project yaml file
+
+participants:
+  # change example.com to the FQDN of the server
+  - name: {SERVER_FQDN}
+    type: server
+    org: nvflare
+    fed_learn_port: 8002
+    admin_port: 8003
+  - name: site-1
+    type: client
+    org: nvflare
+  - name: site-2
+    type: client
+    org: nvflare
+  - name: site-3
+    type: client
+    org: nvflare
+  - name: admin@nvflare.com
+    type: admin
+    org: nvflare
+    roles:
+      - super
+
+# The same methods in all builders are called in their order defined in builders section
+builders:
+  - path: nvflare.lighter.impl.workspace.WorkspaceBuilder
+    args:
+      template_file: master_template.yml
+  - path: nvflare.lighter.impl.template.TemplateBuilder
+  - path: nvflare.lighter.impl.static_file.StaticFileBuilder
+    args:
+      # config_folder can be set to inform NVFlare where to get configuration
+      config_folder: config
+      # when docker_image is set to a docker image name, docker.sh will be generated on server/client/admin
+      # docker_image:
+  - path: nvflare.lighter.impl.auth_policy.AuthPolicyBuilder
+    args:
+      orgs:
+        nvflare:
+          - relaxed
+      roles:
+        super: super user of system
+      groups:
+        relaxed:
+          desc: org group with relaxed policies
+          rules:
+            allow_byoc: true
+            allow_custom_datalist: true
+      disabled: false
+  - path: nvflare.lighter.impl.cert.CertBuilder
+  - path: nvflare.lighter.impl.he.HEBuilder
+    args:
+      poly_modulus_degree: 8192
+      coeff_mod_bit_sizes: [60, 40, 40]
+      scale_bits: 40
+      scheme: CKKS
+  - path: nvflare.lighter.impl.signature.SignatureBuilder

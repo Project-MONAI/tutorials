@@ -23,21 +23,21 @@ from monai.handlers import (
 from monai.networks.nets import TorchVisionFCModel
 from monai.optimizers import Novograd
 from monai.transforms import (
-    ActivationsD,
-    AsDiscreteD,
-    CastToTypeD,
+    Activationsd,
+    AsDiscreted,
+    CastToTyped,
     Compose,
-    GridSplitD,
-    LambdaD,
-    RandFlipD,
-    RandRotate90D,
-    RandZoomD,
-    ScaleIntensityRangeD,
-    ToNumpyD,
-    TorchVisionD,
-    ToTensorD,
+    GridSplitd,
+    Lambdad,
+    RandFlipd,
+    RandRotate90d,
+    RandZoomd,
+    ScaleIntensityRanged,
+    ToNumpyd,
+    TorchVisiond,
+    ToTensord,
 )
-from monai.utils import first, set_determinism, ensure_tuple_rep
+from monai.utils import first, set_determinism
 
 torch.backends.cudnn.enabled = True
 set_determinism(seed=0, additional_settings=None)
@@ -62,7 +62,7 @@ def set_device(cfg):
     if gpus and torch.cuda.is_available():
         os.environ["CUDA_VISIBLE_DEVICES"] = ",".join([str(n) for n in gpus])
         device = torch.device("cuda")
-        print(f'CUDA is being used with GPU ID(s): {os.environ["CUDA_VISIBLE_DEVICES"]}')
+        print(f'CUDA is being used with GPU Id(s): {os.environ["CUDA_VISIBLE_DEVICES"]}')
     else:
         device = torch.device("cpu")
         print("CPU only!")
@@ -79,26 +79,26 @@ def train(cfg):
     # Build MONAI preprocessing
     train_preprocess = Compose(
         [
-            ToTensorD(keys=("image", "label")),
-            LambdaD(keys="label", func=lambda x: x.reshape((1, *cfg["grid_shape"]))),
-            GridSplitD(keys=("image", "label"), grid=cfg["grid_shape"], size={"image": cfg["patch_size"], "label": 1}),
-            TorchVisionD(
+            ToTensord(keys=("image", "label")),
+            Lambdad(keys="label", func=lambda x: x.reshape((1, *cfg["grid_shape"]))),
+            GridSplitd(keys=("image", "label"), grid=cfg["grid_shape"], size={"image": cfg["patch_size"], "label": 1}),
+            TorchVisiond(
                 keys="image", name="ColorJitter", brightness=64.0 / 255.0, contrast=0.75, saturation=0.25, hue=0.04
             ),
-            ToNumpyD(keys="image"),
-            RandFlipD(keys="image", prob=0.5),
-            RandRotate90D(keys="image", prob=0.5, max_k=3, spatial_axes=(-2, -1)),
-            CastToTypeD(keys="image", dtype=np.float32),
-            RandZoomD(keys="image", prob=0.5, min_zoom=0.9, max_zoom=1.1),
-            ScaleIntensityRangeD(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0),
-            ToTensorD(keys=("image", "label")),
+            ToNumpyd(keys="image"),
+            RandFlipd(keys="image", prob=0.5),
+            RandRotate90d(keys="image", prob=0.5, max_k=3, spatial_axes=(-2, -1)),
+            CastToTyped(keys="image", dtype=np.float32),
+            RandZoomd(keys="image", prob=0.5, min_zoom=0.9, max_zoom=1.1),
+            ScaleIntensityRanged(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0),
+            ToTensord(keys=("image", "label")),
         ]
     )
     valid_preprocess = Compose(
         [
-            CastToTypeD(keys="image", dtype=np.float32),
-            ScaleIntensityRangeD(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0),
-            ToTensorD(keys=("image", "label")),
+            CastToTyped(keys="image", dtype=np.float32),
+            ScaleIntensityRanged(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0),
+            ToTensord(keys=("image", "label")),
         ]
     )
     # __________________________________________________________________________
@@ -107,7 +107,7 @@ def train(cfg):
         cfg["train_file"],
         col_groups={"image": 0, "location": [2, 1], "label": list(range(3, 12))},
         kwargs_read_csv={"header": None},
-        transform=LambdaD("image", lambda x: os.path.join(cfg["image_root"], "training/images", x + ".tif")),
+        transform=Lambdad("image", lambda x: os.path.join(cfg["image_root"], "training/images", x + ".tif")),
     )
     train_dataset = PatchWSIDataset(
         data=train_data_list,
@@ -121,7 +121,7 @@ def train(cfg):
         cfg["valid_file"],
         col_groups={"image": 0, "location": [2, 1], "label": list(range(3, 12))},
         kwargs_read_csv={"header": None},
-        transform=LambdaD("image", lambda x: os.path.join(cfg["image_root"], "validation/images", x + ".tif")),
+        transform=Lambdad("image", lambda x: os.path.join(cfg["image_root"], "validation/images", x + ".tif")),
     )
     valid_dataset = PatchWSIDataset(
         data=valid_data_list,
@@ -191,7 +191,7 @@ def train(cfg):
         StatsHandler(output_transform=lambda x: None),
         TensorBoardStatsHandler(log_dir=log_dir, output_transform=lambda x: None),
     ]
-    val_postprocessing = Compose([ActivationsD(keys="pred", sigmoid=True), AsDiscreteD(keys="pred", threshold=0.5)])
+    val_postprocessing = Compose([Activationsd(keys="pred", sigmoid=True), AsDiscreted(keys="pred", threshold=0.5)])
     evaluator = SupervisedEvaluator(
         device=device,
         val_data_loader=valid_dataloader,
@@ -214,7 +214,7 @@ def train(cfg):
             log_dir=cfg["logdir"], tag_name="train_loss", output_transform=from_engine(["loss"], first=True)
         ),
     ]
-    train_postprocessing = Compose([ActivationsD(keys="pred", sigmoid=True), AsDiscreteD(keys="pred", threshold=0.5)])
+    train_postprocessing = Compose([Activationsd(keys="pred", sigmoid=True), AsDiscreted(keys="pred", threshold=0.5)])
 
     trainer = SupervisedTrainer(
         device=device,

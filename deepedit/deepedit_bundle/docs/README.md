@@ -19,7 +19,7 @@ The training could be performed with a 12GB-memory GPU.
 ## Input and output formats
 Input: 3 channels CT image - one channel representing clicks for each segment (i.e. spleen and background and the image)
 
-Output: 2 channels: Label 1: spleen; Label 0: everything else
+Output: 2 channels: Label 1: spleen; Label 0: everything else - This depends on the dictionary "label_names" defined in train.json and inference.json ("label_names": {"spleen": 1, "background": 0},)
 
 ## commands example
 Execute training:

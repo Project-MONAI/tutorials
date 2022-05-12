@@ -4,10 +4,10 @@
         "$import os",
         "$import ignite"
     ],
-    "bundle_root": "/home/andres/Documents/workspace/tutorials/deepedit/deepedit_bundle",
+    "bundle_root": "/workspace/tutorials/deepedit/deepedit_bundle",
     "ckpt_dir": "$@bundle_root + '/models'",
     "output_dir": "$@bundle_root + '/eval'",
-    "dataset_dir": "/home/andres/Documents/workspace/Datasets/MSD_datasets/Task09_Spleen",
+    "dataset_dir": "/workspace/Datasets/MSD_datasets/Task09_Spleen",
     "images": "$list(sorted(glob.glob(@dataset_dir + '/imagesTr/*.nii.gz')))",
     "labels": "$list(sorted(glob.glob(@dataset_dir + '/labelsTr/*.nii.gz')))",
     "label_names": {"spleen": 1, "background": 0},

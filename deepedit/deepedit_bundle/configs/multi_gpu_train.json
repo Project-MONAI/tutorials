@@ -13,11 +13,11 @@
     },
     "train#dataloader#sampler": "@train#sampler",
     "train#dataloader#shuffle": false,
-    "train#trainer#train_handlers": "$@train#handlers[: 1 if dist.get_rank() > 0 else None]",
+    "train#trainer#train_handlers": "$@train#handlers[: -2 if dist.get_rank() > 0 else None]",
     "validate#sampler": {
         "_target_": "DistributedSampler",
         "dataset": "@validate#dataset",
-        "even_divisible": true,
+        "even_divisible": false,
         "shuffle": false
     },
     "validate#dataloader#sampler": "@validate#sampler",

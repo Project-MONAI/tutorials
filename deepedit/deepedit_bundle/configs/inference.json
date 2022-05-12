@@ -8,7 +8,7 @@
     "output_dir": "$@bundle_root + '/eval'",
     "dataset_dir": "/home/andres/Documents/workspace/Datasets/MSD_datasets/Task09_Spleen",
     "datalist": "$list(sorted(glob.glob(@dataset_dir + '/imagesTs/*.nii.gz')))",
-    "label_names": "{'spleen': 1, 'background': 0}",
+    "label_names": {"spleen": 1, "background": 0},
     "spatial_size": [128, 128, 128],
     "number_intensity_ch": 1,
     "device": "$torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')",

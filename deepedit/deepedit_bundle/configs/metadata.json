@@ -12,7 +12,7 @@
         "nibabel": "3.2.1"
     },
     "task": "Decathlon spleen segmentation",
-    "description": "A pre-trained model for volumetric (3D) segmentation of the spleen from CT image",
+    "description": "This is a pre-trained model for 3D segmentation of the spleen organ from CT images using DeepEdit.",
     "authors": "MONAI team",
     "copyright": "Copyright (c) MONAI Consortium",
     "data_source": "Task09_Spleen.tar from http://medicaldecathlon.com/",
@@ -32,7 +32,7 @@
             "image": {
                 "type": "image",
                 "format": "magnitude",
-                "num_channels": 1,
+                "num_channels": 3,
                 "spatial_shape": [
                     128,
                     128,

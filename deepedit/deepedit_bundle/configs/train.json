@@ -10,10 +10,11 @@
     "dataset_dir": "/home/andres/Documents/workspace/Datasets/MSD_datasets/Task09_Spleen",
     "images": "$list(sorted(glob.glob(@dataset_dir + '/imagesTr/*.nii.gz')))",
     "labels": "$list(sorted(glob.glob(@dataset_dir + '/labelsTr/*.nii.gz')))",
-    "label_names": "{'spleen': 1, 'background': 0}",
+    "label_names": {"spleen": 1, "background": 0},
     "spatial_size": [128, 128, 128],
     "number_intensity_ch": 1,
     "deepgrow_probability_train": 0.4,
+    "deepgrow_probability_val": 1.0,
     "device": "$torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')",
     "network_def": {
         "_target_": "DynUNet",
@@ -37,6 +38,12 @@
         "_target_": "torch.optim.Adam",
         "params": "$@network.parameters()",
         "lr": 1e-4
+    },
+    "lr_scheduler": {
+      "_target_": "torch.optim.lr_scheduler.StepLR",
+      "optimizer": "@optimizer",
+      "step_size": 1000,
+      "gamma": 0.1
     },
     "train": {
         "pre_transforms": {
@@ -104,7 +111,7 @@
                     "_target_": "Resized",
                     "keys":  ["image", "label"],
                     "spatial_size": "@spatial_size",
-                    "mode": "('area', 'nearest')"
+                    "mode": ["area", "nearest"]
                 },
                 {
                     "_target_": "FindAllValidSlicesMissingLabelsd",
@@ -176,14 +183,14 @@
             "data": "$[{'image': i, 'label': l} for i, l in zip(@images[:-9], @labels[:-9])]",
             "transform": "@train#pre_transforms",
             "cache_rate": 1.0,
-            "num_workers": 2
+            "num_workers": 4
         },
         "dataloader": {
             "_target_": "DataLoader",
             "dataset": "@train#dataset",
             "batch_size": 1,
             "shuffle": true,
-            "num_workers": 2
+            "num_workers": 0
         },
         "inferer": {
             "_target_": "SimpleInferer"
@@ -207,7 +214,7 @@
         "handlers": [
             {
                 "_target_": "LrScheduleHandler",
-                "lr_scheduler": "$torch.optim.lr_scheduler.StepLR(@optimizer, step_size=1000, gamma=0.1)",
+                "lr_scheduler": "@lr_scheduler",
                 "print_lr": true
             },
             {
@@ -280,14 +287,15 @@
             "_target_": "CacheDataset",
             "data": "$[{'image': i, 'label': l} for i, l in zip(@images[-9:], @labels[-9:])]",
             "transform": "@validate#pre_transforms",
-            "cache_rate": 1.0
+            "cache_rate": 1.0,
+            "num_workers": 4
         },
         "dataloader": {
             "_target_": "DataLoader",
             "dataset": "@validate#dataset",
             "batch_size": 1,
             "shuffle": false,
-            "num_workers": 2
+            "num_workers": 0
         },
         "inferer": {
             "_target_": "SimpleInferer"
@@ -319,7 +327,7 @@
         },
         "val_iteration_update": {
              "_target_": "Interaction",
-            "deepgrow_probability": "@deepgrow_probability_train",
+            "deepgrow_probability": "@deepgrow_probability_val",
             "transforms": "@train#click_transforms",
             "click_probability_key": "probability",
             "train": false,

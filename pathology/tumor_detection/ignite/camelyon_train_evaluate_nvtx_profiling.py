@@ -39,7 +39,6 @@ from monai.transforms import (
     ToTensord,
 )
 from monai.utils import first, set_determinism, Range
-from monai.transforms.nvtx import RangePopd, RangePushd
 
 torch.backends.cudnn.enabled = True
 set_determinism(seed=0, additional_settings=None)
@@ -81,9 +80,9 @@ def train(cfg):
     # Build MONAI preprocessing
     train_preprocess = Compose(
         [
-            ToTensord(keys=("image", "label")),
             Lambdad(keys="label", func=lambda x: x.reshape((1, *cfg["grid_shape"]))),
             GridSplitd(keys=("image", "label"), grid=cfg["grid_shape"], size={"image": cfg["patch_size"], "label": 1}),
+            ToTensord(keys=("image")),
             TorchVisiond(
                 keys="image", name="ColorJitter", brightness=64.0 / 255.0, contrast=0.75, saturation=0.25, hue=0.04
             ),
@@ -99,6 +98,8 @@ def train(cfg):
     train_preprocess = Range("Preprocessing", recursive=True)(train_preprocess)
     valid_preprocess = Compose(
         [
+            Lambdad(keys="label", func=lambda x: x.reshape((1, *cfg["grid_shape"]))),
+            GridSplitd(keys=("image", "label"), grid=cfg["grid_shape"], size={"image": cfg["patch_size"], "label": 1}),
             CastToTyped(keys="image", dtype=np.float32),
             ScaleIntensityRanged(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0),
             ToTensord(keys=("image", "label")),
@@ -110,7 +111,7 @@ def train(cfg):
         cfg["train_file"],
         col_groups={"image": 0, "location": [2, 1], "label": list(range(3, 12))},
         kwargs_read_csv={"header": None},
-        transform=Lambdad("image", lambda x: os.path.join(cfg["image_root"], "training/images", x + ".tif")),
+        transform=Lambdad("image", lambda x: os.path.join(cfg["root"], "training/images", x + ".tif")),
     )
     train_dataset = PatchWSIDataset(
         data=train_data_list,
@@ -124,7 +125,7 @@ def train(cfg):
         cfg["valid_file"],
         col_groups={"image": 0, "location": [2, 1], "label": list(range(3, 12))},
         kwargs_read_csv={"header": None},
-        transform=Lambdad("image", lambda x: os.path.join(cfg["image_root"], "validation/images", x + ".tif")),
+        transform=Lambdad("image", lambda x: os.path.join(cfg["root"], "validation/images", x + ".tif")),
     )
     valid_dataset = PatchWSIDataset(
         data=valid_data_list,
@@ -241,15 +242,9 @@ def train(cfg):
 def main():
     logging.basicConfig(level=logging.INFO)
     parser = ArgumentParser(description="Tumor detection on whole slide pathology images.")
-    parser.add_argument("--train-file", type=str, default="../training.txt", help="path to training data file")
-    parser.add_argument("--valid-file", type=str, default="../validation.txt", help="path to training data file")
-    parser.add_argument(
-        "--root",
-        type=str,
-        default="/workspace/data/medical/pathology/",
-        dest="image_root",
-        help="path to root folder of images containing training/validation folder",
-    )
+    parser.add_argument("--root", type=str, default="./", help="path to image folder containing training/validation")
+    parser.add_argument("--train-file", type=str, default="training.csv", help="path to training data file")
+    parser.add_argument("--valid-file", type=str, default="validation.csv", help="path to training data file")
     parser.add_argument("--logdir", type=str, default="./logs/", dest="logdir", help="log directory")
 
     parser.add_argument("--rs", type=int, default=256 * 3, dest="region_size", help="region size")

@@ -35,53 +35,56 @@
         "lr": 1e-4
     },
     "train": {
+        "deterministic_transforms": [
+            {
+                "_target_": "LoadImaged",
+                "keys": ["image", "label"]
+            },
+            {
+                "_target_": "EnsureChannelFirstd",
+                "keys": ["image", "label"]
+            },
+            {
+                "_target_": "Orientationd",
+                "keys": ["image", "label"],
+                "axcodes": "RAS"
+            },
+            {
+                "_target_": "Spacingd",
+                "keys": ["image", "label"],
+                "pixdim": [1.5, 1.5, 2.0],
+                "mode": ["bilinear", "nearest"]
+            },
+            {
+                "_target_": "ScaleIntensityRanged",
+                "keys": "image",
+                "a_min": -57,
+                "a_max": 164,
+                "b_min": 0,
+                "b_max": 1,
+                "clip": true
+            },
+            {
+                "_target_": "EnsureTyped",
+                "keys": ["image", "label"]
+            }
+        ],
+        "random_transforms": [
+            {
+                "_target_": "RandCropByPosNegLabeld",
+                "keys": ["image", "label"],
+                "label_key": "label",
+                "spatial_size": [96, 96, 96],
+                "pos": 1,
+                "neg": 1,
+                "num_samples": 4,
+                "image_key": "image",
+                "image_threshold": 0
+            }
+        ],
         "preprocessing": {
             "_target_": "Compose",
-            "transforms": [
-                {
-                    "_target_": "LoadImaged",
-                    "keys": ["image", "label"]
-                },
-                {
-                    "_target_": "EnsureChannelFirstd",
-                    "keys": ["image", "label"]
-                },
-                {
-                    "_target_": "Orientationd",
-                    "keys": ["image", "label"],
-                    "axcodes": "RAS"
-                },
-                {
-                    "_target_": "Spacingd",
-                    "keys": ["image", "label"],
-                    "pixdim": [1.5, 1.5, 2.0],
-                    "mode": ["bilinear", "nearest"]
-                },
-                {
-                    "_target_": "ScaleIntensityRanged",
-                    "keys": "image",
-                    "a_min": -57,
-                    "a_max": 164,
-                    "b_min": 0,
-                    "b_max": 1,
-                    "clip": true
-                },
-                {
-                    "_target_": "RandCropByPosNegLabeld",
-                    "keys": ["image", "label"],
-                    "label_key": "label",
-                    "spatial_size": [96, 96, 96],
-                    "pos": 1,
-                    "neg": 1,
-                    "num_samples": 4,
-                    "image_key": "image",
-                    "image_threshold": 0
-                },
-                {
-                    "_target_": "EnsureTyped",
-                    "keys": ["image", "label"]
-                }
-            ]
+            "transforms": "$@train#deterministic_transforms + @train#random_transforms"
         },
         "dataset": {
             "_target_": "CacheDataset",
@@ -159,14 +162,7 @@
     "validate": {
         "preprocessing": {
             "_target_": "Compose",
-            "transforms": [
-                "%train#preprocessing#transforms#0",
-                "%train#preprocessing#transforms#1",
-                "%train#preprocessing#transforms#2",
-                "%train#preprocessing#transforms#3",
-                "%train#preprocessing#transforms#4",
-                "%train#preprocessing#transforms#6"
-            ]
+            "transforms": "%train#deterministic_transforms"
         },
         "dataset": {
             "_target_": "CacheDataset",

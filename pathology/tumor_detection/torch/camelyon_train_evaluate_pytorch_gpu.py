@@ -213,9 +213,11 @@ def main(cfg):
     if cfg["backend"] == "cucim":
         preprocess_cpu_train = Compose(
             [
-                Lambdad(keys="label", func=lambda x: x.reshape((1, *cfg["grid_shape"]))),
+                Lambdad(keys="label", func=lambda x: x.reshape((1, cfg["grid_shape"], cfg["grid_shape"]))),
                 GridSplitd(
-                    keys=("image", "label"), grid=cfg["grid_shape"], size={"image": cfg["patch_size"], "label": 1}
+                    keys=("image", "label"),
+                    grid=(cfg["grid_shape"], cfg["grid_shape"]),
+                    size={"image": cfg["patch_size"], "label": 1},
                 ),
                 ToTensord(keys="label"),
             ]
@@ -241,9 +243,11 @@ def main(cfg):
         )
         preprocess_cpu_valid = Compose(
             [
-                Lambdad(keys="label", func=lambda x: x.reshape((1, *cfg["grid_shape"]))),
+                Lambdad(keys="label", func=lambda x: x.reshape((1, cfg["grid_shape"], cfg["grid_shape"]))),
                 GridSplitd(
-                    keys=("image", "label"), grid=cfg["grid_shape"], size={"image": cfg["patch_size"], "label": 1}
+                    keys=("image", "label"),
+                    grid=(cfg["grid_shape"], cfg["grid_shape"]),
+                    size={"image": cfg["patch_size"], "label": 1},
                 ),
                 ToTensord(keys="label"),
             ]
@@ -258,9 +262,11 @@ def main(cfg):
     elif cfg["backend"] == "numpy":
         preprocess_cpu_train = Compose(
             [
-                Lambdad(keys="label", func=lambda x: x.reshape((1, *cfg["grid_shape"]))),
+                Lambdad(keys="label", func=lambda x: x.reshape((1, cfg["grid_shape"], cfg["grid_shape"]))),
                 GridSplitd(
-                    keys=("image", "label"), grid=cfg["grid_shape"], size={"image": cfg["patch_size"], "label": 1}
+                    keys=("image", "label"),
+                    grid=(cfg["grid_shape"], cfg["grid_shape"]),
+                    size={"image": cfg["patch_size"], "label": 1},
                 ),
                 ToTensord(keys=("image", "label")),
                 TorchVisiond(
@@ -277,9 +283,11 @@ def main(cfg):
         )
         preprocess_cpu_valid = Compose(
             [
-                Lambdad(keys="label", func=lambda x: x.reshape((1, *cfg["grid_shape"]))),
+                Lambdad(keys="label", func=lambda x: x.reshape((1, cfg["grid_shape"], cfg["grid_shape"]))),
                 GridSplitd(
-                    keys=("image", "label"), grid=cfg["grid_shape"], size={"image": cfg["patch_size"], "label": 1}
+                    keys=("image", "label"),
+                    grid=(cfg["grid_shape"], cfg["grid_shape"]),
+                    size={"image": cfg["patch_size"], "label": 1},
                 ),
                 CastToTyped(keys="image", dtype=np.float32),
                 ScaleIntensityRanged(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0),
@@ -385,7 +393,10 @@ def main(cfg):
 
     total_valid_time, total_train_time = 0.0, 0.0
     t_start = time.perf_counter()
-    metric_summary = {"loss": np.Inf, "accuracy": 0, "best_epoch": 1}
+    if cfg["validate"]:
+        metric_summary = {"loss": np.Inf, "accuracy": 0, "best_epoch": 1}
+    else:
+        metric_summary = {}
     # Training/Validation Loop
     for _ in range(cfg["n_epochs"]):
         t_epoch = time.perf_counter()
@@ -479,7 +490,7 @@ def parse_arguments():
     parser.add_argument("--logdir", type=str, default="./logs/", dest="logdir", help="log directory")
 
     parser.add_argument("--rs", type=int, default=256 * 3, dest="region_size", help="region size")
-    parser.add_argument("--gs", type=int, default=(3, 3), nargs="+", dest="grid_shape", help="image grid shape (3x3)")
+    parser.add_argument("--gs", type=int, default=3, dest="grid_shape", help="image grid shape e.g 3 means 3x3")
     parser.add_argument("--ps", type=int, default=224, dest="patch_size", help="patch size")
     parser.add_argument("--bs", type=int, default=64, dest="batch_size", help="batch size")
     parser.add_argument("--ep", type=int, default=4, dest="n_epochs", help="number of epochs")

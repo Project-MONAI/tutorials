@@ -79,8 +79,12 @@ def train(cfg):
     # Build MONAI preprocessing
     train_preprocess = Compose(
         [
-            Lambdad(keys="label", func=lambda x: x.reshape((1, *cfg["grid_shape"]))),
-            GridSplitd(keys=("image", "label"), grid=cfg["grid_shape"], size={"image": cfg["patch_size"], "label": 1}),
+            Lambdad(keys="label", func=lambda x: x.reshape((1, cfg["grid_shape"], cfg["grid_shape"]))),
+            GridSplitd(
+                keys=("image", "label"),
+                grid=(cfg["grid_shape"], cfg["grid_shape"]),
+                size={"image": cfg["patch_size"], "label": 1},
+            ),
             ToTensord(keys=("image")),
             TorchVisiond(
                 keys="image", name="ColorJitter", brightness=64.0 / 255.0, contrast=0.75, saturation=0.25, hue=0.04
@@ -96,8 +100,12 @@ def train(cfg):
     )
     valid_preprocess = Compose(
         [
-            Lambdad(keys="label", func=lambda x: x.reshape((1, *cfg["grid_shape"]))),
-            GridSplitd(keys=("image", "label"), grid=cfg["grid_shape"], size={"image": cfg["patch_size"], "label": 1}),
+            Lambdad(keys="label", func=lambda x: x.reshape((1, cfg["grid_shape"], cfg["grid_shape"]))),
+            GridSplitd(
+                keys=("image", "label"),
+                grid=(cfg["grid_shape"], cfg["grid_shape"]),
+                size={"image": cfg["patch_size"], "label": 1},
+            ),
             CastToTyped(keys="image", dtype=np.float32),
             ScaleIntensityRanged(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0),
             ToTensord(keys=("image", "label")),
@@ -242,7 +250,7 @@ def main():
     parser.add_argument("--logdir", type=str, default="./logs/", dest="logdir", help="log directory")
 
     parser.add_argument("--rs", type=int, default=256 * 3, dest="region_size", help="region size")
-    parser.add_argument("--gs", type=int, default=(3, 3), nargs="+", dest="grid_shape", help="image grid shape (3x3)")
+    parser.add_argument("--gs", type=int, default=3, dest="grid_shape", help="image grid shape e.g 3 means 3x3")
     parser.add_argument("--ps", type=int, default=224, dest="patch_size", help="patch size")
     parser.add_argument("--bs", type=int, default=64, dest="batch_size", help="batch size")
     parser.add_argument("--ep", type=int, default=10, dest="n_epochs", help="number of epochs")

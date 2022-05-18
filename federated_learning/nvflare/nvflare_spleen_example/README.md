@@ -6,7 +6,7 @@ This repository contains an end-to-end Federated training example based on MONAI
 
 
 
-This example requires Python 3.8.10
+This example requires Python 3.8. It may work with Python 3.7 but currently is not compatible with Python 3.9 and above.
 
 Inside this directory:
 - All Jupiter notebooks are used to build an FL experiment step-by-step.

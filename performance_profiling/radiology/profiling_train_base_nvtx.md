@@ -53,7 +53,7 @@ Upon further analysis of convergence, it appears that the convergence is relativ
 - Per-epoch time reduction: by utilizing pre-indexing and thread-based dataloader for more efficient data loading;
 - Faster convergence: by utilizing different optimizers and loss functions.
 
-One optimized solution can be found [here](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_training_tutorial.ipynb). Based on the validation accuracy curves, we can observe that the optimized solution (orange curve) has much faster convergence. The GPU utilization rate is above 90% on average.
+One optimized solution can be found [here](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/fast_training_tutorial.ipynb). Based on the validation accuracy curves, we can observe that the optimized solution (orange curve) has much faster convergence. The GPU utilization rate is above 90% on average.
 
 ![png](Figure/tensorboard.png)
 
@@ -80,4 +80,4 @@ As shown in the figure, the optimized solution:
 
 Therefore, the computing efficiency and the overall training process are thus be improved by a large margin.
 
-Moreover, another profiling example for pathological image analysis can be found in the following [link](https://github.com/Project-MONAI/tutorials/blob/master/performance_profiling/pathology/profiling_train_base_nvtx.md).
+Moreover, another profiling example for pathological image analysis can be found in the following [link](https://github.com/Project-MONAI/tutorials/blob/main/performance_profiling/pathology/profiling_train_base_nvtx.md).

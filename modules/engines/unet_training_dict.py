@@ -21,16 +21,19 @@ import torch
 from ignite.metrics import Accuracy
 
 import monai
+from monai.apps import get_logger
 from monai.data import create_test_image_3d
 from monai.engines import SupervisedEvaluator, SupervisedTrainer
 from monai.handlers import (
     CheckpointSaver,
+    EarlyStopHandler,
     LrScheduleHandler,
     MeanDice,
     StatsHandler,
     TensorBoardImageHandler,
     TensorBoardStatsHandler,
     ValidationHandler,
+    from_engine,
 )
 from monai.inferers import SimpleInferer, SlidingWindowInferer
 from monai.transforms import (
@@ -43,13 +46,15 @@ from monai.transforms import (
     RandCropByPosNegLabeld,
     RandRotate90d,
     ScaleIntensityd,
-    ToTensord,
+    EnsureTyped,
 )
 
 
 def main(tempdir):
     monai.config.print_config()
+    # set root log level to INFO and init a train logger, will be used in `StatsHandler`
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    get_logger("train_log")
 
     # create a temporary directory and 40 random image, mask pairs
     print(f"generating synthetic data to {tempdir} (this may take a while)")
@@ -75,7 +80,7 @@ def main(tempdir):
                 keys=["image", "label"], label_key="label", spatial_size=[96, 96, 96], pos=1, neg=1, num_samples=4
             ),
             RandRotate90d(keys=["image", "label"], prob=0.5, spatial_axes=[0, 2]),
-            ToTensord(keys=["image", "label"]),
+            EnsureTyped(keys=["image", "label"]),
         ]
     )
     val_transforms = Compose(
@@ -83,7 +88,7 @@ def main(tempdir):
             LoadImaged(keys=["image", "label"]),
             AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
             ScaleIntensityd(keys="image"),
-            ToTensord(keys=["image", "label"]),
+            EnsureTyped(keys=["image", "label"]),
         ]
     )
 
@@ -98,7 +103,7 @@ def main(tempdir):
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     net = monai.networks.nets.UNet(
-        dimensions=3,
+        spatial_dims=3,
         in_channels=1,
         out_channels=1,
         channels=(16, 32, 64, 128, 256),
@@ -111,18 +116,22 @@ def main(tempdir):
 
     val_post_transforms = Compose(
         [
+            EnsureTyped(keys="pred"),
             Activationsd(keys="pred", sigmoid=True),
-            AsDiscreted(keys="pred", threshold_values=True),
+            AsDiscreted(keys="pred", threshold=0.5),
             KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
         ]
     )
     val_handlers = [
-        StatsHandler(output_transform=lambda x: None),
+        # apply “EarlyStop” logic based on the validation metrics
+        EarlyStopHandler(trainer=None, patience=2, score_function=lambda x: x.state.metrics["val_mean_dice"]),
+        # use the logger "train_log" defined at the beginning of this program
+        StatsHandler(name="train_log", output_transform=lambda x: None),
         TensorBoardStatsHandler(log_dir="./runs/", output_transform=lambda x: None),
         TensorBoardImageHandler(
             log_dir="./runs/",
-            batch_transform=lambda x: (x["image"], x["label"]),
-            output_transform=lambda x: x["pred"],
+            batch_transform=from_engine(["image", "label"]),
+            output_transform=from_engine(["pred"]),
         ),
         CheckpointSaver(save_dir="./runs/", save_dict={"net": net}, save_key_metric=True),
     ]
@@ -132,11 +141,11 @@ def main(tempdir):
         val_data_loader=val_loader,
         network=net,
         inferer=SlidingWindowInferer(roi_size=(96, 96, 96), sw_batch_size=4, overlap=0.5),
-        post_transform=val_post_transforms,
+        postprocessing=val_post_transforms,
         key_val_metric={
-            "val_mean_dice": MeanDice(include_background=True, output_transform=lambda x: (x["pred"], x["label"]))
+            "val_mean_dice": MeanDice(include_background=True, output_transform=from_engine(["pred", "label"]))
         },
-        additional_metrics={"val_acc": Accuracy(output_transform=lambda x: (x["pred"], x["label"]))},
+        additional_metrics={"val_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},
         val_handlers=val_handlers,
         # if no FP16 support in GPU or PyTorch version < 1.6, will not enable AMP evaluation
         amp=True if monai.utils.get_torch_version_tuple() >= (1, 6) else False,
@@ -145,15 +154,19 @@ def main(tempdir):
     train_post_transforms = Compose(
         [
             Activationsd(keys="pred", sigmoid=True),
-            AsDiscreted(keys="pred", threshold_values=True),
+            AsDiscreted(keys="pred", threshold=0.5),
             KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
         ]
     )
+
     train_handlers = [
+        # apply “EarlyStop” logic based on the loss value, use “-” negative value because smaller loss is better
+        EarlyStopHandler(trainer=None, patience=20, score_function=lambda x: -x.state.output[0]["loss"], epoch_level=False),
         LrScheduleHandler(lr_scheduler=lr_scheduler, print_lr=True),
         ValidationHandler(validator=evaluator, interval=2, epoch_level=True),
-        StatsHandler(tag_name="train_loss", output_transform=lambda x: x["loss"]),
-        TensorBoardStatsHandler(log_dir="./runs/", tag_name="train_loss", output_transform=lambda x: x["loss"]),
+        # use the logger "train_log" defined at the beginning of this program
+        StatsHandler(name="train_log", tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
+        TensorBoardStatsHandler(log_dir="./runs/", tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
         CheckpointSaver(save_dir="./runs/", save_dict={"net": net, "opt": opt}, save_interval=2, epoch_level=True),
     ]
 
@@ -165,12 +178,15 @@ def main(tempdir):
         optimizer=opt,
         loss_function=loss,
         inferer=SimpleInferer(),
-        post_transform=train_post_transforms,
-        key_train_metric={"train_acc": Accuracy(output_transform=lambda x: (x["pred"], x["label"]))},
+        postprocessing=train_post_transforms,
+        key_train_metric={"train_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},
         train_handlers=train_handlers,
         # if no FP16 support in GPU or PyTorch version < 1.6, will not enable AMP training
         amp=True if monai.utils.get_torch_version_tuple() >= (1, 6) else False,
     )
+    # set initialized trainer for "early stop" handlers
+    val_handlers[0].set_trainer(trainer=trainer)
+    train_handlers[0].set_trainer(trainer=trainer)
     trainer.run()
 
 

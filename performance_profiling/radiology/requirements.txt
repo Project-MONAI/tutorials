@@ -1,0 +1,6 @@
+git+https://github.com/Project-MONAI/MONAI
+pytorch-ignite
+nibabel
+tqdm
+nvtx
+tensorboard

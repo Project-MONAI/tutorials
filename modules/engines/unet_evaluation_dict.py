@@ -21,9 +21,10 @@ import torch
 from ignite.metrics import Accuracy
 
 import monai
+from monai.apps import get_logger
 from monai.data import create_test_image_3d
 from monai.engines import SupervisedEvaluator
-from monai.handlers import CheckpointLoader, MeanDice, SegmentationSaver, StatsHandler
+from monai.handlers import CheckpointLoader, MeanDice, StatsHandler, from_engine
 from monai.inferers import SlidingWindowInferer
 from monai.transforms import (
     Activationsd,
@@ -32,14 +33,17 @@ from monai.transforms import (
     Compose,
     KeepLargestConnectedComponentd,
     LoadImaged,
+    SaveImaged,
     ScaleIntensityd,
-    ToTensord,
+    EnsureTyped,
 )
 
 
 def main(tempdir):
     monai.config.print_config()
+    # set root log level to INFO and init a evaluation logger, will be used in `StatsHandler`
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    get_logger("eval_log")
 
     # create a temporary directory and 40 random image, mask pairs
     print(f"generating synthetic data to {tempdir} (this may take a while)")
@@ -63,7 +67,7 @@ def main(tempdir):
             LoadImaged(keys=["image", "label"]),
             AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
             ScaleIntensityd(keys="image"),
-            ToTensord(keys=["image", "label"]),
+            EnsureTyped(keys=["image", "label"]),
         ]
     )
 
@@ -74,7 +78,7 @@ def main(tempdir):
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     net = monai.networks.nets.UNet(
-        dimensions=3,
+        spatial_dims=3,
         in_channels=1,
         out_channels=1,
         channels=(16, 32, 64, 128, 256),
@@ -84,19 +88,17 @@ def main(tempdir):
 
     val_post_transforms = Compose(
         [
+            EnsureTyped(keys="pred"),
             Activationsd(keys="pred", sigmoid=True),
-            AsDiscreted(keys="pred", threshold_values=True),
+            AsDiscreted(keys="pred", threshold=0.5),
             KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
+            SaveImaged(keys="pred", meta_keys="image_meta_dict", output_dir="./runs/")
         ]
     )
     val_handlers = [
-        StatsHandler(output_transform=lambda x: None),
+        # use the logger "eval_log" defined at the beginning of this program
+        StatsHandler(name="eval_log", output_transform=lambda x: None),
         CheckpointLoader(load_path=model_file, load_dict={"net": net}),
-        SegmentationSaver(
-            output_dir="./runs/",
-            batch_transform=lambda batch: batch["image_meta_dict"],
-            output_transform=lambda output: output["pred"],
-        ),
     ]
 
     evaluator = SupervisedEvaluator(
@@ -104,11 +106,11 @@ def main(tempdir):
         val_data_loader=val_loader,
         network=net,
         inferer=SlidingWindowInferer(roi_size=(96, 96, 96), sw_batch_size=4, overlap=0.5),
-        post_transform=val_post_transforms,
+        postprocessing=val_post_transforms,
         key_val_metric={
-            "val_mean_dice": MeanDice(include_background=True, output_transform=lambda x: (x["pred"], x["label"]))
+            "val_mean_dice": MeanDice(include_background=True, output_transform=from_engine(["pred", "label"]))
         },
-        additional_metrics={"val_acc": Accuracy(output_transform=lambda x: (x["pred"], x["label"]))},
+        additional_metrics={"val_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},
         val_handlers=val_handlers,
         # if no FP16 support in GPU or PyTorch version < 1.6, will not enable AMP evaluation
         amp=True if monai.utils.get_torch_version_tuple() >= (1, 6) else False,

@@ -1,0 +1,8 @@
+git+https://github.com/Project-MONAI/MONAI
+tqdm
+torchvision
+cucim==21.8.2
+cupy-cuda114
+pytorch-ignite
+nvtx
+tensorboard

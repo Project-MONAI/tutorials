@@ -21,12 +21,12 @@ import torch
 from torch.utils.data import DataLoader
 
 import monai
-from monai.data import NiftiSaver, create_test_image_3d, list_data_collate
+from monai.data import create_test_image_3d, list_data_collate, decollate_batch
 from monai.engines import get_devices_spec
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.networks.nets import UNet
-from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadImaged, ScaleIntensityd, ToTensord
+from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadImaged, SaveImage, ScaleIntensityd, EnsureTyped, EnsureType
 
 
 def main(tempdir):
@@ -53,18 +53,20 @@ def main(tempdir):
             LoadImaged(keys=["img", "seg"]),
             AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
             ScaleIntensityd(keys="img"),
-            ToTensord(keys=["img", "seg"]),
+            EnsureTyped(keys=["img", "seg"]),
         ]
     )
     val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
     # sliding window inference need to input 1 image in every iteration
     val_loader = DataLoader(val_ds, batch_size=1, num_workers=4, collate_fn=list_data_collate)
-    dice_metric = DiceMetric(include_background=True, reduction="mean")
-    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold_values=True)])
+    dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
+    post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
+    saver = SaveImage(output_dir="./output", output_ext=".nii.gz", output_postfix="seg")
     # try to use all the available GPUs
-    devices = get_devices_spec(None)
+    devices = [torch.device("cuda" if torch.cuda.is_available() else "cpu")]
+    #devices = get_devices_spec(None)
     model = UNet(
-        dimensions=3,
+        spatial_dims=3,
         in_channels=1,
         out_channels=1,
         channels=(16, 32, 64, 128, 256),
@@ -80,22 +82,23 @@ def main(tempdir):
 
     model.eval()
     with torch.no_grad():
-        metric_sum = 0.0
-        metric_count = 0
-        saver = NiftiSaver(output_dir="./output")
         for val_data in val_loader:
             val_images, val_labels = val_data["img"].to(devices[0]), val_data["seg"].to(devices[0])
             # define sliding window size and batch size for windows inference
             roi_size = (96, 96, 96)
             sw_batch_size = 4
             val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
-            val_outputs = post_trans(val_outputs)
-            value, _ = dice_metric(y_pred=val_outputs, y=val_labels)
-            metric_count += len(value)
-            metric_sum += value.item() * len(value)
-            saver.save_batch(val_outputs, val_data["img_meta_dict"])
-        metric = metric_sum / metric_count
-        print("evaluation metric:", metric)
+            val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+            val_labels = decollate_batch(val_labels)
+            meta_data = decollate_batch(val_data["img_meta_dict"])
+            # compute metric for current iteration
+            dice_metric(y_pred=val_outputs, y=val_labels)
+            for val_output, data in zip(val_outputs, meta_data):
+                saver(val_output, data)
+        # aggregate the final mean dice result
+        print("evaluation metric:", dice_metric.aggregate().item())
+        # reset the status
+        dice_metric.reset()
 
 
 if __name__ == "__main__":

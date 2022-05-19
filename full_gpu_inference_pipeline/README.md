@@ -23,7 +23,7 @@ In this repository, I will try following features:
 
 Before starting, I highly recommand you to read the the following two links to get familiar with the basic features of Triton python backend and MONAI:
 - https://github.com/triton-inference-server/python_backend
-- https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_model_training_guide.md
+- https://github.com/Project-MONAI/tutorials/blob/main/acceleration/fast_model_training_guide.md
 
 ## Prepare the model repository
 The full pipeline is as below:

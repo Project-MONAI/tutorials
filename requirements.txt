@@ -3,6 +3,4 @@ papermill
 autopep8
 jupytext
 autoflake
-ipykernel
-scikit-learn
 tensorboard>=2.4.0

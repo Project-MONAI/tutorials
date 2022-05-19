@@ -4,7 +4,7 @@ on:
   # quick tests for every pull request
   push:
     branches:
-      - master
+      - main
   pull_request:
 
 jobs:
@@ -31,13 +31,12 @@ jobs:
         python -m pip install --upgrade pip wheel
         python -m pip install -r requirements.txt
         BUILD_MONAI=1 python -m pip install git+https://github.com/Project-MONAI/MONAI#egg=MONAI
-        python -m pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/master/requirements.txt
-        python -m pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/master/requirements-dev.txt
+        python -m pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/main/requirements.txt
+        python -m pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/main/requirements-dev.txt
     - name: PEP8 check and execute
       run: |
-        # python -c "import torch; print(torch.cuda.is_available())"
-        git fetch origin master:master
-        git diff --name-only master | \
+        git fetch origin main:main
+        git diff --name-only main | \
           while read line; do
             [[ $line == *.ipynb ]] && ./runner.sh --file "$line"
           done

@@ -148,3 +148,5 @@ deepgrow/ignite/_image.nii.gz
 *.zip
 deployment/bentoml/mednist_classifier_bentoml.py
 deployment/ray/mednist_classifier_start.py
+*.nii.gz
+3d_segmentation/out

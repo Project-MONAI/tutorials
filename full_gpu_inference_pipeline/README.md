@@ -23,12 +23,12 @@ In this repository, I will try following features:
 
 Before starting, I highly recommand you to read the the following two links to get familiar with the basic features of Triton python backend and MONAI:
 - https://github.com/triton-inference-server/python_backend
-- https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_model_training_guide.md
+- https://github.com/Project-MONAI/tutorials/blob/main/acceleration/fast_model_training_guide.md
 
 ## Prepare the model repository
 The full pipeline is as below:
 
-<img src="https://github.com/Project-MONAI/tutorials/raw/master/full_gpu_inference_pipeline/pics/Picture3.png">
+<img src="https://github.com/Project-MONAI/tutorials/raw/main/full_gpu_inference_pipeline/pics/Picture3.png">
 
 ### Prepare the model repository file directories
 The Triton model repository of the experiment can be fast set up by: 
@@ -176,9 +176,9 @@ Since 3D medical images are generally big, the overhead brought by protocols can
 Note that all the processes (pre/post and AI inference) are on GPU.
 From the result, we can come to a conclusion that using shared memory will greatly reduce the latency when data transfer is huge.
 
-![](https://github.com/Project-MONAI/tutorials/raw/master/full_gpu_inference_pipeline/pics/Picture2.png)
+![](https://github.com/Project-MONAI/tutorials/raw/main/full_gpu_inference_pipeline/pics/Picture2.png)
 
 ### Pre/Post-processing on GPU vs. CPU 
 After doing pre and post-processing on GPU, we can get a 12x speedup for the full pipeline.
 
-![](https://github.com/Project-MONAI/tutorials/raw/master/full_gpu_inference_pipeline/pics/Picture1.png)
+![](https://github.com/Project-MONAI/tutorials/raw/main/full_gpu_inference_pipeline/pics/Picture1.png)

@@ -27,6 +27,7 @@ from monai.transforms import (
     Compose,
     LoadImaged,
     RandFlipd,
+    RandGridPatchd,
     GridPatchd,
     RandRotate90d,
     ScaleIntensityRanged,

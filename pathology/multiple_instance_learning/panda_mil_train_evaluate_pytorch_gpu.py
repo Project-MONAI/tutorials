@@ -280,12 +280,10 @@ def main_worker(gpu, args):
         [
             LoadImaged(keys=["image"], reader=WSIReader, backend="cucim", dtype=np.uint8, level=1, image_only=True),
             LabelEncodeIntegerGraded(keys=["label"], num_classes=args.num_classes),
-            GridPatchd(
+            RandGridPatchd(
                 keys=["image"],
                 patch_size=args.tile_size,
-                start_pos="random",
                 max_num_patches=args.tile_count,
-                overlap=0.0,
                 pad_opts={"constant_values": 255},
             ),
             RandFlipd(keys=["image"], spatial_axis=0, prob=0.5),
@@ -300,13 +298,11 @@ def main_worker(gpu, args):
         [
             LoadImaged(keys=["image"], reader=WSIReader, backend="cucim", dtype=np.uint8, level=1, image_only=True),
             LabelEncodeIntegerGraded(keys=["label"], num_classes=args.num_classes),
-            TileOnGridd(
+            GridPatchd(
                 keys=["image"],
-                tile_count=None,
-                tile_size=args.tile_size,
-                random_offset=False,
-                background_val=255,
-                return_list_of_dicts=True,
+                patch_size=args.tile_size,
+                max_num_patches=args.tile_count,
+                pad_opts={"constant_values": 255},
             ),
             ScaleIntensityRanged(keys=["image"], a_min=np.float32(255), a_max=np.float32(0)),
             ToTensord(keys=["image", "label"]),

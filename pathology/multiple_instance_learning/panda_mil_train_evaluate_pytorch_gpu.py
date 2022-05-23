@@ -283,7 +283,7 @@ def main_worker(gpu, args):
             LabelEncodeIntegerGraded(keys=["label"], num_classes=args.num_classes),
             RandGridPatchd(
                 keys=["image"],
-                patch_size=args.tile_size,
+                patch_size=(args.tile_size, args.tile_size),
                 max_num_patches=args.tile_count,
                 sort_key="min",
                 pad_opts={"constant_values": 255},
@@ -302,7 +302,7 @@ def main_worker(gpu, args):
             LabelEncodeIntegerGraded(keys=["label"], num_classes=args.num_classes),
             GridPatchd(
                 keys=["image"],
-                patch_size=args.tile_size,
+                patch_size=(args.tile_size, args.tile_size),
                 sort_key="min",
                 pad_opts={"constant_values": 255},
             ),

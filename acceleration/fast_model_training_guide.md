@@ -305,14 +305,13 @@ With all the above strategies, in this section, we introduce how to apply them t
 ### 1. Spleen segmentation
 
 - Select the algorithms based on the experiments.
-  1. As a binary segmentation task, we replaced the baseline `Dice` loss with a `DiceCE` loss, it can help improve the convergence. To achieve the target metric (mean Dice = 0.95) it reduces the number of training epochs from 200 to 50.
-  2. We tried several numerical optimizers, and finally replaced the baseline `Adam` optimizer with `Novograd`, which consistently reduce the number of training epochs from 50 to 30.
+  As a binary segmentation task, we replaced the baseline `Dice` loss with a `DiceCE` loss, it can help improve the convergence. And we tried to analyze the training curve and tuned different parameters of the network and tested several numerical optimizers, finally replaced the baseline `Adam` optimizer with `SGD`. To achieve the target metric (`mean Dice = 0.94` of the `foreground` channel only) it reduces the number of training epochs from 280 to 60.
 - Optimize GPU utilization.
   1. With `AMP`, the training speed is significantly improved and can achieve almost the same validation metric as without `AMP`.
   2. The deterministic transform results of all the spleen dataset is around 8 GB, which can be cached in a V100 GPU memory. So, we cached all the data in GPU memory and executed the following transforms in GPU directly.
 - Replace `DataLoader` with `ThreadDataLoader`. As all the data are cached in GPU, the computation of randomized transforms is on GPU and light-weighted, `ThreadDataLoader` help avoid the IPC cost of multi-processing in `DataLoader` and increase the GPU utilization.
 
-In summary, with a V100 GPU, we can achieve the training converges at a target validation mean Dice of `0.95` within one minute (`52s` on a V100 GPU, `41s` on an A100 GPU), it is approximately `200x` faster compared with the native PyTorch implementation when achieving the target metric. And each epoch is `20x` faster than the regular training.
+In summary, with a V100 GPU and the target validation `mean dice = 0.94` of the `forground` channel only,  it's more than `100x` speedup compared with the Pytorch regular implementation when achieving the same metric (validation accuracies). And every epoch is `20x` faster than regular training.
 ![spleen fast training](../figures/fast_training.png)
 
 More details are available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/fast_training_tutorial.ipynb).

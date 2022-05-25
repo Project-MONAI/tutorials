@@ -39,6 +39,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" transform_visualiza
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 2d_inference_3d_volume.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" resample_benchmark.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" infoANDinference.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" dice_loss_metric_notes.ipynb)
 
 # output formatting
 separator=""

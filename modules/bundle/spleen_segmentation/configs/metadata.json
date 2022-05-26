@@ -54,8 +54,7 @@
         "outputs": {
             "pred": {
                 "type": "image",
-                "format": "hounsfield",
-                "modality": "CT",
+                "format": "segmentation",
                 "num_channels": 2,
                 "spatial_shape": [
                     96,

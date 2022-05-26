@@ -131,7 +131,7 @@ def train(cfg):
         cfg["valid_file"],
         col_groups={"image": 0, "location": [2, 1], "label": list(range(3, 12))},
         kwargs_read_csv={"header": None},
-        transform=Lambdad("image", lambda x: os.path.join(cfg["root"], "validation/images", x + ".tif")),
+        transform=Lambdad("image", lambda x: os.path.join(cfg["root"], "training/images", x + ".tif")),
     )
     valid_dataset = PatchWSIDataset(
         data=valid_data_list,

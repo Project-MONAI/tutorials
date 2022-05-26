@@ -42,7 +42,7 @@ class DynUNetEvaluator(SupervisedEvaluator):
             checkpoint into files.
         additional_metrics: more Ignite metrics that also attach to Ignite Engine.
         val_handlers: every handler is a set of Ignite Event-Handlers, must have `attach` function, like:
-            CheckpointHandler, StatsHandler, SegmentationSaver, etc.
+            CheckpointHandler, StatsHandler, etc.
         amp: whether to enable auto-mixed-precision evaluation, default is False.
         tta_val: whether to do the 8 flips (8 = 2 ** 3, where 3 represents the three dimensions)
             test time augmentation, default is False.

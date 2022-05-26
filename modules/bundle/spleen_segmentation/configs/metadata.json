@@ -33,7 +33,7 @@
             "image": {
                 "type": "image",
                 "format": "hounsfield",
-                "modility": "CT",
+                "modality": "CT",
                 "num_channels": 1,
                 "spatial_shape": [
                     96,

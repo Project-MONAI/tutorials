@@ -33,8 +33,6 @@ from monai.transforms import (
     ScaleIntensityRanged,
     ToTensord,
 )
-from monai.transforms.spatial.array import GridPatch
-from monai.transforms.spatial.dictionary import GridPatchd
 from monai.networks.nets import milmodel
 
 
@@ -209,7 +207,7 @@ class LabelEncodeIntegerGraded(Transform):
 
     """
 
-    def __init__(self, num_classes, keys=["label"]):
+    def __init__(self, num_classes, keys=("label",)):
         super().__init__()
         self.keys = keys
         self.num_classes = num_classes
@@ -238,7 +236,6 @@ def list_data_collate(batch: collections.abc.Sequence):
     for i, item in enumerate(batch):
         data = item[0]
         data["image"] = torch.stack([ix["image"] for ix in item], dim=0)
-        data["patch"]['location'] = [ix["patch"]['location'] for ix in item]
         batch[i] = data
     return default_collate(batch)
 
@@ -285,7 +282,7 @@ def main_worker(gpu, args):
             RandGridPatchd(
                 keys=["image"],
                 patch_size=(args.tile_size, args.tile_size),
-                max_num_patches=args.tile_count,
+                num_patches=args.tile_count,
                 sort_key="min",
                 pad_opts={"constant_values": 255},
             ),

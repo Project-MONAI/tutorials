@@ -282,7 +282,7 @@ def main_worker(gpu, args):
             RandGridPatchd(
                 keys=["image"],
                 patch_size=(args.tile_size, args.tile_size),
-                num_patches=args.tile_count,
+                fix_num_patches=args.tile_count,
                 sort_key="min",
                 pad_opts={"constant_values": 255},
             ),

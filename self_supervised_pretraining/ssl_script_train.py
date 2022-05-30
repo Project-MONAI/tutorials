@@ -208,7 +208,7 @@ def main():
                 total_val_loss += val_loss.item()
                 end_time = time.time()
 
-            total_val_loss /= step
+            total_val_loss /= val_step
             val_loss_values.append(total_val_loss)
             print(f"epoch {epoch + 1} Validation average loss: {total_val_loss:.4f}, " f"time taken: {end_time-start_time}s")
 

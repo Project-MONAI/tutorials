@@ -88,6 +88,8 @@ Training, evaluation and inference examples of 3D segmentation based on UNet3D a
 The examples are standard PyTorch programs and have both dictionary-based and array-based versions.
 #### [brats_segmentation_3d](./3d_segmentation/brats_segmentation_3d.ipynb)
 This tutorial shows how to construct a training workflow of multi-labels segmentation task based on [MSD Brain Tumor dataset](http://medicaldecathlon.com).
+#### [spleen_segmentation_3d_aim](./3d_segmentation/spleen_segmentation_3d_visualization_basic.ipynb)
+This notebook shows how MONAI may be used in conjunction with the [`aimhubio/aim`](https://github.com/aimhubio/aim).
 #### [spleen_segmentation_3d_lightning](./3d_segmentation/spleen_segmentation_3d_lightning.ipynb)
 This notebook shows how MONAI may be used in conjunction with the [PyTorch Lightning](https://github.com/PyTorchLightning/pytorch-lightning) framework.
 #### [spleen_segmentation_3d](./3d_segmentation/spleen_segmentation_3d.ipynb)
@@ -128,6 +130,12 @@ This tutorial demonstrates the use of MONAI for training of registration and seg
 #### [Deepgrow](./deepgrow)
 The example show how to train/validate a 2D/3D deepgrow model.  It also demonstrates running an inference for trained deepgrow models.
 
+**DeepEdit**
+#### [DeepEdit](./deepedit/ignite)
+This example shows how to train/test a DeepEdit model. In this tutorial there is a Notebook that shows how to run
+inference on a pretrained DeepEdit model.
+
+
 **deployment**
 #### [BentoML](./deployment/bentoml)
 This is a simple example of training and deploying a MONAI network with [BentoML](https://www.bentoml.ai/) as a web server, either locally using the BentoML respository or as a containerized service.
@@ -137,6 +145,9 @@ This uses the previous notebook's trained network to demonstrate deployment a we
 **federated learning**
 #### [NVFlare](./federated_learning/nvflare)
 The examples show how to train federated learning models with [NVFlare](https://pypi.org/project/nvflare/) and MONAI-based trainers.
+
+#### [OpenFL](./federated_learning/openfl)
+The examples show how to train federated learning models based on [OpenFL](https://github.com/intel/openfl) and MONAI.
 
 #### [Substra](./federated_learning/substra)
 The example show how to execute the 3d segmentation torch tutorial on a federated learning platform, Substra.
@@ -164,7 +175,7 @@ And compares the training speed and memory usage with/without AMP.
 This notebook compares the performance of `Dataset`, `CacheDataset` and `PersistentDataset`. These classes differ in how data is stored (in memory or on disk), and at which moment transforms are applied.
 #### [fast_training_tutorial](./acceleration/fast_training_tutorial.ipynb)
 This tutorial compares the training performance of pure PyTorch program and optimized program in MONAI based on NVIDIA GPU device and latest CUDA library.
-The optimization methods mainly include: `AMP`, `CacheDataset` and `Novograd`.
+The optimization methods mainly include: `AMP`, `CacheDataset`, `GPU transforms`, `ThreadDataLoader`, `DiceCELoss` and `SGD`.
 #### [multi_gpu_test](./acceleration/multi_gpu_test.ipynb)
 This notebook is a quick demo for devices, run the Ignite trainer engine on CPU, GPU and multiple GPUs.
 #### [threadbuffer_performance](./acceleration/threadbuffer_performance.ipynb)
@@ -173,17 +184,16 @@ Demonstrates the use of the `ThreadBuffer` class used to generate data batches d
 Illustrate reading NIfTI files and test speed of different transforms on different devices.
 
 **modules**
+#### [bundle](./modules/bundle)
+Get started tutorial and concrete training / inference examples for MONAI bundle features.
 #### [engines](./modules/engines)
 Training and evaluation examples of 3D segmentation based on UNet3D and synthetic dataset with MONAI workflows, which contains engines, event-handlers, and post-transforms. And GAN training and evaluation example for a medical image generative adversarial network. Easy run training script uses `GanTrainer` to train a 2D CT scan reconstruction network. Evaluation script generates random samples from a trained network.
 
 The examples are built with MONAI workflows, mainly contain: trainer/evaluator, handlers, post_transforms, etc.
 #### [3d_image_transforms](./modules/3d_image_transforms.ipynb)
 This notebook demonstrates the transformations on volumetric images.
-
 #### [2d_inference_3d_volume](./modules/2d_inference_3d_volume.ipynb)
 Tutorial that demonstrates how monai `SlidingWindowInferer` can be used when a 3D volume input needs to be provided slice-by-slice to a 2D model and finally, aggregated into a 3D volume.
-
-
 #### [autoencoder_mednist](./modules/autoencoder_mednist.ipynb)
 This tutorial uses the MedNIST hand CT scan dataset to demonstrate MONAI's autoencoder class. The autoencoder is used with an identity encode/decode (i.e., what you put in is what you should get back), as well as demonstrating its usage for de-blurring and de-noising.
 #### [batch_output_transform](./modules/batch_output_transform.py)

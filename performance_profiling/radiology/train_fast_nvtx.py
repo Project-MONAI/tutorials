@@ -22,7 +22,6 @@ from torch.optim import Adam
 from torch.utils.tensorboard import SummaryWriter
 torch.backends.cudnn.benchmark = True
 
-import nvidia_dlprof_pytorch_nvtx
 import nvtx
 
 from monai.apps import download_and_extract
@@ -51,7 +50,6 @@ from monai.transforms import (
 from monai.utils import set_determinism
 from monai.utils.nvtx import Range
 
-nvidia_dlprof_pytorch_nvtx.init()
 
 # set directories
 random.seed(0)
@@ -82,6 +80,7 @@ train_transforms = Compose(
     [
         Range("LoadImage")(LoadImaged(keys=["image", "label"])),
         Range()(EnsureChannelFirstd(keys=["image", "label"])),
+        Range()(Orientationd(keys=["image", "label"], axcodes="RAS")),
         Range("Spacing")(
             Spacingd(
                 keys=["image", "label"],
@@ -89,7 +88,6 @@ train_transforms = Compose(
                 mode=("bilinear", "nearest"),
             )
         ),
-        Range()(Orientationd(keys=["image", "label"], axcodes="RAS")),
         Range()(
             ScaleIntensityRanged(
                 keys=["image"],
@@ -132,12 +130,12 @@ val_transforms = Compose(
     [
         LoadImaged(keys=["image", "label"]),
         EnsureChannelFirstd(keys=["image", "label"]),
+        Orientationd(keys=["image", "label"], axcodes="RAS"),
         Spacingd(
             keys=["image", "label"],
             pixdim=(1.5, 1.5, 2.0),
             mode=("bilinear", "nearest"),
         ),
-        Orientationd(keys=["image", "label"], axcodes="RAS"),
         ScaleIntensityRanged(
             keys=["image"],
             a_min=-57,

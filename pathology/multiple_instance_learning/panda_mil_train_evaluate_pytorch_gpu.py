@@ -282,9 +282,9 @@ def main_worker(gpu, args):
             RandGridPatchd(
                 keys=["image"],
                 patch_size=(args.tile_size, args.tile_size),
-                fix_num_patches=args.tile_count,
-                sort_key="min",
-                pad_opts={"constant_values": 255},
+                num_patches=args.tile_count,
+                sort_fn="min",
+                constant_values=255,
             ),
             RandFlipd(keys=["image"], spatial_axis=0, prob=0.5),
             RandFlipd(keys=["image"], spatial_axis=1, prob=0.5),
@@ -301,8 +301,8 @@ def main_worker(gpu, args):
             GridPatchd(
                 keys=["image"],
                 patch_size=(args.tile_size, args.tile_size),
-                sort_key="min",
-                pad_opts={"constant_values": 255},
+                sort_fn="min",
+                constant_values=255,
             ),
             ScaleIntensityRanged(keys=["image"], a_min=np.float32(255), a_max=np.float32(0)),
             ToTensord(keys=["image", "label"]),

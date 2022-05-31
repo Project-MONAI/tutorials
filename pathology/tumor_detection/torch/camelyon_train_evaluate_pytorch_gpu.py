@@ -324,7 +324,7 @@ def main(cfg):
         cfg["valid_file"],
         col_groups={"image": 0, "location": [2, 1], "label": list(range(3, 12))},
         kwargs_read_csv={"header": None},
-        transform=Lambdad("image", lambda x: os.path.join(cfg["root"], "validation/images", x + ".tif")),
+        transform=Lambdad("image", lambda x: os.path.join(cfg["root"], "training/images", x + ".tif")),
     )
     valid_dataset = PatchWSIDataset(
         data=valid_data_list,
@@ -393,10 +393,10 @@ def main(cfg):
 
     total_valid_time, total_train_time = 0.0, 0.0
     t_start = time.perf_counter()
-    if cfg["validate"]:
-        metric_summary = {"loss": np.Inf, "accuracy": 0, "best_epoch": 1}
-    else:
+    if cfg["no_validate"]:
         metric_summary = {}
+    else:
+        metric_summary = {"loss": np.Inf, "accuracy": 0, "best_epoch": 1}
     # Training/Validation Loop
     for _ in range(cfg["n_epochs"]):
         t_epoch = time.perf_counter()
@@ -426,7 +426,9 @@ def main(cfg):
         total_train_time += train_time
 
         # Validation
-        if cfg["validate"]:
+        if cfg["no_validate"]:
+            logging.info(f"[Epoch: {train_counter['epoch']}/{cfg['n_epochs']}] Train time: {train_time:.1f}s")
+        else:
             valid_loss, valid_acc = validation(
                 model,
                 loss_func,
@@ -451,8 +453,6 @@ def main(cfg):
                 f"[Epoch: {train_counter['epoch']}/{cfg['n_epochs']}] loss: {valid_loss:.3f}, accuracy: {valid_acc:.3f}, "
                 f"time: {t_valid - t_epoch:.1f}s (train: {train_time:.1f}s, valid: {valid_time:.1f}s)"
             )
-        else:
-            logging.info(f"[Epoch: {train_counter['epoch']}/{cfg['n_epochs']}] Train time: {train_time:.1f}s")
         writer.flush()
     t_end = time.perf_counter()
 
@@ -464,7 +464,7 @@ def main(cfg):
     logging.info(f"Metric Summary: {metric_summary}")
 
     # Save the best and final model
-    if cfg["validate"] is True:
+    if not cfg["no_validate"]:
         copyfile(
             os.path.join(log_dir, f"model_epoch_{metric_summary['best_epoch']}.pt"),
             os.path.join(log_dir, "model_best.pt"),
@@ -507,7 +507,7 @@ def parse_arguments():
     parser.add_argument("--benchmark", action="store_true", help="activate Imagenet weights")
 
     parser.add_argument("--save", action="store_true", help="save model at each epoch")
-    parser.add_argument("--validate", action="store_true", help="use optimized parameters")
+    parser.add_argument("--no-validate", action="store_true", help="use optimized parameters")
     parser.add_argument("--baseline", action="store_true", help="use baseline parameters")
     parser.add_argument("--optimized", action="store_true", help="use optimized parameters")
     parser.add_argument("-b", "--backend", type=str, dest="backend", help="backend for transforms")

@@ -1,5 +1,6 @@
-# use python base image
-FROM python:3.8.10
+# We use projectmonai/monai:0.8.1 as base image. Do not modify!
+# Please install any additional dependencies on top of it.
+FROM projectmonai/monai:0.8.1
 ENV DEBIAN_FRONTEND noninteractive
 
 # specify the server FQDN as commandline argument

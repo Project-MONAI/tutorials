@@ -308,7 +308,7 @@ def main(cfg):
     # Create MONAI dataset
     train_data_list = CSVDataset(
         cfg["train_file"],
-        col_groups={"image": 0, "location": [2, 1], "label": list(range(3, 12))},
+        col_groups={"image": 0, "location": [1, 2], "label": list(range(3, 12))},
         kwargs_read_csv={"header": None},
         transform=Lambdad("image", lambda x: os.path.join(cfg["root"], "training/images", x + ".tif")),
     )
@@ -322,7 +322,7 @@ def main(cfg):
 
     valid_data_list = CSVDataset(
         cfg["valid_file"],
-        col_groups={"image": 0, "location": [2, 1], "label": list(range(3, 12))},
+        col_groups={"image": 0, "location": [1, 2], "label": list(range(3, 12))},
         kwargs_read_csv={"header": None},
         transform=Lambdad("image", lambda x: os.path.join(cfg["root"], "training/images", x + ".tif")),
     )

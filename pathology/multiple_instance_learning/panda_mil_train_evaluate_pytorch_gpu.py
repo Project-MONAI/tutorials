@@ -35,7 +35,7 @@ from monai.transforms import (
 )
 from monai.networks.nets import milmodel
 
-    
+
 def train_epoch(model, loader, optimizer, scaler, epoch, args):
     """One train epoch over the dataset"""
 
@@ -238,7 +238,7 @@ def list_data_collate(batch: collections.abc.Sequence):
         data["image"] = torch.stack([ix["image"] for ix in item], dim=0)
         batch[i] = data
     return default_collate(batch)
-    
+
 def main_worker(gpu, args):
 
     args.gpu = gpu

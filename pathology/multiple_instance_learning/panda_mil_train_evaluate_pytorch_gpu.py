@@ -275,6 +275,10 @@ def main_worker(gpu, args):
         training_list = training_list[:16]
         validation_list = validation_list[:16]
 
+    def threshold_filter(patch):
+        thresh = 0.999 * 3 * 255 * args.tile_size * args.tile_size
+        return patch.sum() < thresh
+
     train_transform = Compose(
         [
             LoadImaged(keys=["image"], reader=WSIReader, backend="cucim", dtype=np.uint8, level=1, image_only=True),
@@ -284,6 +288,7 @@ def main_worker(gpu, args):
                 patch_size=(args.tile_size, args.tile_size),
                 num_patches=args.tile_count,
                 sort_fn="min",
+                filter_fn=threshold_filter,
                 constant_values=255,
             ),
             RandFlipd(keys=["image"], spatial_axis=0, prob=0.5),
@@ -302,6 +307,7 @@ def main_worker(gpu, args):
                 keys=["image"],
                 patch_size=(args.tile_size, args.tile_size),
                 sort_fn="min",
+                filter_fn=threshold_filter,
                 constant_values=255,
             ),
             ScaleIntensityRanged(keys=["image"], a_min=np.float32(255), a_max=np.float32(0)),

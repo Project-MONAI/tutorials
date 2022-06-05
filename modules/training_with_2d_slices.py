@@ -22,6 +22,7 @@ import numpy as np
 import torch
 from monai.data import DataLoader, PatchDataset, create_test_image_3d, list_data_collate
 from monai.inferers import SliceInferer
+from monai.metrics import DiceMetric
 from monai.transforms import (
     AsChannelFirstd,
     Compose,
@@ -39,6 +40,7 @@ from monai.visualize import matshow3d
 
 def main(tempdir):
     monai.config.print_config()
+    monai.utils.set_determinism(0)
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
     # -----
@@ -55,7 +57,6 @@ def main(tempdir):
 
         n = nib.Nifti1Image(im, np.eye(4))
         nib.save(n, os.path.join(tempdir, f"img{i:d}.nii.gz"))
-
         n = nib.Nifti1Image(seg, np.eye(4))
         nib.save(n, os.path.join(tempdir, f"seg{i:d}.nii.gz"))
 
@@ -79,7 +80,7 @@ def main(tempdir):
     # 3D dataset with preprocessing transforms
     volume_ds = monai.data.Dataset(data=train_files, transform=train_transforms)
     # use batch_size=1 to check the volumes because the input volumes have different shapes
-    check_loader = DataLoader(volume_ds, batch_size=1, collate_fn=list_data_collate)
+    check_loader = DataLoader(volume_ds, batch_size=1)
     check_data = monai.utils.misc.first(check_loader)
     print("first volume's shape: ", check_data["img"].shape, check_data["seg"].shape)
 
@@ -172,7 +173,6 @@ def main(tempdir):
     # -----
     # inference with a SliceInferer
     # -----
-    model.eval()
     val_transform = Compose(
         [
             LoadImaged(keys=["img", "seg"]),
@@ -183,8 +183,9 @@ def main(tempdir):
     )
     val_files = [{"img": img, "seg": seg} for img, seg in zip(images[-3:], segs[-3:])]
     val_ds = monai.data.Dataset(data=val_files, transform=val_transform)
-    data_loader = DataLoader(val_ds, pin_memory=torch.cuda.is_available())
-
+    data_loader = DataLoader(val_ds, num_workers=1, pin_memory=torch.cuda.is_available())
+    dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
+    model.eval()
     with torch.no_grad():
         for val_data in data_loader:
             val_images = val_data["img"].to(device)
@@ -193,14 +194,17 @@ def main(tempdir):
             slice_inferer = SliceInferer(
                 roi_size=roi_size,
                 sw_batch_size=sw_batch_size,
-                spatial_dim=2,  # Spatial dim to slice along is defined here
+                spatial_dim=1,  # Spatial dim to slice along is defined here
                 device=torch.device("cpu"),
                 padding_mode="replicate",
             )
             val_output = slice_inferer(val_images, model)
+            dice_metric(y_pred=val_output > 0.5, y=val_data["seg"])
+            print("Dice: ", dice_metric.get_buffer()[-1][0])
             matshow3d(val_output[0] > 0.5)
             matshow3d(val_images[0])
             plt.show()
+        print(f"Avg Dice: {dice_metric.aggregate().item()}")
 
 
 if __name__ == "__main__":

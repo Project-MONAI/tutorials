@@ -24,8 +24,8 @@ from monai.data import DataLoader, PatchDataset, create_test_image_3d, list_data
 from monai.inferers import SliceInferer
 from monai.metrics import DiceMetric
 from monai.transforms import (
-    AsChannelFirstd,
     Compose,
+    EnsureChannelFirstd,
     EnsureTyped,
     LoadImaged,
     RandCropByPosNegLabeld,
@@ -71,7 +71,7 @@ def main(tempdir):
     train_transforms = Compose(
         [
             LoadImaged(keys=["img", "seg"]),
-            AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
+            EnsureChannelFirstd(keys=["img", "seg"]),
             ScaleIntensityd(keys="img"),
             RandRotate90d(keys=["img", "seg"], prob=0.5, spatial_axes=[0, 2]),
             EnsureTyped(keys=["img", "seg"]),
@@ -176,7 +176,7 @@ def main(tempdir):
     val_transform = Compose(
         [
             LoadImaged(keys=["img", "seg"]),
-            AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
+            EnsureChannelFirstd(keys=["img", "seg"]),
             ScaleIntensityd(keys="img"),
             EnsureTyped(keys=["img", "seg"]),
         ]

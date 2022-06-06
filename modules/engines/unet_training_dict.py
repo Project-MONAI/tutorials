@@ -21,10 +21,12 @@ import torch
 from ignite.metrics import Accuracy
 
 import monai
+from monai.apps import get_logger
 from monai.data import create_test_image_3d
 from monai.engines import SupervisedEvaluator, SupervisedTrainer
 from monai.handlers import (
     CheckpointSaver,
+    EarlyStopHandler,
     LrScheduleHandler,
     MeanDice,
     StatsHandler,
@@ -50,7 +52,9 @@ from monai.transforms import (
 
 def main(tempdir):
     monai.config.print_config()
+    # set root log level to INFO and init a train logger, will be used in `StatsHandler`
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    get_logger("train_log")
 
     # create a temporary directory and 40 random image, mask pairs
     print(f"generating synthetic data to {tempdir} (this may take a while)")
@@ -119,7 +123,10 @@ def main(tempdir):
         ]
     )
     val_handlers = [
-        StatsHandler(output_transform=lambda x: None),
+        # apply “EarlyStop” logic based on the validation metrics
+        EarlyStopHandler(trainer=None, patience=2, score_function=lambda x: x.state.metrics["val_mean_dice"]),
+        # use the logger "train_log" defined at the beginning of this program
+        StatsHandler(name="train_log", output_transform=lambda x: None),
         TensorBoardStatsHandler(log_dir="./runs/", output_transform=lambda x: None),
         TensorBoardImageHandler(
             log_dir="./runs/",
@@ -151,10 +158,14 @@ def main(tempdir):
             KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
         ]
     )
+
     train_handlers = [
+        # apply “EarlyStop” logic based on the loss value, use “-” negative value because smaller loss is better
+        EarlyStopHandler(trainer=None, patience=20, score_function=lambda x: -x.state.output[0]["loss"], epoch_level=False),
         LrScheduleHandler(lr_scheduler=lr_scheduler, print_lr=True),
         ValidationHandler(validator=evaluator, interval=2, epoch_level=True),
-        StatsHandler(tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
+        # use the logger "train_log" defined at the beginning of this program
+        StatsHandler(name="train_log", tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
         TensorBoardStatsHandler(log_dir="./runs/", tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
         CheckpointSaver(save_dir="./runs/", save_dict={"net": net, "opt": opt}, save_interval=2, epoch_level=True),
     ]
@@ -173,6 +184,9 @@ def main(tempdir):
         # if no FP16 support in GPU or PyTorch version < 1.6, will not enable AMP training
         amp=True if monai.utils.get_torch_version_tuple() >= (1, 6) else False,
     )
+    # set initialized trainer for "early stop" handlers
+    val_handlers[0].set_trainer(trainer=trainer)
+    train_handlers[0].set_trainer(trainer=trainer)
     trainer.run()
 
 

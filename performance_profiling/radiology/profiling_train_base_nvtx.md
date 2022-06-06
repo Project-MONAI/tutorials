@@ -15,19 +15,19 @@ For training and validation steps, they are easier to track by setting NVTX anno
 
 # Profiling Spleen Segmentation Pipeline
 ## Run Nsight Profiling
-With environment prepared `requirements.txt`, we run DLprof (v1.4.0 / r21.08) on the trainer under basic settings for 6 epochs (with validation every 2 epochs). All results shown below are from experiments performed on a DGX-2 workstation using a single V-100 GPU.
+With environment prepared `requirements.txt`, we use `nsys profile` on the trainer under basic settings for 6 epochs (with validation every 2 epochs). All results shown below are from experiments performed on a DGX-2 workstation using a single V-100 GPU.
 
 ```python
-!dlprof --mode pytorch \
-        --reports=summary \
-        --formats json \
-        --output_path ./outputs_base \
-        python3 train_base_nvtx.py
+nsys profile \
+     --output ./output_base \
+     --force-overwrite true \
+     --trace-fork-before-exec true \
+     python3 train_base_nvtx.py
 ```
 
 # Identify Potential Performance Improvements
 ## Profile Results
-After profiling, DLProf provides summary regarding the training process. Also, the computing details can be visualized via Nsight System GUI. (The version of Nsight used in the tutorial is 2021.3.1.54-ee9c30a OSX)
+After profiling, the computing details can be visualized via Nsight System GUI. (The version of Nsight used in the tutorial is 2021.3.1.54-ee9c30a OSX)
 
 ![png](Figure/nsight_base.png)
 
@@ -53,20 +53,20 @@ Upon further analysis of convergence, it appears that the convergence is relativ
 - Per-epoch time reduction: by utilizing pre-indexing and thread-based dataloader for more efficient data loading;
 - Faster convergence: by utilizing different optimizers and loss functions.
 
-One optimized solution can be found [here](https://github.com/Project-MONAI/tutorials/blob/master/acceleration/fast_training_tutorial.ipynb). Based on the validation accuracy curves, we can observe that the optimized solution (orange curve) has much faster convergence. The GPU utilization rate is above 90% on average.
+One optimized solution can be found [here](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/fast_training_tutorial.ipynb). Based on the validation accuracy curves, we can observe that the optimized solution (orange curve) has much faster convergence. The GPU utilization rate is above 90% on average.
 
 ![png](Figure/tensorboard.png)
 
 # Analyzing Performance Improvement
 ## Profile Results
-We again use DLProf to further analyze the optimized training script.
+We again use `nsys profile` to further analyze the optimized training script.
 
 ```python
-!dlprof --mode pytorch \
-        --reports=summary \
-        --formats json \
-        --output_path ./outputs_fast \
-        python3 train_fast_nvtx.py
+nsys profile \
+     --output ./outputs_fast \
+     --force-overwrite true \
+     --trace-fork-before-exec true \
+     python3 train_fast_nvtx.py
 ```
 And the profiling result is
 
@@ -80,4 +80,4 @@ As shown in the figure, the optimized solution:
 
 Therefore, the computing efficiency and the overall training process are thus be improved by a large margin.
 
-Moreover, another profiling example for pathological image analysis can be found in the following [link](https://github.com/Project-MONAI/tutorials/blob/master/performance_profiling/pathology/profiling_train_base_nvtx.md).
+Moreover, another profiling example for pathological image analysis can be found in the following [link](https://github.com/Project-MONAI/tutorials/blob/main/performance_profiling/pathology/profiling_train_base_nvtx.md).

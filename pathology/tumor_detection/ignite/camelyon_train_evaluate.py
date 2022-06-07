@@ -115,28 +115,28 @@ def train(cfg):
     # Create MONAI dataset
     train_data_list = CSVDataset(
         cfg["train_file"],
-        col_groups={"image": 0, "location": [1, 2], "label": list(range(3, 12))},
+        col_groups={"image": 0, "patch_location": [2, 1], "label": [3, 6, 9, 4, 7, 10, 5, 8, 11]},
         kwargs_read_csv={"header": None},
         transform=Lambdad("image", lambda x: os.path.join(cfg["root"], "training/images", x + ".tif")),
     )
     train_dataset = PatchWSIDataset(
         data=train_data_list,
-        size=cfg["region_size"],
-        level=0,
+        patch_size=cfg["region_size"],
+        patch_level=0,
         transform=train_preprocess,
         reader="openslide" if cfg["use_openslide"] else "cuCIM",
     )
 
     valid_data_list = CSVDataset(
         cfg["valid_file"],
-        col_groups={"image": 0, "location": [1, 2], "label": list(range(3, 12))},
+        col_groups={"image": 0, "patch_location": [2, 1], "label": [3, 6, 9, 4, 7, 10, 5, 8, 11]},
         kwargs_read_csv={"header": None},
         transform=Lambdad("image", lambda x: os.path.join(cfg["root"], "training/images", x + ".tif")),
     )
     valid_dataset = PatchWSIDataset(
         data=valid_data_list,
-        size=cfg["region_size"],
-        level=0,
+        patch_size=cfg["region_size"],
+        patch_level=0,
         transform=valid_preprocess,
         reader="openslide" if cfg["use_openslide"] else "cuCIM",
     )

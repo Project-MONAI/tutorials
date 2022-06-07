@@ -239,6 +239,7 @@ def list_data_collate(batch: collections.abc.Sequence):
         batch[i] = data
     return default_collate(batch)
 
+
 def main_worker(gpu, args):
 
     args.gpu = gpu
@@ -282,7 +283,8 @@ def main_worker(gpu, args):
                 keys=["image"],
                 patch_size=(args.tile_size, args.tile_size),
                 num_patches=args.tile_count,
-                sort_fn="min",
+                filter_high_values=True,
+                return_location=False,
                 pad_mode=None,
                 constant_values=255,
             ),
@@ -301,8 +303,9 @@ def main_worker(gpu, args):
             GridPatchd(
                 keys=["image"],
                 patch_size=(args.tile_size, args.tile_size),
-                sort_fn="min",
+                filter_high_values=True,
                 threshold=0.999 * 3 * 255 * args.tile_size * args.tile_size,
+                return_location=False,
                 pad_mode=None,
                 constant_values=255,
             ),

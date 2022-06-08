@@ -305,7 +305,7 @@ def main(cfg):
         ]
     )
 
-    # Create MONAI dataset
+    # Create train dataset and dataloader
     train_data_list = CSVDataset(
         cfg["train_file"],
         col_groups={"image": 0, "patch_location": [2, 1], "label": [3, 6, 9, 4, 7, 10, 5, 8, 11]},
@@ -319,28 +319,28 @@ def main(cfg):
         transform=preprocess_cpu_train,
         reader="openslide" if cfg["use_openslide"] else "cuCIM",
     )
-
-    valid_data_list = CSVDataset(
-        cfg["valid_file"],
-        col_groups={"image": 0, "patch_location": [2, 1], "label": [3, 6, 9, 4, 7, 10, 5, 8, 11]},
-        kwargs_read_csv={"header": None},
-        transform=Lambdad("image", lambda x: os.path.join(cfg["root"], "training/images", x + ".tif")),
-    )
-    valid_dataset = PatchWSIDataset(
-        data=valid_data_list,
-        patch_size=cfg["region_size"],
-        patch_level=0,
-        transform=preprocess_cpu_valid,
-        reader="openslide" if cfg["use_openslide"] else "cuCIM",
-    )
-
-    # DataLoaders
     train_dataloader = DataLoader(
         train_dataset, num_workers=cfg["num_workers"], batch_size=cfg["batch_size"], pin_memory=cfg["pin"]
     )
-    valid_dataloader = DataLoader(
-        valid_dataset, num_workers=cfg["num_workers"], batch_size=cfg["batch_size"], pin_memory=cfg["pin"]
-    )
+
+    # Create validation dataset and dataloader
+    if not cfg["no_validate"]:
+        valid_data_list = CSVDataset(
+            cfg["valid_file"],
+            col_groups={"image": 0, "patch_location": [2, 1], "label": [3, 6, 9, 4, 7, 10, 5, 8, 11]},
+            kwargs_read_csv={"header": None},
+            transform=Lambdad("image", lambda x: os.path.join(cfg["root"], "training/images", x + ".tif")),
+        )
+        valid_dataset = PatchWSIDataset(
+            data=valid_data_list,
+            patch_size=cfg["region_size"],
+            patch_level=0,
+            transform=preprocess_cpu_valid,
+            reader="openslide" if cfg["use_openslide"] else "cuCIM",
+        )
+        valid_dataloader = DataLoader(
+            valid_dataset, num_workers=cfg["num_workers"], batch_size=cfg["batch_size"], pin_memory=cfg["pin"]
+        )
 
     # Get sample batch and some info
     first_sample = first(train_dataloader)
@@ -355,7 +355,8 @@ def main(cfg):
         )
     logging.info(f"Batch size: {cfg['batch_size']}")
     logging.info(f"[Training] number of batches: {len(train_dataloader)}")
-    logging.info(f"[Validation] number of batches: {len(valid_dataloader)}")
+    if not cfg["no_validate"]:
+        logging.info(f"[Validation] number of batches: {len(valid_dataloader)}")
     # -------------------------------------------------------------------------
     # Deep Learning Model and Configurations
     # -------------------------------------------------------------------------
@@ -419,7 +420,7 @@ def main(cfg):
         )
         if scheduler is not None:
             scheduler.step()
-        if cfg["save"]:
+        if not cfg["no_save"]:
             torch.save(model.state_dict(), os.path.join(log_dir, f"model_epoch_{train_counter['epoch']}.pt"))
         t_train = time.perf_counter()
         train_time = t_train - t_epoch
@@ -464,7 +465,7 @@ def main(cfg):
     logging.info(f"Metric Summary: {metric_summary}")
 
     # Save the best and final model
-    if not cfg["no_validate"]:
+    if not cfg["no_validate"] and not cfg["no_save"]:
         copyfile(
             os.path.join(log_dir, f"model_epoch_{metric_summary['best_epoch']}.pt"),
             os.path.join(log_dir, "model_best.pt"),
@@ -484,7 +485,12 @@ def main(cfg):
 
 def parse_arguments():
     parser = ArgumentParser(description="Tumor detection on whole slide pathology images.")
-    parser.add_argument("--root", type=str, default="./", help="path to image folder containing training/validation")
+    parser.add_argument(
+        "--root",
+        type=str,
+        default="/workspace/data/medical/pathology",
+        help="path to image folder containing training/validation",
+    )
     parser.add_argument("--train-file", type=str, default="training.csv", help="path to training data file")
     parser.add_argument("--valid-file", type=str, default="validation.csv", help="path to training data file")
     parser.add_argument("--logdir", type=str, default="./logs/", dest="logdir", help="log directory")
@@ -506,7 +512,7 @@ def parse_arguments():
     parser.add_argument("--pretrain", action="store_true", help="activate Imagenet weights")
     parser.add_argument("--benchmark", action="store_true", help="activate Imagenet weights")
 
-    parser.add_argument("--save", action="store_true", help="save model at each epoch")
+    parser.add_argument("--no-save", action="store_true", help="save model at each epoch")
     parser.add_argument("--no-validate", action="store_true", help="use optimized parameters")
     parser.add_argument("--baseline", action="store_true", help="use baseline parameters")
     parser.add_argument("--optimized", action="store_true", help="use optimized parameters")

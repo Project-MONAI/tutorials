@@ -250,7 +250,12 @@ def train(cfg):
 def main():
     logging.basicConfig(level=logging.INFO)
     parser = ArgumentParser(description="Tumor detection on whole slide pathology images.")
-    parser.add_argument("--root", type=str, default="./", help="path to image folder containing training/validation")
+    parser.add_argument(
+        "--root",
+        type=str,
+        default="/workspace/data/medical/pathology",
+        help="path to image folder containing training/validation",
+    )
     parser.add_argument("--train-file", type=str, default="training.csv", help="path to training data file")
     parser.add_argument("--valid-file", type=str, default="validation.csv", help="path to training data file")
     parser.add_argument("--logdir", type=str, default="./logs/", dest="logdir", help="log directory")

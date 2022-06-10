@@ -13,10 +13,10 @@ from monai.transforms import (
     RandRotated,
     RandScaleIntensityd,
     RandShiftIntensityd,
-    Invertd
 )
 from monai.apps.detection.transforms.dictionary import (
     AffineBoxToImageCoordinated,
+    AffineBoxToWorldCoordinated,
     BoxToMaskd,
     ClipBoxToImaged,
     ConvertBoxToStandardModed,
@@ -246,13 +246,6 @@ def generate_detection_inference_transform(image_key, pred_box_key, pred_label_k
             EnsureTyped(keys=[image_key], dtype=compute_dtype),
         ]
     )
-
-    affine_transform = AffineBoxToImageCoordinated(
-        box_keys=[pred_box_key+"_gt"],
-        box_ref_image_keys=image_key,
-        image_meta_key_postfix="meta_dict",
-        affine_lps_to_ras=affine_lps_to_ras,
-    )
     post_transforms = Compose(
         [
             ClipBoxToImaged(
@@ -260,19 +253,15 @@ def generate_detection_inference_transform(image_key, pred_box_key, pred_label_k
                 label_keys=[pred_label_key, pred_score_key],
                 box_ref_image_keys=image_key,
                 remove_empty=True,
+            ),            
+            AffineBoxToWorldCoordinated(
+                box_keys=[pred_box_key],
+                box_ref_image_keys=image_key,
+                image_meta_key_postfix="meta_dict",
+                affine_lps_to_ras=affine_lps_to_ras,
             ),
+            ConvertBoxModed(box_keys=[pred_box_key], src_mode = "xyzxyz", dst_mode=gt_box_mode),
             DeleteItemsd(keys=[image_key]),
-            Invertd(
-                keys=[pred_box_key],
-                transform=affine_transform,
-                orig_keys=[pred_box_key+"_gt"],
-                meta_keys=["image_meta_dict"],
-                orig_meta_keys=["image_meta_dict"],
-                meta_key_postfix="meta_dict",
-                nearest_interp=False,
-                to_tensor=True,
-            ),
-            ConvertBoxModed(box_keys=[pred_box_key], src_mode="xyzxyz", dst_mode=gt_box_mode),
         ]
     )
     return test_transforms, post_transforms

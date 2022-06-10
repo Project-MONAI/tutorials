@@ -35,12 +35,12 @@ def generate_detection_train_transform(image_key, box_key, label_key, gt_box_mod
         image_key: the key to represent images in the input json files
         box_key: the key to represent boxes in the input json files
         label_key: the key to represent box labels in the input json files
-        gt_box_mode: ground truth box mode in the input json files        
-        intensity_transform: transform to scale image intensities, 
+        gt_box_mode: ground truth box mode in the input json files
+        intensity_transform: transform to scale image intensities,
             usually ScaleIntensityRanged for CT images, and NormalizeIntensityd for MR images.
         patch_size: cropped patch size for training
         batch_size: number of cropped patches from each image
-        affine_lps_to_ras: Usually False. 
+        affine_lps_to_ras: Usually False.
             Set True only when the original images were read by itkreader with affine_lps_to_ras=True
         amp: whether to use half precision
 
@@ -175,9 +175,9 @@ def generate_detection_val_transform(image_key, box_key, label_key, gt_box_mode,
         box_key: the key to represent boxes in the input json files
         label_key: the key to represent box labels in the input json files
         gt_box_mode: ground truth box mode in the input json files
-        intensity_transform: transform to scale image intensities, 
+        intensity_transform: transform to scale image intensities,
             usually ScaleIntensityRanged for CT images, and NormalizeIntensityd for MR images.
-        affine_lps_to_ras: Usually False. 
+        affine_lps_to_ras: Usually False.
             Set True only when the original images were read by itkreader with affine_lps_to_ras=True
         amp: whether to use half precision
 
@@ -221,9 +221,9 @@ def generate_detection_inference_transform(image_key, pred_box_key, pred_label_k
         pred_label_key: the key to represent predicted box labels
         pred_score_key: the key to represent predicted classification scores
         gt_box_mode: ground truth box mode in the input json files
-        intensity_transform: transform to scale image intensities, 
+        intensity_transform: transform to scale image intensities,
             usually ScaleIntensityRanged for CT images, and NormalizeIntensityd for MR images.
-        affine_lps_to_ras: Usually False. 
+        affine_lps_to_ras: Usually False.
             Set True only when the original images were read by itkreader with affine_lps_to_ras=True
         amp: whether to use half precision
 
@@ -246,7 +246,7 @@ def generate_detection_inference_transform(image_key, pred_box_key, pred_label_k
             EnsureTyped(keys=[image_key], dtype=compute_dtype),
         ]
     )
-    
+
     affine_transform = AffineBoxToImageCoordinated(
         box_keys=[pred_box_key+"_gt"],
         box_ref_image_keys=image_key,

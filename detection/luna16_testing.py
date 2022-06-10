@@ -118,7 +118,7 @@ def main():
     # 2) build network
     net = torch.jit.load(env_dict["model_path"][:-3] + ".pt").to(device)
     print(f"Load model from {env_dict['model_path'][:-3]}.pt")
-    
+
 
     # 3) build detector
     detector = RetinaNetDetector(
@@ -185,7 +185,7 @@ def main():
                     "box": inference_pred_i["pred_box"].cpu().detach().numpy().tolist(),
                     "score": inference_pred_i["pred_score"].cpu().detach().numpy().tolist(),
                 }
-                result.update({"image": inference_img_filename})                
+                result.update({"image": inference_img_filename})
                 results_dict["validation"].append(result)
 
     end_time = time.time()

@@ -46,6 +46,8 @@ and change the value of "data_base_dir" to the directory where you saved the res
 Then run:
 
 ```bash
+mkdir -p tfevent_train
+mkdir -p trained_models
 python3 luna16_training.py \
     -e ./config/environment_luna16_fold0.json \
     -c ./config/config_train_luna16_16g.json
@@ -67,6 +69,7 @@ If you have a different GPU memory size than 16G, please maximize "val_patch_siz
 
 For fold i, please run
 ```bash
+mkdir -p result
 python3 luna16_testing.py \
     -e ./config/environment_luna16_fold${fold}.json \
     -c ./config/config_train_luna16_16g.json
@@ -75,7 +78,7 @@ python3 luna16_testing.py \
 
 #### [LUNA16 Detection Evaluation](./run_luna16_offical_eval.sh)
 
-Please first make sure the 10 resulted json files result_luna16_fold{i}.json are in [./result](./result) folder.
+Please first make sure the 10 resulted json files result_luna16_fold{i}.json are in ./result folder.
 Then run:
 ```bash
 ./run_luna16_offical_eval.sh
@@ -84,4 +87,4 @@ Then run:
 It first combine result json files from the 10 folds into one csv file, 
 then run the official LUNA16 evaluation script downloaded from https://luna16.grand-challenge.org/Evaluation/
 
-The evaluation scores for will be stored in [./result/eval_luna16_scores]
+The evaluation scores for will be stored in ./result/eval_luna16_scores

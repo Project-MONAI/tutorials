@@ -384,7 +384,7 @@ def main():
             )
 
             # compute metrics
-            del val_data, val_inputs
+            del val_inputs
             torch.cuda.empty_cache()
             results_metric = matching_batch(
                 iou_fn=box_utils.box_iou,

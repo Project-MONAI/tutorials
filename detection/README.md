@@ -25,13 +25,13 @@ Disclaimer: We are not the host of the data. Please make sure to read the requir
 ### 3. Run the example
 #### [Prepare Your Data](./luna16_prepare_images.py)
 
-The raw CT images in LUNA16 have varioud of voxel size. The first step is to resample them to the same size.
+The raw CT images in LUNA16 have various of voxel sizes. The first step is to resample them to the same size.
 
 Please open ./config/environment_luna16_prepare.json, change the value of "orig_data_base_dir" to the directory where you store the downloaded images, and change the value of "data_base_dir" to the target directory where you will save the resampled images.
 
 Then resample the images by running
 ```bash
-# Run to know all possible options
+# Resample images to the spacing defined in ./config/environment_luna16_fold0.json
 python luna16_prepare_images.py
 ```
 
@@ -52,7 +52,7 @@ python3 luna16_training.py \
 ```
 
 This bash script uses batch size and patch size defined in ./config/config_train_luna16_16g.json, which works for a 16G GPU.
-If you have a different GPU size, please change "batch_size", "patch_size", and "val_patch_size" to fit the GPU you use.
+If you have a different GPU memory size, please change "batch_size", "patch_size", and "val_patch_size" to fit the GPU you use.
 
 For fold i, please change ./config/environment_luna16_fold{i}.json, and run
 ```bash
@@ -62,6 +62,9 @@ python3 luna16_training.py \
 ```
 
 #### [3D Detection Inference](./luna16_testing.py)
+
+If you have a different GPU memory size than 16G, please maximize "val_patch_size" to fit the GPU you use.
+
 For fold i, please run
 ```bash
 python3 luna16_testing.py \

@@ -65,7 +65,7 @@ def main():
     for k, v in config_dict.items():
         setattr(args, k, v)
 
-    patch_size = [640, 640, 320]  # [512,512,192] local, [640,640,288] ngc
+    patch_size = args.val_patch_size
 
     # 1. define transform
     intensity_transform = ScaleIntensityRanged(

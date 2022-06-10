@@ -56,7 +56,7 @@ python3 luna16_training.py \
 This python script uses batch size and patch size defined in [./config/config_train_luna16_16g.json](./config/config_train_luna16_16g.json), which works for a 16G GPU.
 If you have a different GPU memory size, please change "batch_size", "patch_size", and "val_patch_size" to fit the GPU you use.
 
-For fold i, please change ./config/environment_luna16_fold{i}.json, and run
+For fold i, please change the value of "data_base_dir" in ./config/environment_luna16_fold{i}.json, and run
 ```bash
 python3 luna16_training.py \
     -e ./config/environment_luna16_fold${fold}.json \

@@ -372,7 +372,7 @@ def main():
 
             # Visualize an inference image and boxes to tensorboard
             draw_img = visualize_one_xy_slice_in_3d_image(
-                gt_boxes=val_targets[0]["box"].cpu().detach().numpy(),
+                gt_boxes=val_data[0]["box"].cpu().detach().numpy(),
                 image=val_inputs[0][0, ...].cpu().detach().numpy(),
                 pred_boxes=val_outputs[0][detector.target_box_key]
                 .cpu()

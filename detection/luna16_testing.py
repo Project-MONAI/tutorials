@@ -53,9 +53,6 @@ def main():
     amp = True
 
     monai.config.print_config()
-    # torch.backends.cudnn.enabled=False
-    # torch.backends.cudnn.benchmark=True
-    # os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
     env_dict = json.load(open(args.environment_file, "r"))
     config_dict = json.load(open(args.config_file, "r"))
@@ -87,7 +84,7 @@ def main():
         amp=amp,
     )
 
-    # create a validation data loader
+    # 2. create a inference data loader
     inference_data = load_decathlon_datalist(
         args.data_list_file_path,
         is_segmentation=True,

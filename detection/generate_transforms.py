@@ -253,7 +253,7 @@ def generate_detection_inference_transform(image_key, pred_box_key, pred_label_k
                 label_keys=[pred_label_key, pred_score_key],
                 box_ref_image_keys=image_key,
                 remove_empty=True,
-            ),            
+            ),
             AffineBoxToWorldCoordinated(
                 box_keys=[pred_box_key],
                 box_ref_image_keys=image_key,

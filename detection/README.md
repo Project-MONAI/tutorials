@@ -87,4 +87,4 @@ Then run:
 It first combine result json files from the 10 folds into one csv file, 
 then run the official LUNA16 evaluation script downloaded from https://luna16.grand-challenge.org/Evaluation/
 
-The evaluation scores for will be stored in ./result/eval_luna16_scores
+The evaluation scores will be stored in ./result/eval_luna16_scores

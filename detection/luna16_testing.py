@@ -116,39 +116,7 @@ def main():
     )
 
     # 2) build network
-    conv1_t_size = [max(7, 2 * s + 1) for s in args.conv1_t_stride]
-    backbone = resnet.ResNet(
-        block=resnet.ResNetBottleneck,
-        layers=[3, 4, 6, 3],
-        block_inplanes=resnet.get_inplanes(),
-        n_input_channels=args.n_input_channels,
-        conv1_t_stride=args.conv1_t_stride,
-        conv1_t_size=conv1_t_size,
-    )
-    feature_extractor = resnet_fpn_feature_extractor(
-        backbone=backbone,
-        spatial_dims=args.spatial_dims,
-        pretrained_backbone=False,
-        trainable_backbone_layers=None,
-        returned_layers=args.returned_layers,
-    )
-    num_anchors = anchor_generator.num_anchors_per_location()[0]
-    size_divisible = [
-        s * 2 * 2 ** max(args.returned_layers)
-        for s in feature_extractor.body.conv1.stride
-    ]
-    net = torch.jit.script(
-        RetinaNet(
-            spatial_dims=args.spatial_dims,
-            num_classes=len(args.fg_labels),
-            num_anchors=num_anchors,
-            feature_extractor=feature_extractor,
-            size_divisible=size_divisible,
-        )
-    )
-    net.load_state_dict(torch.load(env_dict["model_path"][:-3] + ".pt"))
-    torch.jit.save(net,env_dict["model_path"][:-3] + ".pt")
-    # net = torch.jit.load(env_dict["model_path"][:-3] + ".pt").to(device)
+    net = torch.jit.load(env_dict["model_path"][:-3] + ".pt").to(device)
     print(f"Load model from {env_dict['model_path'][:-3]}.pt")
     
 

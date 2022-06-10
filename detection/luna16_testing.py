@@ -116,8 +116,8 @@ def main():
     )
 
     # 2) build network
-    net = torch.jit.load(env_dict["model_path"][:-3] + ".pt").to(device)
-    print(f"Load model from {env_dict['model_path'][:-3]}.pt")
+    net = torch.jit.load(env_dict["model_path"]).to(device)
+    print(f"Load model from {env_dict['model_path']}")
 
 
     # 3) build detector

@@ -25,9 +25,9 @@ Disclaimer: We are not the host of the data. Please make sure to read the requir
 ### 3. Run the example
 #### [Prepare Your Data](./luna16_prepare_images.py)
 
-The raw CT images in LUNA16 have various of voxel sizes. The first step is to resample them to the same size.
+The raw CT images in LUNA16 have various of voxel sizes. The first step is to resample them to the same voxel size, which is defined in the value of "spacing" in [./config/config_train_luna16_16g.json](./config/config_train_luna16_16g.json).
 
-Please open ./config/environment_luna16_prepare.json, change the value of "orig_data_base_dir" to the directory where you store the downloaded images, and change the value of "data_base_dir" to the target directory where you will save the resampled images.
+Please open [./config/environment_luna16_prepare.json](./config/environment_luna16_prepare.json), change the value of "orig_data_base_dir" to the directory where you store the downloaded images, and change the value of "data_base_dir" to the target directory where you will save the resampled images.
 
 Then resample the images by running
 ```bash
@@ -41,7 +41,7 @@ The original images are with mhd/raw format, the resampled images will be with N
 
 The LUNA16 dataset was splitted into 10-fold by LUNA16 challenge organizers to run cross-fold training and validation.
 
-Taking fold 0 as an example, the first step is to open ./config/environment_luna16_fold0.json,
+Taking fold 0 as an example, the first step is to open [./config/environment_luna16_fold0.json](./config/environment_luna16_fold0.json),
 and change the value of "data_base_dir" to the directory where you saved the resampled images.
 Then run:
 
@@ -51,7 +51,7 @@ python3 luna16_training.py \
     -c ./config/config_train_luna16_16g.json
 ```
 
-This python script uses batch size and patch size defined in ./config/config_train_luna16_16g.json, which works for a 16G GPU.
+This python script uses batch size and patch size defined in [./config/config_train_luna16_16g.json](./config/config_train_luna16_16g.json), which works for a 16G GPU.
 If you have a different GPU memory size, please change "batch_size", "patch_size", and "val_patch_size" to fit the GPU you use.
 
 For fold i, please change ./config/environment_luna16_fold{i}.json, and run
@@ -75,7 +75,7 @@ python3 luna16_testing.py \
 
 #### [LUNA16 Detection Evaluation](./run_luna16_offical_eval.sh)
 
-Please first make sure the 10 resulted json files result_luna16_fold{i}.json are in ./result folder.
+Please first make sure the 10 resulted json files result_luna16_fold{i}.json are in [./result](./result) folder.
 Then run:
 ```bash
 ./run_luna16_offical_eval.sh
@@ -84,4 +84,4 @@ Then run:
 It first combine result json files from the 10 folds into one csv file, 
 then run the official LUNA16 evaluation script downloaded from https://luna16.grand-challenge.org/Evaluation/
 
-The evaluation scores for will be stored in ./result/eval_luna16_scores
+The evaluation scores for will be stored in [./result/eval_luna16_scores]

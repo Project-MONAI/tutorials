@@ -2,7 +2,7 @@ class NoduleFinding(object):
   '''
   Represents a nodule
   '''
-  
+
   def __init__(self, noduleid=None, coordX=None, coordY=None, coordZ=None, coordType="World",
                CADprobability=None, noduleType=None, diameter=None, state=None, seriesInstanceUID=None):
 

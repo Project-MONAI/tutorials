@@ -9,7 +9,8 @@
     "pytorch_version": "1.10.0",
     "numpy_version": "1.21.2",
     "optional_packages_version": {
-        "nibabel": "3.2.1"
+        "nibabel": "3.2.1",
+        "pytorch-ignite": "0.4.8"
     },
     "task": "Decathlon spleen segmentation",
     "description": "A pre-trained model for volumetric (3D) segmentation of the spleen from CT image",

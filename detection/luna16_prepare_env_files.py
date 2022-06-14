@@ -8,10 +8,10 @@ def main():
     raw_data_base_dir = "/orig_datasets/"  # the directory of the raw images
     resampled_data_base_dir = "/datasets/"  # the directory of the resampled images
     downloaded_datasplit_dir = "LUNA16_datasplit"  # the directory of downloaded data split files
-    
-    out_trained_models_dir = "trained_models"  # the directory of trained model weights
-    out_tensorboard_events_dir = "tfevent_train"  # the directory of tensorboard training curves
-    out_inference_result_dir = "result"  # the directory of predicted boxes for inference
+
+    out_trained_models_dir = "trained_models"  # the directory to save trained model weights
+    out_tensorboard_events_dir = "tfevent_train"  # the directory to save tensorboard training curves
+    out_inference_result_dir = "result"  # the directory to save predicted boxes for inference
     #  ------------- Modification ends ---------------
     
     try:

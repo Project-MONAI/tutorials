@@ -30,7 +30,7 @@ In these files, the values of "box" are the ground truth boxes in world coordina
 
 The raw CT images in LUNA16 have various of voxel sizes. The first step is to resample them to the same voxel size, which is defined in the value of "spacing" in [./config/config_train_luna16_16g.json](./config/config_train_luna16_16g.json).
 
-Please open [luna16_prepare_env_files.py](luna16_prepare_env_files.py), change the value of "raw_data_base_dir" to the directory where you store the downloaded images, the value of "downloaded_datasplit_dir" to whre you downloaded the data split files, and the value of "resampled_data_base_dir" to the target directory where you will save the resampled images.
+Please open [luna16_prepare_env_files.py](luna16_prepare_env_files.py), change the value of "raw_data_base_dir" to the directory where you store the downloaded images, the value of "downloaded_datasplit_dir" to where you downloaded the data split files, and the value of "resampled_data_base_dir" to the target directory where you will save the resampled images.
 
 Then resample the images by running
 ```bash
@@ -42,15 +42,10 @@ The original images are with mhd/raw format, the resampled images will be with N
 
 #### [3D Detection Training](./luna16_training.py)
 
-The LUNA16 dataset was splitted into 10-fold by LUNA16 challenge organizers to run cross-fold training and validation.
+The LUNA16 dataset was splitted into 10-fold to run cross-fold training and validation.
 
-Taking fold 0 as an example, the first step is to open [./config/environment_luna16_fold0.json](./config/environment_luna16_fold0.json),
-and change the value of "data_base_dir" to the directory where you saved the resampled images.
-Then run:
-
+Taking fold 0 as an example, run:
 ```bash
-mkdir -p tfevent_train
-mkdir -p trained_models
 python3 luna16_training.py \
     -e ./config/environment_luna16_fold0.json \
     -c ./config/config_train_luna16_16g.json
@@ -59,7 +54,7 @@ python3 luna16_training.py \
 This python script uses batch size and patch size defined in [./config/config_train_luna16_16g.json](./config/config_train_luna16_16g.json), which works for a 16G GPU.
 If you have a different GPU memory size, please change "batch_size", "patch_size", and "val_patch_size" to fit the GPU you use.
 
-For fold i, please change the value of "data_base_dir" in ./config/environment_luna16_fold{i}.json, and run
+For fold i, please run
 ```bash
 python3 luna16_training.py \
     -e ./config/environment_luna16_fold${fold}.json \
@@ -72,7 +67,6 @@ If you have a different GPU memory size than 16G, please maximize "val_patch_siz
 
 For fold i, please run
 ```bash
-mkdir -p result
 python3 luna16_testing.py \
     -e ./config/environment_luna16_fold${fold}.json \
     -c ./config/config_train_luna16_16g.json

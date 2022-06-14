@@ -123,9 +123,9 @@ def main():
     # 3) build detector
     detector = RetinaNetDetector(
         network=net, anchor_generator=anchor_generator, debug=False
-    ).to(device)
+    )
 
-    # set evaluation components
+    # set inference components
     detector.set_box_selector_parameters(
         score_thresh=args.score_thresh,
         topk_candidates_per_level=1000,

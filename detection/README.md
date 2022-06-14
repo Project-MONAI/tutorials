@@ -16,6 +16,8 @@ LUNA16 is a public dataset of CT lung nodule detection. Using raw CT scans, the 
 
 Disclaimer: We are not the host of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the dataset!
 
+We split the data into 10 folds. The datasplit can be downloaded from https://drive.google.com/drive/folders/16QiIJt9092TgGRxR1TKRzBQixb6tQozY?usp=sharing
+
 ### 2. Questions and bugs
 
 - For questions relating to the use of MONAI, please us our [Discussions tab](https://github.com/Project-MONAI/MONAI/discussions) on the main repository of MONAI.

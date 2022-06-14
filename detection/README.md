@@ -62,6 +62,11 @@ python3 luna16_training.py \
     -c ./config/config_train_luna16_16g.json
 ```
 
+The validation score is shown as below:
+<p align="center">
+  <img src="luna16_val_tfevent.png" alt="detection val curve")
+</p>
+
 #### [3D Detection Inference](./luna16_testing.py)
 
 If you have a different GPU memory size than 16G, please maximize "val_patch_size" to fit the GPU you use.

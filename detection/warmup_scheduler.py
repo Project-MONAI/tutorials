@@ -10,7 +10,7 @@
 # limitations under the License.
 
 """
-This script is adapted from 
+This script is adapted from
 https://github.com/ildoonet/pytorch-gradual-warmup-lr/blob/master/warmup_scheduler/scheduler.py
 """
 

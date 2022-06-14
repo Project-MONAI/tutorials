@@ -94,7 +94,7 @@ Multiple axial slices of a 96x96x96 patch are shown before the augmentation (Ref
 Augmented View 1 & 2 are different augmentations generated via the transforms on the same cubic patch. The objective
 of the SSL network is to reconstruct the original top row image from the first view. The contrastive loss
 is driven by maximizing agreement of the reconstruction based on input of the two augmented views.
-`matshow3d` from `monai.visualize` was used for creating this figure, a tutorial for using can be found [here](https://github.com/Project-MONAI/tutorials/blob/master/modules/transform_visualization.ipynb)
+`matshow3d` from `monai.visualize` was used for creating this figure, a tutorial for using can be found [here](https://github.com/Project-MONAI/tutorials/blob/main/modules/transform_visualization.ipynb)
 
 References:
 
@@ -119,7 +119,7 @@ Contrastive Loss Temperature: 0.005
 
 Training Hyper-parameters for Fine-tuning BTCV task (All settings have been kept consistent with prior
 [UNETR 3D
-Segmentation tutorial](https://github.com/Project-MONAI/tutorials/blob/master/3d_segmentation/unetr_btcv_segmentation_3d.ipynb)): \
+Segmentation tutorial](https://github.com/Project-MONAI/tutorials/blob/main/3d_segmentation/unetr_btcv_segmentation_3d.ipynb)): \
 Number of Steps: 30000 \
 Validation Frequency: 100 steps \
 Batch Size: 1 3D Volume (4 samples are drawn per 3D volume) \

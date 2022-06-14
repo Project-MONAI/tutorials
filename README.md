@@ -175,7 +175,7 @@ And compares the training speed and memory usage with/without AMP.
 This notebook compares the performance of `Dataset`, `CacheDataset` and `PersistentDataset`. These classes differ in how data is stored (in memory or on disk), and at which moment transforms are applied.
 #### [fast_training_tutorial](./acceleration/fast_training_tutorial.ipynb)
 This tutorial compares the training performance of pure PyTorch program and optimized program in MONAI based on NVIDIA GPU device and latest CUDA library.
-The optimization methods mainly include: `AMP`, `CacheDataset` and `Novograd`.
+The optimization methods mainly include: `AMP`, `CacheDataset`, `GPU transforms`, `ThreadDataLoader`, `DiceCELoss` and `SGD`.
 #### [multi_gpu_test](./acceleration/multi_gpu_test.ipynb)
 This notebook is a quick demo for devices, run the Ignite trainer engine on CPU, GPU and multiple GPUs.
 #### [threadbuffer_performance](./acceleration/threadbuffer_performance.ipynb)

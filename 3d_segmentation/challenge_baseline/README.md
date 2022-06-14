@@ -109,9 +109,9 @@ This baseline method achieves 0.6904 ± 0.1801 Dice score on the challenge valid
 
 - For MONAI technical documentation, please visit [docs.monai.io](https://docs.monai.io/).
 - Please visit [`Project-MONAI/tutorials`](https://github.com/Project-MONAI/tutorials) for more examples, including:
-  - [`3D segmentation pipelines`](https://github.com/Project-MONAI/tutorials/tree/master/3d_segmentation),
-  - [`Dynamic UNet`](https://github.com/Project-MONAI/tutorials/blob/master/modules/dynunet_tutorial.ipynb),
-  - [`Training acceleration`](https://github.com/Project-MONAI/tutorials/tree/master/acceleration).
+  - [`3D segmentation pipelines`](https://github.com/Project-MONAI/tutorials/tree/main/3d_segmentation),
+  - [`Dynamic UNet`](https://github.com/Project-MONAI/tutorials/blob/main/modules/dynunet_tutorial.ipynb),
+  - [`Training acceleration`](https://github.com/Project-MONAI/tutorials/tree/main/acceleration).
 
 ## Submitting to the leaderboard
 
@@ -121,4 +121,4 @@ For any queries, please contact [the challenge organizers](https://covid-segment
 
 ## License
 
-The code is licensed under [the Apache License 2.0](https://github.com/Project-MONAI/tutorials/blob/master/LICENSE).
+The code is licensed under [the Apache License 2.0](https://github.com/Project-MONAI/tutorials/blob/main/LICENSE).

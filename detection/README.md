@@ -63,7 +63,7 @@ python3 luna16_training.py \
 ```
 
 For each fold, 95% of the training data is used for training, while the rest 5% is used for validation and model selection.
-The training and validation curves are shown as below. The upper row shows the training loses for box regression and classification for each epoch. The bottom row shows the mAP and mAR of IoU ranging from 0.1 to 0.5 for validation.
+The training and validation curves for 300 epochs are shown as below. The upper row shows the training losses for box regression and classification. The bottom row shows the validation mAP and mAR for IoU ranging from 0.1 to 0.5.
 <p align="center">
   <img src="luna16_tfevent.png" alt="detection train curve")
 </p>

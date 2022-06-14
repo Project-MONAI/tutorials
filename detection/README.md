@@ -16,7 +16,8 @@ LUNA16 is a public dataset of CT lung nodule detection. Using raw CT scans, the 
 
 Disclaimer: We are not the host of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the dataset!
 
-We split the data into 10 folds. The data split files can be downloaded from https://drive.google.com/drive/folders/16QiIJt9092TgGRxR1TKRzBQixb6tQozY?usp=sharing
+We split the data into 10 folds using the script from nndetection in https://github.com/MIC-DKFZ/nnDetection/blob/main/projects/Task016_Luna/scripts/prepare.py#L70-L88. 
+The resulted data split files can be downloaded from https://drive.google.com/drive/folders/16QiIJt9092TgGRxR1TKRzBQixb6tQozY?usp=sharing
 In these files, the values of "box" are the ground truth boxes in world coordinate.
 
 ### 2. Questions and bugs

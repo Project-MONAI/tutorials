@@ -43,7 +43,7 @@ The original images are with mhd/raw format, the resampled images will be with N
 
 #### [3D Detection Training](./luna16_training.py)
 
-The LUNA16 dataset was splitted into 10-fold to run cross-fold training and validation.
+The LUNA16 dataset was splitted into 10-fold to run cross-fold training and inference.
 
 Taking fold 0 as an example, run:
 ```bash
@@ -62,9 +62,10 @@ python3 luna16_training.py \
     -c ./config/config_train_luna16_16g.json
 ```
 
-The validation score is shown as below:
+For each fold, 95% of the training data is used for training, while the rest 5% is used for validation and model selection.
+The training and validation curves are shown as below. The upper row shows the training loses for box regression and classification for each epoch. The bottom row shows the mAP and mAR of IoU ranging from 0.1 to 0.5 for validation.
 <p align="center">
-  <img src="luna16_train_tfevent.png" alt="detection train curve")
+  <img src="luna16_tfevent.png" alt="detection train curve")
 </p>
 
 #### [3D Detection Inference](./luna16_testing.py)

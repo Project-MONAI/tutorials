@@ -16,7 +16,8 @@ LUNA16 is a public dataset of CT lung nodule detection. Using raw CT scans, the 
 
 Disclaimer: We are not the host of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the dataset!
 
-We split the data into 10 folds. The datasplit can be downloaded from https://drive.google.com/drive/folders/16QiIJt9092TgGRxR1TKRzBQixb6tQozY?usp=sharing
+We split the data into 10 folds. The data split files can be downloaded from https://drive.google.com/drive/folders/16QiIJt9092TgGRxR1TKRzBQixb6tQozY?usp=sharing
+In these files, the values of "box" are the ground truth boxes in world coordinate.
 
 ### 2. Questions and bugs
 
@@ -29,7 +30,7 @@ We split the data into 10 folds. The datasplit can be downloaded from https://dr
 
 The raw CT images in LUNA16 have various of voxel sizes. The first step is to resample them to the same voxel size, which is defined in the value of "spacing" in [./config/config_train_luna16_16g.json](./config/config_train_luna16_16g.json).
 
-Please open [./config/environment_luna16_prepare.json](./config/environment_luna16_prepare.json), change the value of "orig_data_base_dir" to the directory where you store the downloaded images, and change the value of "data_base_dir" to the target directory where you will save the resampled images.
+Please open [luna16_prepare_env_files.py](luna16_prepare_env_files.py), change the value of "raw_data_base_dir" to the directory where you store the downloaded images, the value of "downloaded_datasplit_dir" to whre you downloaded the data split files, and the value of "resampled_data_base_dir" to the target directory where you will save the resampled images.
 
 Then resample the images by running
 ```bash

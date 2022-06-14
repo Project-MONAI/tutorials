@@ -1,7 +1,0 @@
-{
-	"model_path": "trained_models/model_luna16_fold0.pt",
-	"tfevent_path": "tfevent_train/luna16_fold0",
-	"data_base_dir": "/datasets/",
-	"data_list_file_path": "annotation/dataset_fold0.json",
-	"result_list_file_path": "result/result_luna16_fold0.json"
-}

@@ -30,12 +30,11 @@ In these files, the values of "box" are the ground truth boxes in world coordina
 
 The raw CT images in LUNA16 have various of voxel sizes. The first step is to resample them to the same voxel size, which is defined in the value of "spacing" in [./config/config_train_luna16_16g.json](./config/config_train_luna16_16g.json).
 
-Please open [luna16_prepare_env_files.py](luna16_prepare_env_files.py), change the value of "raw_data_base_dir" to the directory where you store the downloaded images, the value of "downloaded_datasplit_dir" to where you downloaded the data split files, and the value of "resampled_data_base_dir" to the target directory where you will save the resampled images.
+Then, please open [luna16_prepare_env_files.py](luna16_prepare_env_files.py), change the value of "raw_data_base_dir" to the directory where you store the downloaded images, the value of "downloaded_datasplit_dir" to where you downloaded the data split files, and the value of "resampled_data_base_dir" to the target directory where you will save the resampled images.
 
-Then resample the images by running
+Finally, resample the images by running
 ```bash
 python3 luna16_prepare_env_files.py
-# Resample images to the spacing defined in ./config/config_train_luna16_16g.json
 python3 luna16_prepare_images.py -c ./config/config_train_luna16_16g.json
 ```
 

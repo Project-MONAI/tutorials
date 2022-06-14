@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-python3 ./luna16_post_combine_cross_fold_results.py \
+python ./luna16_post_combine_cross_fold_results.py \
 	-i ./result/result_luna16_fold0.json \
 	./result/result_luna16_fold1.json \
 	./result/result_luna16_fold2.json \
@@ -23,8 +23,9 @@ python3 ./luna16_post_combine_cross_fold_results.py \
 	./result/result_luna16_fold8.json \
 	./result/result_luna16_fold9.json \
 	-o ./result/result_luna16_all.csv
+
 mkdir -p ./result/eval_luna16_scores
-python3 ./evaluation_luna16/noduleCADEvaluationLUNA16.py \
+python ./evaluation_luna16/noduleCADEvaluationLUNA16.py \
 	./evaluation_luna16/annotations/annotations.csv  \
 	./evaluation_luna16/annotations/annotations_excluded.csv \
 	./evaluation_luna16/annotations/seriesuids.csv \

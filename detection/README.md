@@ -72,17 +72,19 @@ python3 luna16_testing.py \
     -c ./config/config_train_luna16_16g.json
 ```
 
-
 #### [LUNA16 Detection Evaluation](./run_luna16_offical_eval.sh)
+Please download the official LUNA16 evaluation scripts from https://luna16.grand-challenge.org/Evaluation/,
+and save it as ./evaluation_luna16
 
-Please first make sure the 10 resulted json files result_luna16_fold{i}.json are in ./result folder.
+./evaluation_luna16/noduleCADEvaluationLUNA16.py will be the main python script to generate evaluation scores.
+
+To run evaluation, please first make sure the 10 resulted json files result_luna16_fold{i}.json are in ./result folder.
 Then run:
 ```bash
 ./run_luna16_offical_eval.sh
 ```
 
 This bash script first combines the 10 result json files from 10 folds into one csv file,
-then runs the official LUNA16 evaluation scripts [./evaluation_luna16](./evaluation_luna16).
-These scripts are downloaded from https://luna16.grand-challenge.org/Evaluation/
+then runs the official LUNA16 evaluation scripts saved in ./evaluation_luna16.
 
 The evaluation scores will be stored in ./result/eval_luna16_scores

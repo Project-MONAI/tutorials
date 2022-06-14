@@ -13,7 +13,7 @@ def main():
     out_tensorboard_events_dir = "tfevent_train"  # the directory to save tensorboard training curves
     out_inference_result_dir = "result"  # the directory to save predicted boxes for inference
     #  ------------- Modification ends ---------------
-    
+
     try:
         os.mkdir(out_trained_models_dir)
     except FileExistsError:
@@ -38,7 +38,7 @@ def main():
     with open(out_file, "w") as outfile:
         json.dump(env_dict, outfile, indent=4)
 
-    
+
     # generate env json file for training and inference
     for fold in range(10):
         out_file = "config/environment_luna16_fold"+str(fold)+".json"

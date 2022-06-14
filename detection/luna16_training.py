@@ -205,7 +205,7 @@ def main():
     )
     detector.set_target_keys(box_key="box", label_key="label")
 
-    # set evaluation components
+    # set validation components
     detector.set_box_selector_parameters(
         score_thresh=args.score_thresh,
         topk_candidates_per_level=1000,
@@ -234,31 +234,22 @@ def main():
     optimizer.zero_grad()
     optimizer.step()
 
-    import ctypes
-
-    _libcudart = ctypes.CDLL("libcudart.so")
-    # Set device limit on the current device
-    # cudaLimitMaxL2FetchGranularity = 0x05
-    pValue = ctypes.cast((ctypes.c_int * 1)(), ctypes.POINTER(ctypes.c_int))
-    _libcudart.cudaDeviceSetLimit(ctypes.c_int(0x05), ctypes.c_int(128))
-    _libcudart.cudaDeviceGetLimit(pValue, ctypes.c_int(0x05))
-    assert pValue.contents.value == 128
-
     # initialize tensorboard writer
     tensorboard_writer = SummaryWriter(args.tfevent_path)
 
     # 5. train
-    val_interval = 5
+    val_interval = 5  # do validation every val_interval epochs
     coco_metric = COCOMetric(classes=["nodule"], iou_list=[0.1], max_detection=[100])
-    best_val_epoch_loss = 0.0
+    best_val_epoch_metric = 0.0
 
-    best_loss_epoch = -1
+    best_val_epoch = -1  # the epoch that gives best validation metrics
     max_epochs = 300
     epoch_len = len(train_ds) // train_loader.batch_size
     w_cls = config_dict.get(
         "w_cls", 1.0
-    )  # weight between classification loss and box regression loss
+    )  # weight between classification loss and box regression loss, default 1.0
     for epoch in range(max_epochs):
+        # ------------- Training -------------
         print("-" * 10)
         print(f"epoch {epoch + 1}/{max_epochs}")
         detector.train()
@@ -319,6 +310,7 @@ def main():
         torch.cuda.empty_cache()
         gc.collect()
 
+        # save to tensorboard
         epoch_loss /= step
         epoch_cls_loss /= step
         epoch_box_reg_loss /= step
@@ -332,10 +324,11 @@ def main():
             "train_lr", optimizer.param_groups[0]["lr"], epoch + 1
         )
 
+        # save last trained model
         torch.jit.save(detector.network,env_dict["model_path"][:-3] + "_last.pt")
         print("saved last model")
 
-        # Evaluation for model selection
+        # ------------- Validation for model selection -------------
         if (epoch + 1) % val_interval == 0:
             detector.eval()
             val_outputs_all = []
@@ -370,7 +363,7 @@ def main():
             end_time = time.time()
             print(f"Validation time: {end_time-start_time}s")
 
-            # Visualize an inference image and boxes to tensorboard
+            # visualize an inference image and boxes to tensorboard
             draw_img = visualize_one_xy_slice_in_3d_image(
                 gt_boxes=val_data[0]["box"].cpu().detach().numpy(),
                 image=val_inputs[0][0, ...].cpu().detach().numpy(),
@@ -380,7 +373,7 @@ def main():
                 .numpy(),
             )
             tensorboard_writer.add_image(
-                "val_img_xy", draw_img.transpose([2, 0, 1]), epoch + 1
+                "val_img_xy", draw_img.transpose([2, 1, 0]), epoch + 1
             )
 
             # compute metrics
@@ -402,11 +395,11 @@ def main():
                     for val_data_i in val_outputs_all
                 ],
                 gt_boxes=[
-                    val_data_i["box"].cpu().detach().numpy()
+                    val_data_i[detector.target_box_key].cpu().detach().numpy()
                     for val_data_i in val_targets_all
                 ],
                 gt_classes=[
-                    val_data_i["label"].cpu().detach().numpy()
+                    val_data_i[detector.target_label_key].cpu().detach().numpy()
                     for val_data_i in val_targets_all
                 ],
             )
@@ -422,22 +415,22 @@ def main():
             val_epoch_metric = sum(val_epoch_metric) / len(val_epoch_metric)
             tensorboard_writer.add_scalar("val_metric", val_epoch_metric, epoch + 1)
 
-            # save model
-            if val_epoch_metric > best_val_epoch_loss:
-                best_val_epoch_loss = val_epoch_metric
-                best_loss_epoch = epoch + 1
+            # save best trained model
+            if val_epoch_metric > best_val_epoch_metric:
+                best_val_epoch_metric = val_epoch_metric
+                best_val_epoch = epoch + 1
                 torch.jit.save(detector.network, env_dict["model_path"])
                 print("saved new best metric model")
             print(
                 "current epoch: {} current metric: {:.4f} "
                 "best metric: {:.4f} at epoch {}".format(
-                    epoch + 1, val_epoch_metric, best_val_epoch_loss, best_loss_epoch
+                    epoch + 1, val_epoch_metric, best_val_epoch_metric, best_val_epoch
                 )
             )
 
     print(
-        f"train completed, best_metric: {best_val_epoch_loss:.4f} "
-        f"at epoch: {best_loss_epoch}"
+        f"train completed, best_metric: {best_val_epoch_metric:.4f} "
+        f"at epoch: {best_val_epoch}"
     )
     tensorboard_writer.close()
 

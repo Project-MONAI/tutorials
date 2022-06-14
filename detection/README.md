@@ -64,7 +64,7 @@ python3 luna16_training.py \
 
 The validation score is shown as below:
 <p align="center">
-  <img src="luna16_val_tfevent.png" alt="detection val curve")
+  <img src="luna16_train_tfevent.png" alt="detection train curve")
 </p>
 
 #### [3D Detection Inference](./luna16_testing.py)

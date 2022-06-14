@@ -34,6 +34,7 @@ Please open [luna16_prepare_env_files.py](luna16_prepare_env_files.py), change t
 
 Then resample the images by running
 ```bash
+python3 luna16_prepare_env_files.py
 # Resample images to the spacing defined in ./config/config_train_luna16_16g.json
 python3 luna16_prepare_images.py -c ./config/config_train_luna16_16g.json
 ```

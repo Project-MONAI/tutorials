@@ -238,7 +238,7 @@ class MammoLearner(Learner):
             base_dir=self.dataset_root,
         )
 
-        num_workers = 1
+        num_workers = 4  # tuned for challenge system. Please do not change.
         cache_rate = 1.0
         self.train_dataset = CacheDataset(
             data=train_datalist,

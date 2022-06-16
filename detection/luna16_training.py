@@ -243,7 +243,7 @@ def main():
     coco_metric = COCOMetric(classes=["nodule"], iou_list=[0.1], max_detection=[100])
     best_val_epoch_metric = 0.0
     best_val_epoch = -1  # the epoch that gives best validation metrics
-    
+
     max_epochs = 300
     epoch_len = len(train_ds) // train_loader.batch_size
     w_cls = config_dict.get(

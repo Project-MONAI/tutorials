@@ -229,7 +229,8 @@ def main():
         weight_decay=3e-5,
         nesterov=True,
     )
-    scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=1, total_epoch=10)
+    after_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=150, gamma=0.1)
+    scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=1, total_epoch=10, after_scheduler=after_scheduler)
     scaler = torch.cuda.amp.GradScaler() if amp else None
     optimizer.zero_grad()
     optimizer.step()
@@ -241,8 +242,8 @@ def main():
     val_interval = 5  # do validation every val_interval epochs
     coco_metric = COCOMetric(classes=["nodule"], iou_list=[0.1], max_detection=[100])
     best_val_epoch_metric = 0.0
-
     best_val_epoch = -1  # the epoch that gives best validation metrics
+    
     max_epochs = 300
     epoch_len = len(train_ds) // train_loader.batch_size
     w_cls = config_dict.get(
@@ -354,7 +355,6 @@ def main():
                             val_outputs = detector(val_inputs, use_inferer=use_inferer)
                     else:
                         val_outputs = detector(val_inputs, use_inferer=use_inferer)
-                    del val_inputs
 
                     # save outputs for evaluation
                     val_outputs_all += val_outputs

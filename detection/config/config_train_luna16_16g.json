@@ -8,7 +8,7 @@
 	"fg_labels": [0],
 	"n_input_channels": 1,
 	"spatial_dims": 3,
-	"score_thresh": 0.2,
+	"score_thresh": 0.1,
 	"nms_thresh": 0.22,
 	"returned_layers": [1,2],
 	"conv1_t_stride": [2,2,1],

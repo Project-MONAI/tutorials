@@ -1,24 +1,16 @@
 import json
-import logging
 import copy
 import math
 import os
-import random
-import cv2
 import numpy as np
-import skimage
+import cv2
 import torch
 from tqdm import tqdm
+
 from skimage.measure import regionprops
-#from lib.handlers import TensorBoardImageHandler
-#from lib.transforms import FilterImaged
-#from lib.utils import split_dataset, split_nuclei_dataset
-from monai.config import KeysCollection
 from monai.engines import SupervisedTrainer, SupervisedEvaluator
 from monai.handlers import (
     CheckpointSaver,
-    EarlyStopHandler,
-    LrScheduleHandler,
     MeanDice,
     StatsHandler,
     TensorBoardImageHandler,
@@ -30,7 +22,6 @@ from monai.inferers import SimpleInferer
 from monai.losses import DiceLoss
 from monai.networks.nets import BasicUNet
 from monai.data import (
-    CacheDataset,
     Dataset,
     DataLoader,
 )
@@ -43,17 +34,13 @@ from monai.transforms import (
     EnsureTyped,
     LoadImaged,
     LoadImage,
-    MapTransform,
-    RandomizableTransform,
     RandRotate90d,
     ScaleIntensityRangeD,
     ToNumpyd,
     TorchVisiond,
     ToTensord,
-    Transform,
 )
 
-#from monai.apps.nuclick.dataset_prep import split_pannuke_dataset, split_nuclei_dataset
 from monai.apps.nuclick.transforms import (
     FlattenLabeld,
     ExtractPatchd,
@@ -62,8 +49,6 @@ from monai.apps.nuclick.transforms import (
     FilterImaged
 )
 
-#from monailabel.interfaces.datastore import Datastore
-#from monailabel.tasks.train.basic_train import BasicTrainTask, Context
 
 def split_pannuke_dataset(image, label, output_dir, groups):
     groups = groups if groups else dict()
@@ -81,15 +66,11 @@ def split_pannuke_dataset(image, label, output_dir, groups):
 
     print(f"++ Using Groups: {groups}")
     print(f"++ Using Label Channels: {label_channels}")
-    #logger.info(f"++ Using Groups: {groups}")
-    #logger.info(f"++ Using Label Channels: {label_channels}")
 
     images = np.load(image)
     labels = np.load(label)
     print(f"Image Shape: {images.shape}")
     print(f"Labels Shape: {labels.shape}")
-    #logger.info(f"Image Shape: {images.shape}")
-    #logger.info(f"Labels Shape: {labels.shape}")
 
     images_dir = output_dir
     labels_dir = os.path.join(output_dir, "labels", "final")
@@ -128,7 +109,6 @@ def split_nuclei_dataset(d, centroid_key="centroid", mask_value_key="mask_value"
     stats = regionprops(labels)
     for stat in stats:
         if stat.area < min_area:
-            #logger.debug(f"++++ Ignored label with smaller area => ( {stat.area} < {min_area})")
             print(f"++++ Ignored label with smaller area => ( {stat.area} < {min_area})")
             continue
 
@@ -140,7 +120,6 @@ def split_nuclei_dataset(d, centroid_key="centroid", mask_value_key="mask_value"
         item[centroid_key] = (x, y)
         item[mask_value_key] = stat.label
 
-        # logger.info(f"{d['label']} => {len(stats)} => {mask.shape} => {stat.label}")
         dataset_json.append(item)
     return dataset_json
 
@@ -274,12 +253,6 @@ def main():
     dice_loss = DiceLoss(sigmoid=True, squared_pred=True)
 
     # Training Process
-    #TODO Consider uisng the Supervised Trainer over here from MONAI
-    #network.train()
-    #TODO Refer here for how to fix up a validation when using a SupervisedTrainer. In short a supervisedevaluator needs to be created as a
-    # training handler
-    #TODO https://github.com/Project-MONAI/tutorials/blob/bc342633bd8e50be7b4a67b723006bb03285f6ba/acceleration/distributed_training/unet_training_workflows.py#L187
-
     val_handlers = [
         # use the logger "train_log" defined at the beginning of this program
         StatsHandler(name="train_log", output_transform=lambda x: None),
@@ -299,16 +272,12 @@ def main():
         inferer=val_inferer,
         postprocessing=train_post_transforms,
         key_val_metric=val_key_metric,
-        #additional_metrics={"val_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},
         val_handlers=val_handlers,
         # if no FP16 support in GPU or PyTorch version < 1.6, will not enable AMP evaluation
         amp=False,
     )
 
     train_handlers = [
-        # apply “EarlyStop” logic based on the loss value, use “-” negative value because smaller loss is better
-        #EarlyStopHandler(trainer=None, patience=20, score_function=lambda x: -x.state.output[0]["loss"], epoch_level=False),
-        #LrScheduleHandler(lr_scheduler=lr_scheduler, print_lr=True),
         ValidationHandler(validator=evaluator, interval=1, epoch_level=True),
         # use the logger "train_log" defined at the beginning of this program
         StatsHandler(name="train_log",

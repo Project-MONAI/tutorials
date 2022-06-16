@@ -153,4 +153,4 @@ deployment/ray/mednist_classifier_start.py
 
 # archives
 archives/
-acceleration/*.nsys-rep
+acceleration/output

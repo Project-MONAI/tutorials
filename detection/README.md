@@ -95,3 +95,8 @@ This bash script first combines the 10 result json files from 10 folds into one 
 then runs the official LUNA16 evaluation scripts saved in ./evaluation_luna16.
 
 The evaluation scores will be stored in ./result/eval_luna16_scores
+
+We trained and tested on a DGX1V 16G GPU, got FROC curve as below. It is comparable with the result in [nnDetection](https://arxiv.org/pdf/2106.00817.pdf) Figure 2.
+<p align="center">
+  <img src="froc_result_luna16_all.png" alt="detection inference FROC")
+</p>

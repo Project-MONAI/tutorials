@@ -130,7 +130,7 @@ def main():
         score_thresh=args.score_thresh,
         topk_candidates_per_level=1000,
         nms_thresh=args.nms_thresh,
-        detections_per_img=300,
+        detections_per_img=100,
     )
     detector.set_sliding_window_inferer(
         roi_size=patch_size,

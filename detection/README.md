@@ -103,4 +103,5 @@ We trained and tested on a DGX1V 16G GPU, got FROC result as shown in the table 
 | [Liu et al. (2019)](https://arxiv.org/pdf/1906.03467.pdf)   | **0.848** | 0.876 | 0.905 | 0.933 | 0.943 | 0.957 | 0.970 |
 | [nnDetection (2021)](https://arxiv.org/pdf/2106.00817.pdf)  | 0.812 | **0.885** | **0.927** | 0.950 | 0.969 | 0.979 | 0.985 |
 | MONAI detection     | 0.838 | 0.881 | 0.926 | **0.958** | **0.975** | **0.985** | **0.988** |
+
 **Table 1**. The FROC sensitivity values at the predefined false positive per scan thresholds of the LUNA16 challenge.

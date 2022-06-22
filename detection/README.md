@@ -16,8 +16,8 @@ LUNA16 is a public dataset of CT lung nodule detection. Using raw CT scans, the 
 
 Disclaimer: We are not the host of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the dataset!
 
-We split the data into 10 folds using the script from nndetection in https://github.com/MIC-DKFZ/nnDetection/blob/main/projects/Task016_Luna/scripts/prepare.py.
-The resulted data split files can be downloaded from https://github.com/Project-MONAI/MONAI-extra-test-data/releases/download/0.8.1/LUNA16_datasplit-20220615T233840Z-001.zip
+We follow the official 10-fold data splitting from LUNA16 challenge and generate data split json files using the script from [nndetection](https://github.com/MIC-DKFZ/nnDetection/blob/main/projects/Task016_Luna/scripts/prepare.py).
+The resulted json files can be downloaded from https://github.com/Project-MONAI/MONAI-extra-test-data/releases/download/0.8.1/LUNA16_datasplit-20220615T233840Z-001.zip
 In these files, the values of "box" are the ground truth boxes in world coordinate.
 
 ### 2. Questions and bugs
@@ -31,7 +31,7 @@ In these files, the values of "box" are the ground truth boxes in world coordina
 
 The raw CT images in LUNA16 have various of voxel sizes. The first step is to resample them to the same voxel size, which is defined in the value of "spacing" in [./config/config_train_luna16_16g.json](./config/config_train_luna16_16g.json).
 
-Then, please open [luna16_prepare_env_files.py](luna16_prepare_env_files.py), change the value of "raw_data_base_dir" to the directory where you store the downloaded images, the value of "downloaded_datasplit_dir" to where you downloaded the data split files, and the value of "resampled_data_base_dir" to the target directory where you will save the resampled images.
+Then, please open [luna16_prepare_env_files.py](luna16_prepare_env_files.py), change the value of "raw_data_base_dir" to the directory where you store the downloaded images, the value of "downloaded_datasplit_dir" to where you downloaded the data split json files, and the value of "resampled_data_base_dir" to the target directory where you will save the resampled images.
 
 Finally, resample the images by running
 ```bash

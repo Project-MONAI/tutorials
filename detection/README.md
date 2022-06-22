@@ -68,6 +68,8 @@ The training and validation curves for 300 epochs of 10 folds are shown as below
   <img src="luna16_tfevent.png" alt="detection train curve")
 </p>
 
+With a single DGX1V 16G GPU, it took around 55 hours to train 300 epochs for each data fold.
+
 #### [3D Detection Inference](./luna16_testing.py)
 
 If you have a different GPU memory size than 16G, please maximize "val_patch_size" to fit the GPU you use.
@@ -96,7 +98,7 @@ then runs the official LUNA16 evaluation scripts saved in ./evaluation_luna16.
 
 The evaluation scores will be stored in ./result/eval_luna16_scores
 
-We trained and tested on a DGX1V 16G GPU, got FROC result as shown in the table below. It is comparable with the result in [nnDetection](https://arxiv.org/pdf/2106.00817.pdf) Table 2.
+We got FROC result as shown in the table below. It is comparable with the result in [nnDetection](https://arxiv.org/pdf/2106.00817.pdf) Table 2.
 
 | Methods             | 1/8   | 1/4   | 1/2   | 1     | 2     | 4     | 8     |
 | :---:               | :---: | :---: | :---: | :---: | :---: | :---: | :---: |

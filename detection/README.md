@@ -96,7 +96,11 @@ then runs the official LUNA16 evaluation scripts saved in ./evaluation_luna16.
 
 The evaluation scores will be stored in ./result/eval_luna16_scores
 
-We trained and tested on a DGX1V 16G GPU, got FROC curve as below. It is comparable with the result in [nnDetection](https://arxiv.org/pdf/2106.00817.pdf) Figure 2.
-<p align="center">
-  <img src="froc_result_luna16_all.png" alt="detection inference FROC")
-</p>
+We trained and tested on a DGX1V 16G GPU, got FROC curve as below. It is comparable with the result in [nnDetection](https://arxiv.org/pdf/2106.00817.pdf) Table 2.
+
+| Methods             | 1/8   | 1/4   | 1/2   | 1     | 2     | 4     | 8     |
+| :---:               | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| Liu et al. (2019)   | 0.848 | 0.876 | 0.905 | 0.933 | 0.943 | 0.957 | 0.970 |
+| Song et al. (2020)  | -     | -     | -     | 0.911 | 0.928 | -     | 0.948 |
+| nndetection (2021)  | 0.812 | 0.885 | 0.927 | 0.950 | 0.969 | 0.979 | 0.985 |
+| MONAI detection     | 0.838 | 0.881 | 0.926 | 0.958 | 0.975 | 0.985 | 0.988 |

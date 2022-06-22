@@ -58,7 +58,7 @@ If you have a different GPU memory size, please change "batch_size", "patch_size
 For fold i, please run
 ```bash
 python3 luna16_training.py \
-    -e ./config/environment_luna16_fold${fold}.json \
+    -e ./config/environment_luna16_fold${i}.json \
     -c ./config/config_train_luna16_16g.json
 ```
 
@@ -72,12 +72,12 @@ With a single DGX1V 16G GPU, it took around 55 hours to train 300 epochs for eac
 
 #### [3D Detection Inference](./luna16_testing.py)
 
-If you have a different GPU memory size than 16G, please maximize "val_patch_size" to fit the GPU you use.
+If you have a different GPU memory size than 16G, please maximize "val_patch_size" in [./config/config_train_luna16_16g.json](./config/config_train_luna16_16g.json) to fit the GPU you use.
 
 For fold i, please run
 ```bash
 python3 luna16_testing.py \
-    -e ./config/environment_luna16_fold${fold}.json \
+    -e ./config/environment_luna16_fold${i}.json \
     -c ./config/config_train_luna16_16g.json
 ```
 

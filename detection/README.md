@@ -112,13 +112,15 @@ We got FROC result as shown in the table below. It is comparable with the result
 
 **Table 1**. The FROC sensitivity values at the predefined false positive per scan thresholds of the LUNA16 challenge.
 This MONAI example uses similar training and inference workflows and same hyper-parameters as [nnDetection](https://github.com/MIC-DKFZ/nnDetection) LUNA16. 
+
 The major differences are: 
 1) we use a different learning rate scheduler, 
 2) during training, we run validation with 5% of the training data and select the best model for inference, while nnDetection directly uses the model from the last epoch for inference, 
 3) when input image is too large to fit in the GPU memory, we perform inference on patches and do sliding window aggregation on the predicted class logits and box regression, while nnDetection uses a different aggregation stategy from [Jaeger et al.](http://proceedings.mlr.press/v116/jaeger20a/jaeger20a.pdf). 
+
 There are other differences that may have minor impact on the performance: 
-4) we use RetinaNet, while nnDetection uses RetinaUnet from [Jaeger et al.](http://proceedings.mlr.press/v116/jaeger20a/jaeger20a.pdf), 
-5) we directly apply the trained model to the images/patches during inference, while nnDetection applies the model to the images/patches flipped in three axes and average the flipped-back results.
+1) we use RetinaNet, while nnDetection uses RetinaUnet from [Jaeger et al.](http://proceedings.mlr.press/v116/jaeger20a/jaeger20a.pdf), 
+2) we directly apply the trained model to the images/patches during inference, while nnDetection applies the model to the images/patches flipped in three axes and average the flipped-back results.
 
 
 ### Acknowledgement

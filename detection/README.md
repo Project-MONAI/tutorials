@@ -5,9 +5,13 @@ The workflow of MONAI detection module is shown in the following figure.
   <img src="https://github.com/Project-MONAI/MONAI/blob/dev/docs/images/detection.png" alt="detection scheme")
 </p>
 
-MONAI implementation is based on:
+MONAI implementation is based on the following papers:
 
-Lin, Tsung-Yi, et al. "Focal loss for dense object detection." ICCV 2017. https://arxiv.org/abs/1708.02002
+RetinaNet: Lin, Tsung-Yi, et al. "Focal loss for dense object detection." ICCV 2017. https://arxiv.org/abs/1708.02002
+
+Implementation details: Baumgartner, Michael, et al. "nndetection: A self-configuring method for medical object detection." MICCAI 2021. https://arxiv.org/pdf/2106.00817.pdf
+
+ATSS matcher: Zhang, Shifeng, et al. "Bridging the gap between anchor-based and anchor-free detection via adaptive training sample selection." CVPR 2020. https://openaccess.thecvf.com/content_CVPR_2020/papers/Zhang_Bridging_the_Gap_Between_Anchor-Based_and_Anchor-Free_Detection_via_Adaptive_CVPR_2020_paper.pdf
 
 ### 1. Data
 
@@ -107,3 +111,7 @@ We got FROC result as shown in the table below. It is comparable with the result
 | MONAI detection     | 0.835 | **0.886** | **0.931** | **0.957** | **0.974** | **0.983** | **0.988** |
 
 **Table 1**. The FROC sensitivity values at the predefined false positive per scan thresholds of the LUNA16 challenge.
+
+
+### Acknowledgement
+We greatly appreciate Michael Baumgartner, who is one of the main contributor of [nndetection](https://github.com/MIC-DKFZ/nnDetection) project, for his vital cooperation and help in ensuring the successful completion of this MONAI detection module.

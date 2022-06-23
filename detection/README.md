@@ -114,4 +114,4 @@ We got FROC result as shown in the table below. It is comparable with the result
 
 
 ### Acknowledgement
-We greatly appreciate Michael Baumgartner, who is one of the main contributor of [nndetection](https://github.com/MIC-DKFZ/nnDetection) project, for his vital cooperation and help in ensuring the successful completion of this MONAI detection module.
+We greatly appreciate Michael Baumgartner, one of the main contributor of [nndetection](https://github.com/MIC-DKFZ/nnDetection) project, for his vital cooperation and help in ensuring the successful completion of this MONAI detection module.

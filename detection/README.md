@@ -117,7 +117,7 @@ This MONAI example uses similar training and inference workflows and same hyper-
 The major differences are:
 1) we use a different learning rate scheduler,
 2) during training, we run validation with 5% of the training data and select the best model for inference, while nnDetection directly uses the model from the last epoch for inference,
-3) when input image is too large to fit in the GPU memory, we perform inference on patches and do sliding window aggregation on the predicted class logits and box regression, while nnDetection uses a different aggregation stategy from [Jaeger et al.](http://proceedings.mlr.press/v116/jaeger20a/jaeger20a.pdf).
+3) when input image is too large to fit in the GPU memory, inference is performed on patches. We do sliding window aggregation on the predicted class logits and box regression, while nnDetection uses a different aggregation stategy from [Jaeger et al.](http://proceedings.mlr.press/v116/jaeger20a/jaeger20a.pdf).
 
 
 There are other differences that may have minor impact on the performance:

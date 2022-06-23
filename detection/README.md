@@ -102,7 +102,7 @@ then runs the official LUNA16 evaluation scripts saved in ./evaluation_luna16.
 
 The evaluation scores will be stored in ./result/eval_luna16_scores
 
-We got FROC result as shown in the table below. It is comparable with the result in [nnDetection](https://arxiv.org/pdf/2106.00817.pdf) Table 2. The major difference beween this MONAI example and nndetection on LUNA16 is the learning rate scheduler.
+We got FROC result as shown in the table below. It is comparable with the result in [nnDetection](https://arxiv.org/pdf/2106.00817.pdf) Table 2. This MONAI example uses the same hyper-parameters searched by nndetection, except that it uses a different learning rate scheduler.
 
 | Methods             | 1/8   | 1/4   | 1/2   | 1     | 2     | 4     | 8     |
 | :---:               | :---: | :---: | :---: | :---: | :---: | :---: | :---: |

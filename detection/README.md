@@ -111,6 +111,7 @@ We got FROC result as shown in the table below. It is comparable with the result
 | MONAI detection     | 0.835 | **0.885** | **0.931** | **0.957** | **0.974** | **0.983** | **0.988** |
 
 **Table 1**. The FROC sensitivity values at the predefined false positive per scan thresholds of the LUNA16 challenge.
+
 This MONAI example uses similar training and inference workflows and same hyper-parameters as [nnDetection](https://github.com/MIC-DKFZ/nnDetection) LUNA16.
 
 The major differences are:

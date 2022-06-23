@@ -119,7 +119,7 @@ The major differences are:
 3) when input image is too large to fit in the GPU memory, we perform inference on patches and do sliding window aggregation on the predicted class logits and box regression, while nnDetection uses a different aggregation stategy from [Jaeger et al.](http://proceedings.mlr.press/v116/jaeger20a/jaeger20a.pdf). 
 
 There are other differences that may have minor impact on the performance: 
-1) we use RetinaNet, while nnDetection uses RetinaUnet from [Jaeger et al.](http://proceedings.mlr.press/v116/jaeger20a/jaeger20a.pdf), 
+1) we use RetinaNet, while nnDetection uses [RetinaUnet](http://proceedings.mlr.press/v116/jaeger20a/jaeger20a.pdf), 
 2) we directly apply the trained model to the images/patches during inference, while nnDetection applies the model to the images/patches flipped in three axes and average the flipped-back results.
 
 

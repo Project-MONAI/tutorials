@@ -5,7 +5,7 @@ The workflow of MONAI detection module is shown in the following figure.
   <img src="https://github.com/Project-MONAI/MONAI/blob/dev/docs/images/detection.png" alt="detection scheme")
 </p>
 
-MONAI implementation is based on the following papers:
+MONAI detection implementation is based on the following papers:
 
 **RetinaNet:** Lin, Tsung-Yi, et al. "Focal loss for dense object detection." ICCV 2017. https://arxiv.org/abs/1708.02002
 

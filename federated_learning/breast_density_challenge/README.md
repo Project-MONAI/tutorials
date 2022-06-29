@@ -174,3 +174,6 @@ for the global model (should be named `SRV_best_FL_global_model.pt`).
 			...
     }
 ```
+
+## Challenge evaluation
+The script used for evaluating different submissions is available at [challenge_evaluate.py](./challenge_evaluate.py)

@@ -63,4 +63,3 @@ The following example shows predicted boxed (red) and ground truth boxes (green)
 ![Step 4](figures/step-4.png)
 
 After completing these steps, the user can analyze the boxes using 3D Slicer's basic visualization capabilities (e.g., zoom in, zoom out).
-

@@ -31,7 +31,7 @@ In these files, the values of "box" are the ground truth boxes in world coordina
 - For bugs relating to the running of a tutorial, please create an issue in [this repository](https://github.com/Project-MONAI/Tutorials/issues).
 
 ### 3. Run the example
-#### [Prepare Your Data](./luna16_prepare_images.py)
+#### [3.1 Prepare Your Data](./luna16_prepare_images.py)
 
 The raw CT images in LUNA16 have various of voxel sizes. The first step is to resample them to the same voxel size, which is defined in the value of "spacing" in [./config/config_train_luna16_16g.json](./config/config_train_luna16_16g.json).
 
@@ -45,7 +45,7 @@ python3 luna16_prepare_images.py -c ./config/config_train_luna16_16g.json
 
 The original images are with mhd/raw format, the resampled images will be with Nifti format.
 
-#### [3D Detection Training](./luna16_training.py)
+#### [3.2 3D Detection Training](./luna16_training.py)
 
 The LUNA16 dataset was splitted into 10-fold to run cross-fold training and inference.
 
@@ -85,7 +85,7 @@ python3 luna16_testing.py \
     -c ./config/config_train_luna16_16g.json
 ```
 
-#### [LUNA16 Detection Evaluation](./run_luna16_offical_eval.sh)
+#### [3.3 LUNA16 Detection Evaluation](./run_luna16_offical_eval.sh)
 Please download the official LUNA16 evaluation scripts from https://luna16.grand-challenge.org/Evaluation/,
 and save it as ./evaluation_luna16
 
@@ -113,7 +113,7 @@ We got FROC result as shown in the table below. It is comparable with the result
 **Table 1**. The FROC sensitivity values at the predefined false positive per scan thresholds of the LUNA16 challenge.
 
 
-#### Comparison to nnDetection
+#### 3.4 Comparison to nnDetection
 This MONAI example uses similar training and inference workflows as [nnDetection](https://github.com/MIC-DKFZ/nnDetection) LUNA16, with same hyper-parameters and data augmentation pipeline.
 
 The major differences are as follows:

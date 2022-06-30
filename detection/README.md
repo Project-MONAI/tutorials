@@ -74,7 +74,7 @@ The training and validation curves for 300 epochs of 10 folds are shown as below
 
 With a single DGX1V 16G GPU, it took around 55 hours to train 300 epochs for each data fold.
 
-#### [3D Detection Inference](./luna16_testing.py)
+#### [3.3 3D Detection Inference](./luna16_testing.py)
 
 If you have a different GPU memory size than 16G, please maximize "val_patch_size" in [./config/config_train_luna16_16g.json](./config/config_train_luna16_16g.json) to fit the GPU you use.
 
@@ -85,7 +85,7 @@ python3 luna16_testing.py \
     -c ./config/config_train_luna16_16g.json
 ```
 
-#### [3.3 LUNA16 Detection Evaluation](./run_luna16_offical_eval.sh)
+#### [3.4 LUNA16 Detection Evaluation](./run_luna16_offical_eval.sh)
 Please download the official LUNA16 evaluation scripts from https://luna16.grand-challenge.org/Evaluation/,
 and save it as ./evaluation_luna16
 
@@ -113,7 +113,7 @@ We got FROC result as shown in the table below. It is comparable with the result
 **Table 1**. The FROC sensitivity values at the predefined false positive per scan thresholds of the LUNA16 challenge.
 
 
-#### 3.4 Comparison to nnDetection
+#### 3.5 Comparison to nnDetection
 This MONAI example uses similar training and inference workflows as [nnDetection](https://github.com/MIC-DKFZ/nnDetection) LUNA16, with same hyper-parameters and data augmentation pipeline.
 
 The major differences are as follows:

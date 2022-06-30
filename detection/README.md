@@ -9,7 +9,7 @@ MONAI detection implementation is based on the following papers:
 
 **RetinaNet:** Lin, Tsung-Yi, et al. "Focal loss for dense object detection." ICCV 2017. https://arxiv.org/abs/1708.02002
 
-**Implementation details:** Baumgartner, Michael, et al. "nnDetection: A self-configuring method for medical object detection." MICCAI 2021. https://arxiv.org/pdf/2106.00817.pdf
+**Implementation details:** Baumgartner and Jaeger et al. "nnDetection: A self-configuring method for medical object detection." MICCAI 2021. https://arxiv.org/pdf/2106.00817.pdf
 
 **ATSS Matcher:** Zhang, Shifeng, et al. "Bridging the gap between anchor-based and anchor-free detection via adaptive training sample selection." CVPR 2020. https://openaccess.thecvf.com/content_CVPR_2020/papers/Zhang_Bridging_the_Gap_Between_Anchor-Based_and_Anchor-Free_Detection_via_Adaptive_CVPR_2020_paper.pdf
 
@@ -112,18 +112,21 @@ We got FROC result as shown in the table below. It is comparable with the result
 
 **Table 1**. The FROC sensitivity values at the predefined false positive per scan thresholds of the LUNA16 challenge.
 
-This MONAI example uses similar training and inference workflows and same hyper-parameters as [nnDetection](https://github.com/MIC-DKFZ/nnDetection) LUNA16.
+#### [Comparison to nnDetection]
+This MONAI example uses similar training and inference workflows as [nnDetection](https://github.com/MIC-DKFZ/nnDetection) LUNA16, with same hyper-parameters and data augmentation pipeline.
 
-The major differences are:
-1) we use a different learning rate scheduler,
-2) during training, we run validation with 5% of the training data and select the best model for inference, while nnDetection directly uses the model from the last epoch for inference,
-3) when input image is too large to fit in the GPU memory, inference is performed on patches. We do sliding window aggregation on the predicted class logits and box regression, while nnDetection uses a different aggregation stategy from [Jaeger et al.](http://proceedings.mlr.press/v116/jaeger20a/jaeger20a.pdf).
+The major differences are as follows:
+1) We use a different learning rate scheduler than nnDetection.
+2) We train 300 epochs (around 150k iterations), while nnDetection trains 125k iterations.
+3) During training, we run validation with 5% of the training data and save the best model, while nnDetection directly saves the model from the last iteration for inference.
+4) When input image is too large to fit in the GPU memory, inference is performed on patches. We do sliding window aggregation on the predicted class logits and box regression, while nnDetection uses a different aggregation stategy from [Jaeger et al.](http://proceedings.mlr.press/v116/jaeger20a/jaeger20a.pdf).
 
 
 There are other differences that may have minor impact on the performance:
-1) we use RetinaNet, while nnDetection uses [RetinaUnet](http://proceedings.mlr.press/v116/jaeger20a/jaeger20a.pdf),
-2) we directly apply the trained model to the images/patches during inference, while nnDetection applies the model to the images/patches flipped in three axes and average the flipped-back results.
+1) We use different network architecture. We use [RetinaNet](https://arxiv.org/abs/1708.02002) with ResNet as backbone, while nnDetection uses [RetinaUnet](http://proceedings.mlr.press/v116/jaeger20a/jaeger20a.pdf) with U-net as backbone.
+2) We directly apply the trained model to the images/patches during inference, while nnDetection uses mirror aggregation by applying the trained model to the images/patches flipped in three axes and averaging the flipped-back results.
+3) We read in boxes from data loader and do data augmentation on boxes. nnDetection, on the other hand, reads in image masks with ellipsoid as foreground and do data augmentation on masks, then convert the masks to boxes to train the network.
 
 
 ### Acknowledgement
-We greatly appreciate Michael Baumgartner, one of the main contributor of [nnDetection](https://github.com/MIC-DKFZ/nnDetection) project, for his vital cooperation and help in ensuring the successful completion of this MONAI detection module.
+We greatly appreciate Michael Baumgartner, one of the main contributors of [nnDetection](https://github.com/MIC-DKFZ/nnDetection) project, for his vital cooperation and help in ensuring the successful completion of this MONAI detection module.

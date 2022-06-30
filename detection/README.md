@@ -9,7 +9,7 @@ MONAI detection implementation is based on the following papers:
 
 **RetinaNet:** Lin, Tsung-Yi, et al. "Focal loss for dense object detection." ICCV 2017. https://arxiv.org/abs/1708.02002
 
-**Implementation details:** Baumgartner, Michael, et al. "nnDetection: A self-configuring method for medical object detection." MICCAI 2021. https://arxiv.org/pdf/2106.00817.pdf
+**Implementation details:** Baumgartner and Jaeger et al. "nnDetection: A self-configuring method for medical object detection." MICCAI 2021. https://arxiv.org/pdf/2106.00817.pdf
 
 **ATSS Matcher:** Zhang, Shifeng, et al. "Bridging the gap between anchor-based and anchor-free detection via adaptive training sample selection." CVPR 2020. https://openaccess.thecvf.com/content_CVPR_2020/papers/Zhang_Bridging_the_Gap_Between_Anchor-Based_and_Anchor-Free_Detection_via_Adaptive_CVPR_2020_paper.pdf
 
@@ -31,7 +31,7 @@ In these files, the values of "box" are the ground truth boxes in world coordina
 - For bugs relating to the running of a tutorial, please create an issue in [this repository](https://github.com/Project-MONAI/Tutorials/issues).
 
 ### 3. Run the example
-#### [Prepare Your Data](./luna16_prepare_images.py)
+#### [3.1 Prepare Your Data](./luna16_prepare_images.py)
 
 The raw CT images in LUNA16 have various of voxel sizes. The first step is to resample them to the same voxel size, which is defined in the value of "spacing" in [./config/config_train_luna16_16g.json](./config/config_train_luna16_16g.json).
 
@@ -45,7 +45,7 @@ python3 luna16_prepare_images.py -c ./config/config_train_luna16_16g.json
 
 The original images are with mhd/raw format, the resampled images will be with Nifti format.
 
-#### [3D Detection Training](./luna16_training.py)
+#### [3.2 3D Detection Training](./luna16_training.py)
 
 The LUNA16 dataset was splitted into 10-fold to run cross-fold training and inference.
 
@@ -74,7 +74,7 @@ The training and validation curves for 300 epochs of 10 folds are shown as below
 
 With a single DGX1V 16G GPU, it took around 55 hours to train 300 epochs for each data fold.
 
-#### [3D Detection Inference](./luna16_testing.py)
+#### [3.3 3D Detection Inference](./luna16_testing.py)
 
 If you have a different GPU memory size than 16G, please maximize "val_patch_size" in [./config/config_train_luna16_16g.json](./config/config_train_luna16_16g.json) to fit the GPU you use.
 
@@ -85,7 +85,7 @@ python3 luna16_testing.py \
     -c ./config/config_train_luna16_16g.json
 ```
 
-#### [LUNA16 Detection Evaluation](./run_luna16_offical_eval.sh)
+#### [3.4 LUNA16 Detection Evaluation](./run_luna16_offical_eval.sh)
 Please download the official LUNA16 evaluation scripts from https://luna16.grand-challenge.org/Evaluation/,
 and save it as ./evaluation_luna16
 
@@ -112,18 +112,22 @@ We got FROC result as shown in the table below. It is comparable with the result
 
 **Table 1**. The FROC sensitivity values at the predefined false positive per scan thresholds of the LUNA16 challenge.
 
-This MONAI example uses similar training and inference workflows and same hyper-parameters as [nnDetection](https://github.com/MIC-DKFZ/nnDetection) LUNA16.
 
-The major differences are:
-1) we use a different learning rate scheduler,
-2) during training, we run validation with 5% of the training data and select the best model for inference, while nnDetection directly uses the model from the last epoch for inference,
-3) when input image is too large to fit in the GPU memory, inference is performed on patches. We do sliding window aggregation on the predicted class logits and box regression, while nnDetection uses a different aggregation stategy from [Jaeger et al.](http://proceedings.mlr.press/v116/jaeger20a/jaeger20a.pdf).
+#### 3.5 Comparison to nnDetection
+This MONAI example uses similar training and inference workflows as [nnDetection](https://github.com/MIC-DKFZ/nnDetection) LUNA16, with same hyper-parameters and data augmentation pipeline.
+
+The major differences are as follows:
+1) We use a different learning rate scheduler than nnDetection.
+2) We train 300 epochs (around 150k iterations), while nnDetection trains 125k iterations.
+3) During training, we run validation with 5% of the training data and save the best model, while nnDetection directly saves the model from the last iteration for inference.
+4) When input image is too large to fit in the GPU memory, inference is performed on patches. We do sliding window aggregation on the predicted class logits and box regression, while nnDetection uses a different aggregation stategy from [Jaeger et al.](http://proceedings.mlr.press/v116/jaeger20a/jaeger20a.pdf).
 
 
 There are other differences that may have minor impact on the performance:
-1) we use RetinaNet, while nnDetection uses [RetinaUnet](http://proceedings.mlr.press/v116/jaeger20a/jaeger20a.pdf),
-2) we directly apply the trained model to the images/patches during inference, while nnDetection applies the model to the images/patches flipped in three axes and average the flipped-back results.
+1) We use different network architecture. We use [RetinaNet](https://arxiv.org/abs/1708.02002) with ResNet as backbone, while nnDetection uses [RetinaUnet](http://proceedings.mlr.press/v116/jaeger20a/jaeger20a.pdf) with U-net as backbone.
+2) We directly apply the trained model to the images/patches during inference, while nnDetection uses mirror aggregation by applying the trained model to the images/patches flipped in three axes and averaging the flipped-back results.
+3) We read in boxes from data loader and do data augmentation on boxes. nnDetection, on the other hand, reads in image masks with ellipsoid as foreground and do data augmentation on masks, then convert the masks to boxes to train the network.
 
 
 ### Acknowledgement
-We greatly appreciate Michael Baumgartner, one of the main contributor of [nnDetection](https://github.com/MIC-DKFZ/nnDetection) project, for his vital cooperation and help in ensuring the successful completion of this MONAI detection module.
+We greatly appreciate Michael Baumgartner, one of the main contributors of [nnDetection](https://github.com/MIC-DKFZ/nnDetection) project, for his vital cooperation and help in ensuring the successful completion of this MONAI detection module.

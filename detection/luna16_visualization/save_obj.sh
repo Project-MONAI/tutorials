@@ -15,4 +15,3 @@ python save_obj.py  --image_coordinate \
                     --image_data_root ${IMAGE_DATA_ROOT} \
                     --input_box_mode "xyzxyz" \
                     --input_dataset_json ${INPUT_DATASET_JSON} \
-                    --output_dir ${OUTPUT_DIR}

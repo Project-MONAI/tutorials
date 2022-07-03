@@ -151,4 +151,3 @@ deployment/ray/mednist_classifier_start.py
 *.nii.gz
 3d_segmentation/out
 *.nsys-rep
-acceleration/outputs

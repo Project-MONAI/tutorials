@@ -52,8 +52,9 @@ def main():
     )
     parser.add_argument(
         "--input_box_mode",
+        action="store",
         type=str,
-        default="",
+        required=True,
         help="input box coordinate mode",
     ),
     parser.add_argument(

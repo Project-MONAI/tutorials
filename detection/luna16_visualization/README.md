@@ -5,7 +5,7 @@ Visualizing box prediction/annotation in 3D medical image detection is not strai
 ## Prerequisite
 
 - The Version of 3D Slicer should be **4.11.20210226** or later.
-- Box information should be stored in a ".json" file. The "data\_sample.json" file is an example. The information of *N* boxes is stored under the key "box" as *N* lists. The six values are the *X*/*Y*/*Z* coordinates of the box center and the box length in the *X*/*Y*/*Z* axes. All the coordinate values are in the world coordinate system.
+- Box information should be stored in a ".json" file. The information of *N* boxes is stored under the key "box" as *N* lists. The six values could be in different 3D [modes](https://github.com/Project-MONAI/MONAI/blob/edf3b742a4ae85d1f30462ed0c7511c520fae888/monai/data/box_utils.py#L447-L456) (e.g., corner or center coordinates). All the coordinate values are in either world coordinate system or image coordinate system. The "data\_sample.json" file is an example with X/Y/Z-axial center coordinates and box lengths (box mode **cccwhd**).
 
 ```
 "box": [
@@ -32,13 +32,30 @@ Visualizing box prediction/annotation in 3D medical image detection is not strai
 
 ### 1. Create ".obj" file for predictions/annotation using the "save\_obj.sh" script.
 
-```
-#!/bin/bash
+User needs to specify the box mode and whether to use image coordinates. If image coordinates are specified, the image root directory needs to be provided.
 
+#### Example of boxes in world coordinate
+
+```
 INPUT_DATASET_JSON="./data_sample.json"
 OUTPUT_DIR="./out"
 
-python save_obj.py  --input_dataset_json ${INPUT_DATASET_JSON} \
+python save_obj.py  --input_box_mode "cccwhd" \
+                    --input_dataset_json ${INPUT_DATASET_JSON} \
+                    --output_dir ${OUTPUT_DIR}
+```
+
+#### Example of boxes in image coordinate
+
+```
+IMAGE_DATA_ROOT="/data_root"
+INPUT_DATASET_JSON="./data_sample_xyzxyz_image-coordinate.json"
+OUTPUT_DIR="./out_image_coord"
+
+python save_obj.py  --image_coordinate \
+                    --image_data_root ${IMAGE_DATA_ROOT} \
+                    --input_box_mode "xyzxyz" \
+                    --input_dataset_json ${INPUT_DATASET_JSON} \
                     --output_dir ${OUTPUT_DIR}
 ```
 

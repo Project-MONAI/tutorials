@@ -14,9 +14,12 @@
 import argparse
 import csv
 import json
+import monai
 import nibabel as nib
 import numpy as np
 import os
+
+from monai.data.box_utils import convert_box_mode
 
 
 def save_obj(vertices, faces, filename):
@@ -29,20 +32,44 @@ def save_obj(vertices, faces, filename):
         for t in faces:
             f.write("f {} {} {} {}\n".format(*(np.array(t) + 1)))
 
+    return
+
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Save .obj files of boxes for visualization using 3D Slicer.",
+    )
+    parser.add_argument(
+        "--image_coordinate",
+        action="store_true",
+        help="if box coordinates in image coordinate",
+    )
+    parser.add_argument(
+        "--image_data_root",
+        type=str,
+        default="",
+        help="image data root",
+    )
+    parser.add_argument(
+        "--input_box_mode",
+        action="store",
+        type=str,
+        required=True,
+        help="input box coordinate mode",
+    ),
     parser.add_argument(
         "--input_dataset_json",
         action="store",
         type=str,
         required=True,
+        help="the dataset .json with box information",
     )
     parser.add_argument(
         "--output_dir",
         action="store",
         type=str,
         required=True,
+        help="output directory",
     )
     args = parser.parse_args()
 
@@ -51,6 +78,9 @@ def main():
 
     with open(os.path.join(args.input_dataset_json)) as f:
         input_dataset = json.load(f)
+
+    if args.image_coordinate:
+        image_loader = monai.transforms.LoadImage(reader=None, image_only=False)
 
     for key in input_dataset.keys():
         section = input_dataset[key]
@@ -61,17 +91,36 @@ def main():
             box_filename = box_filename.split(os.sep)[-1]
             print("-- {0:d}th case name:".format(_k + 1), box_filename)
 
+            if args.image_coordinate:
+                image_name = os.path.join(args.image_data_root, section[_k]["image"])
+                image_data = image_loader(image_name)
+                affine = image_data[1]["original_affine"]
+
+                # convert to RAS coordinate system (required by 3D Slicer)
+                for _i in range(3):
+                    if affine[_i, _i] < 0:
+                        affine[_i, _i] *= -1.0
+                        affine[_i, 3] *= -1.0
+
             vertices = []
             faces = []
             _i = 0
-            for vec in box_data:
-                xmin = vec[0] - 0.5 * vec[3]
-                ymin = vec[1] - 0.5 * vec[4]
-                zmin = vec[2] - 0.5 * vec[5]
+            for _vec in box_data:
+                vec = convert_box_mode(
+                    np.expand_dims(np.array(_vec), axis=0),
+                    src_mode=args.input_box_mode,
+                    dst_mode="xyzxyz",
+                )
+                vec = vec.squeeze()
+                xmin, ymin, zmin = vec[0], vec[1], vec[2]
+                xmax, ymax, zmax = vec[3], vec[4], vec[5]
 
-                xmax = vec[0] + 0.5 * vec[3]
-                ymax = vec[1] + 0.5 * vec[4]
-                zmax = vec[2] + 0.5 * vec[5]
+                if args.image_coordinate:
+                    _out = affine @ np.transpose(np.array([xmin, ymin, zmin, 1]))
+                    xmin, ymin, zmin = _out[0], _out[1], _out[2]
+
+                    _out = affine @ np.transpose(np.array([xmax, ymax, zmax, 1]))
+                    xmax, ymax, zmax = _out[0], _out[1], _out[2]
 
                 vertices += [
                     (xmax, ymax, zmin),
@@ -95,7 +144,9 @@ def main():
 
                 _i += 1
 
-            save_obj(vertices, faces, os.path.join(args.output_dir, box_filename + ".obj"))
+            save_obj(
+                vertices, faces, os.path.join(args.output_dir, box_filename + ".obj")
+            )
 
     return
 

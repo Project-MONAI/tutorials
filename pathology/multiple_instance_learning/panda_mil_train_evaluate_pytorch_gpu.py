@@ -1,39 +1,36 @@
-import os
-import time
-import shutil
 import argparse
 import collections.abc
+import os
+import shutil
+import time
+
 import gdown
-
 import numpy as np
-from sklearn.metrics import cohen_kappa_score
-
 import torch
-import torch.nn as nn
-from torch.cuda.amp import GradScaler, autocast
-
-from torch.utils.tensorboard import SummaryWriter
-from torch.utils.data.distributed import DistributedSampler
-from torch.utils.data.dataloader import default_collate
-
 import torch.distributed as dist
 import torch.multiprocessing as mp
-
+import torch.nn as nn
+from monai.config import KeysCollection
 from monai.data import Dataset, load_decathlon_datalist
 from monai.data.wsi_reader import WSIReader
 from monai.metrics import Cumulative, CumulativeAverage
+from monai.networks.nets import milmodel
 from monai.transforms import (
-    Transform,
     Compose,
+    GridPatchd,
     LoadImaged,
+    MapTransform,
     RandFlipd,
     RandGridPatchd,
-    GridPatchd,
     RandRotate90d,
     ScaleIntensityRanged,
     ToTensord,
 )
-from monai.networks.nets import milmodel
+from sklearn.metrics import cohen_kappa_score
+from torch.cuda.amp import GradScaler, autocast
+from torch.utils.data.dataloader import default_collate
+from torch.utils.data.distributed import DistributedSampler
+from torch.utils.tensorboard import SummaryWriter
 
 
 def train_epoch(model, loader, optimizer, scaler, epoch, args):
@@ -194,7 +191,7 @@ def save_checkpoint(model, epoch, args, filename="model.pt", best_acc=0):
     print("Saving checkpoint", filename)
 
 
-class LabelEncodeIntegerGraded(Transform):
+class LabelEncodeIntegerGraded(MapTransform):
     """
     Convert an integer label to encoded array representation of length num_classes,
     with 1 filled in up to label index, and 0 otherwise. For example for num_classes=5,
@@ -202,14 +199,18 @@ class LabelEncodeIntegerGraded(Transform):
 
     Args:
         num_classes: the number of classes to convert to encoded format.
-        keys: keys of the corresponding items to be transformed
-            Defaults to ``['label']``.
+        keys: keys of the corresponding items to be transformed. Defaults to ``'label'``.
+        allow_missing_keys: don't raise exception if key is missing.
 
     """
 
-    def __init__(self, num_classes, keys=("label",)):
-        super().__init__()
-        self.keys = keys
+    def __init__(
+        self,
+        num_classes: int,
+        keys: KeysCollection = "label",
+        allow_missing_keys: bool = False,
+    ):
+        super().__init__(keys, allow_missing_keys)
         self.num_classes = num_classes
 
     def __call__(self, data):

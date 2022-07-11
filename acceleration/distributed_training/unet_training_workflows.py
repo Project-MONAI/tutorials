@@ -81,7 +81,6 @@ from monai.transforms import (
     RandCropByPosNegLabeld,
     RandRotate90d,
     ScaleIntensityd,
-    EnsureTyped,
 )
 
 
@@ -118,7 +117,6 @@ def train(args):
                 keys=["image", "label"], label_key="label", spatial_size=[96, 96, 96], pos=1, neg=1, num_samples=4
             ),
             RandRotate90d(keys=["image", "label"], prob=0.5, spatial_axes=[0, 2]),
-            EnsureTyped(keys=["image", "label"]),
         ]
     )
 
@@ -155,7 +153,6 @@ def train(args):
 
     train_post_transforms = Compose(
         [
-            EnsureTyped(keys="pred"),
             Activationsd(keys="pred", sigmoid=True),
             AsDiscreted(keys="pred", threshold=0.5),
             KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
@@ -196,7 +193,6 @@ def main():
     args = parser.parse_args()
 
     train(args=args)
-
 
 
 # python -m torch.distributed.launch --nproc_per_node=NUM_GPUS_PER_NODE

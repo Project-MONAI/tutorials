@@ -165,9 +165,8 @@ class BratsCacheDataset(DecathlonDataset):
 
 
 def main_worker(args):
-    local_rank = int(os.environ["LOCAL_RANK"])
     # disable logging for processes except 0 on every node
-    if local_rank != 0:
+    if args.local_rank != 0:
         f = open(os.devnull, "w")
         sys.stdout = sys.stderr = f
     if not os.path.exists(args.dir):
@@ -175,7 +174,7 @@ def main_worker(args):
 
     # initialize the distributed training process, every GPU runs in a process
     dist.init_process_group(backend="nccl", init_method="env://")
-    device = torch.device(f"cuda:{local_rank}")
+    device = torch.device(f"cuda:{args.local_rank}")
     torch.cuda.set_device(device)
     # use amp to accelerate training
     scaler = torch.cuda.amp.GradScaler()
@@ -369,6 +368,8 @@ def evaluate(model, val_loader, dice_metric, dice_metric_batch, post_trans):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--dir", default="./testdata", type=str, help="directory of Brain Tumor dataset")
+    # must parse the command-line argument: ``--local_rank=LOCAL_PROCESS_RANK``, which will be provided by DDP
+    parser.add_argument("--local_rank", type=int, help="node rank for distributed training")
     parser.add_argument("--epochs", default=300, type=int, metavar="N", help="number of total epochs to run")
     parser.add_argument("--lr", default=1e-4, type=float, help="learning rate")
     parser.add_argument("-b", "--batch_size", default=1, type=int, help="mini-batch size of every GPU")
@@ -391,9 +392,12 @@ def main():
     main_worker(args=args)
 
 
-# usage example(refer to https://github.com/pytorch/pytorch/blob/master/torch/distributed/run.py):
+# usage example(refer to https://github.com/pytorch/pytorch/blob/master/torch/distributed/launch.py):
 
-# torchrun --standalone --nnodes=1 --nproc_per_node=NUM_GPUS_PER_NODE brats_training_ddp.py -d DIR_OF_TESTDATA
+# python -m torch.distributed.launch --nproc_per_node=NUM_GPUS_PER_NODE
+#        --nnodes=NUM_NODES --node_rank=INDEX_CURRENT_NODE
+#        --master_addr="192.168.1.1" --master_port=1234
+#        brats_training_ddp.py -d DIR_OF_TESTDATA
 
 if __name__ == "__main__":
     main()

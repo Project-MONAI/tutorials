@@ -88,7 +88,6 @@ from monai.transforms import (
     RandSpatialCropd,
     Spacingd,
     ToDeviced,
-    EnsureType,
 )
 from monai.utils import set_determinism
 
@@ -279,7 +278,7 @@ def main_worker(args):
     dice_metric = DiceMetric(include_background=True, reduction="mean")
     dice_metric_batch = DiceMetric(include_background=True, reduction="mean_batch")
 
-    post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
+    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
 
     # start a typical PyTorch training
     best_metric = -1

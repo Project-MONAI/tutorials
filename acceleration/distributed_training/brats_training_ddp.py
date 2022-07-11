@@ -57,7 +57,6 @@ Some codes are taken from https://github.com/pytorch/examples/blob/master/imagen
 """
 
 import argparse
-import numpy as np
 import os
 import sys
 import time
@@ -89,7 +88,6 @@ from monai.transforms import (
     RandSpatialCropd,
     Spacingd,
     ToDeviced,
-    EnsureTyped,
     EnsureType,
 )
 from monai.utils import set_determinism
@@ -110,16 +108,16 @@ class ConvertToMultiChannelBasedOnBratsClassesd(MapTransform):
         for key in self.keys:
             result = []
             # merge label 2 and label 3 to construct TC
-            result.append(np.logical_or(d[key] == 2, d[key] == 3))
+            result.append(torch.logical_or(d[key] == 2, d[key] == 3))
             # merge labels 1, 2 and 3 to construct WT
             result.append(
-                np.logical_or(
-                    np.logical_or(d[key] == 2, d[key] == 3), d[key] == 1
+                torch.logical_or(
+                    torch.logical_or(d[key] == 2, d[key] == 3), d[key] == 1
                 )
             )
             # label 2 is ET
             result.append(d[key] == 2)
-            d[key] = np.stack(result, axis=0).astype(np.float32)
+            d[key] = torch.stack(result, dim=0)
         return d
 
 
@@ -132,7 +130,7 @@ class BratsCacheDataset(DecathlonDataset):
         self,
         root_dir,
         section,
-        transform=LoadImaged(["image", "label"]),
+        transform=None,
         cache_rate=1.0,
         num_workers=0,
         shuffle=False,
@@ -167,8 +165,9 @@ class BratsCacheDataset(DecathlonDataset):
 
 
 def main_worker(args):
+    local_rank = int(os.environ["LOCAL_RANK"])
     # disable logging for processes except 0 on every node
-    if args.local_rank != 0:
+    if local_rank != 0:
         f = open(os.devnull, "w")
         sys.stdout = sys.stderr = f
     if not os.path.exists(args.dir):
@@ -176,7 +175,7 @@ def main_worker(args):
 
     # initialize the distributed training process, every GPU runs in a process
     dist.init_process_group(backend="nccl", init_method="env://")
-    device = torch.device(f"cuda:{args.local_rank}")
+    device = torch.device(f"cuda:{local_rank}")
     torch.cuda.set_device(device)
     # use amp to accelerate training
     scaler = torch.cuda.amp.GradScaler()
@@ -187,6 +186,7 @@ def main_worker(args):
         [
             # load 4 Nifti images and stack them together
             LoadImaged(keys=["image", "label"]),
+            ToDeviced(keys=["image", "label"], device=device),
             EnsureChannelFirstd(keys="image"),
             ConvertToMultiChannelBasedOnBratsClassesd(keys="label"),
             Orientationd(keys=["image", "label"], axcodes="RAS"),
@@ -195,8 +195,6 @@ def main_worker(args):
                 pixdim=(1.0, 1.0, 1.0),
                 mode=("bilinear", "nearest"),
             ),
-            EnsureTyped(keys=["image", "label"]),
-            ToDeviced(keys=["image", "label"], device=device),
             RandSpatialCropd(keys=["image", "label"], roi_size=[224, 224, 144], random_size=False),
             RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=0),
             RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=1),
@@ -223,6 +221,7 @@ def main_worker(args):
     val_transforms = Compose(
         [
             LoadImaged(keys=["image", "label"]),
+            ToDeviced(keys=["image", "label"], device=device),
             EnsureChannelFirstd(keys="image"),
             ConvertToMultiChannelBasedOnBratsClassesd(keys="label"),
             Orientationd(keys=["image", "label"], axcodes="RAS"),
@@ -232,8 +231,6 @@ def main_worker(args):
                 mode=("bilinear", "nearest"),
             ),
             NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True),
-            EnsureTyped(keys=["image", "label"]),
-            ToDeviced(keys=["image", "label"], device=device),
         ]
     )
     val_ds = BratsCacheDataset(
@@ -372,8 +369,6 @@ def evaluate(model, val_loader, dice_metric, dice_metric_batch, post_trans):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--dir", default="./testdata", type=str, help="directory of Brain Tumor dataset")
-    # must parse the command-line argument: ``--local_rank=LOCAL_PROCESS_RANK``, which will be provided by DDP
-    parser.add_argument("--local_rank", type=int, help="node rank for distributed training")
     parser.add_argument("--epochs", default=300, type=int, metavar="N", help="number of total epochs to run")
     parser.add_argument("--lr", default=1e-4, type=float, help="learning rate")
     parser.add_argument("-b", "--batch_size", default=1, type=int, help="mini-batch size of every GPU")
@@ -396,12 +391,9 @@ def main():
     main_worker(args=args)
 
 
-# usage example(refer to https://github.com/pytorch/pytorch/blob/master/torch/distributed/launch.py):
+# usage example(refer to https://github.com/pytorch/pytorch/blob/master/torch/distributed/run.py):
 
-# python -m torch.distributed.launch --nproc_per_node=NUM_GPUS_PER_NODE
-#        --nnodes=NUM_NODES --node_rank=INDEX_CURRENT_NODE
-#        --master_addr="192.168.1.1" --master_port=1234
-#        brats_training_ddp.py -d DIR_OF_TESTDATA
+# torchrun --standalone --nnodes=1 --nproc_per_node=NUM_GPUS_PER_NODE brats_training_ddp.py -d DIR_OF_TESTDATA
 
 if __name__ == "__main__":
     main()

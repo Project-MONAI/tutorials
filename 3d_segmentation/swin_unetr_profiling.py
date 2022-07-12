@@ -220,7 +220,7 @@ def validation(epoch_iterable_val):
             with nvtx.annotate("sliding window", color="green"):
 #                 with torch.cuda.amp.autocast():
                 val_outputs = sliding_window_inference(val_inputs, (96, 96, 96), 4, model)
-            
+
             with nvtx.annotate("decollate batch", color="blue"):
                 val_labels_list = decollate_batch(val_labels)
                 val_labels_convert = [
@@ -233,7 +233,7 @@ def validation(epoch_iterable_val):
 
             with nvtx.annotate("compute metric", color="yellow"):
                 dice_metric(y_pred=val_output_convert, y=val_labels_convert)
-            
+
             epoch_iterable_val.set_description(
                 "Validate (%d / %d Steps)" % (global_step, 10.0)
             )
@@ -270,7 +270,7 @@ def train(global_step, train_loader, dice_val_best, global_step_best):
         with nvtx.annotate("update", color="yellow"):
             optimizer.step()
             optimizer.zero_grad()
-        
+
         epoch_iterable.set_description(
             "Training (%d / %d Steps) (loss=%2.5f)"
             % (global_step, max_iterations, loss)

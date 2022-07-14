@@ -20,10 +20,9 @@ import numpy as np
 import torch
 from ignite.engine import Events, create_supervised_evaluator, create_supervised_trainer
 from ignite.handlers import EarlyStopping, ModelCheckpoint
-from torch.utils.data import DataLoader
 
 import monai
-from monai.data import ImageDataset, create_test_image_3d, decollate_batch
+from monai.data import ImageDataset, create_test_image_3d, decollate_batch, DataLoader
 from monai.handlers import (
     MeanDice,
     StatsHandler,
@@ -39,7 +38,6 @@ from monai.transforms import (
     RandSpatialCrop,
     Resize,
     ScaleIntensity,
-    EnsureType,
 )
 
 
@@ -67,16 +65,15 @@ def main(tempdir):
             ScaleIntensity(),
             AddChannel(),
             RandSpatialCrop((96, 96, 96), random_size=False),
-            EnsureType(),
         ]
     )
     train_segtrans = Compose(
-        [AddChannel(), RandSpatialCrop((96, 96, 96), random_size=False), EnsureType()]
+        [AddChannel(), RandSpatialCrop((96, 96, 96), random_size=False)]
     )
     val_imtrans = Compose(
-        [ScaleIntensity(), AddChannel(), Resize((96, 96, 96)), EnsureType()]
+        [ScaleIntensity(), AddChannel(), Resize((96, 96, 96))]
     )
-    val_segtrans = Compose([AddChannel(), Resize((96, 96, 96)), EnsureType()])
+    val_segtrans = Compose([AddChannel(), Resize((96, 96, 96))])
 
     # define image dataset, data loader
     check_ds = ImageDataset(
@@ -151,8 +148,8 @@ def main(tempdir):
     # add evaluation metric to the evaluator engine
     val_metrics = {metric_name: MeanDice()}
 
-    post_pred = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
-    post_label = Compose([EnsureType(), AsDiscrete(threshold=0.5)])
+    post_pred = Compose([Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
+    post_label = Compose([AsDiscrete(threshold=0.5)])
 
     # Ignite evaluator expects batch=(img, seg) and returns output=(y_pred, y) at every iteration,
     # user can add output_transform to return other values

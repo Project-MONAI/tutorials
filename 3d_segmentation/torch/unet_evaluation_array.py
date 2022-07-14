@@ -18,14 +18,13 @@ from glob import glob
 import nibabel as nib
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
 
 from monai import config
-from monai.data import ImageDataset, create_test_image_3d, decollate_batch
+from monai.data import ImageDataset, create_test_image_3d, decollate_batch, DataLoader
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.networks.nets import UNet
-from monai.transforms import Activations, AddChannel, AsDiscrete, Compose, SaveImage, ScaleIntensity, EnsureType
+from monai.transforms import Activations, AddChannel, AsDiscrete, Compose, SaveImage, ScaleIntensity
 
 
 def main(tempdir):
@@ -46,13 +45,13 @@ def main(tempdir):
     segs = sorted(glob(os.path.join(tempdir, "seg*.nii.gz")))
 
     # define transforms for image and segmentation
-    imtrans = Compose([ScaleIntensity(), AddChannel(), EnsureType()])
-    segtrans = Compose([AddChannel(), EnsureType()])
+    imtrans = Compose([ScaleIntensity(), AddChannel()])
+    segtrans = Compose([AddChannel()])
     val_ds = ImageDataset(images, segs, transform=imtrans, seg_transform=segtrans, image_only=False)
     # sliding window inference for one image at every iteration
     val_loader = DataLoader(val_ds, batch_size=1, num_workers=1, pin_memory=torch.cuda.is_available())
     dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
-    post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
+    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
     saver = SaveImage(output_dir="./output", output_ext=".nii.gz", output_postfix="seg")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = UNet(
@@ -75,11 +74,10 @@ def main(tempdir):
             val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
             val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
             val_labels = decollate_batch(val_labels)
-            meta_data = decollate_batch(val_data[2])
             # compute metric for current iteration
             dice_metric(y_pred=val_outputs, y=val_labels)
-            for val_output, data in zip(val_outputs, meta_data):
-                saver(val_output, data)
+            for val_output in val_outputs:
+                saver(val_output)
         # aggregate the final mean dice result
         print("evaluation metric:", dice_metric.aggregate().item())
         # reset the status

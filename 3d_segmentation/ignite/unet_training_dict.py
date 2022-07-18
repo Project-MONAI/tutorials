@@ -45,8 +45,6 @@ from monai.transforms import (
     RandCropByPosNegLabeld,
     RandRotate90d,
     ScaleIntensityd,
-    EnsureTyped,
-    EnsureType,
 )
 
 
@@ -85,7 +83,6 @@ def main(tempdir):
                 num_samples=4,
             ),
             RandRotate90d(keys=["img", "seg"], prob=0.5, spatial_axes=[0, 2]),
-            EnsureTyped(keys=["img", "seg"]),
         ]
     )
     val_transforms = Compose(
@@ -93,7 +90,6 @@ def main(tempdir):
             LoadImaged(keys=["img", "seg"]),
             AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
             ScaleIntensityd(keys="img"),
-            EnsureTyped(keys=["img", "seg"]),
         ]
     )
 
@@ -180,8 +176,8 @@ def main(tempdir):
     # add evaluation metric to the evaluator engine
     val_metrics = {metric_name: MeanDice()}
 
-    post_pred = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
-    post_label = Compose([EnsureType(), AsDiscrete(threshold=0.5)])
+    post_pred = Compose([Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
+    post_label = Compose([AsDiscrete(threshold=0.5)])
 
     # Ignite evaluator expects batch=(img, seg) and returns output=(y_pred, y) at every iteration,
     # user can add output_transform to return other values

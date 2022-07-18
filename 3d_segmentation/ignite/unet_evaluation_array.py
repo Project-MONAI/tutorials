@@ -19,14 +19,13 @@ import nibabel as nib
 import numpy as np
 import torch
 from ignite.engine import Engine
-from torch.utils.data import DataLoader
 
 from monai import config
-from monai.data import ImageDataset, create_test_image_3d, decollate_batch
+from monai.data import ImageDataset, create_test_image_3d, decollate_batch, DataLoader
 from monai.handlers import CheckpointLoader, MeanDice, StatsHandler
 from monai.inferers import sliding_window_inference
 from monai.networks.nets import UNet
-from monai.transforms import Activations, AddChannel, AsDiscrete, Compose, SaveImage, ScaleIntensity, EnsureType
+from monai.transforms import Activations, AddChannel, AsDiscrete, Compose, SaveImage, ScaleIntensity
 
 
 def main(tempdir):
@@ -47,8 +46,8 @@ def main(tempdir):
     segs = sorted(glob(os.path.join(tempdir, "seg*.nii.gz")))
 
     # define transforms for image and segmentation
-    imtrans = Compose([ScaleIntensity(), AddChannel(), EnsureType()])
-    segtrans = Compose([AddChannel(), EnsureType()])
+    imtrans = Compose([ScaleIntensity(), AddChannel()])
+    segtrans = Compose([AddChannel()])
     ds = ImageDataset(images, segs, transform=imtrans, seg_transform=segtrans, image_only=False)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -65,7 +64,7 @@ def main(tempdir):
     roi_size = (96, 96, 96)
     sw_batch_size = 4
 
-    post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
+    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
     save_image = SaveImage(output_dir="tempdir", output_ext=".nii.gz", output_postfix="seg")
 
     def _sliding_window_processor(engine, batch):
@@ -74,9 +73,8 @@ def main(tempdir):
             val_images, val_labels = batch[0].to(device), batch[1].to(device)
             seg_probs = sliding_window_inference(val_images, roi_size, sw_batch_size, net)
             seg_probs = [post_trans(i) for i in decollate_batch(seg_probs)]
-            val_data = decollate_batch(batch[2])
-            for seg_prob, data in zip(seg_probs, val_data):
-                save_image(seg_prob, data)
+            for seg_prob in seg_probs:
+                save_image(seg_prob)
             return seg_probs, val_labels
 
     evaluator = Engine(_sliding_window_processor)

@@ -25,7 +25,7 @@ This directory contains a simple baseline method [using MONAI](https://monai.io)
 
 The script is tested with:
 
-- `Ubuntu 18.04` | `Python 3.6` | `CUDA 10.2`
+- `Ubuntu 20.04` | `Python 3.8` | `CUDA 11.7`
 
 On a GPU with [automatic mixed precision support](https://developer.nvidia.com/automatic-mixed-precision):
 

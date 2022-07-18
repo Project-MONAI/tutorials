@@ -18,14 +18,13 @@ from glob import glob
 import nibabel as nib
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 import monai
-from monai.data import ImageDataset, create_test_image_3d, decollate_batch
+from monai.data import ImageDataset, create_test_image_3d, decollate_batch, DataLoader
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
-from monai.transforms import Activations, AddChannel, AsDiscrete, Compose, RandRotate90, RandSpatialCrop, ScaleIntensity, EnsureType
+from monai.transforms import Activations, AddChannel, AsDiscrete, Compose, RandRotate90, RandSpatialCrop, ScaleIntensity
 from monai.visualize import plot_2d_or_3d_image
 
 
@@ -54,7 +53,6 @@ def main(tempdir):
             AddChannel(),
             RandSpatialCrop((96, 96, 96), random_size=False),
             RandRotate90(prob=0.5, spatial_axes=(0, 2)),
-            EnsureType(),
         ]
     )
     train_segtrans = Compose(
@@ -62,11 +60,10 @@ def main(tempdir):
             AddChannel(),
             RandSpatialCrop((96, 96, 96), random_size=False),
             RandRotate90(prob=0.5, spatial_axes=(0, 2)),
-            EnsureType(),
         ]
     )
-    val_imtrans = Compose([ScaleIntensity(), AddChannel(), EnsureType()])
-    val_segtrans = Compose([AddChannel(), EnsureType()])
+    val_imtrans = Compose([ScaleIntensity(), AddChannel()])
+    val_segtrans = Compose([AddChannel()])
 
     # define image dataset, data loader
     check_ds = ImageDataset(images, segs, transform=train_imtrans, seg_transform=train_segtrans)
@@ -81,7 +78,7 @@ def main(tempdir):
     val_ds = ImageDataset(images[-20:], segs[-20:], transform=val_imtrans, seg_transform=val_segtrans)
     val_loader = DataLoader(val_ds, batch_size=1, num_workers=4, pin_memory=torch.cuda.is_available())
     dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
-    post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
+    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
 
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

@@ -15,13 +15,12 @@ import sys
 
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 import monai
-from monai.data import decollate_batch
+from monai.data import decollate_batch, DataLoader
 from monai.metrics import ROCAUCMetric
-from monai.transforms import Activations, AddChanneld, AsDiscrete, Compose, LoadImaged, RandRotate90d, Resized, ScaleIntensityd, EnsureTyped, EnsureType
+from monai.transforms import Activations, AddChanneld, AsDiscrete, Compose, LoadImaged, RandRotate90d, Resized, ScaleIntensityd
 
 
 def main():
@@ -68,7 +67,6 @@ def main():
             ScaleIntensityd(keys=["img"]),
             Resized(keys=["img"], spatial_size=(96, 96, 96)),
             RandRotate90d(keys=["img"], prob=0.8, spatial_axes=[0, 2]),
-            EnsureTyped(keys=["img"]),
         ]
     )
     val_transforms = Compose(
@@ -77,11 +75,10 @@ def main():
             AddChanneld(keys=["img"]),
             ScaleIntensityd(keys=["img"]),
             Resized(keys=["img"], spatial_size=(96, 96, 96)),
-            EnsureTyped(keys=["img"]),
         ]
     )
-    post_pred = Compose([EnsureType(), Activations(softmax=True)])
-    post_label = Compose([EnsureType(), AsDiscrete(to_onehot=2)])
+    post_pred = Compose([Activations(softmax=True)])
+    post_label = Compose([AsDiscrete(to_onehot=2)])
 
     # Define dataset, data loader
     check_ds = monai.data.Dataset(data=train_files, transform=train_transforms)

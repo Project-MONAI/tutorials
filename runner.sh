@@ -74,6 +74,7 @@ pattern="-and -name '*' -and ! -wholename '*federated_learning*'\
  -and ! -wholename '*nuclick_infer*'\
  -and ! -wholename '*nuclick_training_notebook*'\
  -and ! -wholename '*full_gpu_inference_pipeline*'\
+ -and ! -wholename '*generate_random_permutations*'\
  -and ! -wholename '*get_started*'"
 kernelspec="python3"
 

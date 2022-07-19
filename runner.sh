@@ -312,7 +312,7 @@ for file in "${files[@]}"; do
 			replace_text
 		done
 
-		# echo "$notebook" > "${base_path}/debug_notebook.ipynb"
+		python -c 'import monai; monai.config.print_config()'
 		time out=$(echo "$notebook" | papermill --progress-bar -k "$kernelspec")
 		success=$?
 	    if [[ ${success} -ne 0 || "$out" =~ "\"status\": \"failed\"" ]]; then

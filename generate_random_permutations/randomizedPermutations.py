@@ -1,10 +1,10 @@
 import numpy as np
-import os 
+import os
 import torch
-import glob 
-import random 
+import glob
+import random
 from monai.data import DataLoader
-from monai.transforms.transform import Transform 
+from monai.transforms.transform import Transform
 from monai.transforms import (Affine, LoadImage, Rotate, NormalizeIntensity, Transpose, Compose, Resize, AsChannelFirst, AsChannelLast, ScaleIntensity, RandFlip, Rotate90, AddChannel, GaussianSmooth, AdjustContrast)
 from random import shuffle
 
@@ -12,14 +12,14 @@ class Dataset(torch.utils.data.Dataset):
 	def __init__(self, image_file_list, transforms, shuffle_transforms=1):
 		self.image_file_list = image_file_list
 		if shuffle_transforms:
-			transform_list = [LoadImage(image_only=True), AddChannel(), Resize((299, 299))] + shuffle(transforms) 
+			transform_list = [LoadImage(image_only=True), AddChannel(), Resize((299, 299))] + shuffle(transforms)
 			self.transform = Compose(transpose_list)
 		else:
 			self.transform = Compose([LoadImage(image_only=True), AddChannel(), Resize((299, 299))] + transforms)
 
 	def __len__(self):
 		return len(self.image_file_list)
-	
+
 	def __getitem__(self, index):
 		return self.transform(self.image_file_list[index])
 
@@ -37,8 +37,8 @@ class AugmentData(object):
 		augmentation_transforms = []
 		for aug, num_aug in self.augmentation_dict.items():
 			_x = [aug]*num_aug
-			augmentation_transforms = augmentation_transforms + _x 
-		return augmentation_transforms 
+			augmentation_transforms = augmentation_transforms + _x
+		return augmentation_transforms
 
 
 	def create_transform_list(self, augmentation_sequence):
@@ -62,9 +62,9 @@ class AugmentData(object):
 
 	def create_native_transform_list(self):
 		transform_list = Compose(self.image_loading_transforms + [ScaleIntensity(), Resize(self.output_size)])
-		return transform_list 
+		return transform_list
 
-	
+
 	def __call__(self, image_file_list, *args, **kwargs):
 		image_file_list = image_file_list
 
@@ -83,7 +83,7 @@ class AugmentData(object):
 		ALLIMG_NP = np.stack(IMG, axis=0)
 		OUT_IMAGE_NP = ALLIMG_NP[0:self.batch_size, :]
 		return OUT_IMAGE_NP
-		
+
 
 
 def main():
@@ -103,7 +103,7 @@ def main():
 	augmentation_dict = {'rotate': 3, 'flip': 2, 'rotate90': 1, 'intensityGaussian': 2, 'adjustContrast' : 2}
 
 	img = AugmentData(image_loading_transforms=image_loading_transforms, augmentation_dict = augmentation_dict)(image_file_list)
-	print(img.shape)	
+	print(img.shape)
 
 
 if __name__ == '__main__':

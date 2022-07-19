@@ -17,14 +17,13 @@ from glob import glob
 
 import torch
 from PIL import Image
-from torch.utils.data import DataLoader
 
 from monai import config
-from monai.data import ArrayDataset, create_test_image_2d, decollate_batch
+from monai.data import ArrayDataset, create_test_image_2d, decollate_batch, DataLoader
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.networks.nets import UNet
-from monai.transforms import Activations, AddChannel, AsDiscrete, Compose, LoadImage, SaveImage, ScaleIntensity, EnsureType
+from monai.transforms import Activations, AddChannel, AsDiscrete, Compose, LoadImage, SaveImage, ScaleIntensity
 
 
 def main(tempdir):
@@ -41,13 +40,13 @@ def main(tempdir):
     segs = sorted(glob(os.path.join(tempdir, "seg*.png")))
 
     # define transforms for image and segmentation
-    imtrans = Compose([LoadImage(image_only=True), AddChannel(), ScaleIntensity(), EnsureType()])
-    segtrans = Compose([LoadImage(image_only=True), AddChannel(), ScaleIntensity(), EnsureType()])
+    imtrans = Compose([LoadImage(image_only=True), AddChannel(), ScaleIntensity()])
+    segtrans = Compose([LoadImage(image_only=True), AddChannel(), ScaleIntensity()])
     val_ds = ArrayDataset(images, imtrans, segs, segtrans)
     # sliding window inference for one image at every iteration
     val_loader = DataLoader(val_ds, batch_size=1, num_workers=1, pin_memory=torch.cuda.is_available())
     dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
-    post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
+    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
     saver = SaveImage(output_dir="./output", output_ext=".png", output_postfix="seg")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = UNet(

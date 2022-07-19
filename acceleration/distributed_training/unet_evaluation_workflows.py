@@ -79,7 +79,6 @@ from monai.transforms import (
     KeepLargestConnectedComponentd,
     LoadImaged,
     ScaleIntensityd,
-    EnsureTyped,
     SaveImaged,
 )
 
@@ -113,7 +112,6 @@ def evaluate(args):
             LoadImaged(keys=["image", "label"]),
             AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
             ScaleIntensityd(keys="image"),
-            EnsureTyped(keys=["image", "label"]),
         ]
     )
 

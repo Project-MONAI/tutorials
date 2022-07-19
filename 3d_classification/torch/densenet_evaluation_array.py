@@ -15,11 +15,10 @@ import sys
 
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
 
 import monai
-from monai.data import CSVSaver, ImageDataset
-from monai.transforms import AddChannel, Compose, Resize, ScaleIntensity, EnsureType
+from monai.data import CSVSaver, ImageDataset, DataLoader
+from monai.transforms import AddChannel, Compose, Resize, ScaleIntensity
 
 
 def main():
@@ -47,10 +46,10 @@ def main():
     labels = np.array([0, 0, 1, 0, 1, 0, 1, 0, 1, 0], dtype=np.int64)
 
     # Define transforms for image
-    val_transforms = Compose([ScaleIntensity(), AddChannel(), Resize((96, 96, 96)), EnsureType()])
+    val_transforms = Compose([ScaleIntensity(), AddChannel(), Resize((96, 96, 96))])
 
     # Define image dataset
-    val_ds = ImageDataset(image_files=images, labels=labels, transform=val_transforms, image_only=False)
+    val_ds = ImageDataset(image_files=images, labels=labels, transform=val_transforms, image_only=True)
     # create a validation data loader
     val_loader = DataLoader(val_ds, batch_size=2, num_workers=4, pin_memory=torch.cuda.is_available())
 
@@ -70,7 +69,7 @@ def main():
             value = torch.eq(val_outputs, val_labels)
             metric_count += len(value)
             num_correct += value.sum().item()
-            saver.save_batch(val_outputs, val_data[2])
+            saver.save_batch(val_outputs, val_images.meta)
         metric = num_correct / metric_count
         print("evaluation metric:", metric)
         saver.finalize()

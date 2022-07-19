@@ -45,6 +45,7 @@ from glob import glob
 
 import nibabel as nib
 import numpy as np
+import torch
 import torch.distributed as dist
 
 from monai.data import create_test_image_3d, partition_dataset
@@ -57,7 +58,7 @@ from monai.transforms import (
     KeepLargestConnectedComponentd,
     LoadImaged,
     ScaleIntensityd,
-    EnsureTyped,
+    ToDeviced,
 )
 from monai.utils import string_list_all_gather
 
@@ -77,8 +78,8 @@ def compute(args):
             n = nib.Nifti1Image(label, np.eye(4))
             nib.save(n, os.path.join(args.dir, f"label{i:d}.nii.gz"))
 
-    # initialize the distributed evaluation process, change to NCCL backend if computing on GPU
-    dist.init_process_group(backend="gloo", init_method="env://")
+    # initialize the distributed evaluation process, change to gloo backend if computing on CPU
+    dist.init_process_group(backend="nccl", init_method="env://")
 
     preds = sorted(glob(os.path.join(args.dir, "pred*.nii.gz")))
     labels = sorted(glob(os.path.join(args.dir, "label*.nii.gz")))
@@ -92,13 +93,15 @@ def compute(args):
         even_divisible=False,
     )[dist.get_rank()]
 
+    device = torch.device(f"cuda:{args.local_rank}")
+    torch.cuda.set_device(device)
     # define transforms for predictions and labels
     transforms = Compose(
         [
             LoadImaged(keys=["pred", "label"]),
+            ToDeviced(keys=["pred", "label"], device=device),
             EnsureChannelFirstd(keys=["pred", "label"]),
             ScaleIntensityd(keys="pred"),
-            EnsureTyped(keys=["pred", "label"]),
             AsDiscreted(keys="pred", threshold=0.5),
             KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
         ]
@@ -128,6 +131,13 @@ def compute(args):
 
     dist.destroy_process_group()
 
+
+# usage example(refer to https://github.com/pytorch/pytorch/blob/master/torch/distributed/launch.py):
+
+# python -m torch.distributed.launch --nproc_per_node=NUM_GPUS_PER_NODE
+#        --nnodes=NUM_NODES --node_rank=INDEX_CURRENT_NODE
+#        --master_addr="192.168.1.1" --master_port=1234
+#        compute_metric.py -d DIR_OF_OUTPUT
 
 def main():
     parser = argparse.ArgumentParser()

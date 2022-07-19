@@ -17,11 +17,10 @@ from glob import glob
 
 import torch
 from PIL import Image
-from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 import monai
-from monai.data import ArrayDataset, create_test_image_2d, decollate_batch
+from monai.data import ArrayDataset, create_test_image_2d, decollate_batch, DataLoader
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.transforms import (
@@ -33,7 +32,6 @@ from monai.transforms import (
     RandRotate90,
     RandSpatialCrop,
     ScaleIntensity,
-    EnsureType,
 )
 from monai.visualize import plot_2d_or_3d_image
 
@@ -60,7 +58,6 @@ def main(tempdir):
             ScaleIntensity(),
             RandSpatialCrop((96, 96), random_size=False),
             RandRotate90(prob=0.5, spatial_axes=(0, 1)),
-            EnsureType(),
         ]
     )
     train_segtrans = Compose(
@@ -70,11 +67,10 @@ def main(tempdir):
             ScaleIntensity(),
             RandSpatialCrop((96, 96), random_size=False),
             RandRotate90(prob=0.5, spatial_axes=(0, 1)),
-            EnsureType(),
         ]
     )
-    val_imtrans = Compose([LoadImage(image_only=True), AddChannel(), ScaleIntensity(), EnsureType()])
-    val_segtrans = Compose([LoadImage(image_only=True), AddChannel(), ScaleIntensity(), EnsureType()])
+    val_imtrans = Compose([LoadImage(image_only=True), AddChannel(), ScaleIntensity()])
+    val_segtrans = Compose([LoadImage(image_only=True), AddChannel(), ScaleIntensity()])
 
     # define array dataset, data loader
     check_ds = ArrayDataset(images, train_imtrans, segs, train_segtrans)
@@ -89,7 +85,7 @@ def main(tempdir):
     val_ds = ArrayDataset(images[-20:], val_imtrans, segs[-20:], val_segtrans)
     val_loader = DataLoader(val_ds, batch_size=1, num_workers=4, pin_memory=torch.cuda.is_available())
     dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
-    post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
+    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = monai.networks.nets.UNet(

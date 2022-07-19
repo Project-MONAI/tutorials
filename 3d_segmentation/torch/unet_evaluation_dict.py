@@ -26,7 +26,7 @@ from monai.engines import get_devices_spec
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.networks.nets import UNet
-from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadImaged, SaveImage, ScaleIntensityd, EnsureTyped, EnsureType
+from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadImaged, SaveImage, ScaleIntensityd
 
 
 def main(tempdir):
@@ -53,14 +53,13 @@ def main(tempdir):
             LoadImaged(keys=["img", "seg"]),
             AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
             ScaleIntensityd(keys="img"),
-            EnsureTyped(keys=["img", "seg"]),
         ]
     )
     val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
     # sliding window inference need to input 1 image in every iteration
     val_loader = DataLoader(val_ds, batch_size=1, num_workers=4, collate_fn=list_data_collate)
     dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
-    post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
+    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
     saver = SaveImage(output_dir="./output", output_ext=".nii.gz", output_postfix="seg")
     # try to use all the available GPUs
     devices = [torch.device("cuda" if torch.cuda.is_available() else "cpu")]
@@ -90,11 +89,10 @@ def main(tempdir):
             val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
             val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
             val_labels = decollate_batch(val_labels)
-            meta_data = decollate_batch(val_data["img_meta_dict"])
             # compute metric for current iteration
             dice_metric(y_pred=val_outputs, y=val_labels)
-            for val_output, data in zip(val_outputs, meta_data):
-                saver(val_output, data)
+            for val_output in val_outputs:
+                saver(val_output)
         # aggregate the final mean dice result
         print("evaluation metric:", dice_metric.aggregate().item())
         # reset the status

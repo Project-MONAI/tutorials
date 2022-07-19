@@ -35,7 +35,7 @@ Note:
     Example script to execute this program, only need to run on the master node:
     `horovodrun -np 16 -H server1:4,server2:4,server3:4,server4:4 python unet_evaluation_horovod.py -d "./testdata"`
 
-    This example was tested with [Ubuntu 16.04/20.04], [NCCL 2.6.3], [horovod 0.19.5].
+    This example was tested with [Ubuntu 16.04/20.04], [NCCL 2.6.3], [horovod 0.25.0].
 
 Referring to: https://github.com/horovod/horovod/blob/master/examples/pytorch_mnist.py
 
@@ -56,7 +56,7 @@ import monai
 from monai.data import DataLoader, Dataset, create_test_image_3d, decollate_batch
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
-from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadImaged, ScaleIntensityd, EnsureTyped, EnsureType
+from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadImaged, ScaleIntensityd, EnsureType
 
 
 def evaluate(args):
@@ -88,7 +88,6 @@ def evaluate(args):
             LoadImaged(keys=["img", "seg"]),
             AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
             ScaleIntensityd(keys="img"),
-            EnsureTyped(keys=["img", "seg"]),
         ]
     )
 
@@ -156,7 +155,7 @@ def main():
     evaluate(args=args)
 
 
-# Example script to execute this program only on the master node:
+# Example script to execute this program on 4 nodes (only need to run below command on the master node):
 # horovodrun -np 16 -H server1:4,server2:4,server3:4,server4:4 python unet_evaluation_horovod.py -d "./testdata"
 if __name__ == "__main__":
     main()

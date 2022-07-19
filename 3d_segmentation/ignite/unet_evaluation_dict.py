@@ -26,7 +26,7 @@ from monai.data import create_test_image_3d, list_data_collate, decollate_batch
 from monai.handlers import CheckpointLoader, MeanDice, StatsHandler
 from monai.inferers import sliding_window_inference
 from monai.networks.nets import UNet
-from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadImaged, SaveImage, ScaleIntensityd, EnsureTyped, EnsureType
+from monai.transforms import Activations, AsChannelFirstd, AsDiscrete, Compose, LoadImaged, SaveImage, ScaleIntensityd
 
 
 def main(tempdir):
@@ -53,7 +53,6 @@ def main(tempdir):
             LoadImaged(keys=["img", "seg"]),
             AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
             ScaleIntensityd(keys="img"),
-            EnsureTyped(keys=["img", "seg"]),
         ]
     )
     val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
@@ -72,7 +71,7 @@ def main(tempdir):
     roi_size = (96, 96, 96)
     sw_batch_size = 4
 
-    post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
+    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
     save_image = SaveImage(output_dir="tempdir", output_ext=".nii.gz", output_postfix="seg")
 
     def _sliding_window_processor(engine, batch):
@@ -81,9 +80,8 @@ def main(tempdir):
             val_images, val_labels = batch["img"].to(device), batch["seg"].to(device)
             seg_probs = sliding_window_inference(val_images, roi_size, sw_batch_size, net)
             seg_probs = [post_trans(i) for i in decollate_batch(seg_probs)]
-            val_data = decollate_batch(batch["img_meta_dict"])
-            for seg_prob, data in zip(seg_probs, val_data):
-                save_image(seg_prob, data)
+            for seg_prob in seg_probs:
+                save_image(seg_prob)
             return seg_probs, val_labels
 
     evaluator = Engine(_sliding_window_processor)

@@ -17,14 +17,13 @@ from glob import glob
 
 import torch
 from PIL import Image
-from torch.utils.data import DataLoader
 
 import monai
-from monai.data import create_test_image_2d, list_data_collate, decollate_batch
+from monai.data import create_test_image_2d, list_data_collate, decollate_batch, DataLoader
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.networks.nets import UNet
-from monai.transforms import Activations, AddChanneld, AsDiscrete, Compose, LoadImaged, SaveImage, ScaleIntensityd, EnsureTyped, EnsureType
+from monai.transforms import Activations, AddChanneld, AsDiscrete, Compose, LoadImaged, SaveImage, ScaleIntensityd
 
 
 def main(tempdir):
@@ -47,14 +46,13 @@ def main(tempdir):
             LoadImaged(keys=["img", "seg"]),
             AddChanneld(keys=["img", "seg"]),
             ScaleIntensityd(keys=["img", "seg"]),
-            EnsureTyped(keys=["img", "seg"]),
         ]
     )
     val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
     # sliding window inference need to input 1 image in every iteration
     val_loader = DataLoader(val_ds, batch_size=1, num_workers=4, collate_fn=list_data_collate)
     dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
-    post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
+    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
     saver = SaveImage(output_dir="./output", output_ext=".png", output_postfix="seg")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = UNet(

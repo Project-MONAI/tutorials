@@ -7,27 +7,28 @@ from shutil import copyfile
 
 import monai
 import numpy as np
-from monai.apps.pathology.data import PatchWSIDataset
-from monai.data import DataLoader, load_decathlon_datalist
+from monai.data import CSVDataset, DataLoader, PatchWSIDataset
 from monai.networks.nets import TorchVisionFCModel
 from monai.optimizers import Novograd
 from monai.transforms import (
     Activations,
     AsDiscrete,
     CastToType,
-    CastToTypeD,
+    CastToTyped,
     Compose,
     CuCIM,
+    GridSplitd,
+    Lambdad,
     RandCuCIM,
-    RandFlipD,
-    RandRotate90D,
-    RandZoomD,
-    ScaleIntensityRangeD,
+    RandFlipd,
+    RandRotate90d,
+    RandZoomd,
+    ScaleIntensityRanged,
     ToCupy,
-    ToNumpyD,
-    TorchVisionD,
+    ToNumpyd,
+    TorchVisiond,
     ToTensor,
-    ToTensorD,
+    ToTensord,
 )
 from monai.utils import first, set_determinism
 
@@ -185,7 +186,7 @@ def main(cfg):
     fh.setLevel(logging.INFO)
     logger.addHandler(fh)
 
-    # Set TensorBoard summary writter
+    # Set TensorBoard summary writer
     writer = SummaryWriter(log_dir)
 
     # Save configs
@@ -210,11 +211,28 @@ def main(cfg):
     preprocess_cpu_valid = None
     preprocess_gpu_valid = None
     if cfg["backend"] == "cucim":
-        preprocess_cpu_train = Compose([ToTensorD(keys="label")])
+        preprocess_cpu_train = Compose(
+            [
+                Lambdad(keys="label", func=lambda x: x.reshape((1, cfg["grid_shape"], cfg["grid_shape"]))),
+                GridSplitd(
+                    keys=("image", "label"),
+                    grid=(cfg["grid_shape"], cfg["grid_shape"]),
+                    size={"image": cfg["patch_size"], "label": 1},
+                ),
+                ToTensord(keys="label"),
+            ]
+        )
         preprocess_gpu_train = Compose(
             [
                 ToCupy(),
-                RandCuCIM(name="rand_color_jitter", prob=cfg["prob"], brightness=64.0 / 255.0, contrast=0.75, saturation=0.25, hue=0.04),
+                RandCuCIM(
+                    name="rand_color_jitter",
+                    prob=1.0,
+                    brightness=64.0 / 255.0,
+                    contrast=0.75,
+                    saturation=0.25,
+                    hue=0.04,
+                ),
                 RandCuCIM(name="rand_image_flip", prob=cfg["prob"], spatial_axis=-1),
                 RandCuCIM(name="rand_image_rotate_90", prob=cfg["prob"], max_k=3, spatial_axis=(-2, -1)),
                 CastToType(dtype=np.float32),
@@ -223,7 +241,17 @@ def main(cfg):
                 ToTensor(device=device),
             ]
         )
-        preprocess_cpu_valid = Compose([ToTensorD(keys="label")])
+        preprocess_cpu_valid = Compose(
+            [
+                Lambdad(keys="label", func=lambda x: x.reshape((1, cfg["grid_shape"], cfg["grid_shape"]))),
+                GridSplitd(
+                    keys=("image", "label"),
+                    grid=(cfg["grid_shape"], cfg["grid_shape"]),
+                    size={"image": cfg["patch_size"], "label": 1},
+                ),
+                ToTensord(keys="label"),
+            ]
+        )
         preprocess_gpu_valid = Compose(
             [
                 ToCupy(dtype=np.float32),
@@ -234,24 +262,36 @@ def main(cfg):
     elif cfg["backend"] == "numpy":
         preprocess_cpu_train = Compose(
             [
-                ToTensorD(keys=("image", "label")),
-                TorchVisionD(
+                Lambdad(keys="label", func=lambda x: x.reshape((1, cfg["grid_shape"], cfg["grid_shape"]))),
+                GridSplitd(
+                    keys=("image", "label"),
+                    grid=(cfg["grid_shape"], cfg["grid_shape"]),
+                    size={"image": cfg["patch_size"], "label": 1},
+                ),
+                ToTensord(keys=("image", "label")),
+                TorchVisiond(
                     keys="image", name="ColorJitter", brightness=64.0 / 255.0, contrast=0.75, saturation=0.25, hue=0.04
                 ),
-                ToNumpyD(keys="image"),
-                RandFlipD(keys="image", prob=cfg["prob"], spatial_axis=-1),
-                RandRotate90D(keys="image", prob=cfg["prob"]),
-                CastToTypeD(keys="image", dtype=np.float32),
-                RandZoomD(keys="image", prob=cfg["prob"], min_zoom=0.9, max_zoom=1.1),
-                ScaleIntensityRangeD(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0),
-                ToTensorD(keys="image"),
+                ToNumpyd(keys="image"),
+                RandFlipd(keys="image", prob=cfg["prob"], spatial_axis=-1),
+                RandRotate90d(keys="image", prob=cfg["prob"]),
+                CastToTyped(keys="image", dtype=np.float32),
+                RandZoomd(keys="image", prob=cfg["prob"], min_zoom=0.9, max_zoom=1.1),
+                ScaleIntensityRanged(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0),
+                ToTensord(keys="image"),
             ]
         )
         preprocess_cpu_valid = Compose(
             [
-                CastToTypeD(keys="image", dtype=np.float32),
-                ScaleIntensityRangeD(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0),
-                ToTensorD(keys=("image", "label")),
+                Lambdad(keys="label", func=lambda x: x.reshape((1, cfg["grid_shape"], cfg["grid_shape"]))),
+                GridSplitd(
+                    keys=("image", "label"),
+                    grid=(cfg["grid_shape"], cfg["grid_shape"]),
+                    size={"image": cfg["patch_size"], "label": 1},
+                ),
+                CastToTyped(keys="image", dtype=np.float32),
+                ScaleIntensityRanged(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0),
+                ToTensord(keys=("image", "label")),
             ]
         )
     else:
@@ -265,41 +305,42 @@ def main(cfg):
         ]
     )
 
-    # Create MONAI dataset
-    train_json_info_list = load_decathlon_datalist(
-        data_list_file_path=cfg["dataset_json"],
-        data_list_key="training",
-        base_dir=cfg["data_root"],
-    )
-    valid_json_info_list = load_decathlon_datalist(
-        data_list_file_path=cfg["dataset_json"],
-        data_list_key="validation",
-        base_dir=cfg["data_root"],
+    # Create train dataset and dataloader
+    train_data_list = CSVDataset(
+        cfg["train_file"],
+        col_groups={"image": 0, "patch_location": [2, 1], "label": [3, 6, 9, 4, 7, 10, 5, 8, 11]},
+        kwargs_read_csv={"header": None},
+        transform=Lambdad("image", lambda x: os.path.join(cfg["root"], "training/images", x + ".tif")),
     )
     train_dataset = PatchWSIDataset(
-        data=train_json_info_list,
-        region_size=cfg["region_size"],
-        grid_shape=cfg["grid_shape"],
-        patch_size=cfg["patch_size"],
+        data=train_data_list,
+        patch_size=cfg["region_size"],
+        patch_level=0,
         transform=preprocess_cpu_train,
-        image_reader_name="openslide" if cfg["use_openslide"] else "cuCIM",
+        reader="openslide" if cfg["use_openslide"] else "cuCIM",
     )
-    valid_dataset = PatchWSIDataset(
-        data=valid_json_info_list,
-        region_size=cfg["region_size"],
-        grid_shape=cfg["grid_shape"],
-        patch_size=cfg["patch_size"],
-        transform=preprocess_cpu_valid,
-        image_reader_name="openslide" if cfg["use_openslide"] else "cuCIM",
-    )
-
-    # DataLoaders
     train_dataloader = DataLoader(
         train_dataset, num_workers=cfg["num_workers"], batch_size=cfg["batch_size"], pin_memory=cfg["pin"]
     )
-    valid_dataloader = DataLoader(
-        valid_dataset, num_workers=cfg["num_workers"], batch_size=cfg["batch_size"], pin_memory=cfg["pin"]
-    )
+
+    # Create validation dataset and dataloader
+    if not cfg["no_validate"]:
+        valid_data_list = CSVDataset(
+            cfg["valid_file"],
+            col_groups={"image": 0, "patch_location": [2, 1], "label": [3, 6, 9, 4, 7, 10, 5, 8, 11]},
+            kwargs_read_csv={"header": None},
+            transform=Lambdad("image", lambda x: os.path.join(cfg["root"], "training/images", x + ".tif")),
+        )
+        valid_dataset = PatchWSIDataset(
+            data=valid_data_list,
+            patch_size=cfg["region_size"],
+            patch_level=0,
+            transform=preprocess_cpu_valid,
+            reader="openslide" if cfg["use_openslide"] else "cuCIM",
+        )
+        valid_dataloader = DataLoader(
+            valid_dataset, num_workers=cfg["num_workers"], batch_size=cfg["batch_size"], pin_memory=cfg["pin"]
+        )
 
     # Get sample batch and some info
     first_sample = first(train_dataloader)
@@ -314,7 +355,8 @@ def main(cfg):
         )
     logging.info(f"Batch size: {cfg['batch_size']}")
     logging.info(f"[Training] number of batches: {len(train_dataloader)}")
-    logging.info(f"[Validation] number of batches: {len(valid_dataloader)}")
+    if not cfg["no_validate"]:
+        logging.info(f"[Validation] number of batches: {len(valid_dataloader)}")
     # -------------------------------------------------------------------------
     # Deep Learning Model and Configurations
     # -------------------------------------------------------------------------
@@ -352,7 +394,10 @@ def main(cfg):
 
     total_valid_time, total_train_time = 0.0, 0.0
     t_start = time.perf_counter()
-    metric_summary = {"loss": np.Inf, "accuracy": 0, "best_epoch": 1}
+    if cfg["no_validate"]:
+        metric_summary = {}
+    else:
+        metric_summary = {"loss": np.Inf, "accuracy": 0, "best_epoch": 1}
     # Training/Validation Loop
     for _ in range(cfg["n_epochs"]):
         t_epoch = time.perf_counter()
@@ -375,14 +420,16 @@ def main(cfg):
         )
         if scheduler is not None:
             scheduler.step()
-        if cfg["save"]:
+        if not cfg["no_save"]:
             torch.save(model.state_dict(), os.path.join(log_dir, f"model_epoch_{train_counter['epoch']}.pt"))
         t_train = time.perf_counter()
         train_time = t_train - t_epoch
         total_train_time += train_time
 
         # Validation
-        if cfg["validate"]:
+        if cfg["no_validate"]:
+            logging.info(f"[Epoch: {train_counter['epoch']}/{cfg['n_epochs']}] Train time: {train_time:.1f}s")
+        else:
             valid_loss, valid_acc = validation(
                 model,
                 loss_func,
@@ -407,8 +454,6 @@ def main(cfg):
                 f"[Epoch: {train_counter['epoch']}/{cfg['n_epochs']}] loss: {valid_loss:.3f}, accuracy: {valid_acc:.3f}, "
                 f"time: {t_valid - t_epoch:.1f}s (train: {train_time:.1f}s, valid: {valid_time:.1f}s)"
             )
-        else:
-            logging.info(f"[Epoch: {train_counter['epoch']}/{cfg['n_epochs']}] Train time: {train_time:.1f}s")
         writer.flush()
     t_end = time.perf_counter()
 
@@ -420,7 +465,7 @@ def main(cfg):
     logging.info(f"Metric Summary: {metric_summary}")
 
     # Save the best and final model
-    if cfg["validate"] is True:
+    if not cfg["no_validate"] and not cfg["no_save"]:
         copyfile(
             os.path.join(log_dir, f"model_epoch_{metric_summary['best_epoch']}.pt"),
             os.path.join(log_dir, "model_best.pt"),
@@ -441,23 +486,17 @@ def main(cfg):
 def parse_arguments():
     parser = ArgumentParser(description="Tumor detection on whole slide pathology images.")
     parser.add_argument(
-        "--dataset",
-        type=str,
-        default="./dataset_0.json",
-        dest="dataset_json",
-        help="path to dataset json file",
-    )
-    parser.add_argument(
         "--root",
         type=str,
-        default="/workspace/data/medical/pathology/",
-        dest="data_root",
-        help="path to root folder of images containing training folder",
+        default="/workspace/data/medical/pathology",
+        help="path to image folder containing training/validation",
     )
+    parser.add_argument("--train-file", type=str, default="training.csv", help="path to training data file")
+    parser.add_argument("--valid-file", type=str, default="validation.csv", help="path to training data file")
     parser.add_argument("--logdir", type=str, default="./logs/", dest="logdir", help="log directory")
 
     parser.add_argument("--rs", type=int, default=256 * 3, dest="region_size", help="region size")
-    parser.add_argument("--gs", type=int, default=3, dest="grid_shape", help="image grid shape (3x3)")
+    parser.add_argument("--gs", type=int, default=3, dest="grid_shape", help="image grid shape e.g 3 means 3x3")
     parser.add_argument("--ps", type=int, default=224, dest="patch_size", help="patch size")
     parser.add_argument("--bs", type=int, default=64, dest="batch_size", help="batch size")
     parser.add_argument("--ep", type=int, default=4, dest="n_epochs", help="number of epochs")
@@ -473,8 +512,8 @@ def parse_arguments():
     parser.add_argument("--pretrain", action="store_true", help="activate Imagenet weights")
     parser.add_argument("--benchmark", action="store_true", help="activate Imagenet weights")
 
-    parser.add_argument("--save", action="store_true", help="save model at each epoch")
-    parser.add_argument("--validate", action="store_true", help="use optimized parameters")
+    parser.add_argument("--no-save", action="store_true", help="save model at each epoch")
+    parser.add_argument("--no-validate", action="store_true", help="use optimized parameters")
     parser.add_argument("--baseline", action="store_true", help="use baseline parameters")
     parser.add_argument("--optimized", action="store_true", help="use optimized parameters")
     parser.add_argument("-b", "--backend", type=str, dest="backend", help="backend for transforms")

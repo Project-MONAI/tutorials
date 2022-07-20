@@ -10,20 +10,20 @@
 # limitations under the License.
 
 from monai.config import KeysCollection
-from monai.transforms import EnsureTyped
+from monai.transforms import LoadImaged
 
 
-class PrintEnsureTyped(EnsureTyped):
+class LoadImagePrintd(LoadImaged):
     """
-    Extend the `EnsureTyped` transform to print the image shape.
+    Transform to load image and print the image shape.
 
      Args:
         keys: keys of the corresponding items to be transformed.
 
     """
 
-    def __init__(self, keys: KeysCollection, data_type: str = "tensor") -> None:
-        super().__init__(keys, data_type=data_type)
+    def __init__(self, keys: KeysCollection) -> None:
+        super().__init__(keys)
 
     def __call__(self, data):
         d = dict(super().__call__(data=data))

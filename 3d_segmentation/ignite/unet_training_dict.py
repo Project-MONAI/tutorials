@@ -38,7 +38,7 @@ from monai.handlers import (
 )
 from monai.transforms import (
     Activations,
-    AsChannelFirstd,
+    EnsureChannelFirstd,
     AsDiscrete,
     Compose,
     LoadImaged,
@@ -72,7 +72,7 @@ def main(tempdir):
     train_transforms = Compose(
         [
             LoadImaged(keys=["img", "seg"]),
-            AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
+            EnsureChannelFirstd(keys=["img", "seg"]),
             ScaleIntensityd(keys="img"),
             RandCropByPosNegLabeld(
                 keys=["img", "seg"],
@@ -88,7 +88,7 @@ def main(tempdir):
     val_transforms = Compose(
         [
             LoadImaged(keys=["img", "seg"]),
-            AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
+            EnsureChannelFirstd(keys=["img", "seg"]),
             ScaleIntensityd(keys="img"),
         ]
     )

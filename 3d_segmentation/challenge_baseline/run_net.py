@@ -24,7 +24,6 @@ from ignite.contrib.handlers import ProgressBar
 import monai
 from monai.handlers import CheckpointSaver, MeanDice, StatsHandler, ValidationHandler, from_engine
 from monai.transforms import (
-    AddChanneld,
     AsDiscreted,
     CastToTyped,
     LoadImaged,
@@ -43,8 +42,7 @@ def get_xforms(mode="train", keys=("image", "label")):
     """returns a composed transform for train/val/infer."""
 
     xforms = [
-        LoadImaged(keys),
-        AddChanneld(keys),
+        LoadImaged(keys, ensure_channel_first=True),
         Orientationd(keys, axcodes="LPS"),
         Spacingd(keys, pixdim=(1.25, 1.25, 5.0), mode=("bilinear", "nearest")[: len(keys)]),
         ScaleIntensityRanged(keys[0], a_min=-1000.0, a_max=500.0, b_min=0.0, b_max=1.0, clip=True),

@@ -32,7 +32,7 @@ from monai.handlers import (
 )
 from monai.transforms import (
     Activations,
-    AddChannel,
+    EnsureChannelFirst,
     AsDiscrete,
     Compose,
     RandSpatialCrop,
@@ -63,17 +63,17 @@ def main(tempdir):
     train_imtrans = Compose(
         [
             ScaleIntensity(),
-            AddChannel(),
+            EnsureChannelFirst(),
             RandSpatialCrop((96, 96, 96), random_size=False),
         ]
     )
     train_segtrans = Compose(
-        [AddChannel(), RandSpatialCrop((96, 96, 96), random_size=False)]
+        [EnsureChannelFirst(), RandSpatialCrop((96, 96, 96), random_size=False)]
     )
     val_imtrans = Compose(
-        [ScaleIntensity(), AddChannel(), Resize((96, 96, 96))]
+        [ScaleIntensity(), EnsureChannelFirst(), Resize((96, 96, 96))]
     )
-    val_segtrans = Compose([AddChannel(), Resize((96, 96, 96))])
+    val_segtrans = Compose([EnsureChannelFirst(), Resize((96, 96, 96))])
 
     # define image dataset, data loader
     check_ds = ImageDataset(

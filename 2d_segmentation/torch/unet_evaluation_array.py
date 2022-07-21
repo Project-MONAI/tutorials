@@ -23,7 +23,7 @@ from monai.data import ArrayDataset, create_test_image_2d, decollate_batch, Data
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.networks.nets import UNet
-from monai.transforms import Activations, AddChannel, AsDiscrete, Compose, LoadImage, SaveImage, ScaleIntensity
+from monai.transforms import Activations, AsDiscrete, Compose, LoadImage, SaveImage, ScaleIntensity
 
 
 def main(tempdir):
@@ -40,8 +40,8 @@ def main(tempdir):
     segs = sorted(glob(os.path.join(tempdir, "seg*.png")))
 
     # define transforms for image and segmentation
-    imtrans = Compose([LoadImage(image_only=True), AddChannel(), ScaleIntensity()])
-    segtrans = Compose([LoadImage(image_only=True), AddChannel(), ScaleIntensity()])
+    imtrans = Compose([LoadImage(image_only=True, ensure_channel_first=True), ScaleIntensity()])
+    segtrans = Compose([LoadImage(image_only=True, ensure_channel_first=True), ScaleIntensity()])
     val_ds = ArrayDataset(images, imtrans, segs, segtrans)
     # sliding window inference for one image at every iteration
     val_loader = DataLoader(val_ds, batch_size=1, num_workers=1, pin_memory=torch.cuda.is_available())

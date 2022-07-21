@@ -25,7 +25,6 @@ from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.transforms import (
     Activations,
-    AddChannel,
     AsDiscrete,
     Compose,
     LoadImage,
@@ -53,8 +52,7 @@ def main(tempdir):
     # define transforms for image and segmentation
     train_imtrans = Compose(
         [
-            LoadImage(image_only=True),
-            AddChannel(),
+            LoadImage(image_only=True, ensure_channel_first=True),
             ScaleIntensity(),
             RandSpatialCrop((96, 96), random_size=False),
             RandRotate90(prob=0.5, spatial_axes=(0, 1)),
@@ -62,15 +60,14 @@ def main(tempdir):
     )
     train_segtrans = Compose(
         [
-            LoadImage(image_only=True),
-            AddChannel(),
+            LoadImage(image_only=True, ensure_channel_first=True),
             ScaleIntensity(),
             RandSpatialCrop((96, 96), random_size=False),
             RandRotate90(prob=0.5, spatial_axes=(0, 1)),
         ]
     )
-    val_imtrans = Compose([LoadImage(image_only=True), AddChannel(), ScaleIntensity()])
-    val_segtrans = Compose([LoadImage(image_only=True), AddChannel(), ScaleIntensity()])
+    val_imtrans = Compose([LoadImage(image_only=True, ensure_channel_first=True), ScaleIntensity()])
+    val_segtrans = Compose([LoadImage(image_only=True, ensure_channel_first=True), ScaleIntensity()])
 
     # define array dataset, data loader
     check_ds = ArrayDataset(images, train_imtrans, segs, train_segtrans)

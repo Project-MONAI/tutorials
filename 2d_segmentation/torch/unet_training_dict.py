@@ -25,7 +25,7 @@ from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.transforms import (
     Activations,
-    AddChanneld,
+    EnsureChannelFirstd,
     AsDiscrete,
     Compose,
     LoadImaged,
@@ -56,7 +56,7 @@ def main(tempdir):
     train_transforms = Compose(
         [
             LoadImaged(keys=["img", "seg"]),
-            AddChanneld(keys=["img", "seg"]),
+            EnsureChannelFirstd(keys=["img", "seg"]),
             ScaleIntensityd(keys=["img", "seg"]),
             RandCropByPosNegLabeld(
                 keys=["img", "seg"], label_key="seg", spatial_size=[96, 96], pos=1, neg=1, num_samples=4
@@ -67,7 +67,7 @@ def main(tempdir):
     val_transforms = Compose(
         [
             LoadImaged(keys=["img", "seg"]),
-            AddChanneld(keys=["img", "seg"]),
+            EnsureChannelFirstd(keys=["img", "seg"]),
             ScaleIntensityd(keys=["img", "seg"]),
         ]
     )

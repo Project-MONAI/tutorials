@@ -18,7 +18,7 @@ import torch
 
 import monai
 from monai.data import CSVSaver, ImageDataset, DataLoader
-from monai.transforms import AddChannel, Compose, Resize, ScaleIntensity
+from monai.transforms import EnsureChannelFirst, Compose, Resize, ScaleIntensity
 
 
 def main():
@@ -46,7 +46,7 @@ def main():
     labels = np.array([0, 0, 1, 0, 1, 0, 1, 0, 1, 0], dtype=np.int64)
 
     # Define transforms for image
-    val_transforms = Compose([ScaleIntensity(), AddChannel(), Resize((96, 96, 96))])
+    val_transforms = Compose([ScaleIntensity(), EnsureChannelFirst(), Resize((96, 96, 96))])
 
     # Define image dataset
     val_ds = ImageDataset(image_files=images, labels=labels, transform=val_transforms, image_only=True)

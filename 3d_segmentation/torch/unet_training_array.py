@@ -24,7 +24,7 @@ import monai
 from monai.data import ImageDataset, create_test_image_3d, decollate_batch, DataLoader
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
-from monai.transforms import Activations, AddChannel, AsDiscrete, Compose, RandRotate90, RandSpatialCrop, ScaleIntensity
+from monai.transforms import Activations, EnsureChannelFirst, AsDiscrete, Compose, RandRotate90, RandSpatialCrop, ScaleIntensity
 from monai.visualize import plot_2d_or_3d_image
 
 
@@ -50,20 +50,20 @@ def main(tempdir):
     train_imtrans = Compose(
         [
             ScaleIntensity(),
-            AddChannel(),
+            EnsureChannelFirst(),
             RandSpatialCrop((96, 96, 96), random_size=False),
             RandRotate90(prob=0.5, spatial_axes=(0, 2)),
         ]
     )
     train_segtrans = Compose(
         [
-            AddChannel(),
+            EnsureChannelFirst(),
             RandSpatialCrop((96, 96, 96), random_size=False),
             RandRotate90(prob=0.5, spatial_axes=(0, 2)),
         ]
     )
-    val_imtrans = Compose([ScaleIntensity(), AddChannel()])
-    val_segtrans = Compose([AddChannel()])
+    val_imtrans = Compose([ScaleIntensity(), EnsureChannelFirst()])
+    val_segtrans = Compose([EnsureChannelFirst()])
 
     # define image dataset, data loader
     check_ds = ImageDataset(images, segs, transform=train_imtrans, seg_transform=train_segtrans)

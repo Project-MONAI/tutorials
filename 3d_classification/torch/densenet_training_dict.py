@@ -20,7 +20,7 @@ from torch.utils.tensorboard import SummaryWriter
 import monai
 from monai.data import decollate_batch, DataLoader
 from monai.metrics import ROCAUCMetric
-from monai.transforms import Activations, AddChanneld, AsDiscrete, Compose, LoadImaged, RandRotate90d, Resized, ScaleIntensityd
+from monai.transforms import Activations, AsDiscrete, Compose, LoadImaged, RandRotate90d, Resized, ScaleIntensityd
 
 
 def main():
@@ -62,8 +62,7 @@ def main():
     # Define transforms for image
     train_transforms = Compose(
         [
-            LoadImaged(keys=["img"]),
-            AddChanneld(keys=["img"]),
+            LoadImaged(keys=["img"], ensure_channel_first=True),
             ScaleIntensityd(keys=["img"]),
             Resized(keys=["img"], spatial_size=(96, 96, 96)),
             RandRotate90d(keys=["img"], prob=0.8, spatial_axes=[0, 2]),
@@ -71,8 +70,7 @@ def main():
     )
     val_transforms = Compose(
         [
-            LoadImaged(keys=["img"]),
-            AddChanneld(keys=["img"]),
+            LoadImaged(keys=["img"], ensure_channel_first=True),
             ScaleIntensityd(keys=["img"]),
             Resized(keys=["img"], spatial_size=(96, 96, 96)),
         ]

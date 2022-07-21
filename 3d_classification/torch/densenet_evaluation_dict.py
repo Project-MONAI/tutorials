@@ -18,7 +18,7 @@ import torch
 
 import monai
 from monai.data import CSVSaver, DataLoader
-from monai.transforms import AddChanneld, Compose, LoadImaged, Resized, ScaleIntensityd
+from monai.transforms import Compose, LoadImaged, Resized, ScaleIntensityd
 
 
 def main():
@@ -49,8 +49,7 @@ def main():
     # Define transforms for image
     val_transforms = Compose(
         [
-            LoadImaged(keys=["img"]),
-            AddChanneld(keys=["img"]),
+            LoadImaged(keys=["img"], ensure_channel_first=True),
             ScaleIntensityd(keys=["img"]),
             Resized(keys=["img"], spatial_size=(96, 96, 96)),
         ]

@@ -15,11 +15,10 @@ import sys
 
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
 
 import monai
-from monai.data import CSVSaver
-from monai.transforms import AddChanneld, Compose, LoadImaged, Resized, ScaleIntensityd, EnsureTyped
+from monai.data import CSVSaver, DataLoader
+from monai.transforms import Compose, LoadImaged, Resized, ScaleIntensityd
 
 
 def main():
@@ -50,11 +49,9 @@ def main():
     # Define transforms for image
     val_transforms = Compose(
         [
-            LoadImaged(keys=["img"]),
-            AddChanneld(keys=["img"]),
+            LoadImaged(keys=["img"], ensure_channel_first=True),
             ScaleIntensityd(keys=["img"]),
             Resized(keys=["img"], spatial_size=(96, 96, 96)),
-            EnsureTyped(keys=["img"]),
         ]
     )
 
@@ -78,7 +75,7 @@ def main():
             value = torch.eq(val_outputs, val_labels)
             metric_count += len(value)
             num_correct += value.sum().item()
-            saver.save_batch(val_outputs, val_data["img_meta_dict"])
+            saver.save_batch(val_outputs, val_data["img"].meta)
         metric = num_correct / metric_count
         print("evaluation metric:", metric)
         saver.finalize()

@@ -24,7 +24,6 @@ from ignite.contrib.handlers import ProgressBar
 import monai
 from monai.handlers import CheckpointSaver, MeanDice, StatsHandler, ValidationHandler, from_engine
 from monai.transforms import (
-    AddChanneld,
     AsDiscreted,
     CastToTyped,
     LoadImaged,
@@ -36,7 +35,6 @@ from monai.transforms import (
     ScaleIntensityRanged,
     Spacingd,
     SpatialPadd,
-    EnsureTyped,
 )
 
 
@@ -44,8 +42,7 @@ def get_xforms(mode="train", keys=("image", "label")):
     """returns a composed transform for train/val/infer."""
 
     xforms = [
-        LoadImaged(keys),
-        AddChanneld(keys),
+        LoadImaged(keys, ensure_channel_first=True),
         Orientationd(keys, axcodes="LPS"),
         Spacingd(keys, pixdim=(1.25, 1.25, 5.0), mode=("bilinear", "nearest")[: len(keys)]),
         ScaleIntensityRanged(keys[0], a_min=-1000.0, a_max=500.0, b_min=0.0, b_max=1.0, clip=True),
@@ -69,12 +66,12 @@ def get_xforms(mode="train", keys=("image", "label")):
                 RandFlipd(keys, spatial_axis=2, prob=0.5),
             ]
         )
-        dtype = (np.float32, np.uint8)
+        dtype = (torch.float32, torch.uint8)
     if mode == "val":
-        dtype = (np.float32, np.uint8)
+        dtype = (torch.float32, torch.uint8)
     if mode == "infer":
-        dtype = (np.float32,)
-    xforms.extend([CastToTyped(keys, dtype=dtype), EnsureTyped(keys)])
+        dtype = (torch.float32,)
+    xforms.extend([CastToTyped(keys, dtype=dtype)])
     return monai.transforms.Compose(xforms)
 
 
@@ -172,7 +169,7 @@ def train(data_folder=".", model_folder="runs"):
 
     # create evaluator (to be used to measure model quality during training
     val_post_transform = monai.transforms.Compose(
-        [EnsureTyped(keys=("pred", "label")), AsDiscreted(keys=("pred", "label"), argmax=(True, False), to_onehot=2)]
+        [AsDiscreted(keys=("pred", "label"), argmax=(True, False), to_onehot=2)]
     )
     val_handlers = [
         ProgressBar(),
@@ -246,7 +243,7 @@ def infer(data_folder=".", model_folder="runs", prediction_folder="output"):
     saver = monai.data.NiftiSaver(output_dir=prediction_folder, mode="nearest")
     with torch.no_grad():
         for infer_data in infer_loader:
-            logging.info(f"segmenting {infer_data['image_meta_dict']['filename_or_obj']}")
+            logging.info(f"segmenting {infer_data['image'].meta['filename_or_obj']}")
             preds = inferer(infer_data[keys[0]].to(device), net)
             n = 1.0
             for _ in range(4):
@@ -262,7 +259,7 @@ def infer(data_folder=".", model_folder="runs", prediction_folder="output"):
                     n = n + 1.0
             preds = preds / n
             preds = (preds.argmax(dim=1, keepdims=True)).float()
-            saver.save_batch(preds, infer_data["image_meta_dict"])
+            saver.save_batch(preds, infer_data["image"].meta)
 
     # copy the saved segmentations into the required folder structure for submission
     submission_dir = os.path.join(prediction_folder, "to_submit")

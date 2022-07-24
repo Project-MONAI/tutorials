@@ -30,10 +30,6 @@
                 "b_min": 0,
                 "b_max": 1,
                 "clip": true
-            },
-            {
-                "_target_": "EnsureTyped",
-                "keys": "@image_key"
             }
         ]
     },

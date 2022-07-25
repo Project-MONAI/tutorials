@@ -3,7 +3,7 @@ clear
 
 TASK="Task09_Spleen"
 
-ARCH_CKPT="arch_code.pth"
+ARCH_CKPT="arch_code_cvpr.pth"
 DATA_ROOT="/workspace/data_msd/${TASK}"
 JSON_PATH="${DATA_ROOT}/dataset.json"
 

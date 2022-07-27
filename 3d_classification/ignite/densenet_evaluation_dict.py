@@ -17,11 +17,11 @@ import numpy as np
 import torch
 from ignite.engine import _prepare_batch, create_supervised_evaluator
 from ignite.metrics import Accuracy
-from torch.utils.data import DataLoader
 
 import monai
+from monai.data import DataLoader
 from monai.handlers import CheckpointLoader, ClassificationSaver, StatsHandler
-from monai.transforms import AddChanneld, Compose, LoadImaged, Resized, ScaleIntensityd, EnsureTyped
+from monai.transforms import Compose, LoadImaged, Resized, ScaleIntensityd
 
 
 def main():
@@ -52,11 +52,9 @@ def main():
     # define transforms for image
     val_transforms = Compose(
         [
-            LoadImaged(keys=["img"]),
-            AddChanneld(keys=["img"]),
+            LoadImaged(keys=["img"], ensure_channel_first=True),
             ScaleIntensityd(keys=["img"]),
             Resized(keys=["img"], spatial_size=(96, 96, 96)),
-            EnsureTyped(keys=["img"]),
         ]
     )
 
@@ -85,7 +83,7 @@ def main():
     prediction_saver = ClassificationSaver(
         output_dir="tempdir",
         name="evaluator",
-        batch_transform=lambda batch: batch["img_meta_dict"],
+        batch_transform=lambda batch: batch["img"].meta,
         output_transform=lambda output: output[0].argmax(1),
     )
     prediction_saver.attach(evaluator)

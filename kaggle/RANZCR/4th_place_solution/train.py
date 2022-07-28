@@ -224,8 +224,6 @@ def run_eval(model, val_dataloader, cfg, writer, epoch):
 
         val_preds = torch.cat(val_preds)
         val_targets = torch.cat(val_targets)
-        val_preds = val_preds.cpu().numpy().astype(np.float32)
-        val_targets = val_targets.cpu().numpy().astype(np.float32)
         avg_auc = compute_roc_auc(val_preds, val_targets, average="macro")
         writer.add_scalar("val_avg_auc", avg_auc, epoch)
 

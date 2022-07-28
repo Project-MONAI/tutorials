@@ -12,12 +12,11 @@ The model is based on ResNet18 with the last fully connected layer replaced by a
 
 All the data used to train and validate this model is from [Camelyon-16 Challenge](https://camelyon16.grand-challenge.org/). You can download all the images for "CAMELYON16" data set from various sources listed [here](https://camelyon17.grand-challenge.org/Data/).
 
-Location information for training/validation patches (the location on the whole slide image where patches are extracted) are adopted from [NCRF/coords](https://github.com/baidu-research/NCRF/tree/master/coords). The reformatted coordinations and labels are stored in a json file (`dataset_0.json`), and can be downloaded from [here](https://drive.google.com/file/d/1m2pwko6hxwsxeDWZY2oSOV-_KT97Ol0o/view?usp=sharing)
+Location information for training/validation patches (the location on the whole slide image where patches are extracted) are adopted from [NCRF/coords](https://github.com/baidu-research/NCRF/tree/master/coords). The reformatted coordinations and labels in CSV format for training (`training.csv`) can be found [here](https://drive.google.com/file/d/1httIjgji6U6rMIb0P8pE0F-hXFAuvQEf/view?usp=sharing) and for validation (`validation.csv`) can be found [here](https://drive.google.com/file/d/1tJulzl9m5LUm16IeFbOCoFnaSWoB6i5L/view?usp=sharing).
 
-This pipeline expects the training/validation data (whole slide images) reside in `cfg["data_root"]/training/images`. By default `data_root` is pointing to `/workspace/data/medical/pathology/` You can easily modify it to point to a different directory by passing the following argument in the runtime: `--data-root /other/data/root/dir/`.
+This pipeline expects the training/validation data (whole slide images) reside in `cfg["data_root"]/training/images`. By default `data_root` is pointing to the code folder `./`; however, you can easily modify it to point to a different directory by passing the following argument in the runtime: `--data-root /other/data/root/dir/`.
 
-> `dataset_0_subset_0.json` is also provided [here](https://drive.google.com/file/d/1NCd0y4FR42maQpfZjzKlFSIX4oeKgysg/view?usp=sharing) to check the functionality of the pipeline using only two of the whole slide images: `tumor_001` and `tumor_101`. <br/>
-> This dataset should not be used for the real training or any perfomance evaluation.
+> [`training_sub.csv`](https://drive.google.com/file/d/1rO8ZY-TrU9nrOsx-Udn1q5PmUYrLG3Mv/view?usp=sharing) and [`validation_sub.csv`](https://drive.google.com/file/d/130pqsrc2e9wiHIImL8w4fT_5NktEGel7/view?usp=sharing) is also provided to check the functionality of the pipeline using only two of the whole slide images: `tumor_001` (for training) and `tumor_101` (for validation). This dataset should not be used for the real training or any performance evaluation.
 
 ### Input and output formats
 

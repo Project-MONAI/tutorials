@@ -7,27 +7,28 @@ from shutil import copyfile
 
 import monai
 import numpy as np
-from monai.apps.pathology.data import PatchWSIDataset
-from monai.data import DataLoader, load_decathlon_datalist
+from monai.data import CSVDataset, DataLoader, PatchWSIDataset
 from monai.networks.nets import TorchVisionFCModel
 from monai.optimizers import Novograd
 from monai.transforms import (
     Activations,
     AsDiscrete,
     CastToType,
-    CastToTypeD,
+    CastToTyped,
     Compose,
     CuCIM,
+    GridSplitd,
+    Lambdad,
     RandCuCIM,
-    RandFlipD,
-    RandRotate90D,
-    RandZoomD,
-    ScaleIntensityRangeD,
+    RandFlipd,
+    RandRotate90d,
+    RandZoomd,
+    ScaleIntensityRanged,
     ToCupy,
-    ToNumpyD,
-    TorchVisionD,
+    ToNumpyd,
+    TorchVisiond,
     ToTensor,
-    ToTensorD,
+    ToTensord,
 )
 from monai.utils import first, set_determinism, Range
 
@@ -78,20 +79,23 @@ def training(
     writer: SummaryWriter,
     print_step,
 ):
+    summary["epoch"] += 1
+
     model.train()
 
     n_steps = len(dataloader)
     iter_data = iter(dataloader)
 
     for step in range(n_steps):
+        summary["step"] += 1
         with Range("Step"):
             with Range("Data Loading"):
                 batch = next(iter_data)
                 x = batch["image"].to(device)
                 y = batch["label"].to(device)
 
-                if pre_process is not None:
-                    x = pre_process(x)
+            if pre_process is not None:
+                x = pre_process(x)
 
             with autocast(enabled=amp):
                 output = model(x)
@@ -121,10 +125,6 @@ def training(
                     f"Step: {step + 1}/{n_steps} -- "
                     f"train_loss: {loss_data:.5f}, train_acc: {acc_data:.3f}"
                 )
-
-            summary["step"] += 1
-
-    summary["epoch"] += 1
     return summary
 
 
@@ -212,41 +212,66 @@ def main(cfg):
     preprocess_cpu_valid = None
     preprocess_gpu_valid = None
     if cfg["backend"] == "cucim":
-        preprocess_cpu_train = Compose([ToTensorD(keys="label")])
+        preprocess_cpu_train = Compose(
+            [
+                Lambdad(keys="label", func=lambda x: x.reshape((1, *cfg["grid_shape"]))),
+                GridSplitd(
+                    keys=("image", "label"), grid=cfg["grid_shape"], size={"image": cfg["patch_size"], "label": 1}
+                ),
+                ToTensord(keys="label"),
+            ]
+        )
         preprocess_gpu_train = Compose(
             [
                 Range()(ToCupy()),
                 Range("ColorJitter")(
-                    RandCuCIM(name="color_jitter", brightness=64.0 / 255.0, contrast=0.75, saturation=0.25, hue=0.04)
+                    RandCuCIM(
+                        name="rand_color_jitter",
+                        prob=1.0,
+                        brightness=64.0 / 255.0,
+                        contrast=0.75,
+                        saturation=0.25,
+                        hue=0.04,
+                    )
                 ),
-                Range("RandomFlip")(RandCuCIM(name="image_flip", apply_prob=cfg["prob"], spatial_axis=-1)),
+                Range("RandomFlip")(RandCuCIM(name="rand_image_flip", prob=cfg["prob"], spatial_axis=-1)),
                 Range("RandomRotate90")(
                     RandCuCIM(name="rand_image_rotate_90", prob=cfg["prob"], max_k=3, spatial_axis=(-2, -1))
                 ),
                 Range()(CastToType(dtype=np.float32)),
-                Range("RandomZoom")(RandCuCIM(name="rand_zoom", min_zoom=0.9, max_zoom=1.1)),
+                Range("RandomZoom")(RandCuCIM(name="rand_zoom", prob=cfg["prob"], min_zoom=0.9, max_zoom=1.1)),
                 Range("ScaleIntensity")(
                     CuCIM(name="scale_intensity_range", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0)
                 ),
                 Range()(ToTensor(device=device)),
             ]
         )
-        preprocess_cpu_valid = Compose([ToTensorD(keys="label")])
+        preprocess_cpu_valid = Compose(
+            [
+                Lambdad(keys="label", func=lambda x: x.reshape((1, *cfg["grid_shape"]))),
+                GridSplitd(
+                    keys=("image", "label"), grid=cfg["grid_shape"], size={"image": cfg["patch_size"], "label": 1}
+                ),
+                ToTensord(keys="label"),
+            ]
+        )
         preprocess_gpu_valid = Compose(
             [
-                Range("ValidToCupyAndCast")(ToCupy(dtype=np.float32)),
-                Range("ValidScaleIntensity")(
-                    CuCIM(name="scale_intensity_range", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0)
-                ),
-                Range("ValidToTensor")(ToTensor(device=device)),
+                ToCupy(dtype=np.float32),
+                CuCIM(name="scale_intensity_range", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0),
+                ToTensor(device=device),
             ]
         )
     elif cfg["backend"] == "numpy":
         preprocess_cpu_train = Compose(
             [
-                Range()(ToTensorD(keys=("image", "label"))),
+                Lambdad(keys="label", func=lambda x: x.reshape((1, *cfg["grid_shape"]))),
+                GridSplitd(
+                    keys=("image", "label"), grid=cfg["grid_shape"], size={"image": cfg["patch_size"], "label": 1}
+                ),
+                Range()(ToTensord(keys=("image", "label"))),
                 Range("ColorJitter")(
-                    TorchVisionD(
+                    TorchVisiond(
                         keys="image",
                         name="ColorJitter",
                         brightness=64.0 / 255.0,
@@ -255,24 +280,26 @@ def main(cfg):
                         hue=0.04,
                     )
                 ),
-                Range()(ToNumpyD(keys="image")),
-                Range("RandomFlip")(RandFlipD(keys="image", prob=cfg["prob"], spatial_axis=-1)),
-                Range("RandomRotate90")(RandRotate90D(keys="image", prob=cfg["prob"])),
-                Range()(CastToTypeD(keys="image", dtype=np.float32)),
-                Range("RandomZoom")(RandZoomD(keys="image", prob=cfg["prob"], min_zoom=0.9, max_zoom=1.1)),
+                Range()(ToNumpyd(keys="image")),
+                Range("RandomFlip")(RandFlipd(keys="image", prob=cfg["prob"], spatial_axis=-1)),
+                Range("RandomRotate90")(RandRotate90d(keys="image", prob=cfg["prob"])),
+                Range()(CastToTyped(keys="image", dtype=np.float32)),
+                Range("RandomZoom")(RandZoomd(keys="image", prob=cfg["prob"], min_zoom=0.9, max_zoom=1.1)),
                 Range("ScaleIntensity")(
-                    ScaleIntensityRangeD(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0)
+                    ScaleIntensityRanged(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0)
                 ),
-                Range()(ToTensorD(keys="image")),
+                Range()(ToTensord(keys="image")),
             ]
         )
         preprocess_cpu_valid = Compose(
             [
-                Range("ValidCastType")(CastToTypeD(keys="image", dtype=np.float32)),
-                Range("ValidScaleIntensity")(
-                    ScaleIntensityRangeD(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0)
+                Lambdad(keys="label", func=lambda x: x.reshape((1, *cfg["grid_shape"]))),
+                GridSplitd(
+                    keys=("image", "label"), grid=cfg["grid_shape"], size={"image": cfg["patch_size"], "label": 1}
                 ),
-                Range("ValidToTensor")(ToTensorD(keys=("image", "label"))),
+                CastToTyped(keys="image", dtype=np.float32),
+                ScaleIntensityRanged(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0),
+                ToTensord(keys=("image", "label")),
             ]
         )
     else:
@@ -287,31 +314,32 @@ def main(cfg):
     )
 
     # Create MONAI dataset
-    train_json_info_list = load_decathlon_datalist(
-        data_list_file_path=cfg["dataset_json"],
-        data_list_key="training",
-        base_dir=cfg["data_root"],
-    )
-    valid_json_info_list = load_decathlon_datalist(
-        data_list_file_path=cfg["dataset_json"],
-        data_list_key="validation",
-        base_dir=cfg["data_root"],
+    train_data_list = CSVDataset(
+        cfg["train_file"],
+        col_groups={"image": 0, "location": [2, 1], "label": list(range(3, 12))},
+        kwargs_read_csv={"header": None},
+        transform=Lambdad("image", lambda x: os.path.join(cfg["root"], "training/images", x + ".tif")),
     )
     train_dataset = PatchWSIDataset(
-        data=train_json_info_list,
-        region_size=cfg["region_size"],
-        grid_shape=cfg["grid_shape"],
-        patch_size=cfg["patch_size"],
+        data=train_data_list,
+        size=cfg["region_size"],
+        level=0,
         transform=preprocess_cpu_train,
-        image_reader_name="openslide" if cfg["use_openslide"] else "cuCIM",
+        reader="openslide" if cfg["use_openslide"] else "cuCIM",
+    )
+
+    valid_data_list = CSVDataset(
+        cfg["valid_file"],
+        col_groups={"image": 0, "location": [2, 1], "label": list(range(3, 12))},
+        kwargs_read_csv={"header": None},
+        transform=Lambdad("image", lambda x: os.path.join(cfg["root"], "validation/images", x + ".tif")),
     )
     valid_dataset = PatchWSIDataset(
-        data=valid_json_info_list,
-        region_size=cfg["region_size"],
-        grid_shape=cfg["grid_shape"],
-        patch_size=cfg["patch_size"],
+        data=valid_data_list,
+        size=cfg["region_size"],
+        level=0,
         transform=preprocess_cpu_valid,
-        image_reader_name="openslide" if cfg["use_openslide"] else "cuCIM",
+        reader="openslide" if cfg["use_openslide"] else "cuCIM",
     )
 
     # DataLoaders
@@ -369,7 +397,7 @@ def main(cfg):
     # -------------------------------------------------------------------------
     # Training/Evaluating
     # -------------------------------------------------------------------------
-    train_counter = {"n_epochs": cfg["n_epochs"], "epoch": 1, "step": 1}
+    train_counter = {"n_epochs": cfg["n_epochs"], "epoch": 0, "step": 0}
 
     total_valid_time, total_train_time = 0.0, 0.0
     t_start = time.perf_counter()
@@ -427,7 +455,7 @@ def main(cfg):
             writer.add_scalar("valid/accuracy", valid_acc, train_counter["epoch"])
 
             logging.info(
-                f"[Epoch: {train_counter['epoch']}/{cfg['n_epochs']}] loss: {valid_loss:.3f}, accuracy: {valid_acc:.2f}, "
+                f"[Epoch: {train_counter['epoch']}/{cfg['n_epochs']}] loss: {valid_loss:.3f}, accuracy: {valid_acc:.3f}, "
                 f"time: {t_valid - t_epoch:.1f}s (train: {train_time:.1f}s, valid: {valid_time:.1f}s)"
             )
         else:
@@ -445,12 +473,12 @@ def main(cfg):
     # Save the best and final model
     if cfg["validate"] is True:
         copyfile(
-            os.path.join(log_dir, f"model_epoch_{metric_summary['best_epoch']}.pth"),
-            os.path.join(log_dir, "model_best.pth"),
+            os.path.join(log_dir, f"model_epoch_{metric_summary['best_epoch']}.pt"),
+            os.path.join(log_dir, "model_best.pt"),
         )
         copyfile(
-            os.path.join(log_dir, f"model_epoch_{cfg['n_epochs']}.pth"),
-            os.path.join(log_dir, "model_final.pth"),
+            os.path.join(log_dir, f"model_epoch_{cfg['n_epochs']}.pt"),
+            os.path.join(log_dir, "model_final.pt"),
         )
 
     # Final prints
@@ -463,24 +491,13 @@ def main(cfg):
 
 def parse_arguments():
     parser = ArgumentParser(description="Tumor detection on whole slide pathology images.")
-    parser.add_argument(
-        "--dataset",
-        type=str,
-        default="./data/dataset_0.json",
-        dest="dataset_json",
-        help="path to dataset json file",
-    )
-    parser.add_argument(
-        "--root",
-        type=str,
-        default="data/",
-        dest="data_root",
-        help="path to root folder of images containing training folder",
-    )
+    parser.add_argument("--root", type=str, default="./", help="path to image folder containing training/validation")
+    parser.add_argument("--train-file", type=str, default="training.csv", help="path to training data file")
+    parser.add_argument("--valid-file", type=str, default="validation.csv", help="path to training data file")
     parser.add_argument("--logdir", type=str, default="./logs/", dest="logdir", help="log directory")
 
     parser.add_argument("--rs", type=int, default=256 * 3, dest="region_size", help="region size")
-    parser.add_argument("--gs", type=int, default=3, dest="grid_shape", help="image grid shape (3x3)")
+    parser.add_argument("--gs", type=int, default=(3, 3), nargs="+", dest="grid_shape", help="image grid shape (3x3)")
     parser.add_argument("--ps", type=int, default=224, dest="patch_size", help="patch size")
     parser.add_argument("--bs", type=int, default=64, dest="batch_size", help="batch size")
     parser.add_argument("--ep", type=int, default=4, dest="n_epochs", help="number of epochs")
@@ -502,7 +519,7 @@ def parse_arguments():
     parser.add_argument("--optimized", action="store_true", help="use optimized parameters")
     parser.add_argument("-b", "--backend", type=str, dest="backend", help="backend for transforms")
 
-    parser.add_argument("--cpu", type=int, default=10, dest="num_workers", help="number of workers")
+    parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")
     parser.add_argument("--gpu", type=str, default="0", dest="gpu", help="which gpu to use")
 
     args = parser.parse_args()
@@ -521,12 +538,12 @@ def parse_arguments():
             config_dict["backend"] = "cucim"
 
     if config_dict["baseline"] is True:
-        config_dict["benchmark"] = True
-        config_dict["novograd"] = True
+        config_dict["benchmark"] = False
+        config_dict["novograd"] = False
         config_dict["pretrain"] = True
-        config_dict["cos"] = True
+        config_dict["cos"] = False
         config_dict["pin"] = False
-        config_dict["amp"] = True
+        config_dict["amp"] = False
 
     if config_dict["backend"] is None:
         config_dict["backend"] = "numpy"

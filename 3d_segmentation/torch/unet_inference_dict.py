@@ -34,7 +34,6 @@ from monai.transforms import (
     Resized,
     SaveImaged,
     ScaleIntensityd,
-    EnsureTyped,
 )
 
 
@@ -58,14 +57,12 @@ def main(tempdir):
         Orientationd(keys="img", axcodes="RAS"),
         Resized(keys="img", spatial_size=(96, 96, 96), mode="trilinear", align_corners=True),
         ScaleIntensityd(keys="img"),
-        EnsureTyped(keys="img"),
     ])
     # define dataset and dataloader
     dataset = Dataset(data=files, transform=pre_transforms)
     dataloader = DataLoader(dataset, batch_size=2, num_workers=4)
     # define post transforms
     post_transforms = Compose([
-        EnsureTyped(keys="pred"),
         Activationsd(keys="pred", sigmoid=True),
         Invertd(
             keys="pred",  # invert the `pred` data field, also support multiple fields
@@ -73,19 +70,12 @@ def main(tempdir):
             orig_keys="img",  # get the previously applied pre_transforms information on the `img` data field,
                               # then invert `pred` based on this information. we can use same info
                               # for multiple fields, also support different orig_keys for different fields
-            meta_keys="pred_meta_dict",  # key field to save inverted meta data, every item maps to `keys`
-            orig_meta_keys="img_meta_dict",  # get the meta data from `img_meta_dict` field when inverting,
-                                             # for example, may need the `affine` to invert `Spacingd` transform,
-                                             # multiple fields can use the same meta data to invert
-            meta_key_postfix="meta_dict",  # if `meta_keys=None`, use "{keys}_{meta_key_postfix}" as the meta key,
-                                           # if `orig_meta_keys=None`, use "{orig_keys}_{meta_key_postfix}",
-                                           # otherwise, no need this arg during inverting
             nearest_interp=False,  # don't change the interpolation mode to "nearest" when inverting transforms
                                    # to ensure a smooth output, then execute `AsDiscreted` transform
             to_tensor=True,  # convert to PyTorch Tensor after inverting
         ),
         AsDiscreted(keys="pred", threshold=0.5),
-        SaveImaged(keys="pred", meta_keys="pred_meta_dict", output_dir="./out", output_postfix="seg", resample=False),
+        SaveImaged(keys="pred", output_dir="./out", output_postfix="seg", resample=False),
     ])
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

@@ -7,7 +7,7 @@ the pre-trained weights generated from the first script and performs fine-tuning
 task.
 
 In case, the user wants to skip the pre-training part, the pre-trained weights can be
-[downloaded from here](https://drive.google.com/file/d/1z0BouIiQ9oLizubOIH9Rlpad5Kk_2RtY/view?usp=sharing)
+[downloaded from here](https://drive.google.com/file/d/1D7G1FhgZfBhql4djMfiSy0xODVXnLlpd/view?usp=sharing)
 to use for fine-tuning tasks and directly skip to the second part of the tutorial which is using the
 'ssl_finetune_train.py'.
 

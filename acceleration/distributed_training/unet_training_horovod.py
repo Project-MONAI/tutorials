@@ -39,7 +39,7 @@ Note:
     Example script to execute this program, only need to run on the master node:
     `horovodrun -np 16 -H server1:4,server2:4,server3:4,server4:4 python unet_training_horovod.py -d "./testdata"`
 
-    This example was tested with [Ubuntu 16.04/20.04], [NCCL 2.6.3], [horovod 0.19.5].
+    This example was tested with [Ubuntu 16.04/20.04], [NCCL 2.6.3], [horovod 0.25.0].
 
 Referring to: https://github.com/horovod/horovod/blob/master/examples/pytorch_mnist.py
 
@@ -66,7 +66,6 @@ from monai.transforms import (
     RandCropByPosNegLabeld,
     RandRotate90d,
     ScaleIntensityd,
-    EnsureTyped,
 )
 
 
@@ -106,7 +105,6 @@ def train(args):
                 keys=["img", "seg"], label_key="seg", spatial_size=[96, 96, 96], pos=1, neg=1, num_samples=4
             ),
             RandRotate90d(keys=["img", "seg"], prob=0.5, spatial_axes=[0, 2]),
-            EnsureTyped(keys=["img", "seg"]),
         ]
     )
 
@@ -188,7 +186,7 @@ def main():
     train(args=args)
 
 
-# Example script to execute this program only on the master node:
+# Example script to execute this program on 4 nodes (only need to run below command on the master node):
 # horovodrun -np 16 -H server1:4,server2:4,server3:4,server4:4 python unet_training_horovod.py -d "./testdata"
 if __name__ == "__main__":
     main()

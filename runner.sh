@@ -74,6 +74,8 @@ pattern="-and -name '*' -and ! -wholename '*federated_learning*'\
  -and ! -wholename '*nuclick_infer*'\
  -and ! -wholename '*nuclick_training_notebook*'\
  -and ! -wholename '*full_gpu_inference_pipeline*'\
+ -and ! -wholename '*generate_random_permutations*'\
+ -and ! -wholename '*transforms_update_meta_data*'\
  -and ! -wholename '*get_started*'"
 kernelspec="python3"
 
@@ -312,7 +314,7 @@ for file in "${files[@]}"; do
 			replace_text
 		done
 
-		# echo "$notebook" > "${base_path}/debug_notebook.ipynb"
+		python -c 'import monai; monai.config.print_config()'
 		time out=$(echo "$notebook" | papermill --progress-bar -k "$kernelspec")
 		success=$?
 	    if [[ ${success} -ne 0 || "$out" =~ "\"status\": \"failed\"" ]]; then

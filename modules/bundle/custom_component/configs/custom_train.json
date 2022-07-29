@@ -1,7 +1,7 @@
 {
-    "train#preprocessing#transforms#6":
+    "train#deterministic_transforms#0":
     {
-        "_target_": "scripts.custom_transforms.PrintEnsureTyped",
+        "_target_": "scripts.custom_transforms.LoadImagePrintd",
         "keys": ["image", "label"]
     }
 }

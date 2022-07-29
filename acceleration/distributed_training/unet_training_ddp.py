@@ -67,7 +67,6 @@ from monai.transforms import (
     RandCropByPosNegLabeld,
     RandRotate90d,
     ScaleIntensityd,
-    EnsureTyped,
 )
 
 
@@ -106,7 +105,6 @@ def train(args):
                 keys=["img", "seg"], label_key="seg", spatial_size=[96, 96, 96], pos=1, neg=1, num_samples=4
             ),
             RandRotate90d(keys=["img", "seg"], prob=0.5, spatial_axes=[0, 2]),
-            EnsureTyped(keys=["img", "seg"]),
         ]
     )
 

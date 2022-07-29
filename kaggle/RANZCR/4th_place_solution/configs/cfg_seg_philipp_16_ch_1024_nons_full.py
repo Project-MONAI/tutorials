@@ -1,9 +1,7 @@
 import numpy as np
 from monai.transforms import (
-    CastToTyped,
     CenterSpatialCropd,
     Compose,
-    EnsureTyped,
     Lambdad,
     NormalizeIntensityd,
     RandAffined,
@@ -63,10 +61,8 @@ cfg.train_aug = Compose(
             max_spatial_size=(102, 102),
             prob=0.5,
         ),
-        CastToTyped(keys="input", dtype=np.float32),
         NormalizeIntensityd(keys="input", nonzero=False),
         Lambdad(keys="input", func=lambda x: x.clip(-20, 20)),
-        EnsureTyped(keys=("input", "mask")),
     ]
 )
 
@@ -83,10 +79,8 @@ cfg.val_aug = Compose(
         CenterSpatialCropd(
             keys=("input", "mask"), roi_size=(cfg.img_size[0], cfg.img_size[1])
         ),
-        CastToTyped(keys="input", dtype=np.float32),
         NormalizeIntensityd(keys="input", nonzero=False),
         Lambdad(keys="input", func=lambda x: x.clip(-20, 20)),
-        EnsureTyped(keys=("input", "mask")),
     ]
 )
 
@@ -100,9 +94,7 @@ cfg.test_aug = Compose(
             align_corners=False,
         ),
         SpatialPadd(keys=("input", "mask"), spatial_size=(1120, 1120)),
-        CastToTyped(keys="input", dtype=np.float32),
         NormalizeIntensityd(keys="input", nonzero=False),
         Lambdad(keys="input", func=lambda x: x.clip(-20, 20)),
-        EnsureTyped(keys=("input", "mask")),
     ]
 )

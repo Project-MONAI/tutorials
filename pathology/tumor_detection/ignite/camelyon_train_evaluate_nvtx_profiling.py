@@ -3,41 +3,42 @@ import os
 import time
 from argparse import ArgumentParser
 
-import monai
 import numpy as np
+import pandas as pd
 import torch
-from monai.apps.pathology.data import PatchWSIDataset
-from monai.data import DataLoader, load_decathlon_datalist
+from ignite.metrics import Accuracy
+from torch.optim import SGD, lr_scheduler
+
+import monai
+from monai.data import DataLoader, PatchWSIDataset, CSVDataset
 from monai.engines import SupervisedEvaluator, SupervisedTrainer
 from monai.handlers import (
     CheckpointSaver,
     LrScheduleHandler,
+    RangeHandler,
     StatsHandler,
     TensorBoardStatsHandler,
     ValidationHandler,
     from_engine,
 )
-from monai.handlers.nvtx_handlers import RangeHandler
 from monai.networks.nets import TorchVisionFCModel
 from monai.optimizers import Novograd
 from monai.transforms import (
-    ActivationsD,
-    AsDiscreteD,
-    CastToTypeD,
+    Activationsd,
+    AsDiscreted,
+    CastToTyped,
     Compose,
-    RandFlipD,
-    RandRotate90D,
-    RandZoomD,
-    ScaleIntensityRangeD,
-    ToNumpyD,
-    TorchVisionD,
-    ToTensorD,
+    GridSplitd,
+    Lambdad,
+    RandFlipd,
+    RandRotate90d,
+    RandZoomd,
+    ScaleIntensityRanged,
+    ToNumpyd,
+    TorchVisiond,
+    ToTensord,
 )
-from monai.transforms.nvtx import RangePopD, RangePushD
-from monai.utils import Range, first, set_determinism
-from torch.optim import SGD, lr_scheduler
-
-from ignite.metrics import Accuracy
+from monai.utils import first, set_determinism, Range
 
 torch.backends.cudnn.enabled = True
 set_determinism(seed=0, additional_settings=None)
@@ -62,7 +63,7 @@ def set_device(cfg):
     if gpus and torch.cuda.is_available():
         os.environ["CUDA_VISIBLE_DEVICES"] = ",".join([str(n) for n in gpus])
         device = torch.device("cuda")
-        print(f'CUDA is being used with GPU ID(s): {os.environ["CUDA_VISIBLE_DEVICES"]}')
+        print(f'CUDA is being used with GPU Id(s): {os.environ["CUDA_VISIBLE_DEVICES"]}')
     else:
         device = torch.device("cpu")
         print("CPU only!")
@@ -79,85 +80,82 @@ def train(cfg):
     # Build MONAI preprocessing
     train_preprocess = Compose(
         [
-            Range()(ToTensorD(keys="image")),
-            Range("ColorJitter")(
-                TorchVisionD(
-                    keys="image",
-                    name="ColorJitter",
-                    brightness=64.0 / 255.0,
-                    contrast=0.75,
-                    saturation=0.25,
-                    hue=0.04,
-                )
+            Lambdad(keys="label", func=lambda x: x.reshape((1, cfg["grid_shape"], cfg["grid_shape"]))),
+            GridSplitd(
+                keys=("image", "label"),
+                grid=(cfg["grid_shape"], cfg["grid_shape"]),
+                size={"image": cfg["patch_size"], "label": 1},
             ),
-            Range()(ToNumpyD(keys="image")),
-            Range()(RandFlipD(keys="image", prob=0.5)),
-            Range()(RandRotate90D(keys="image", prob=0.5)),
-            Range()(CastToTypeD(keys="image", dtype=np.float32)),
-            Range()(RandZoomD(keys="image", prob=0.5, min_zoom=0.9, max_zoom=1.1)),
-            Range()(ScaleIntensityRangeD(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0)),
-            ToTensorD(keys=("image", "label")),
+            ToTensord(keys=("image")),
+            TorchVisiond(
+                keys="image", name="ColorJitter", brightness=64.0 / 255.0, contrast=0.75, saturation=0.25, hue=0.04
+            ),
+            ToNumpyd(keys="image"),
+            RandFlipd(keys="image", prob=0.5),
+            RandRotate90d(keys="image", prob=0.5, max_k=3, spatial_axes=(-2, -1)),
+            CastToTyped(keys="image", dtype=np.float32),
+            RandZoomd(keys="image", prob=0.5, min_zoom=0.9, max_zoom=1.1),
+            ScaleIntensityRanged(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0),
+            ToTensord(keys=("image", "label")),
         ]
     )
-    train_preprocess = Range("Preprocessing")(train_preprocess)
+    train_preprocess = Range("Preprocessing", recursive=True)(train_preprocess)
     valid_preprocess = Compose(
         [
-            CastToTypeD(keys="image", dtype=np.float32),
-            ScaleIntensityRangeD(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0),
-            ToTensorD(keys=("image", "label")),
+            Lambdad(keys="label", func=lambda x: x.reshape((1, cfg["grid_shape"], cfg["grid_shape"]))),
+            GridSplitd(
+                keys=("image", "label"),
+                grid=(cfg["grid_shape"], cfg["grid_shape"]),
+                size={"image": cfg["patch_size"], "label": 1},
+            ),
+            CastToTyped(keys="image", dtype=np.float32),
+            ScaleIntensityRanged(keys="image", a_min=0.0, a_max=255.0, b_min=-1.0, b_max=1.0),
+            ToTensord(keys=("image", "label")),
         ]
     )
     # __________________________________________________________________________
     # Create MONAI dataset
-    train_json_info_list = load_decathlon_datalist(
-        data_list_file_path=cfg["dataset_json"],
-        data_list_key="training",
-        base_dir=cfg["data_root"],
+    train_data_list = CSVDataset(
+        cfg["train_file"],
+        col_groups={"image": 0, "patch_location": [2, 1], "label": [3, 6, 9, 4, 7, 10, 5, 8, 11]},
+        kwargs_read_csv={"header": None},
+        transform=Lambdad("image", lambda x: os.path.join(cfg["root"], "training/images", x + ".tif")),
     )
-    valid_json_info_list = load_decathlon_datalist(
-        data_list_file_path=cfg["dataset_json"],
-        data_list_key="validation",
-        base_dir=cfg["data_root"],
+    train_dataset = PatchWSIDataset(
+        data=train_data_list,
+        patch_size=cfg["region_size"],
+        patch_level=0,
+        transform=train_preprocess,
+        reader="openslide" if cfg["use_openslide"] else "cuCIM",
     )
 
-    train_dataset = PatchWSIDataset(
-        train_json_info_list,
-        cfg["region_size"],
-        cfg["grid_shape"],
-        cfg["patch_size"],
-        train_preprocess,
-        image_reader_name="openslide" if cfg["use_openslide"] else "cuCIM",
+    valid_data_list = CSVDataset(
+        cfg["valid_file"],
+        col_groups={"image": 0, "patch_location": [2, 1], "label": [3, 6, 9, 4, 7, 10, 5, 8, 11]},
+        kwargs_read_csv={"header": None},
+        transform=Lambdad("image", lambda x: os.path.join(cfg["root"], "training/images", x + ".tif")),
     )
     valid_dataset = PatchWSIDataset(
-        valid_json_info_list,
-        cfg["region_size"],
-        cfg["grid_shape"],
-        cfg["patch_size"],
-        valid_preprocess,
-        image_reader_name="openslide" if cfg["use_openslide"] else "cuCIM",
+        data=valid_data_list,
+        patch_size=cfg["region_size"],
+        patch_level=0,
+        transform=valid_preprocess,
+        reader="openslide" if cfg["use_openslide"] else "cuCIM",
     )
 
     # __________________________________________________________________________
     # DataLoaders
     train_dataloader = DataLoader(
-        train_dataset,
-        num_workers=cfg["num_workers"],
-        batch_size=cfg["batch_size"],
-        pin_memory=True,
+        train_dataset, num_workers=cfg["num_workers"], batch_size=cfg["batch_size"], pin_memory=True
     )
     valid_dataloader = DataLoader(
-        valid_dataset,
-        num_workers=cfg["num_workers"],
-        batch_size=cfg["batch_size"],
-        pin_memory=True,
+        valid_dataset, num_workers=cfg["num_workers"], batch_size=cfg["batch_size"], pin_memory=True
     )
 
-    # __________________________________________________________________________
-    # Get sample batch and some info
+    # Check first sample
     first_sample = first(train_dataloader)
     if first_sample is None:
-        raise ValueError("Fist sample is None!")
-
+        raise ValueError("First sample is None!")
     print("image: ")
     print("    shape", first_sample["image"].shape)
     print("    type: ", type(first_sample["image"]))
@@ -206,12 +204,7 @@ def train(cfg):
         StatsHandler(output_transform=lambda x: None),
         TensorBoardStatsHandler(log_dir=log_dir, output_transform=lambda x: None),
     ]
-    val_postprocessing = Compose(
-        [
-            ActivationsD(keys="pred", sigmoid=True),
-            AsDiscreteD(keys="pred", threshold=0.5),
-        ]
-    )
+    val_postprocessing = Compose([Activationsd(keys="pred", sigmoid=True), AsDiscreted(keys="pred", threshold=0.5)])
     evaluator = SupervisedEvaluator(
         device=device,
         val_data_loader=valid_dataloader,
@@ -228,27 +221,16 @@ def train(cfg):
         RangeHandler("Batch"),
         LrScheduleHandler(lr_scheduler=scheduler, print_lr=True),
         CheckpointSaver(
-            save_dir=cfg["logdir"],
-            save_dict={"net": model, "opt": optimizer},
-            save_interval=1,
-            epoch_level=True,
+            save_dir=cfg["logdir"], save_dict={"net": model, "opt": optimizer}, save_interval=1, epoch_level=True
         ),
         StatsHandler(tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
         ValidationHandler(validator=evaluator, interval=1, epoch_level=True),
         TensorBoardStatsHandler(
-            log_dir=cfg["logdir"],
-            tag_name="train_loss",
-            output_transform=from_engine(["loss"], first=True),
+            log_dir=cfg["logdir"], tag_name="train_loss", output_transform=from_engine(["loss"], first=True)
         ),
     ]
-    train_postprocessing = Compose(
-        [
-            RangePushD("Postprocessing"),
-            Range()(ActivationsD(keys="pred", sigmoid=True)),
-            Range()(AsDiscreteD(keys="pred", threshold=0.5)),
-            RangePopD(),
-        ]
-    )
+    train_postprocessing = Compose([Activationsd(keys="pred", sigmoid=True), AsDiscreted(keys="pred", threshold=0.5)])
+    train_postprocessing = Range("Postprocessing", recursive=True)(train_postprocessing)
 
     trainer = SupervisedTrainer(
         device=device,
@@ -269,23 +251,17 @@ def main():
     logging.basicConfig(level=logging.INFO)
     parser = ArgumentParser(description="Tumor detection on whole slide pathology images.")
     parser.add_argument(
-        "--dataset",
-        type=str,
-        default="../dataset_0.json",
-        dest="dataset_json",
-        help="path to dataset json file",
-    )
-    parser.add_argument(
         "--root",
         type=str,
-        default="/workspace/data/medical/pathology/",
-        dest="data_root",
-        help="path to root folder of images containing training folder",
+        default="/workspace/data/medical/pathology",
+        help="path to image folder containing training/validation",
     )
+    parser.add_argument("--train-file", type=str, default="training.csv", help="path to training data file")
+    parser.add_argument("--valid-file", type=str, default="validation.csv", help="path to training data file")
     parser.add_argument("--logdir", type=str, default="./logs/", dest="logdir", help="log directory")
 
     parser.add_argument("--rs", type=int, default=256 * 3, dest="region_size", help="region size")
-    parser.add_argument("--gs", type=int, default=3, dest="grid_shape", help="image grid shape (3x3)")
+    parser.add_argument("--gs", type=int, default=3, dest="grid_shape", help="image grid shape e.g 3 means 3x3")
     parser.add_argument("--ps", type=int, default=224, dest="patch_size", help="patch size")
     parser.add_argument("--bs", type=int, default=64, dest="batch_size", help="batch size")
     parser.add_argument("--ep", type=int, default=10, dest="n_epochs", help="number of epochs")
@@ -293,20 +269,10 @@ def main():
 
     parser.add_argument("--openslide", action="store_true", dest="use_openslide", help="use OpenSlide")
     parser.add_argument("--no-amp", action="store_false", dest="amp", help="deactivate amp")
-    parser.add_argument(
-        "--no-novograd",
-        action="store_false",
-        dest="novograd",
-        help="deactivate novograd optimizer",
-    )
-    parser.add_argument(
-        "--no-pretrain",
-        action="store_false",
-        dest="pretrain",
-        help="deactivate Imagenet weights",
-    )
+    parser.add_argument("--no-novograd", action="store_false", dest="novograd", help="deactivate novograd optimizer")
+    parser.add_argument("--no-pretrain", action="store_false", dest="pretrain", help="deactivate Imagenet weights")
 
-    parser.add_argument("--cpu", type=int, default=0, dest="num_workers", help="number of workers")
+    parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")
     parser.add_argument("--gpu", type=str, default="0", dest="gpu", help="which gpu to use")
 
     args = parser.parse_args()

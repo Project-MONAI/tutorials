@@ -43,7 +43,7 @@ def trainer(args):
     outpath = os.path.join(args.exp_dir,args.exp)
     Path(outpath).mkdir(parents=True, exist_ok=True) # create output directory to store model checkpoints
     now = datetime.now()
-    date = now.strftime('%m-%d-%y_%H-%M') 
+    date = now.strftime('%m-%d-%y_%H-%M')
     writer = SummaryWriter(outpath+'/'+date) # create a date directory within the output directory for storing training logs
 
     # create training-validation data loaders
@@ -51,10 +51,10 @@ def trainer(args):
     random.shuffle(train_files)
     train_files = train_files[:int(args.sample_rate*len(train_files))] # select a subset of the data according to sample_rate
     train_files = [dict([("kspace",train_files[i])]) for i in range(len(train_files))]
-    
+
     val_files = list(Path(args.data_path_val).iterdir())
     ##################################################### temp: dummy file
-    val_files = list(filter(lambda f: 'file_brain_AXT2_201_2010294.h5' not in str(f), val_files)) 
+    val_files = list(filter(lambda f: 'file_brain_AXT2_201_2010294.h5' not in str(f), val_files))
     ##################################################### temp: dummy file
     random.shuffle(val_files)
     val_files = val_files[:int(args.sample_rate*len(val_files))] # select a subset of the data according to sample_rate
@@ -84,12 +84,12 @@ def trainer(args):
         data=train_files, transform=train_transforms,
         cache_rate=args.cache_rate, num_workers=args.num_workers)
     train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
-    
+
     val_ds = CacheDataset(
         data=val_files, transform=train_transforms,
         cache_rate=args.cache_rate, num_workers=args.num_workers)
     val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
-    
+
     # create the model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = BasicUNet(
@@ -105,7 +105,7 @@ def trainer(args):
 
     # create the loss function
     loss_function = torch.nn.L1Loss()
-    
+
     # create the optimizer and the learning rate scheduler
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr,weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, args.lr_step_size, args.lr_gamma)
@@ -126,17 +126,17 @@ def trainer(args):
 
             # iterate through all slices
             slice_dim = 1  # change this if another dimension is your slice dimension
-            num_slices = input.shape[slice_dim] 
+            num_slices = input.shape[slice_dim]
             for i in range(num_slices):
                 step += 1
                 optimizer.zero_grad()
-                
+
                 inp = input[:,i,...].unsqueeze(slice_dim)
                 tar = target[:,i,...].unsqueeze(slice_dim)
                 output = model(inp.to(device))
-            
+
                 loss = loss_function(output, tar.to(device))
-            
+
                 loss.backward()
                 optimizer.step()
                 epoch_loss += loss.item()
@@ -165,7 +165,7 @@ def trainer(args):
 
                     # iterate through all slices:
                     slice_dim = 1 # change this if another dimension is your slice dimension
-                    num_slices = input.shape[slice_dim] 
+                    num_slices = input.shape[slice_dim]
                     for i in range(num_slices):
                         inp = input[:,i,...].unsqueeze(slice_dim)
                         tar = target[:,i,...].unsqueeze(slice_dim)
@@ -173,7 +173,7 @@ def trainer(args):
 
                         vloss = loss_function(output, tar.to(device))
                         val_loss.append(vloss.item())
-                        
+
                         _std = std[0][i].item()
                         _mean = mean[0][i].item()
                         outputs[fname[0]].append(output.data.cpu().numpy()[0][0]*_std+_mean)
@@ -184,9 +184,9 @@ def trainer(args):
                     outputs[fname] = np.stack(outputs[fname])
                     targets[fname] = np.stack(targets[fname])
                     val_ssim.append(skimage_ssim(targets[fname],outputs[fname]))
-                    
+
                 metric = np.mean(val_ssim)
-                
+
                 # save the best checkpoint so far
                 if metric > best_metric:
                     best_metric = metric

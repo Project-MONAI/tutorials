@@ -11,11 +11,11 @@ This folder contains code to train and validate a U-Net for accelerated MRI reco
 
 * [Questions and bugs](#Questions-and-bugs)
 
-* [Datasets and model checkpoints](#Datasets-and-model-checkpoints) 
+* [Datasets and model checkpoints](#Datasets-and-model-checkpoints)
 
-* [Training](#Training) 
+* [Training](#Training)
 
-* [Inference](#Inference) 
+* [Inference](#Inference)
 
 ***
 
@@ -39,7 +39,7 @@ Running `train.py` trains a U-Net. The default setup automatically detects a GPU
 
     # Run this to get a full list of training arguments
     python ./train.py -h
-    
+
     # This is an example of calling train.py
     python ./train.py
         --data_path_train train_dir \
@@ -55,4 +55,3 @@ Running `train.py` trains a U-Net. The default setup automatically detects a GPU
 
 The notebook `inference.ipynb` contains an example to perform validation. Average SSIM score over the validation set is computed and then
 one sample is picked for visualization.
-

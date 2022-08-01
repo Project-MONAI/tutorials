@@ -177,5 +177,5 @@ $ jupyter notebook --ip=0.0.0.0
      or http://127.0.0.1:8888/?token=c62...52d
 ```
 
-Access the notebook server from local machine and execute 
+Access the notebook server from local machine and execute
 `Monai_MedNIST.ipynb` notebook.

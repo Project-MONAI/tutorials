@@ -20,7 +20,8 @@ First of all, clone the repository and go to [openfl_mednist_2d_registration](./
 git clone https://github.com/Project-MONAI/tutorials.git
 cd tutorials/federated_learning/openfl/openfl_mednist_2d_registration/
 ```
-Then follow the steps to set up federation and run your experiment.
+Then follow the steps to set up federation and run your experiment using virtual environment. Or, follow [run_docker.md](run_docker.md) to run using Docker container.
+
 ### Virtual Environment
 
 We will use several `Python3.8` virtual environments  with `openfl`, `monai` and other packages.

@@ -1,6 +1,6 @@
 # Accelerated MRI reconstruction with U-Net
 
-<p align="center"><img src="./mri_recon.png" width="800" height="225"></p>
+<p align="center"><img src="./figures/workflow.PNG" width="800" height="225"></p>
 
 
 This folder contains code to train and validate a U-Net for accelerated MRI reconstruction. Accelerated MRI reconstruction is a compressed sensing task where the goal is to recover a ground-truth image from an under-sampled measurement. The under-sampled measurement is based in the frequency domain and is often called the $k$-space.
@@ -11,7 +11,9 @@ This folder contains code to train and validate a U-Net for accelerated MRI reco
 
 * [Questions and bugs](#Questions-and-bugs)
 
-* [Datasets and model checkpoints](#Datasets-and-model-checkpoints)
+* [Dataset](#Dataset)
+
+* [Model checkpoint](#Model-checkpoint)
 
 * [Training](#Training)
 
@@ -25,13 +27,20 @@ This folder contains code to train and validate a U-Net for accelerated MRI reco
 - For bugs relating to MONAI functionality, please create an issue on the [main repository](https://github.com/Project-MONAI/MONAI/issues).
 - For bugs relating to the running of a tutorial, please create an issue in [this repository](https://github.com/Project-MONAI/Tutorials/issues).
 
-# Datasets and model checkpoints
+# Dataset
 
 The experiments are performed on the [fastMRI](https://fastmri.org/dataset) dataset. Users should request access to the dataset
 from the [owner's website](https://fastmri.org/dataset).
 
-We have already provided a model checkpoint `best_model.pt` for a U-Net with 7,782,849 parameters. To obtain this checkpoint, we trained
-a U-Net with the default hyper-parameters in `train.py` on the T2 subset of the brain dataset. The user can train their model on an arbitrary portion of the dataset.
+# Model checkpoint
+
+We have already provided a model checkpoint `best_model.pt` for a U-Net with `7,782,849` parameters. To obtain this checkpoint, we trained
+a U-Net with the default hyper-parameters in `train.py` on the T2 subset of the brain dataset (`500` training and `180` validation volumes). The user can train their model on an arbitrary portion of the dataset.
+
+Our checkpoint achieves `0.9496` SSIM on the fastMRI T2 validation subset which is comparabale to the original result reported on the
+[fastMRI public leaderboard](https://fastmri.org/leaderboards/) (which is `0.9474` SSIM). The training dynamics for our checkpoint is depicted in the figure below.
+
+<p align="center"><img src="./figures/dynamics.PNG" width="800" height="225"></p>
 
 # Training
 

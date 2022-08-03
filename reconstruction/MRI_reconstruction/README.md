@@ -32,6 +32,15 @@ This folder contains code to train and validate a U-Net for accelerated MRI reco
 The experiments are performed on the [fastMRI](https://fastmri.org/dataset) dataset. Users should request access to the dataset
 from the [owner's website](https://fastmri.org/dataset).
 
+**Note.** Since the ground truth is not released with the test set of the fastMRI dataset, it is a common practice in the literature
+to perform inference on the validation set of the fastMRI dataset. This could be in the form of testing on the whole validation
+set (for example this work [https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8767765/](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8767765/)).
+<br>
+Another approach is to split the validation set into validation and test sets and keep the test portion for inference (for exmple this work [https://arxiv.org/pdf/2111.02549.pdf](https://arxiv.org/pdf/2111.02549.pdf)). Note that both approaches are conceptually similar
+in that splitting the validation set does not change the fact that the splits belong to the same distribution.
+<br>
+Other workarounds to this problem include (1) skipping validation during training and saving the model checkpoint of the last epoch for inference on the validation set, and (2) submitting model results to the [fastMRI public leaderboard](https://fastmri.org/leaderboards/).
+
 # Model checkpoint
 
 We have already provided a model checkpoint `best_model.pt` for a U-Net with `7,782,849` parameters. To obtain this checkpoint, we trained

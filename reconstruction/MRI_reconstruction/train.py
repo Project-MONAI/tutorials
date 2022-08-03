@@ -191,7 +191,7 @@ def trainer(args):
                 if metric > best_metric:
                     best_metric = metric
                     best_metric_epoch = epoch + 1
-                    torch.save(model.state_dict(), os.path.join(outpath,"best_model.pt"))
+                    torch.save(model.state_dict(), os.path.join(outpath,"unet_mri_reconstruction.pt"))
                     print("saved new best metric model")
                 print(
                     "current epoch: {} current mean ssim: {:.4f} best mean ssim: {:.4f} at epoch {}".format(

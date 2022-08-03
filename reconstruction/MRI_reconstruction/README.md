@@ -43,7 +43,7 @@ Other workarounds to this problem include (1) skipping validation during trainin
 
 # Model checkpoint
 
-We have already provided a model checkpoint `best_model.pt` for a U-Net with `7,782,849` parameters. To obtain this checkpoint, we trained
+We have already provided a model checkpoint `unet_mri_reconstruction.pt` for a U-Net with `7,782,849` parameters. To obtain this checkpoint, we trained
 a U-Net with the default hyper-parameters in `train.py` on the T2 subset of the brain dataset (`500` training and `180` validation volumes). The user can train their model on an arbitrary portion of the dataset.
 
 Our checkpoint achieves `0.9496` SSIM on the fastMRI T2 validation subset which is comparabale to the original result reported on the

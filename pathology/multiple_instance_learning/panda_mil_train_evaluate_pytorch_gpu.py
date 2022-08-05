@@ -237,6 +237,7 @@ def list_data_collate(batch: collections.abc.Sequence):
     for i, item in enumerate(batch):
         data = item[0]
         data["image"] = torch.stack([ix["image"] for ix in item], dim=0)
+        data["patch_location"] = torch.stack([ix["patch_location"] for ix in item], dim=0)
         batch[i] = data
     return default_collate(batch)
 

@@ -1,7 +1,7 @@
 pip
 setuptools
-nvflare==2.0.16
-monai==0.8.0
+nvflare==2.1.2
+monai==0.9.0
 pytorch-ignite==0.4.6
 tqdm==4.61.2
 nibabel==3.2.1

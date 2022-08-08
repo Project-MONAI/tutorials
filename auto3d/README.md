@@ -1,6 +1,6 @@
 # Auto3D Tutorial
 
-# Motivation
+# Overview
 
 As a monai app, the Auto3D aims to provide an ease-of-use experience for data scientist to automate model training. By using the package, you can automate model selection, hyper parameter tunning, and model ensembling by running a few lines of code. 
 

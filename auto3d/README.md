@@ -2,7 +2,7 @@
 
 # Overview
 
-As a monai app, the Auto3D aims to provide an ease-of-use experience for data scientist to automate model training. By using the package, you can automate model selection, hyper parameter tunning, and model ensembling by running a few lines of code. 
+As a monai app, the Auto3D aims to provide an ease-of-use experience for data scientist to automate model training. By using the package, you can automate model selection, hyper parameter tunning, and model ensembling by running a few lines of code.
 
 
 # Status
@@ -59,5 +59,4 @@ ensember.infer(datalist["testing"], "save_fig"=True)
 ```
 # Reference:
 - Methods(todo, powerpoints)
-- 
-
+-

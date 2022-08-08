@@ -2,15 +2,15 @@
 
 ## Brief Introduction
 
-This repository contains an end-to-end Federated training example based on MONAI trainers and [NVIDIA FLARE](https://github.com/nvidia/nvflare). Please also download the `hello-monai` folder in [NVFlare/examples](https://github.com/NVIDIA/NVFlare/tree/main/examples/hello-monai), and copy it into this directory.
+This repository contains an end-to-end Federated training example based on MONAI trainers and [NVIDIA FLARE](https://github.com/nvidia/nvflare). Please also download the `hello-monai` folder in [NVFlare/examples](https://github.com/NVIDIA/NVFlare/tree/dev/examples/hello-monai), and copy it into this directory.
 
 
 
-This example requires Python 3.8.10
+This example requires Python 3.8. It may work with Python 3.7 but currently is not compatible with Python 3.9 and above.
 
 Inside this directory:
 - All Jupiter notebooks are used to build an FL experiment step-by-step.
-- hello-monai (needs to be downloaded) is a folder containing all required config files for the experiment (in `config/`) and the customized trainer (in `custom`) and its components.
+- hello-monai (needs to be downloaded) is a folder containing all required config files for the experiment (in `app/config`) and the customized trainer (in `app/custom`) and its components.
 
 ## Installation
 
@@ -31,11 +31,9 @@ Please run:
 pip install -U -r requirements.txt
 ```
 
-### Prepare Startup Kit
+### Prepare POC
 
-NVIDIA FLARE provides the Open Provision API to build the startup kit flexibly, the corresponding guide is in [here](https://nvidia.github.io/NVFlare/user_guide/provisioning_tool.html).
-
-In this example, we simply use the `poc` command to create one startup kit, this way is also used in [an official example of NVIDIA FLARE](https://nvidia.github.io/NVFlare/examples/hello_cross_val.html?highlight=poc).
+In this example, we use the `poc` command to create a proof of concept folder, please check the [official document](https://nvflare.readthedocs.io/en/main/quickstart.html#setting-up-the-application-environment-in-poc-mode) for more details.
 
 Please run:
 ```

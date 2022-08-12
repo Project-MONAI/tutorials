@@ -143,9 +143,9 @@ This is a simple example of training and deploying a MONAI network with [BentoML
 This uses the previous notebook's trained network to demonstrate deployment a web server using [Ray](https://docs.ray.io/en/master/serve/index.html#rayserve).
 
 **experiment management**
-#### [Aim](./experiment_management/spleen_segmentation_aim)
+#### [Aim](./experiment_management/spleen_segmentation_aim.ipynb)
 An example of experiment management with [Aim](https://aimstack.io/aim-monai-tutorial/), using 3D spleen segmentation as an example.
-#### [MLFlow](./experiment_management/spleen_segmentation_mlflow)
+#### [MLFlow](./experiment_management/spleen_segmentation_mlflow.ipynb)
 An example of experiment management with [MLFlow](https://www.mlflow.org/docs/latest/tracking.html), using 3D spleen segmentation as an example.
 
 **federated learning**

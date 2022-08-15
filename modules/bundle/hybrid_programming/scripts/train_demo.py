@@ -20,7 +20,7 @@ def run(config_file, **kwargs):
     for k, v in kwargs.items():
         parser[k] = v
     print(parser)
-    print(parser[k])
+    print(f"new value set: {k}: {parser[k]}")
 
 
 if __name__ == "__main__":

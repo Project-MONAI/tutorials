@@ -36,7 +36,7 @@ For more information please check out [the installation guide](https://docs.mona
 ### Data
 
 Prostate biopsy WSI dataset can be downloaded from Prostate cANcer graDe Assessment (PANDA) Challenge on [Kaggle](https://www.kaggle.com/c/prostate-cancer-grade-assessment/data).
-In this tutorial, we assume it is downloaded in the `/PandaChallenge2020` folder
+In this tutorial, we assume it is downloaded in the `/PandaChallenge2020` folder (if it's not the case, please modify `--data_root` in the following commands accordingly).
 
 ## Examples
 
@@ -49,7 +49,7 @@ python ./panda_mil_train_evaluate_pytorch_gpu.py -h
 ### Train
 
 Train in multi-gpu mode with AMP using all available gpus,
-assuming the training images in /PandaChallenge2020/train_images folder,
+assuming the training images in `/PandaChallenge2020/train_images` folder,
 it will use the pre-defined 80/20 data split in [datalist_panda_0.json](https://drive.google.com/drive/u/0/folders/1CAHXDZqiIn5QUfg5A7XsK1BncRu6Ftbh)
 
 ```bash

@@ -77,7 +77,7 @@ class EnsembleTrainTask():
         if not inference_config_paths:
             logger.warning(f"Ignore {self.bundle_path} as there is no inference config {Const.INFERENCE_CONFIGS} exists")
             return
-        
+
         logger.info(f"Total Records in Test Dataset: {len(test_datalist)}")
 
         bundle_inference_config_path = os.path.join(self.bundle_path, "configs", inference_config_paths[0])
@@ -124,7 +124,7 @@ class EnsembleTrainTask():
         if dataset_dir is None:
             logger.warning(f"Ignore dataset dir as there is no dataset dir exists")
             return
-        
+
         train_ds, val_ds = self._partition_datalist(datalist, n_splits=request.get("n_splits", 5))
         fold = 0
         for _train_ds, _val_ds in zip(train_ds, val_ds):
@@ -165,7 +165,7 @@ class EnsembleTrainTask():
                 )
 
             logger.info(f"Fold{fold} Training Finished....")
-        
+
         if test_datalist is not None:
             device = self._device(request.get("device", "cuda:0"))
             self.ensemble_inference(device, test_datalist, ensemble=request.get("ensemble", "Mean"))
@@ -181,7 +181,7 @@ if __name__ == '__main__':
     datalist_path = request['dataset_dir']+'/dataset.json'
     with open(datalist_path) as fp:
         datalist = json.load(fp)
-    
+
 
     train_datalist = [{"image": d["image"].replace('./', f'{request["dataset_dir"]}/'), "label": d["label"].replace('./', f'{request["dataset_dir"]}/')} for d in datalist['training'] if d]
     test_datalist = [{"image": d.replace('./', f'{request["dataset_dir"]}/')} for d in datalist['test'] if d]

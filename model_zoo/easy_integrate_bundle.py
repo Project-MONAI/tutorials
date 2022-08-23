@@ -11,6 +11,7 @@
 import json
 import logging
 import os
+import subprocess
 
 import monai.bundle
 import torch
@@ -138,7 +139,7 @@ class EnsembleTrainTask():
             logger.info(f"Using Multi GPU: {multi_gpu}; GPUS: {gpus}")
             logger.info(f"CUDA_VISIBLE_DEVICES: {os.environ.get('CUDA_VISIBLE_DEVICES')}")
 
-            device = self._device(request.get("device", "cuda:0"))
+            device = self._device(request.get("device", "cuda"))
             logger.info(f"Using device: {device}")
 
             overrides = {
@@ -148,21 +149,53 @@ class EnsembleTrainTask():
                 Const.KEY_VALIDATE_DATASET_DATA: _val_ds,
                 Const.KEY_DATASET_DIR: dataset_dir,
                 Const.KEY_MODEL_PYTORCH: model_pytorch,
+                Const.KEY_DEVICE: device,
             }
 
             if multi_gpu:
-                pass
+                config_paths = [
+                    c for c in Const.MULTI_GPU_CONFIGS if os.path.exists(os.path.join(self.bundle_path, "configs", c))
+                ]
+                if not config_paths:
+                    logger.warning(f"Ignore Multi-GPU Training; No multi-gpu train config {Const.MULTI_GPU_CONFIGS} exists")
+                    return
+
+                train_path = os.path.join(self.bundle_path, "configs", f"train_multigpu_fold{fold}.json")
+                multi_gpu_train_path = os.path.join(self.bundle_path, "configs", config_paths[0])
+                logging_file = os.path.join(self.bundle_path, "configs", "logging.conf")
+                for k, v in overrides.items():
+                    if k != Const.KEY_DEVICE:
+                        self.bundle_config.set(v, k)
+                ConfigParser.export_config_file(self.bundle_config.config, train_path, indent=2)
+
+                env = os.environ.copy()
+                env["CUDA_VISIBLE_DEVICES"] = ",".join([str(g) for g in gpus])
+                logger.info(f"Using CUDA_VISIBLE_DEVICES: {env['CUDA_VISIBLE_DEVICES']}")
+                cmd = [
+                    "torchrun",
+                    "--standalone",
+                    "--nnodes=1",
+                    f"--nproc_per_node={len(gpus)}",
+                    "-m",
+                    "monai.bundle",
+                    "run",
+                    "training",
+                    "--meta_file",
+                    self.bundle_metadata_path,
+                    "--config_file",
+                    f"['{train_path}','{multi_gpu_train_path}']",
+                    "--logging_file",
+                    logging_file,
+                ]
+                self.run_command(cmd, env)
             else:
-                train_config = ConfigParser()
-                train_config.read_config(f=self.bundle_config.config)
-                train_config.update(pairs=overrides)
-                train_config_path = os.path.join(self.bundle_path, "configs", f"train_fold{fold}.json")
-                ConfigParser.export_config_file(train_config.config, train_config_path, indent=2)
                 monai.bundle.run(
                     "training",
                     meta_file=self.bundle_metadata_path,
-                    config_file=train_config_path,
+                    config_file=self.bundle_config_path,
+                    **overrides,
                 )
+            fold += 1
 
             logger.info(f"Fold{fold} Training Finished....")
 
@@ -170,13 +203,26 @@ class EnsembleTrainTask():
             device = self._device(request.get("device", "cuda:0"))
             self.ensemble_inference(device, test_datalist, ensemble=request.get("ensemble", "Mean"))
 
+    def run_command(self, cmd, env):
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True, env=env)
+        while process.poll() is None:
+            line = process.stdout.readline()
+            line = line.rstrip()
+            if line:
+                print(line, flush=True)
+
+        logger.info(f"Return code: {process.returncode}")
+        process.stdout.close()
+
 
 if __name__ == '__main__':
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1"
     request = {
         'dataset_dir': '/workspace/Data/Task09_Spleen',
         'max_epochs': 6,
-        'ensemble': "Mean",
-        'n_splits': 5
+        'ensemble': "Mean", # Mean or Vote
+        'n_splits': 5,
+        'multi_gpu': True
     }
     datalist_path = request['dataset_dir']+'/dataset.json'
     with open(datalist_path) as fp:

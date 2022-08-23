@@ -11,6 +11,7 @@
 import json
 import logging
 import os
+import argparse
 import subprocess
 
 import monai.bundle
@@ -120,26 +121,26 @@ class EnsembleTrainTask():
         evaluator.run()
         logger.info(f"Inference Finished....")
 
-    def __call__(self, request, datalist, test_datalist=None):
-        dataset_dir = request.get("dataset_dir", None)
+    def __call__(self, args, datalist, test_datalist=None):
+        dataset_dir = args.dataset_dir
         if dataset_dir is None:
             logger.warning(f"Ignore dataset dir as there is no dataset dir exists")
             return
 
-        train_ds, val_ds = self._partition_datalist(datalist, n_splits=request.get("n_splits", 5))
+        train_ds, val_ds = self._partition_datalist(datalist, n_splits=args.n_splits)
         fold = 0
         for _train_ds, _val_ds in zip(train_ds, val_ds):
             model_pytorch = f'model{fold}.pt'
-            max_epochs = request.get("max_epochs", 50)
-            multi_gpu = request.get("multi_gpu", False)
+            max_epochs = args.epochs
+            multi_gpu = args.multi_gpu
             multi_gpu = multi_gpu if torch.cuda.device_count() > 1 else False
 
-            gpus = request.get("gpus", "all")
+            gpus = args.gpus
             gpus = list(range(torch.cuda.device_count())) if gpus == "all" else [int(g) for g in gpus.split(",")]
             logger.info(f"Using Multi GPU: {multi_gpu}; GPUS: {gpus}")
             logger.info(f"CUDA_VISIBLE_DEVICES: {os.environ.get('CUDA_VISIBLE_DEVICES')}")
 
-            device = self._device(request.get("device", "cuda"))
+            device = self._device(args.device)
             logger.info(f"Using device: {device}")
 
             overrides = {
@@ -200,8 +201,8 @@ class EnsembleTrainTask():
             logger.info(f"Fold{fold} Training Finished....")
 
         if test_datalist is not None:
-            device = self._device(request.get("device", "cuda:0"))
-            self.ensemble_inference(device, test_datalist, ensemble=request.get("ensemble", "Mean"))
+            device = self._device(args.device)
+            self.ensemble_inference(device, test_datalist, ensemble=args.ensemble)
         
     def run_command(self, cmd, env):
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True, env=env)
@@ -216,21 +217,32 @@ class EnsembleTrainTask():
 
 
 if __name__ == '__main__':
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1"
-    request = {
-        'dataset_dir': '/workspace/Data/Task09_Spleen',
-        'max_epochs': 6,
-        'ensemble': "Mean", # Mean or Vote
-        'n_splits': 5,
-        'multi_gpu': True
-    }
-    datalist_path = request['dataset_dir']+'/dataset.json'
+    """
+    Usage:
+        python easy_integrate_bundle.py --bundle_root /workspace/Code/Bundles/spleen_ct_segmentation --dataset_dir /workspace/Data/Task09_Spleen
+    """
+    parser = argparse.ArgumentParser(description="Run an ensemble train task using bundle.")
+
+    parser.add_argument(
+        "--ensemble", default="Mean", choices=["Mean", "Vote"], type=str, help="way of ensemble"
+    )
+    parser.add_argument("--bundle_root", default="", type=str, help="root bundle dir")
+    parser.add_argument("--dataset_dir", default="", type=str, help="root data dir")
+    parser.add_argument("--epochs", default=6, type=int, help="max epochs")
+    parser.add_argument("--n_splits", default=5, type=int, help="n fold split")
+    parser.add_argument("--multi_gpu", default=False, type=bool, help="whether use multigpu")
+    parser.add_argument("--device", default="cuda", type=str, help="device")
+    parser.add_argument("--gpus", default="all", type=str, help="which gpu to use")
+
+    args = parser.parse_args()
+    gpus = list(range(torch.cuda.device_count())) if args.gpus == "all" else [int(g) for g in args.gpus.split(",")]
+    os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(str(x) for x in gpus)
+    datalist_path = args.dataset_dir+'/dataset.json'
     with open(datalist_path) as fp:
         datalist = json.load(fp)
 
 
-    train_datalist = [{"image": d["image"].replace('./', f'{request["dataset_dir"]}/'), "label": d["label"].replace('./', f'{request["dataset_dir"]}/')} for d in datalist['training'] if d]
-    test_datalist = [{"image": d.replace('./', f'{request["dataset_dir"]}/')} for d in datalist['test'] if d]
-    bundle_root = '/workspace/Code/Bundles/spleen_ct_segmentation'
-    EnsembleTrainTask = EnsembleTrainTask(bundle_root)
-    EnsembleTrainTask(request, train_datalist, test_datalist)
+    train_datalist = [{"image": d["image"].replace('./', f'{args.dataset_dir}/'), "label": d["label"].replace('./', f'{args.dataset_dir}/')} for d in datalist['training'] if d]
+    test_datalist = [{"image": d.replace('./', f'{args.dataset_dir}/')} for d in datalist['test'] if d]
+    traintask = EnsembleTrainTask(args.bundle_root)
+    traintask(args, train_datalist, test_datalist)

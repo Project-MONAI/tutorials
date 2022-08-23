@@ -202,7 +202,7 @@ class EnsembleTrainTask():
         if test_datalist is not None:
             device = self._device(request.get("device", "cuda:0"))
             self.ensemble_inference(device, test_datalist, ensemble=request.get("ensemble", "Mean"))
-        
+
     def run_command(self, cmd, env):
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True, env=env)
         while process.poll() is None:

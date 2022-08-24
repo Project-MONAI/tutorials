@@ -18,8 +18,9 @@ import monai.bundle
 import torch
 from monai.bundle import ConfigParser
 from monai.engines import EnsembleEvaluator
-from sklearn.model_selection import KFold
+from monai.utils import optional_import
 
+KFold, _ = optional_import("sklearn.model_selection", name="KFold")
 logger = logging.getLogger(__name__)
 
 
@@ -43,6 +44,28 @@ class Const:
 
 
 class EnsembleTrainTask():
+    """
+    To construct an n-fold training and ensemble infer on any dataset.
+    Just specify the bundle root path and data root path.
+    Bundle can be download from https://github.com/Project-MONAI/model-zoo/releases/tag/hosting_storage_v1
+    Date root path also need a dataset.json which should be like:
+        train datalist: [
+            {
+                "image": $image1_path,
+                "label": $label1_path 
+            },
+            ...
+        ]
+        test_datalist: [
+            {
+                "image": $image1_path
+            },
+            ...
+        ]
+
+    Args:
+        path: bundle root path where your place the download bundle 
+    """
     def __init__(self, path):
         config_paths = [c for c in Const.CONFIGS if os.path.exists(os.path.join(path, "configs", c))]
         if not config_paths:
@@ -104,7 +127,7 @@ class EnsembleTrainTask():
         bundle_inference_config.update({Const.KEY_INFERENCE_POSTPROCESSING: post_tranform})
 
         # update network weights
-        _networks = [bundle_inference_config.get_parsed_content("network")]*5
+        _networks = [bundle_inference_config.get_parsed_content("network")] * 5
         networks = []
         for i, _network in enumerate(_networks):
             _network.load_state_dict(torch.load(self.bundle_path+f"/models/model{i}.pt"))
@@ -218,8 +241,27 @@ class EnsembleTrainTask():
 
 if __name__ == '__main__':
     """
-    Usage:
-        python easy_integrate_bundle.py --bundle_root /workspace/Code/Bundles/spleen_ct_segmentation --dataset_dir /workspace/Data/Task09_Spleen
+    Usage
+        first download a bundle from model-zoo to somewhere as your bundle_root path
+        split your data into train and test datalist
+            train datalist: [
+                {
+                    "image": $image1_path
+                    "label": $label1_path
+                },
+                {
+                    "image": $image2_path,
+                    "label": $label2_path 
+                },
+                ...
+            ]
+            test_datalist: [
+                {
+                    "image": $image1_path
+                },
+                ...
+            ]
+        python easy_integrate_bundle.py --bundle_root $bundle_root_path --dataset_dir $data_root_path
     """
     parser = argparse.ArgumentParser(description="Run an ensemble train task using bundle.")
 

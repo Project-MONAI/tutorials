@@ -52,7 +52,7 @@ class EnsembleTrainTask():
         train datalist: [
             {
                 "image": $image1_path,
-                "label": $label1_path 
+                "label": $label1_path
             },
             ...
         ]
@@ -64,7 +64,7 @@ class EnsembleTrainTask():
         ]
 
     Args:
-        path: bundle root path where your place the download bundle 
+        path: bundle root path where your place the download bundle
     """
     def __init__(self, path):
         config_paths = [c for c in Const.CONFIGS if os.path.exists(os.path.join(path, "configs", c))]
@@ -251,7 +251,7 @@ if __name__ == '__main__':
                 },
                 {
                     "image": $image2_path,
-                    "label": $label2_path 
+                    "label": $label2_path
                 },
                 ...
             ]

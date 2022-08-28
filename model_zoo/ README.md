@@ -3,7 +3,7 @@
 A MONAI bundle contains the stored weights of a model, training, inference, post-processing transform sequences and other information. This tutorial aims to demonstrate users how to quickly integrate the bundle into their own application. 
 The tutorial create a straightforward ensemble application and instruct users on how to use the existing bundle.
 
-The example dataset is from 
+The example training dataset is Task09_Spleen.tar from http://medicaldecathlon.com/.
 
 ## Requirements
 
@@ -33,7 +33,6 @@ docker pull projectmonai/monai:0.9.1
 For more information please check out [the installation guide](https://docs.monai.io/en/latest/installation.html).
 
 ## Examples
-
 
 Check all possible options
 
@@ -72,6 +71,7 @@ python ./easy_integrate_bundle.py -h
     The data in training will random split into `n_splits` which you can specifiy with `--n_splits xx`
 
 3. Run the script. Make sure `bundle_root_path` and `data_root_path` is correct.
+
 ```bash
 python easy_integrate_bundle.py --bundle_root bundle_root_path --dataset_dir data_root_path
 --ensemble Mean

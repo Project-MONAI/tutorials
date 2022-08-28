@@ -49,19 +49,25 @@ class EnsembleTrainTask():
     Just specify the bundle root path and data root path.
     Bundle can be download from https://github.com/Project-MONAI/model-zoo/releases/tag/hosting_storage_v1
     Date root path also need a dataset.json which should be like:
-        train datalist: [
-            {
-                "image": $image1_path,
-                "label": $label1_path 
-            },
-            ...
-        ]
-        test_datalist: [
-            {
-                "image": $image1_path
-            },
-            ...
-        ]
+        {
+            "training": [
+                {
+                    "image": "./image1.nii.gz"
+                    "label": "./label1.nii.gz"
+                },
+                {
+                    "image": "./image2.nii.gz",
+                    "label": "./label2.nii.gz"
+                },
+                ...
+            ],
+            "test": [
+                {
+                    "image": "./image.nii.gz"
+                },
+                ...
+            ]
+        }
 
     Args:
         path: bundle root path where your place the download bundle 

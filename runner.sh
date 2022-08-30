@@ -77,6 +77,7 @@ pattern="-and -name '*' -and ! -wholename '*federated_learning*'\
  -and ! -wholename '*generate_random_permutations*'\
  -and ! -wholename '*transforms_update_meta_data*'\
  -and ! -wholename '*video_seg*'\
+ -and ! -wholename '*tcia_dataset*'\
  -and ! -wholename '*get_started*'"
 kernelspec="python3"
 

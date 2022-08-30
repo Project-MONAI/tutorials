@@ -75,8 +75,7 @@ python ./train.py
 # We recommend using the new PyTorch API
 torchrun --standalone \
        --nnodes=1 \
-       --nproc_per_node=`nvidia-smi -L | wc -l` \
-       --node_rank=0 train.py --input /PATH_TO_DATASET/ --output deepedit_model/ --epochs 100 --multi_gpu True
+       --nproc_per_node=`nvidia-smi -L | wc -l` train.py --input /PATH_TO_DATASET/ --output deepedit_model/ --epochs 100 --multi_gpu True
 
 # Using to-be deprecated PyTorch API
 python -m torch.distributed.launch \

@@ -57,7 +57,6 @@ Some codes are taken from https://github.com/pytorch/examples/blob/master/imagen
 """
 
 import argparse
-import numpy as np
 import os
 import sys
 import time
@@ -89,8 +88,6 @@ from monai.transforms import (
     RandSpatialCropd,
     Spacingd,
     ToDeviced,
-    EnsureTyped,
-    EnsureType,
 )
 from monai.utils import set_determinism
 
@@ -110,16 +107,16 @@ class ConvertToMultiChannelBasedOnBratsClassesd(MapTransform):
         for key in self.keys:
             result = []
             # merge label 2 and label 3 to construct TC
-            result.append(np.logical_or(d[key] == 2, d[key] == 3))
+            result.append(torch.logical_or(d[key] == 2, d[key] == 3))
             # merge labels 1, 2 and 3 to construct WT
             result.append(
-                np.logical_or(
-                    np.logical_or(d[key] == 2, d[key] == 3), d[key] == 1
+                torch.logical_or(
+                    torch.logical_or(d[key] == 2, d[key] == 3), d[key] == 1
                 )
             )
             # label 2 is ET
             result.append(d[key] == 2)
-            d[key] = np.stack(result, axis=0).astype(np.float32)
+            d[key] = torch.stack(result, dim=0)
         return d
 
 
@@ -132,7 +129,7 @@ class BratsCacheDataset(DecathlonDataset):
         self,
         root_dir,
         section,
-        transform=LoadImaged(["image", "label"]),
+        transform=None,
         cache_rate=1.0,
         num_workers=0,
         shuffle=False,
@@ -187,6 +184,7 @@ def main_worker(args):
         [
             # load 4 Nifti images and stack them together
             LoadImaged(keys=["image", "label"]),
+            ToDeviced(keys=["image", "label"], device=device),
             EnsureChannelFirstd(keys="image"),
             ConvertToMultiChannelBasedOnBratsClassesd(keys="label"),
             Orientationd(keys=["image", "label"], axcodes="RAS"),
@@ -195,8 +193,6 @@ def main_worker(args):
                 pixdim=(1.0, 1.0, 1.0),
                 mode=("bilinear", "nearest"),
             ),
-            EnsureTyped(keys=["image", "label"]),
-            ToDeviced(keys=["image", "label"], device=device),
             RandSpatialCropd(keys=["image", "label"], roi_size=[224, 224, 144], random_size=False),
             RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=0),
             RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=1),
@@ -223,6 +219,7 @@ def main_worker(args):
     val_transforms = Compose(
         [
             LoadImaged(keys=["image", "label"]),
+            ToDeviced(keys=["image", "label"], device=device),
             EnsureChannelFirstd(keys="image"),
             ConvertToMultiChannelBasedOnBratsClassesd(keys="label"),
             Orientationd(keys=["image", "label"], axcodes="RAS"),
@@ -232,8 +229,6 @@ def main_worker(args):
                 mode=("bilinear", "nearest"),
             ),
             NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True),
-            EnsureTyped(keys=["image", "label"]),
-            ToDeviced(keys=["image", "label"], device=device),
         ]
     )
     val_ds = BratsCacheDataset(
@@ -283,7 +278,7 @@ def main_worker(args):
     dice_metric = DiceMetric(include_background=True, reduction="mean")
     dice_metric_batch = DiceMetric(include_background=True, reduction="mean_batch")
 
-    post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
+    post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
 
     # start a typical PyTorch training
     best_metric = -1

@@ -4,7 +4,7 @@ from monai.transforms import (CastToTyped,
                               NormalizeIntensity, RandCropByPosNegLabeld,
                               RandFlipd, RandGaussianNoised,
                               RandGaussianSmoothd, RandScaleIntensityd,
-                              RandZoomd, SpatialCrop, SpatialPadd, EnsureTyped)
+                              RandZoomd, SpatialCrop, SpatialPadd, ToTensord, EnsureTyped)
 from monai.transforms.compose import MapTransform
 from monai.transforms.utils import generate_spatial_bounding_box
 from skimage.transform import resize
@@ -31,6 +31,7 @@ def get_task_transforms(mode, task_id, pos_sample_num, neg_sample_num, num_sampl
             normalize_values=normalize_values[task_id],
             model_mode=mode,
         ),
+        ToTensord(keys="image"),
     ]
     # 3. spatial transforms
     if mode == "train":
@@ -66,23 +67,11 @@ def get_task_transforms(mode, task_id, pos_sample_num, neg_sample_num, num_sampl
             RandFlipd(["image", "label"], spatial_axis=[0], prob=0.5),
             RandFlipd(["image", "label"], spatial_axis=[1], prob=0.5),
             RandFlipd(["image", "label"], spatial_axis=[2], prob=0.5),
-            CastToTyped(keys=["image", "label"], dtype=(np.float32, np.uint8)),
-            EnsureTyped(keys=["image", "label"]),
         ]
-    elif mode == "validation":
-        other_transforms = [
-            CastToTyped(keys=["image", "label"], dtype=(np.float32, np.uint8)),
-            EnsureTyped(keys=["image", "label"]),
-        ]
+
+        return Compose(load_transforms + sample_transforms + other_transforms)
     else:
-        other_transforms = [
-            CastToTyped(keys=["image"], dtype=(np.float32)),
-            EnsureTyped(keys=["image"]),
-        ]
-
-    all_transforms = load_transforms + sample_transforms + other_transforms
-    return Compose(all_transforms)
-
+        return Compose(load_transforms + sample_transforms)
 
 def resample_image(image, shape, anisotrophy_flag):
     resized_channels = []
@@ -273,6 +262,7 @@ class PreprocessAnisotropic(MapTransform):
         # load data
         d = dict(data)
         image = d["image"]
+
         image_spacings = d["image_meta_dict"]["pixdim"][1:4].tolist()
 
         if "label" in self.keys:
@@ -294,6 +284,8 @@ class PreprocessAnisotropic(MapTransform):
         # calculate shape
         resample_flag = False
         anisotrophy_flag = False
+
+        image = image.numpy()
         if self.target_spacing != image_spacings:
             # resample
             resample_flag = True

@@ -18,12 +18,11 @@ import torch
 from ignite.engine import Events, create_supervised_evaluator, create_supervised_trainer
 from ignite.handlers import EarlyStopping, ModelCheckpoint
 from ignite.metrics import Accuracy
-from torch.utils.data import DataLoader
 
 import monai
-from monai.data import ImageDataset, decollate_batch
+from monai.data import ImageDataset, decollate_batch, DataLoader
 from monai.handlers import StatsHandler, TensorBoardStatsHandler, stopping_fn_from_metric
-from monai.transforms import AddChannel, Compose, RandRotate90, Resize, ScaleIntensity, EnsureType
+from monai.transforms import EnsureChannelFirst, Compose, RandRotate90, Resize, ScaleIntensity
 
 
 def main():
@@ -61,8 +60,8 @@ def main():
     labels = np.array([0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0], dtype=np.int64)
 
     # define transforms
-    train_transforms = Compose([ScaleIntensity(), AddChannel(), Resize((96, 96, 96)), RandRotate90(), EnsureType()])
-    val_transforms = Compose([ScaleIntensity(), AddChannel(), Resize((96, 96, 96)), EnsureType()])
+    train_transforms = Compose([ScaleIntensity(), EnsureChannelFirst(), Resize((96, 96, 96)), RandRotate90()])
+    val_transforms = Compose([ScaleIntensity(), EnsureChannelFirst(), Resize((96, 96, 96))])
 
     # define image dataset, data loader
     check_ds = ImageDataset(image_files=images, labels=labels, transform=train_transforms)

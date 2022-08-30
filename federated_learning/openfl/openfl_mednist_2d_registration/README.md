@@ -20,7 +20,8 @@ First of all, clone the repository and go to [openfl_mednist_2d_registration](./
 git clone https://github.com/Project-MONAI/tutorials.git
 cd tutorials/federated_learning/openfl/openfl_mednist_2d_registration/
 ```
-Then follow the steps to set up federation and run your experiment.
+Then follow the steps to set up federation and run your experiment using virtual environment. Or, follow [run_docker.md](run_docker.md) to run using Docker container.
+
 ### Virtual Environment
 
 We will use several `Python3.8` virtual environments  with `openfl`, `monai` and other packages.
@@ -77,7 +78,7 @@ pip install -r sd_requirements.txt
 fx envoy start --shard-name env_one --disable-tls --envoy-config-path envoy_config_one.yaml --director-host localhost --director-port 50051
 ```
 
-The envoy `env_one` will be connected to the director via given host and port. Also, you can choose the GPU to be used during the experiment, you can specify it in [envoy_config_one.yaml](./envoy/envoy_config_one.yaml). By default we will use `CUDA:0` on the `env_one`.
+The envoy `env_one` will be connected to the director via given host and port. Also, you can choose the GPU to be used during the experiment, you can specify it in [envoy_config_one.yaml](./envoy/envoy_config_one.yaml). By default we will use `CUDA:0` on the `env_one`. Or, to run using CPU only (without GPU), you can use [envoy_config_cpu_one.yaml](./envoy/envoy_config_cpu_one.yaml) instead of [envoy_config_one.yaml](./envoy/envoy_config_one.yaml).
 
 ### 3\. Start second envoy:
 
@@ -101,7 +102,7 @@ pip install -r sd_requirements.txt
 fx envoy start --shard-name env_two --disable-tls --envoy-config-path envoy_config_two.yaml --director-host localhost --director-port 50051
 ```
 
-The envoy `env_two` will be connected to the director via given host and port. Also, you can choose the GPU to be used during the experiment, you can specify it in [envoy_config_two.yaml](./envoy/envoy_config_two.yaml). By default we will use `CUDA:1` on the `env_one`.
+The envoy `env_two` will be connected to the director via given host and port. Also, you can choose the GPU to be used during the experiment, you can specify it in [envoy_config_two.yaml](./envoy/envoy_config_two.yaml). By default we will use `CUDA:1` on the `env_two`. Or, to run using CPU only (without GPU), you can use [envoy_config_cpu_two.yaml](./envoy/envoy_config_cpu_two.yaml) instead of [envoy_config_two.yaml](./envoy/envoy_config_two.yaml).
 
 ---
 **_NOTE:_**  If your want to run this example in distributed mode, you have to change some variables:

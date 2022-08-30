@@ -189,6 +189,10 @@ Demonstrates the use of the `ThreadBuffer` class used to generate data batches d
 #### [transform_speed](./acceleration/transform_speed.ipynb)
 Illustrate reading NIfTI files and test speed of different transforms on different devices.
 
+**model_zoo**
+#### [easy_integrate_bundle](./model_zoo/easy_integrate_bundle.py)
+This tutorial shows a straightforward ensemble application to instruct users on how to integrate existing bundles in their own projects. By simply changing the data path and the path where the bundle is located, training and ensemble inference can be performed.
+
 **modules**
 #### [bundle](./bundle)
 Get started tutorial and concrete training / inference examples for MONAI bundle features.

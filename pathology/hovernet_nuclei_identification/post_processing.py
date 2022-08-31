@@ -103,7 +103,7 @@ def _proc_np_hv(pred, hover):
               channel 0 contain probability map of nuclei
               channel 1 containing the regressed X-map
               channel 2 containing the regressed Y-map
-      
+
         returns: instance labelled segmentation map
 
     """
@@ -175,7 +175,7 @@ def _coords_to_pixel(current,previous):
         col=int(current[1])
     elif p_delta==(1.,0.):
         row=int(current[0] + 0.5)
-        col=int(current[1])    
+        col=int(current[1])
     elif p_delta==(-1,0.):
         row=int(current[0])
         col=int(current[1] + 0.5)

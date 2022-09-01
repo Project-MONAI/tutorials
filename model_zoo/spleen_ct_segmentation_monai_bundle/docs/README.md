@@ -39,10 +39,10 @@ Actual Model Input: 96 x 96 x 96
 | (In "train#dataset",) "data": "$[{'image': i, 'label': l} for i, l in zip(@images[:-9], @labels[:-9])]",| "data": "$@train_datalist[: int(0.8 * len(@train_datalist))]", |
 | (In "validate#dataset",) "data": "$[{'image': i, 'label': l} for i, l in zip(@images[-9:], @labels[-9:])]",| "data": "$@train_datalist[int(0.8 * len(@train_datalist)):]", |
 | (In "validate#handlers",) "key_metric_filename": "model.pt"| (train from scratch) "key_metric_filename": "model_from scratch.pt"|
-| (In "validate#handlers",) "key_metric_filename": "model.pt"| (train from pretrained model) "key_metric_filename": "model_transfer.pt"|
+| (In "validate#handlers",) "key_metric_filename": "model.pt"| (finetune from pretrained model) "key_metric_filename": "model_transfer.pt"|
 | (In "train#trainer",) "max_epochs": 100,| (train from scratch) "max_epochs": 600,|
-| (In "train#trainer",) "max_epochs": 100,| (train from pretrained model) "max_epochs": 200,|
-| (In "train#handlers", add as the first element of the list)| (train from pretrained model) {"_target_": "CheckpointLoader","load_path": "$@ckpt_dir + '/model.pt'","load_dict": {"model": "@network"}},|
+| (In "train#trainer",) "max_epochs": 100,| (finetune from pretrained model) "max_epochs": 200,|
+| (In "train#handlers", add as the first element of the list)| (finetune from pretrained model) {"_target_": "CheckpointLoader","load_path": "$@ckpt_dir + '/model.pt'","load_dict": {"model": "@network"}},|
 
 ## Modify evaluate.json
 | Old json config | Updated json config |
@@ -50,7 +50,7 @@ Actual Model Input: 96 x 96 x 96
 | (add)| "test_datalist": "$monai.data.load_decathlon_datalist(@data_list_file_path, is_segmentation=True, data_list_key='validation', base_dir=@data_file_base_dir)", |
 | (add)| "validate#dataset": {"_target_": "Dataset","data": "$@test_datalist","transform": "@validate#preprocessing"},|
 | (In "validate#handlers",) "load_path": "$@ckpt_dir + '/model.pt'",|(train from scratch) "load_path": "$@ckpt_dir + '/model_from_scratch.pt'", |
-| (In "validate#handlers",) "load_path": "$@ckpt_dir + '/model.pt'",|(train from scratch) "load_path": "$@ckpt_dir + '/model_transfer.pt'", |
+| (In "validate#handlers",) "load_path": "$@ckpt_dir + '/model.pt'",|(finetune from pretrained model) "load_path": "$@ckpt_dir + '/model_transfer.pt'", |
 
 
 ## Scores

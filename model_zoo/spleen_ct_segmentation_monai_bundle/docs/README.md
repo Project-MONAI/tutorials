@@ -32,9 +32,9 @@ Actual Model Input: 96 x 96 x 96
 ## Modify train.json
 | Old json config | Updated json config |
 | --- | --- |
-| "bundle_root": "/workspace/data/tutorials/modules/bundle/spleen_segmentation", | "bundle_root": <Your work directory>, |
+| "bundle_root": "/workspace/data/tutorials/modules/bundle/spleen_segmentation", | "bundle_root": Your work directory, |
 | "dataset_dir": "/workspace/data/Task09_Spleen",| "data_file_base_dir": "./data/spleen", |
-| "images": "$list(sorted(glob.glob(@dataset_dir + '/imagesTr/*.nii.gz')))",<br />"labels": "$list(sorted(glob.glob(@dataset_dir + '/labelsTr/*.nii.gz')))",| "data_list_file_path": "./data/dataset_0.json",<br />
+| "images": "$list(sorted(glob.glob(@dataset_dir + '/imagesTr/*.nii.gz')))",<br />"labels": "$list(sorted(glob.glob(@dataset_dir + '/labelsTr/*.nii.gz')))",| "data_list_file_path": "./data/dataset_0.json",
 "train_datalist": "$monai.data.load_decathlon_datalist(@data_list_file_path, is_segmentation=True, data_list_key='training', base_dir=@data_file_base_dir)", |
 | (In "train#dataset",) "data": "$[{'image': i, 'label': l} for i, l in zip(@images[:-9], @labels[:-9])]",| "data": "$@train_datalist[: int(0.8 * len(@train_datalist))]", |
 | (In "validate#dataset",) "data": "$[{'image': i, 'label': l} for i, l in zip(@images[-9:], @labels[-9:])]",| "data": "$@train_datalist[int(0.8 * len(@train_datalist)):]", |

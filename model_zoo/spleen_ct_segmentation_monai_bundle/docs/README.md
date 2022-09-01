@@ -61,34 +61,20 @@ When finetuning with BTCV data from the pretrained model, we got mean Dice = 0.9
 
 The Dice of finetuning result is better than training from scratch for every subject in the validation set.
 
-## commands example for training from scratch
+## commands example
 
-Execute training from scratch:
+Execute training:
 
 ```
 python -m monai.bundle run training --meta_file configs/metadata.json --config_file configs/train.json --logging_file configs/logging.conf
 ```
 
-Override the `train` config to execute evaluation with the trained model:
+Override the `train` config to execute evaluation:
 
 ```
 python -m monai.bundle run evaluating --meta_file configs/metadata.json --config_file "['configs/train.json','configs/evaluate.json']" --logging_file configs/logging.conf
 ```
 
-## commands example for finetuning
-
-Override the `train` config to execute finetuning from pretrained model:
-
-```
-python -m monai.bundle run training --meta_file configs/metadata.json --config_file "['configs/train.json','configs/finetune.json']" --logging_file configs/logging.conf
-```
-
-Override the `train` config to execute evaluation with the trained model:
-First modify the "ckpt_file": "model_btcv.pt" to "ckpt_file": "model_transfer.pt" in configs/evaluate.json, then run
-
-```
-python -m monai.bundle run evaluating --meta_file configs/metadata.json --config_file "['configs/train.json','configs/evaluate.json']" --logging_file configs/logging.conf
-```
 
 
 # Disclaimer

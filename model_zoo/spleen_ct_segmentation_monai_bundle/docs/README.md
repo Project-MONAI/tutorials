@@ -29,10 +29,35 @@ During training, 19 out of the 24 scans are used for training, while the rest 5 
 
 Actual Model Input: 96 x 96 x 96
 
-## Input and output formats
-Input: 1 channel CT image
+## Modify train.json
+| Old json config | Updated json config |
+| --- | --- |
+| "bundle_root": "/workspace/data/tutorials/modules/bundle/spleen_segmentation", | "bundle_root": <Your work directory>, |
+| "dataset_dir": "/workspace/data/Task09_Spleen",| "data_file_base_dir": "./data/spleen", |
+| "images": "$list(sorted(glob.glob(@dataset_dir + '/imagesTr/*.nii.gz')))",<br />"labels": "$list(sorted(glob.glob(@dataset_dir + '/labelsTr/*.nii.gz')))",| "data_list_file_path": "./data/dataset_0.json",<br />
+"train_datalist": "$monai.data.load_decathlon_datalist(@data_list_file_path, is_segmentation=True, data_list_key='training', base_dir=@data_file_base_dir)", |
+| (In "train#dataset",) "data": "$[{'image': i, 'label': l} for i, l in zip(@images[:-9], @labels[:-9])]",| "data": "$@train_datalist[: int(0.8 * len(@train_datalist))]", |
+| (In "validate#dataset",) "data": "$[{'image': i, 'label': l} for i, l in zip(@images[-9:], @labels[-9:])]",| "data": "$@train_datalist[int(0.8 * len(@train_datalist)):]", |
+| (In "validate#handlers",) "key_metric_filename": "model.pt"| (train from scratch) "key_metric_filename": "model_from scratch.pt"|
+| (In "validate#handlers",) "key_metric_filename": "model.pt"| (train from pretrained model) "key_metric_filename": "model_transfer.pt"|
+| (In ""train#handlers"", add)| (train from pretrained model) {<br />
+  "_target_": "CheckpointLoader",<br />
+  "load_path": "$@ckpt_dir + '/model.pt'",<br />
+  "load_dict": {"model": "@network"}<br />
+},|
 
-Output: 2 channels: Label 1: spleen; Label 0: everything else
+## Modify evaluate.json
+| Old json config | Updated json config |
+| --- | --- |
+| (add)| "test_datalist": "$monai.data.load_decathlon_datalist(@data_list_file_path, is_segmentation=True, data_list_key='validation', base_dir=@data_file_base_dir)",<br />
+"validate#dataset": {<br />
+  "_target_": "Dataset",<br />
+  "data": "$@test_datalist",<br />
+  "transform": "@validate#preprocessing"<br />
+},|
+| (In "validate#handlers",) "load_path": "$@ckpt_dir + '/model.pt'",|(train from scratch) "load_path": "$@ckpt_dir + '/model_from_scratch.pt'", |
+| (In "validate#handlers",) "load_path": "$@ckpt_dir + '/model.pt'",|(train from scratch) "load_path": "$@ckpt_dir + '/model_transfer.pt'", |
+
 
 ## Scores
 This model achieves the following Dice score on the validation data:

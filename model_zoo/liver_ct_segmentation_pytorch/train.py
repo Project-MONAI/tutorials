@@ -47,7 +47,6 @@ from monai.transforms import (
     Spacingd,
 )
 from monai.visualize import plot_2d_or_3d_image
-from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 
@@ -60,10 +59,10 @@ def main(tempdir):
 
     # define path
     data_file_base_dir = (
-        "/home/canz/Projects/MONAI_detection/model_zoo_workspace/BTCV/liver"
+        "./data/liver"
     )
     data_list_file_path = (
-        "/home/canz/Projects/MONAI_detection/model_zoo_workspace/BTCV/dataset_0.json"
+        "./dataset_0.json"
     )
 
     pretrain_bool = True
@@ -87,7 +86,7 @@ def main(tempdir):
     if pretrain_bool:
         print("Load model from monai model-zoo.")
         pretrained_model = monai.bundle.load(
-            name="spleen_ct_segmentation", bundle_dir="./"
+            name="spleen_ct_segmentation", bundle_dir="./", version="0.1.1"
         )
         model.load_state_dict(pretrained_model)
 
@@ -120,13 +119,6 @@ def main(tempdir):
                 image_key="image",
                 image_threshold=0,
             ),
-            # user can also add other random transforms
-            # RandAffined(
-            #     keys=['image', 'label'],
-            #     mode=('bilinear', 'nearest'),
-            #     prob=1.0, spatial_size=(96, 96, 96),
-            #     rotate_range=(0, 0, np.pi/15),
-            #     scale_range=(0.1, 0.1, 0.1)),
         ]
     )
     val_transforms = Compose(
@@ -260,7 +252,5 @@ def main(tempdir):
 
 
 if __name__ == "__main__":
-    # parser = argparse.ArgumentParser(description="Run an ensemble train task using bundle.")
-    # parser.add_argument("--bundle_root", default="", type=str, help="root bundle dir")
     with tempfile.TemporaryDirectory() as tempdir:
         main(tempdir)

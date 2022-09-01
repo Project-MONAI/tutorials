@@ -48,8 +48,6 @@ from monai.transforms import (
     Spacingd,
 )
 from monai.visualize import plot_2d_or_3d_image
-from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
 
 
 def main(tempdir):

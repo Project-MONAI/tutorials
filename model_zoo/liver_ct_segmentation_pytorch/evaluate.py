@@ -15,43 +15,41 @@ import sys
 import tempfile
 from glob import glob
 
+import monai
 import nibabel as nib
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
-
-import monai
 from monai.data import (
-    DataLoader,
     CacheDataset,
-    load_decathlon_datalist,
+    DataLoader,
     decollate_batch,
+    load_decathlon_datalist,
     set_track_meta,
 )
-from monai.networks.nets import UNet
-from monai.networks.layers import Norm
 from monai.inferers import sliding_window_inference
-from monai.metrics import DiceMetric
 from monai.losses import DiceLoss
+from monai.metrics import DiceMetric
+from monai.networks.layers import Norm
+from monai.networks.nets import UNet
 from monai.transforms import (
+    Activations,
     AsDiscrete,
     AsDiscreted,
-    EnsureChannelFirstd,
     Compose,
     CropForegroundd,
+    EnsureChannelFirstd,
+    Invertd,
     LoadImaged,
     Orientationd,
     RandCropByPosNegLabeld,
+    SaveImage,
     SaveImaged,
     ScaleIntensityRanged,
     Spacingd,
-    Invertd,
-    Activations,
-    AsDiscrete,
-    SaveImage
 )
 from monai.visualize import plot_2d_or_3d_image
+from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 
 
 def main(tempdir):
@@ -62,27 +60,43 @@ def main(tempdir):
     torch.backends.cudnn.benchmark = True
 
     # define path
-    data_file_base_dir = '/home/canz/Projects/MONAI_detection/model_zoo_workspace/BTCV/liver'
-    data_list_file_path = '/home/canz/Projects/MONAI_detection/model_zoo_workspace/BTCV/dataset_0.json'
+    data_file_base_dir = (
+        "/home/canz/Projects/MONAI_detection/model_zoo_workspace/BTCV/liver"
+    )
+    data_list_file_path = (
+        "/home/canz/Projects/MONAI_detection/model_zoo_workspace/BTCV/dataset_0.json"
+    )
 
     pretrain_bool = True
     if pretrain_bool:
-        save_model = './models/model_transfer.pt'
+        save_model = "./models/model_transfer.pt"
     else:
-        save_model = './models/model_btcv.pt'
+        save_model = "./models/model_btcv.pt"
 
-    val_datalist = load_decathlon_datalist(data_list_file_path, is_segmentation=True, data_list_key='validation', base_dir=data_file_base_dir)
+    val_datalist = load_decathlon_datalist(
+        data_list_file_path,
+        is_segmentation=True,
+        data_list_key="validation",
+        base_dir=data_file_base_dir,
+    )
     # define transforms for image and segmentation
     val_transforms = Compose(
         [
             LoadImaged(keys=["image", "label"]),
             EnsureChannelFirstd(keys=["image", "label"]),
             Orientationd(keys=["image", "label"], axcodes="RAS"),
-            Spacingd(keys=["image", "label"], pixdim=(
-                1.5, 1.5, 2.0), mode=("bilinear", "nearest")),
+            Spacingd(
+                keys=["image", "label"],
+                pixdim=(1.5, 1.5, 2.0),
+                mode=("bilinear", "nearest"),
+            ),
             ScaleIntensityRanged(
-                keys=["image"], a_min=-57, a_max=164,
-                b_min=0.0, b_max=1.0, clip=True,
+                keys=["image"],
+                a_min=-57,
+                a_max=164,
+                b_min=0.0,
+                b_max=1.0,
+                clip=True,
             ),
         ]
     )
@@ -98,7 +112,6 @@ def main(tempdir):
     )
     val_loader = DataLoader(val_ds, num_workers=2, batch_size=1, shuffle=False)
 
-
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device("cuda:0")
     model = UNet(
@@ -113,15 +126,18 @@ def main(tempdir):
     model.load_state_dict(torch.load(save_model))
     dice_metric = DiceMetric(include_background=False, reduction="mean")
 
-
     model.eval()
     with torch.no_grad():
         for val_data in val_loader:
-            val_images, val_labels = val_data["image"].to(device), val_data["label"].to(device)
+            val_images, val_labels = val_data["image"].to(device), val_data["label"].to(
+                device
+            )
             # define sliding window size and batch size for windows inference
             roi_size = (96, 96, 96)
             sw_batch_size = 4
-            val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
+            val_outputs = sliding_window_inference(
+                val_images, roi_size, sw_batch_size, model
+            )
             val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
             val_labels = decollate_batch(val_labels)
             # compute metric for current iteration

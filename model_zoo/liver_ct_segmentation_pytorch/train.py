@@ -64,7 +64,7 @@ def main(tempdir):
     data_file_base_dir = '/home/canz/Projects/MONAI_detection/model_zoo_workspace/BTCV/liver'
     data_list_file_path = '/home/canz/Projects/MONAI_detection/model_zoo_workspace/BTCV/dataset_0.json'
 
-    
+
     pretrain_bool = True
     if pretrain_bool:
         save_model = './models/model_transfer.pt'
@@ -82,7 +82,7 @@ def main(tempdir):
         num_res_units=2,
         norm=Norm.BATCH,
     ).to(device)
-    
+
     if pretrain_bool:
         print('Load model from monai model-zoo.')
         pretrained_model = monai.bundle.load(
@@ -131,7 +131,7 @@ def main(tempdir):
             ScaleIntensityRanged(
                 keys=["image"], a_min=-57, a_max=164,
                 b_min=0.0, b_max=1.0, clip=True,
-            ),            
+            ),
         ]
     )
     post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
@@ -154,7 +154,7 @@ def main(tempdir):
     )
     val_loader = DataLoader(val_ds, num_workers=2, batch_size=1, shuffle=False)
 
-    
+
     # DiceLoss and Adam optimizer
     loss_function = DiceLoss(to_onehot_y=True, softmax=True)
     optimizer = torch.optim.Adam(model.parameters(), 2e-4)

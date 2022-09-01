@@ -22,7 +22,7 @@ for path, subdirs, files in os.walk(src_label):
 		label = np.array(label.dataobj)
 		label = label.astype(np.float32)
 		label[label == 5] = 0
-		label[label == 6] = 5 
+		label[label == 6] = 5
 		label[label == 11] = 6
 		label[label > 6] = 0
 		print("file: ", file)

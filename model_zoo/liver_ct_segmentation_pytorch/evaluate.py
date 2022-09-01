@@ -83,7 +83,7 @@ def main(tempdir):
             ScaleIntensityRanged(
                 keys=["image"], a_min=-57, a_max=164,
                 b_min=0.0, b_max=1.0, clip=True,
-            ),            
+            ),
         ]
     )
     post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
@@ -98,7 +98,7 @@ def main(tempdir):
     )
     val_loader = DataLoader(val_ds, num_workers=2, batch_size=1, shuffle=False)
 
-    
+
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device("cuda:0")
     model = UNet(

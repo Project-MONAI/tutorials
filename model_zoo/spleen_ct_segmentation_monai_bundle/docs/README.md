@@ -38,12 +38,11 @@ Actual Model Input: 96 x 96 x 96
 | "labels": "$list(sorted(glob.glob(@dataset_dir + '/labelsTr/*.nii.gz')))",| "train_datalist": "$monai.data.load_decathlon_datalist(@data_list_file_path, is_segmentation=True, data_list_key='training', base_dir=@data_file_base_dir)", |
 | (In "train#dataset",) "data": "$[{'image': i, 'label': l} for i, l in zip(@images[:-9], @labels[:-9])]",| "data": "$@train_datalist[: int(0.8 * len(@train_datalist))]", |
 | (In "validate#dataset",) "data": "$[{'image': i, 'label': l} for i, l in zip(@images[-9:], @labels[-9:])]",| "data": "$@train_datalist[int(0.8 * len(@train_datalist)):]", |
-| settings that differ for training from scratch and finetuning|
+| settings that differ for training from scratch and finetuning||
 | (In "validate#handlers",) "key_metric_filename": "model.pt"| (train from scratch) "key_metric_filename": "model_from scratch.pt"|
 | (In "validate#handlers",) "key_metric_filename": "model.pt"| (train from pretrained model) "key_metric_filename": "model_transfer.pt"|
 | (In "train#trainer",) "max_epochs": 100,| (train from scratch) "max_epochs": 600,|
 | (In "train#trainer",) "max_epochs": 100,| (train from pretrained model) "max_epochs": 200,|
-| --- | --- |
 | (In "train#handlers", add as the first element of the list)| (train from pretrained model) {"_target_": "CheckpointLoader","load_path": "$@ckpt_dir + '/model.pt'","load_dict": {"model": "@network"}},|
 
 ## Modify evaluate.json

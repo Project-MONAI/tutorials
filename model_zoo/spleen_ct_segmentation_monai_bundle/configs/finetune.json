@@ -1,0 +1,35 @@
+{
+    "max_epochs": 200,
+    "save_ckpt_file": "model_transfer.pt",
+    "train#handlers": [
+        {
+            "_target_": "CheckpointLoader",
+            "load_path": "$@ckpt_dir + '/model.pt'",
+            "load_dict": {
+                "model": "@network"
+            }
+        },
+        {
+            "_target_": "ValidationHandler",
+            "validator": "@validate#evaluator",
+            "epoch_level": true,
+            "interval": 5
+        },
+        {
+            "_target_": "StatsHandler",
+            "tag_name": "train_loss",
+            "output_transform": "$monai.handlers.from_engine(['loss'], first=True)"
+        },
+        {
+            "_target_": "TensorBoardStatsHandler",
+            "log_dir": "@output_dir",
+            "tag_name": "train_loss",
+            "output_transform": "$monai.handlers.from_engine(['loss'], first=True)"
+        }
+    ],
+    "training": [
+        "$monai.utils.set_determinism(seed=123)",
+        "$setattr(torch.backends.cudnn, 'benchmark', True)",
+        "$@train#trainer.run()"
+    ]
+}

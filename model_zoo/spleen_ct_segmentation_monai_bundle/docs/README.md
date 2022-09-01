@@ -41,6 +41,8 @@ Actual Model Input: 96 x 96 x 96
 | (In "validate#handlers",) "key_metric_filename": "model.pt"| (train from scratch) "key_metric_filename": "model_from scratch.pt"|
 | (In "validate#handlers",) "key_metric_filename": "model.pt"| (train from pretrained model) "key_metric_filename": "model_transfer.pt"|
 | (In ""train#handlers"", add as the first element of the list)| (train from pretrained model) {"_target_": "CheckpointLoader","load_path": "$@ckpt_dir + '/model.pt'","load_dict": {"model": "@network"}},|
+| (In "train#trainer",) "max_epochs": 100,| (train from scratch) "max_epochs": 600,|
+| (In "train#trainer",) "max_epochs": 100,| (train from pretrained model) "max_epochs": 200,|
 
 ## Modify evaluate.json
 | Old json config | Updated json config |

@@ -37,7 +37,7 @@ v0.1.0 was released in 9/12/2022:
 Please refer to [changelog.md](docs/changelog.md) for details and release history.
 
 ## Get Started
-The user needs to provide the following data root and data list as minimum input.
+The user needs to provide the following data root and data list for a new task as minimum input.
 
 ```python
 dataroot = '/dataset'

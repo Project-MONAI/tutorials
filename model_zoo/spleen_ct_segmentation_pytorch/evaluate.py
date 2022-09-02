@@ -65,7 +65,7 @@ def main(tempdir, load_pretrained_ckpt=False):
     if load_pretrained_ckpt:
         save_model = "./models/model_transfer.pt"
     else:
-        save_model = "./models/model_btcv.pt"
+        save_model = "./models/model_from_scratch.pt"
 
     val_datalist = load_decathlon_datalist(
         data_list_file_path,

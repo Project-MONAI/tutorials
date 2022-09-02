@@ -31,7 +31,7 @@
 
 v0.1.0 was released in 9/12/2022:
 
-- - Initiaze repository with complete functionalities
+- Initiaze repository with complete functionalities
 - Add four default algorithms for segmentation
 
 Please refer to [changelog.md](docs/changelog.md) for details and release history.

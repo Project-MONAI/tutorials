@@ -1,7 +1,7 @@
 name: Task05_Prostate
 task: segmentation
 
-modality: MRI  
+modality: MRI
 datalist: ./datafolds/msd_task05_prostate_folds.json # list of files
 dataroot: /data/Task05_Prostate # data location
 

@@ -1,9 +1,8 @@
 name: Task06_Lung
 task: segmentation
 
-modality: CT  
+modality: CT
 datalist: ./datafolds/msd_task06_lung_folds.json # list of files
 dataroot: /data/Task06_Lung # data location
 
 multigpu: True
-

@@ -1,14 +1,3 @@
-# Copyright (c) MONAI Consortium
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#     http://www.apache.org/licenses/LICENSE-2.0
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import os
 
 import nibabel as nib
@@ -16,14 +5,12 @@ import numpy as np
 
 root_dir = "./data"
 
-src_label = os.path.join(root_dir, "labelsTr")
+src_label = os.path.join(root_dir, "RawData/Training/label")
 
 dst_Spleen = os.path.join(root_dir, "spleen/labelsTr")
 
-try:
-    os.mkdir(dst_Spleen)
-except:
-    pass
+os.makedirs(os.path.join(root_dir, "spleen"), exist_ok=True)
+os.makedirs(dst_Spleen, exist_ok=True)
 
 for path, subdirs, files in os.walk(src_label):
     for file in files:
@@ -54,31 +41,37 @@ for path, subdirs, files in os.walk(src_label):
         mask[mask != 1] = 0
         if (mask == 1).sum() != 0:
             nib.save(
-                nib.Nifti1Image(mask, affine),
-                os.path.join(dst_Spleen, "label" + file[5:9] + ".nii.gz"),
+                nib.Nifti1Image(mask, affine), os.path.join(dst_Spleen, file),
             )
 
         # mask = label.copy()
         # mask[mask != 2] = 0
         # if (mask == 2).sum() != 0:
-        # 	nib.save(nib.Nifti1Image(mask, affine), os.path.join(dst_Right_Kidney, "Synapse_" + file[5:9] + ".nii.gz"))
+        #     mask[mask == 2] = 1
+        # 	nib.save(nib.Nifti1Image(mask, affine), os.path.join(dst_Right_Kidney, file))
 
         # mask = label.copy()
         # mask[mask != 3] = 0
         # if (mask == 3).sum() != 0:
-        # 	nib.save(nib.Nifti1Image(mask, affine), os.path.join(dst_Left_Kidney, "Synapse_" + file[5:9] + ".nii.gz"))
+        #     mask[mask == 3] = 1
+        # 	nib.save(nib.Nifti1Image(mask, affine), os.path.join(dst_Left_Kidney, file))
 
         # mask = label.copy()
         # mask[mask != 6] = 0
         # if (mask == 6).sum() != 0:
-        # 	nib.save(nib.Nifti1Image(mask, affine), os.path.join(dst_Pancreas, "Synapse_" + file[5:9] + ".nii.gz"))
+        #     mask[mask == 6] = 1
+        # 	nib.save(nib.Nifti1Image(mask, affine), os.path.join(dst_Pancreas, file))
 
         # mask = label.copy()
         # mask[mask != 5] = 0
         # if (mask == 5).sum() != 0:
-        # 	nib.save(nib.Nifti1Image(mask, affine), os.path.join(dst_Liver, "Synapse_" + file[5:9] + ".nii.gz"))
+        #     mask[mask == 5] = 1
+        #     nib.save(
+        #         nib.Nifti1Image(mask, affine), os.path.join(dst_Liver, file),
+        #     )
 
         # mask = label.copy()
         # mask[mask != 4] = 0
         # if (mask == 4).sum() != 0:
-        # 	nib.save(nib.Nifti1Image(mask, affine), os.path.join(dst_Gallbladder, "Synapse_" + file[5:9] + ".nii.gz"))
+        #     mask[mask == 4] = 1
+        # 	nib.save(nib.Nifti1Image(mask, affine), os.path.join(dst_Gallbladder, file))

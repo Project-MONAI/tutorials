@@ -31,14 +31,28 @@
 
 v0.1.0 was released in 9/12/2022:
 
-- Initiaze repository with complete functionalities
+- - Initiaze repository with complete functionalities
 - Add four default algorithms for segmentation
 
 Please refer to [changelog.md](docs/changelog.md) for details and release history.
 
 ## Get Started
+The user needs to provide the following data root and data list as minimum input.
 
-Users needs provide data root and data list as the minimal input.
+# Example Usage
+
+```python
+dataroot = '/dataset'
+datalist = {
+    "training": [
+        {"fold": 0, "image": "image_001.nii.gz", "label": "label_001.nii.gz"},
+        {"fold": 0, "image": "image_002.nii.gz", "label": "label_002.nii.gz"},
+        {"fold": 1, "image": "image_001.nii.gz", "label": "label_001.nii.gz"},
+        {"fold": 1, "image": "image_004.nii.gz", "label": "label_004.nii.gz"},
+    ],
+    "testing": [{"image": "image_003.nii.gz"}],
+}
+```
 
 ### Framework Demo
 

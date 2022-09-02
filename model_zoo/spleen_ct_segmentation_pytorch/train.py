@@ -63,7 +63,7 @@ def main(tempdir, load_pretrained_ckpt=False):
         "./data/spleen"
     )
     data_list_file_path = (
-        "./dataset_0.json"
+        "./data/dataset_0.json"
     )
 
     os.makedirs("./models", exist_ok=True)

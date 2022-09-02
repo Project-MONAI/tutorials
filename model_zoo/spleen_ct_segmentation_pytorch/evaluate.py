@@ -60,10 +60,10 @@ def main(tempdir, load_pretrained_ckpt=False):
 
     # define path
     data_file_base_dir = (
-        "/home/canz/Projects/MONAI_detection/model_zoo_workspace/BTCV/spleen"
+        "./data/spleen"
     )
     data_list_file_path = (
-        "/home/canz/Projects/MONAI_detection/model_zoo_workspace/BTCV/dataset_0.json"
+        "./data/dataset_0.json"
     )
 
     if load_pretrained_ckpt:

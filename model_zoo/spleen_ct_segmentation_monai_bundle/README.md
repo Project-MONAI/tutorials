@@ -10,7 +10,7 @@ Introduction of BTCV dataset can be found in https://github.com/Project-MONAI/tu
 
 There are 13 organs labeld in BTCV. In this example, we focus on spleen segmentation only.
 
-Step 1: Download BTCV dataset following the instruction in https://github.com/Project-MONAI/tutorials/blob/main/3d_segmentation/swin_unetr_btcv_segmentation_3d.ipynb. Extract it in `./data`.
+Step 1: Download BTCV dataset RawData.zip following the instruction in https://github.com/Project-MONAI/tutorials/blob/main/3d_segmentation/swin_unetr_btcv_segmentation_3d.ipynb. Extract it as `./data/RawData`.
 
 Step 2: Download the the json file for data splits in https://github.com/Project-MONAI/tutorials/blob/main/3d_segmentation/swin_unetr_btcv_segmentation_3d.ipynb, and save it to `./data/dataset_0.json`.
 
@@ -29,10 +29,10 @@ During training, 19 out of the 24 scans are used for training, while the rest 5 
 
 Actual Model Input: 96 x 96 x 96
 
-## Modify ./config/train.json from the downloaded example
+## Modify ./spleen_ct_segmentation/configs/train.json from the downloaded example
 | Old json config | Updated json config |
 | --- | --- |
-| "bundle_root": "/workspace/data/tutorials/modules/bundle/spleen_segmentation", | "bundle_root": Your work directory, |
+| "bundle_root": "/workspace/data/tutorials/modules/bundle/spleen_segmentation", | "bundle_root": "./spleen_ct_segmentation", |
 | "dataset_dir": "/workspace/data/Task09_Spleen",| "data_file_base_dir": "./data/spleen", |
 | "images": "$list(sorted(glob.glob(@dataset_dir + '/imagesTr/*.nii.gz')))",| "data_list_file_path": "./data/dataset_0.json", |
 | "labels": "$list(sorted(glob.glob(@dataset_dir + '/labelsTr/*.nii.gz')))",| "train_datalist": "$monai.data.load_decathlon_datalist(@data_list_file_path, is_segmentation=True, data_list_key='training', base_dir=@data_file_base_dir)", |
@@ -41,7 +41,7 @@ Actual Model Input: 96 x 96 x 96
 | (In "train#trainer",) "max_epochs": 100,| "max_epochs": 600,|
 | (In "optimizer",) "lr": 0.0001,| "lr": 0.0002,|
 
-## Modify ./config/evaluate.json
+## Modify ./spleen_ct_segmentation/configs/evaluate.json
 | Old json config | Updated json config |
 | --- | --- |
 | (add)| "test_datalist": "$monai.data.load_decathlon_datalist(@data_list_file_path, is_segmentation=True, data_list_key='validation', base_dir=@data_file_base_dir)", |
@@ -58,13 +58,13 @@ Mean Dice = 0.9294.
 Execute training:
 
 ```
-python -m monai.bundle run training --meta_file configs/metadata.json --config_file configs/train.json --logging_file configs/logging.conf
+python -m monai.bundle run training --meta_file ./spleen_ct_segmentation/configs/metadata.json --config_file ./spleen_ct_segmentation/configs/train.json --logging_file ./spleen_ct_segmentation/configs/logging.conf
 ```
 
 Override the `train` config to execute evaluation:
 
 ```
-python -m monai.bundle run evaluating --meta_file configs/metadata.json --config_file "['configs/train.json','configs/evaluate.json']" --logging_file configs/logging.conf
+python -m monai.bundle run evaluating --meta_file ./spleen_ct_segmentation/configs/metadata.json --config_file "['./spleen_ct_segmentation/configs/train.json','./spleen_ct_segmentation/configs/evaluate.json']" --logging_file ./spleen_ct_segmentation/configs/logging.conf
 ```
 
 

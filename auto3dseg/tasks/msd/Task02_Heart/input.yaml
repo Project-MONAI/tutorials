@@ -1,0 +1,9 @@
+name: Task02_Heart
+task: segmentation
+
+modality: MRI  
+datalist: ./datafolds/msd_task02_heart_folds.json # list of files
+dataroot: /data/Task02_Heart # data location
+
+multigpu: True
+

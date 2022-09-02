@@ -1,0 +1,10 @@
+name: Task01_BrainTumour
+task: segmentation
+
+modality: MRI   
+datalist: ./datafolds/msd_task01_braintumour_folds.json # list of files
+dataroot: /data/Task01_BrainTumour # data location
+
+multigpu: True
+
+class_names: [val_acc_edema, val_acc_enh, val_acc_nonenh]

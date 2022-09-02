@@ -7,6 +7,7 @@ This tutorial shows how to adapt an example monai bundle from MONAI model-zoo to
 ## Data
 The new dataset is BTCV challenge dataset (https://www.synapse.org/#!Synapse:syn3193805/wiki/217752). It has 24 Training + 6 Validation CT abdominal scans.
 Introduction of BTCV dataset can be found in https://github.com/Project-MONAI/tutorials/blob/main/3d_segmentation/swin_unetr_btcv_segmentation_3d.ipynb
+There are 13 organs labeld in BTCV. In this example, we are interested in spleen segmentation only.
 
 Step 1: Download BTCV dataset following the instruction in https://github.com/Project-MONAI/tutorials/blob/main/3d_segmentation/swin_unetr_btcv_segmentation_3d.ipynb. Extract it in `./data`.
 
@@ -50,7 +51,7 @@ This model achieves the following Dice score on the validation data:
 Mean Dice = 0.9294.
 
 
-## commands example
+## Commands example
 
 Execute training:
 

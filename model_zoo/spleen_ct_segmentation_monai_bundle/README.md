@@ -14,7 +14,7 @@ Step 1: Download BTCV dataset following the instruction in https://github.com/Pr
 
 Step 2: Download the the json file for data splits in https://github.com/Project-MONAI/tutorials/blob/main/3d_segmentation/swin_unetr_btcv_segmentation_3d.ipynb, and save it to `./data/dataset_0.json`.
 
-Step 3: The labels in BTCV dataset contains 13 organ. So we split the labels and extract spleen label out. This is done by running `python ./split_spleen_labels.py`.
+Step 3: The labels in BTCV dataset contains 13 organs. We split the labels and extract spleen label out. This is done by running `python ./split_spleen_labels.py`.
 
 Step 4: `cp -avr ./data/RawData/Training/img ./data/spleen/imagesTr`
 
@@ -39,6 +39,7 @@ Actual Model Input: 96 x 96 x 96
 | (In "train#dataset",) "data": "$[{'image': i, 'label': l} for i, l in zip(@images[:-9], @labels[:-9])]",| "data": "$@train_datalist[: int(0.8 * len(@train_datalist))]", |
 | (In "validate#dataset",) "data": "$[{'image': i, 'label': l} for i, l in zip(@images[-9:], @labels[-9:])]",| "data": "$@train_datalist[int(0.8 * len(@train_datalist)):]", |
 | (In "train#trainer",) "max_epochs": 100,| "max_epochs": 600,|
+| (In "optimizer",) "lr": 0.0001,| "lr": 0.0002,|
 
 ## Modify ./config/evaluate.json
 | Old json config | Updated json config |

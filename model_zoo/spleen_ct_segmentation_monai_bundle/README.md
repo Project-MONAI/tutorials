@@ -1,8 +1,8 @@
 # Description
-Finetune a pre-trained model for volumetric (3D) segmentation of CT spleen from MSD dataset and apply it to BTCV dataset.
+Adapt a bundle to another dataset
 
 # Overview
-This tutorial shows how to finetune a pretrained model from MONAI model zoo on a new dataset using monai bundle.
+This tutorial shows how to adapt an example monai bundle from MONAI model-zoo to a new dataset.
 
 ## Data
 The new dataset is BTCV challenge dataset (https://www.synapse.org/#!Synapse:syn3193805/wiki/217752). It has 24 Training + 6 Validation CT abdominal scans.
@@ -12,7 +12,7 @@ Step 1: Download BTCV dataset following the instruction in https://github.com/Pr
 
 Step 2: Download the the json file for data splits in https://github.com/Project-MONAI/tutorials/blob/main/3d_segmentation/swin_unetr_btcv_segmentation_3d.ipynb, and save it to `./data/dataset_0.json`.
 
-Step 3: The labels in BTCV dataset contains 13 organ. So we split the labels and extract liver label out. This is done by running `python ./script/split_spleen_labels.py`.
+Step 3: The labels in BTCV dataset contains 13 organ. So we split the labels and extract spleen label out. This is done by running `python ./split_spleen_labels.py`.
 
 Step 4: `cp -avr ./data/RawData/Training/img ./data/spleen/imagesTr`
 

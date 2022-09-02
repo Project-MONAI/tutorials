@@ -151,7 +151,7 @@ def main(tempdir, load_pretrained_ckpt=False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run a train task.")
     parser.add_argument("--load_pretrained_ckpt",action='store_true', help="whether to load pretrained checkpoint from model zoo")
-    
+
     args = parser.parse_args()
     with tempfile.TemporaryDirectory() as tempdir:
         main(tempdir, args.load_pretrained_ckpt)

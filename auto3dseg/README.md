@@ -67,7 +67,7 @@ datalist = {
 
 ## Benchmarks
 
-Some benchmark results of public datasets are described in the [tasks](https://github.com/dongyang0122/tutorials/tree/main/auto3dseg/tasks) folder.
+Some benchmark results of public datasets are described in the [tasks](tasks) folder.
 
 ## FAQ
 

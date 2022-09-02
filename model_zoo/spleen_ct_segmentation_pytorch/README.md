@@ -2,14 +2,13 @@
 Load pre-trained model from MONAI model-zoo with pytorch and train it on a new dataset.
 
 # Overview
-This tutorial shows how to load a pretrained U-net from MONAI model-zoo and train it on BTCV dataset using pytorch. The pretrained model was trained on volumetric (3D) segmentation of CT spleen from MSD dataset.
+This tutorial shows how to load a pretrained U-net from MONAI model-zoo and train it on BTCV dataset using pytorch. The pretrained U-net was trained on volumetric (3D) segmentation of CT spleen from MSD dataset.
 
 ## Data
 The description of data and data preparation can be found in [spleen_ct_segmentation_monai_bundle](../spleen_ct_segmentation_monai_bundle)
 
 ## Pretrained model
-The pretrained model is from MONAI model zoo,
- https://github.com/Project-MONAI/model-zoo/releases/download/hosting_storage_v1/spleen_ct_segmentation_v0.1.1.zip
+The pretrained model is from MONAI model-zoo spleen_ct_segmentation.
 It was trained using the runner-up [1] awarded pipeline of the "Medical Segmentation Decathlon Challenge 2018" using the UNet architecture [2] with 32 training images and 9 validation images.
 
 It is loaded with the following python code, which can be found in `train.py`.
@@ -30,7 +29,7 @@ Actual Model Input: 96 x 96 x 96
 ## Input and output formats
 Input: 1 channel CT image
 
-Output: 2 channels: Label 1: liver; Label 0: everything else
+Output: 2 channels: Label 1: spleen; Label 0: everything else
 
 ## Scores
 This model achieves the following Dice score on the validation data:

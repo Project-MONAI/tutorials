@@ -8,10 +8,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import argparse
 import json
 import logging
 import os
+import argparse
 import subprocess
 
 import monai.bundle
@@ -43,7 +43,7 @@ class Const:
     KEY_INFERENCE_POSTPROCESSING = "postprocessing"
 
 
-class EnsembleTrainTask:
+class EnsembleTrainTask():
     """
     To construct an n-fold training and ensemble infer on any dataset.
     Just specify the bundle root path and data root path.
@@ -72,15 +72,10 @@ class EnsembleTrainTask:
     Args:
         path: bundle root path where your place the download bundle
     """
-
     def __init__(self, path):
-        config_paths = [
-            c for c in Const.CONFIGS if os.path.exists(os.path.join(path, "configs", c))
-        ]
+        config_paths = [c for c in Const.CONFIGS if os.path.exists(os.path.join(path, "configs", c))]
         if not config_paths:
-            logger.warning(
-                f"Ignore {path} as there is no train config {Const.CONFIGS} exists"
-            )
+            logger.warning(f"Ignore {path} as there is no train config {Const.CONFIGS} exists")
             return
 
         self.bundle_path = path
@@ -108,54 +103,40 @@ class EnsembleTrainTask:
     def _device(self, str):
         return torch.device(str if torch.cuda.is_available() else "cpu")
 
-    def ensemble_inference(self, device, test_datalist, ensemble="Mean"):
-        inference_config_paths = [
-            c
-            for c in Const.INFERENCE_CONFIGS
-            if os.path.exists(os.path.join(self.bundle_path, "configs", c))
-        ]
+    def ensemble_inference(self, device, test_datalist, ensemble='Mean'):
+        inference_config_paths = [c for c in Const.INFERENCE_CONFIGS if os.path.exists(os.path.join(self.bundle_path, "configs", c))]
         if not inference_config_paths:
-            logger.warning(
-                f"Ignore {self.bundle_path} as there is no inference config {Const.INFERENCE_CONFIGS} exists"
-            )
+            logger.warning(f"Ignore {self.bundle_path} as there is no inference config {Const.INFERENCE_CONFIGS} exists")
             return
 
         logger.info(f"Total Records in Test Dataset: {len(test_datalist)}")
 
-        bundle_inference_config_path = os.path.join(
-            self.bundle_path, "configs", inference_config_paths[0]
-        )
+        bundle_inference_config_path = os.path.join(self.bundle_path, "configs", inference_config_paths[0])
         bundle_inference_config = ConfigParser()
         bundle_inference_config.read_config(bundle_inference_config_path)
         bundle_inference_config.update({Const.KEY_BUNDLE_ROOT: self.bundle_path})
-        bundle_inference_config.update(
-            {Const.KEY_INFERENCE_DATASET_DATA: test_datalist}
-        )
+        bundle_inference_config.update({Const.KEY_INFERENCE_DATASET_DATA: test_datalist})
 
         # update postprocessing with mean ensemble or vote ensemble
-        post_tranform = bundle_inference_config.config["postprocessing"]
+        post_tranform = bundle_inference_config.config['postprocessing']
         ensemble_tranform = {
             "_target_": f"{ensemble}Ensembled",
             "keys": ["pred", "pred", "pred", "pred", "pred"],
-            "output_key": "pred",
+            "output_key": "pred"
         }
-        if ensemble == "Mean":
+        if ensemble == 'Mean':
             post_tranform["transforms"].insert(0, ensemble_tranform)
-        elif ensemble == "Vote":
+        elif ensemble == 'Vote':
             post_tranform["transforms"].insert(-1, ensemble_tranform)
         else:
             raise NotImplementedError
-        bundle_inference_config.update(
-            {Const.KEY_INFERENCE_POSTPROCESSING: post_tranform}
-        )
+        bundle_inference_config.update({Const.KEY_INFERENCE_POSTPROCESSING: post_tranform})
 
         # update network weights
         _networks = [bundle_inference_config.get_parsed_content("network")] * 5
         networks = []
         for i, _network in enumerate(_networks):
-            _network.load_state_dict(
-                torch.load(self.bundle_path + f"/models/model{i}.pt")
-            )
+            _network.load_state_dict(torch.load(self.bundle_path+f"/models/model{i}.pt"))
             networks.append(_network)
 
         evaluator = EnsembleEvaluator(
@@ -178,21 +159,15 @@ class EnsembleTrainTask:
         train_ds, val_ds = self._partition_datalist(datalist, n_splits=args.n_splits)
         fold = 0
         for _train_ds, _val_ds in zip(train_ds, val_ds):
-            model_pytorch = f"model{fold}.pt"
+            model_pytorch = f'model{fold}.pt'
             max_epochs = args.epochs
             multi_gpu = args.multi_gpu
             multi_gpu = multi_gpu if torch.cuda.device_count() > 1 else False
 
             gpus = args.gpus
-            gpus = (
-                list(range(torch.cuda.device_count()))
-                if gpus == "all"
-                else [int(g) for g in gpus.split(",")]
-            )
+            gpus = list(range(torch.cuda.device_count())) if gpus == "all" else [int(g) for g in gpus.split(",")]
             logger.info(f"Using Multi GPU: {multi_gpu}; GPUS: {gpus}")
-            logger.info(
-                f"CUDA_VISIBLE_DEVICES: {os.environ.get('CUDA_VISIBLE_DEVICES')}"
-            )
+            logger.info(f"CUDA_VISIBLE_DEVICES: {os.environ.get('CUDA_VISIBLE_DEVICES')}")
 
             device = self._device(args.device)
             logger.info(f"Using device: {device}")
@@ -209,35 +184,23 @@ class EnsembleTrainTask:
 
             if multi_gpu:
                 config_paths = [
-                    c
-                    for c in Const.MULTI_GPU_CONFIGS
-                    if os.path.exists(os.path.join(self.bundle_path, "configs", c))
+                    c for c in Const.MULTI_GPU_CONFIGS if os.path.exists(os.path.join(self.bundle_path, "configs", c))
                 ]
                 if not config_paths:
-                    logger.warning(
-                        f"Ignore Multi-GPU Training; No multi-gpu train config {Const.MULTI_GPU_CONFIGS} exists"
-                    )
+                    logger.warning(f"Ignore Multi-GPU Training; No multi-gpu train config {Const.MULTI_GPU_CONFIGS} exists")
                     return
 
-                train_path = os.path.join(
-                    self.bundle_path, "configs", f"train_multigpu_fold{fold}.json"
-                )
-                multi_gpu_train_path = os.path.join(
-                    self.bundle_path, "configs", config_paths[0]
-                )
+                train_path = os.path.join(self.bundle_path, "configs", f"train_multigpu_fold{fold}.json")
+                multi_gpu_train_path = os.path.join(self.bundle_path, "configs", config_paths[0])
                 logging_file = os.path.join(self.bundle_path, "configs", "logging.conf")
                 for k, v in overrides.items():
                     if k != Const.KEY_DEVICE:
                         self.bundle_config.set(v, k)
-                ConfigParser.export_config_file(
-                    self.bundle_config.config, train_path, indent=2
-                )
+                ConfigParser.export_config_file(self.bundle_config.config, train_path, indent=2)
 
                 env = os.environ.copy()
                 env["CUDA_VISIBLE_DEVICES"] = ",".join([str(g) for g in gpus])
-                logger.info(
-                    f"Using CUDA_VISIBLE_DEVICES: {env['CUDA_VISIBLE_DEVICES']}"
-                )
+                logger.info(f"Using CUDA_VISIBLE_DEVICES: {env['CUDA_VISIBLE_DEVICES']}")
                 cmd = [
                     "torchrun",
                     "--standalone",
@@ -271,9 +234,7 @@ class EnsembleTrainTask:
             self.ensemble_inference(device, test_datalist, ensemble=args.ensemble)
 
     def run_command(self, cmd, env):
-        process = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, universal_newlines=True, env=env
-        )
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True, env=env)
         while process.poll() is None:
             line = process.stdout.readline()
             line = line.rstrip()
@@ -284,7 +245,7 @@ class EnsembleTrainTask:
         process.stdout.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     """
     Usage
         first download a bundle from model-zoo to somewhere as your bundle_root path
@@ -308,50 +269,28 @@ if __name__ == "__main__":
             ]
         python easy_integrate_bundle.py --bundle_root $bundle_root_path --dataset_dir $data_root_path
     """
-    parser = argparse.ArgumentParser(
-        description="Run an ensemble train task using bundle."
-    )
+    parser = argparse.ArgumentParser(description="Run an ensemble train task using bundle.")
 
     parser.add_argument(
-        "--ensemble",
-        default="Mean",
-        choices=["Mean", "Vote"],
-        type=str,
-        help="way of ensemble",
+        "--ensemble", default="Mean", choices=["Mean", "Vote"], type=str, help="way of ensemble"
     )
     parser.add_argument("--bundle_root", default="", type=str, help="root bundle dir")
     parser.add_argument("--dataset_dir", default="", type=str, help="root data dir")
     parser.add_argument("--epochs", default=6, type=int, help="max epochs")
     parser.add_argument("--n_splits", default=5, type=int, help="n fold split")
-    parser.add_argument(
-        "--multi_gpu", default=False, type=bool, help="whether use multigpu"
-    )
+    parser.add_argument("--multi_gpu", default=False, type=bool, help="whether use multigpu")
     parser.add_argument("--device", default="cuda", type=str, help="device")
     parser.add_argument("--gpus", default="all", type=str, help="which gpu to use")
 
     args = parser.parse_args()
-    gpus = (
-        list(range(torch.cuda.device_count()))
-        if args.gpus == "all"
-        else [int(g) for g in args.gpus.split(",")]
-    )
+    gpus = list(range(torch.cuda.device_count())) if args.gpus == "all" else [int(g) for g in args.gpus.split(",")]
     os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(str(x) for x in gpus)
-    datalist_path = args.dataset_dir + "/dataset.json"
+    datalist_path = args.dataset_dir+'/dataset.json'
     with open(datalist_path) as fp:
         datalist = json.load(fp)
 
-    train_datalist = [
-        {
-            "image": d["image"].replace("./", f"{args.dataset_dir}/"),
-            "label": d["label"].replace("./", f"{args.dataset_dir}/"),
-        }
-        for d in datalist["training"]
-        if d
-    ]
-    test_datalist = [
-        {"image": d.replace("./", f"{args.dataset_dir}/")}
-        for d in datalist["test"]
-        if d
-    ]
+
+    train_datalist = [{"image": d["image"].replace('./', f'{args.dataset_dir}/'), "label": d["label"].replace('./', f'{args.dataset_dir}/')} for d in datalist['training'] if d]
+    test_datalist = [{"image": d.replace('./', f'{args.dataset_dir}/')} for d in datalist['test'] if d]
     traintask = EnsembleTrainTask(args.bundle_root)
     traintask(args, train_datalist, test_datalist)

@@ -40,6 +40,18 @@ When finetuning with BTCV data from the pretrained model, we got mean Dice = 0.9
 
 The Dice of finetuning result is better than training from scratch for every subject in the validation set.
 
+## Commands example
+Train and evaluate from scratch:
+```
+python3 train.py
+python3 evaluate.py
+```
+
+Load pre-trained model and do transfer learning:
+```
+python3 train.py --load_pretrained_ckpt
+python3 evaluate.py --load_pretrained_ckpt
+```
 
 # Disclaimer
 This is an example, not to be used for diagnostic purposes.

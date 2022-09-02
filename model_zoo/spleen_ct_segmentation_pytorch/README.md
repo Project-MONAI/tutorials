@@ -44,8 +44,8 @@ Output: 2 channels: Label 1: liver; Label 0: everything else
 ## Scores
 This model achieves the following Dice score on the validation data:
 
-When training with BTCV data from scratch, we got mean Dice = 0.9490.
-When finetuning with BTCV data from the pretrained model, we got mean Dice = 0.9534
+When training with BTCV data from scratch, we got mean Dice = 0.9294.
+When finetuning with BTCV data from the pretrained model, we got mean Dice = 0.9488
 
 The Dice of finetuning result is better than training from scratch for every subject in the validation set.
 

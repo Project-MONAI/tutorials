@@ -16,12 +16,10 @@ Step 3: The labels in BTCV dataset contains 13 organ. So we split the labels and
 
 Step 4: move ./data/imagesTr to ./data/spleen/imagesTr
 
-## Pretrained model
-The pretrained model is from MONAI model zoo,
- https://github.com/Project-MONAI/model-zoo/releases/download/hosting_storage_v1/spleen_ct_segmentation_v0.1.1.zip
-It was trained using the runner-up [1] awarded pipeline of the "Medical Segmentation Decathlon Challenge 2018" using the UNet architecture [2] with 32
-
-Please download the pretrained model from MONAI model-zoo https://github.com/Project-MONAI/model-zoo/releases/download/hosting_storage_v1/spleen_ct_segmentation_v0.1.1.zip, and move model.pt to ./models/model.pt
+## Download example monai bundle from model-zoo
+```
+python -m monai.bundle download --name spleen_ct_segmentation --version "0.1.1" --bundle_dir "./"
+```
 
 ## Training configuration
 The training was performed with at least 12GB-memory GPUs.
@@ -29,7 +27,7 @@ During training, 19 out of the 24 scans are used for training, while the rest 5 
 
 Actual Model Input: 96 x 96 x 96
 
-## Modify train.json
+## Modify ./config/train.json from the downloaded example
 | Old json config | Updated json config |
 | --- | --- |
 | "bundle_root": "/workspace/data/tutorials/modules/bundle/spleen_segmentation", | "bundle_root": Your work directory, |
@@ -38,28 +36,19 @@ Actual Model Input: 96 x 96 x 96
 | "labels": "$list(sorted(glob.glob(@dataset_dir + '/labelsTr/*.nii.gz')))",| "train_datalist": "$monai.data.load_decathlon_datalist(@data_list_file_path, is_segmentation=True, data_list_key='training', base_dir=@data_file_base_dir)", |
 | (In "train#dataset",) "data": "$[{'image': i, 'label': l} for i, l in zip(@images[:-9], @labels[:-9])]",| "data": "$@train_datalist[: int(0.8 * len(@train_datalist))]", |
 | (In "validate#dataset",) "data": "$[{'image': i, 'label': l} for i, l in zip(@images[-9:], @labels[-9:])]",| "data": "$@train_datalist[int(0.8 * len(@train_datalist)):]", |
-| (In "validate#handlers",) "key_metric_filename": "model.pt"| (train from scratch) "key_metric_filename": "model_from scratch.pt"|
-| (In "validate#handlers",) "key_metric_filename": "model.pt"| (finetune from pretrained model) "key_metric_filename": "model_transfer.pt"|
-| (In "train#trainer",) "max_epochs": 100,| (train from scratch) "max_epochs": 600,|
-| (In "train#trainer",) "max_epochs": 100,| (finetune from pretrained model) "max_epochs": 200,|
-| (In "train#handlers", add as the first element of the list)| (finetune from pretrained model) {"_target_": "CheckpointLoader","load_path": "$@ckpt_dir + '/model.pt'","load_dict": {"model": "@network"}},|
+| (In "train#trainer",) "max_epochs": 100,| "max_epochs": 600,|
 
-## Modify evaluate.json
+## Modify ./config/evaluate.json
 | Old json config | Updated json config |
 | --- | --- |
 | (add)| "test_datalist": "$monai.data.load_decathlon_datalist(@data_list_file_path, is_segmentation=True, data_list_key='validation', base_dir=@data_file_base_dir)", |
 | (add)| "validate#dataset": {"_target_": "Dataset","data": "$@test_datalist","transform": "@validate#preprocessing"},|
-| (In "validate#handlers",) "load_path": "$@ckpt_dir + '/model.pt'",|(train from scratch) "load_path": "$@ckpt_dir + '/model_from_scratch.pt'", |
-| (In "validate#handlers",) "load_path": "$@ckpt_dir + '/model.pt'",|(finetune from pretrained model) "load_path": "$@ckpt_dir + '/model_transfer.pt'", |
 
 
 ## Scores
 This model achieves the following Dice score on the validation data:
+Mean Dice = 0.9294.
 
-When training with BTCV data from scratch, we got mean Dice = 0.9294.
-When finetuning with BTCV data from the pretrained model, we got mean Dice = 0.9488
-
-The Dice of finetuning result is better than training from scratch for every subject in the validation set.
 
 ## commands example
 

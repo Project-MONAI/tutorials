@@ -14,6 +14,7 @@ import os
 import sys
 import tempfile
 from glob import glob
+import argparse
 
 import monai
 import nibabel as nib
@@ -50,7 +51,7 @@ from monai.visualize import plot_2d_or_3d_image
 from torch.utils.tensorboard import SummaryWriter
 
 
-def main(tempdir):
+def main(tempdir, load_pretrained_ckpt=False):
     monai.config.print_config()
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
@@ -59,17 +60,21 @@ def main(tempdir):
 
     # define path
     data_file_base_dir = (
-        "./data/liver"
+        "./data/spleen"
     )
     data_list_file_path = (
         "./dataset_0.json"
     )
 
-    pretrain_bool = True
-    if pretrain_bool:
+    os.makedirs("./models", exist_ok=True)
+    if load_pretrained_ckpt:
+        # transfer learning
         save_model = "./models/model_transfer.pt"
+        max_epochs = 200
     else:
-        save_model = "./models/model_btcv.pt"
+        # train from scratch
+        save_model = "./models/model_from_scratch.pt"
+        max_epochs = 600
 
     # create UNet and load pretrained weights from monai model-zoo
     device = torch.device("cuda:0")
@@ -83,7 +88,7 @@ def main(tempdir):
         norm=Norm.BATCH,
     ).to(device)
 
-    if pretrain_bool:
+    if load_pretrained_ckpt:
         print("Load model from monai model-zoo.")
         pretrained_model = monai.bundle.load(
             name="spleen_ct_segmentation", bundle_dir="./", version="0.1.1"
@@ -172,7 +177,7 @@ def main(tempdir):
     dice_metric = DiceMetric(include_background=False, reduction="mean")
 
     # start a typical PyTorch training
-    max_epochs = 600
+    
     val_interval = 5
     best_metric = -1
     best_metric_epoch = -1
@@ -252,5 +257,9 @@ def main(tempdir):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run a train task.")
+    parser.add_argument("--load_pretrained_ckpt",action='store_true', help="whether to load pretrained checkpoint from model zoo")
+    
+    args = parser.parse_args()
     with tempfile.TemporaryDirectory() as tempdir:
-        main(tempdir)
+        main(tempdir, args.load_pretrained_ckpt)

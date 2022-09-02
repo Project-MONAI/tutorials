@@ -14,6 +14,7 @@ import os
 import sys
 import tempfile
 from glob import glob
+import argparse
 
 import monai
 import nibabel as nib
@@ -50,7 +51,7 @@ from monai.transforms import (
 from monai.visualize import plot_2d_or_3d_image
 
 
-def main(tempdir):
+def main(tempdir, load_pretrained_ckpt=False):
     monai.config.print_config()
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
@@ -59,14 +60,13 @@ def main(tempdir):
 
     # define path
     data_file_base_dir = (
-        "/home/canz/Projects/MONAI_detection/model_zoo_workspace/BTCV/liver"
+        "/home/canz/Projects/MONAI_detection/model_zoo_workspace/BTCV/spleen"
     )
     data_list_file_path = (
         "/home/canz/Projects/MONAI_detection/model_zoo_workspace/BTCV/dataset_0.json"
     )
 
-    pretrain_bool = True
-    if pretrain_bool:
+    if load_pretrained_ckpt:
         save_model = "./models/model_transfer.pt"
     else:
         save_model = "./models/model_btcv.pt"
@@ -149,7 +149,9 @@ def main(tempdir):
 
 
 if __name__ == "__main__":
-    # parser = argparse.ArgumentParser(description="Run an ensemble train task using bundle.")
-    # parser.add_argument("--bundle_root", default="", type=str, help="root bundle dir")
+    parser = argparse.ArgumentParser(description="Run a train task.")
+    parser.add_argument("--load_pretrained_ckpt",action='store_true', help="whether to load pretrained checkpoint from model zoo")
+    
+    args = parser.parse_args()
     with tempfile.TemporaryDirectory() as tempdir:
-        main(tempdir)
+        main(tempdir, args.load_pretrained_ckpt)

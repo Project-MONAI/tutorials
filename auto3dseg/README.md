@@ -52,9 +52,9 @@ datalist = {
 }
 ```
 
-### Framework Demo
+### Framework Usage
 
-### Component Demo
+### Component Usage
 
 - [Data analyzer](tutorials/data_analyzer.ipynb)
 - Algorithm generation

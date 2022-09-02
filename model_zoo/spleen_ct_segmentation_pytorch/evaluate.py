@@ -9,12 +9,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
 import logging
 import os
 import sys
 import tempfile
 from glob import glob
-import argparse
 
 import monai
 import nibabel as nib
@@ -59,12 +59,8 @@ def main(tempdir, load_pretrained_ckpt=False):
     torch.backends.cudnn.benchmark = True
 
     # define path
-    data_file_base_dir = (
-        "./data/spleen"
-    )
-    data_list_file_path = (
-        "./data/dataset_0.json"
-    )
+    data_file_base_dir = "./data/spleen"
+    data_list_file_path = "./data/dataset_0.json"
 
     if load_pretrained_ckpt:
         save_model = "./models/model_transfer.pt"
@@ -150,7 +146,11 @@ def main(tempdir, load_pretrained_ckpt=False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run a train task.")
-    parser.add_argument("--load_pretrained_ckpt",action='store_true', help="whether to load pretrained checkpoint from model zoo")
+    parser.add_argument(
+        "--load_pretrained_ckpt",
+        action="store_true",
+        help="whether to load pretrained checkpoint from model zoo",
+    )
 
     args = parser.parse_args()
     with tempfile.TemporaryDirectory() as tempdir:

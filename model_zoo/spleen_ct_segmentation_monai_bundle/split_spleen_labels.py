@@ -41,7 +41,8 @@ for path, subdirs, files in os.walk(src_label):
         mask[mask != 1] = 0
         if (mask == 1).sum() != 0:
             nib.save(
-                nib.Nifti1Image(mask, affine), os.path.join(dst_Spleen, file),
+                nib.Nifti1Image(mask, affine),
+                os.path.join(dst_Spleen, file),
             )
 
         # mask = label.copy()

@@ -39,8 +39,6 @@ Please refer to [changelog.md](docs/changelog.md) for details and release histor
 ## Get Started
 The user needs to provide the following data root and data list as minimum input.
 
-# Example Usage
-
 ```python
 dataroot = '/dataset'
 datalist = {

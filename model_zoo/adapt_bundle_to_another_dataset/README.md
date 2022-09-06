@@ -14,7 +14,8 @@ Step 1: Download BTCV dataset RawData.zip following the instruction in https://g
 
 Step 2: Download the the json file for data splits in https://github.com/Project-MONAI/tutorials/blob/main/3d_segmentation/swin_unetr_btcv_segmentation_3d.ipynb, and save it to `./data/dataset_0.json`.
 
-Step 3: The labels in BTCV dataset contains 13 organs. We split the labels and extract spleen label out. This is done by running `python ./split_spleen_labels.py`.
+Step 3: The segmentation labels in BTCV dataset contain 13 organs. Therefore there are 14 intensity levels in the label images.
+In this experiment, we focus on spleen only, which has intensity = 1 in the label images. We split the labels and create binary spleen masks by running `python ./split_spleen_labels.py`.
 
 Step 4: `cp -avr ./data/RawData/Training/img ./data/spleen/imagesTr`
 

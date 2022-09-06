@@ -36,6 +36,16 @@ v0.1.0 was released in 9/12/2022:
 
 Please refer to [changelog.md](docs/changelog.md) for details and release history.
 
+## Installation
+
+**Auto3DSeg** is a GPU based application. The minimum requirement is a single GPU with more than 16GB of RAM.
+
+**Auto3DSeg** is a direct application of the MONAI library. To use **Auto3DSeg**, MONAI needs to be installed following the [official instructions](https://docs.monai.io/en/stable/installation.html). Alternatively, user can run scripts inside the [MONAI docker container](https://hub.docker.com/r/projectmonai/monai). Meanwhile, additional Python libraries need to be installed as well with the following command.
+
+```bash
+pip install nibabel==4.0.2 fire==0.4.0 scikit-image==0.19.3
+```
+
 ## Get Started
 The user needs to provide the following data root and data list for a new task as minimum input.
 

@@ -64,7 +64,7 @@ datalist = {
 
 ### Pipeline Usage
 
-
+We demonstrate the entire pipeline with all necessary componets in the [tutorial notebooks](notebooks/pipeline.ipynb).
 
 ### Component Usage
 

@@ -50,7 +50,7 @@ pip install nibabel==4.0.2 fire==0.4.0 scikit-image==0.19.3
 
 We offer users different ways to use **Auto3DSeg** to suit their needs.
 
-### Run with Minimal Input
+### 1. Run with Minimal Input
 
 The user needs to provide the following data root and data list for a new task as minimum input.
 
@@ -67,7 +67,7 @@ datalist = {
 }
 ```
 
-And user can futher utilize the following command to launch the pipeline.
+And user can futher utilize the following simple command to launch the pipeline.
 
 ```bash
 CONFIG="tasks/task_x/input.yaml"
@@ -82,18 +82,23 @@ python run_auto3dseg.py  --input "${CONFIG}" \
                          --ensemble
 ```
 
-### Run with Components
+### 2. Run with Components
 
-We demonstrate the entire pipeline with all necessary componets in the [tutorial notebooks](notebooks/pipeline.ipynb). For high-level usage, we provide a simple API call as shown in the example.
+We demonstrate the entire pipeline with all necessary componets in the [tutorial notebooks](notebooks/pipeline.ipynb). And each component can be individually used for different purposes. And functions/methods in the components can be customized by users.
 
 - [Data analyzer](notebooks/data_analyzer.ipynb)
+	- Bring-Your-Own-Components (BYOC)
 - Algorithm generation
 - Unified algorithm API
 - Model training, validation, and inference
+	- Customized training options
+	- BYOC
 - Hyper-parameter optimization
+	- BYOC
 - Model ensemble
+	- BYOC
 
-### Run with Customization / Bring-Your-Own-Algorithm (BYOA)
+### 3. Run with Customization / Bring-Your-Own-Algorithm (BYOA)
 
 We also give users the option to bring their own segmentation algorithm to **Auto3DSeg**. Users can add custom algorithms or custom algorithm templates.
 
@@ -104,6 +109,11 @@ Some benchmark results of public datasets are described in the [tasks](tasks) fo
 ## FAQ
 
 Please refer to [FAQ](docs/faq.md) for frequently asked questions.
+
+## Work-in-Progress
+
+- [ ] A
+- [ ] B
 
 ## Contributing
 

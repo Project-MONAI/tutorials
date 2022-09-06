@@ -44,8 +44,8 @@ Actual Model Input: 96 x 96 x 96
 ## Modify ./spleen_ct_segmentation/configs/evaluate.json
 | Old json config | Updated json config |
 | --- | --- |
-| (Add to json file)| "test_datalist": "$monai.data.load_decathlon_datalist(@data_list_file_path, is_segmentation=True, data_list_key='validation', base_dir=@data_file_base_dir)", |
-| (Add to json file)| "validate#dataset": {"_target_": "Dataset","data": "$@test_datalist","transform": "@validate#preprocessing"},|
+| (Add a new line to the json file)| "test_datalist": "$monai.data.load_decathlon_datalist(@data_list_file_path, is_segmentation=True, data_list_key='validation', base_dir=@data_file_base_dir)", |
+| (Add a new line to the json file)| "validate#dataset": {"_target_": "Dataset","data": "$@test_datalist","transform": "@validate#preprocessing"},|
 
 
 ## Scores

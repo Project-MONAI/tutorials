@@ -64,7 +64,20 @@ datalist = {
 
 ### Pipeline Usage
 
-We demonstrate the entire pipeline with all necessary componets in the [tutorial notebooks](notebooks/pipeline.ipynb).
+We demonstrate the entire pipeline with all necessary componets in the [tutorial notebooks](notebooks/pipeline.ipynb). For high-level usage, we provide a simple API call as shown in the example.
+
+```bash
+CONFIG="tasks/task_x/input.yaml"
+WORKDIR="tasks/task_x"
+
+python run_auto3dseg.py  --input "${CONFIG}" \
+                         --workdir "${WORKDIR}" \
+                         --analyze \
+                         --generation \
+                         --train \
+                         --hpo \
+                         --ensemble
+```
 
 ### Component Usage
 

@@ -7,9 +7,9 @@ root_dir = "./data"
 
 src_label = os.path.join(root_dir, "RawData/Training/label")
 
-dst_Spleen = os.path.join(root_dir, "spleen/labelsTr")
+dst_Spleen = os.path.join(root_dir, "btcv_spleen/labelsTr")
 
-os.makedirs(os.path.join(root_dir, "spleen"), exist_ok=True)
+os.makedirs(os.path.join(root_dir, "btcv_spleen"), exist_ok=True)
 os.makedirs(dst_Spleen, exist_ok=True)
 
 for path, subdirs, files in os.walk(src_label):

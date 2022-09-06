@@ -17,7 +17,7 @@ Step 2: Download the the json file for data splits in https://github.com/Project
 Step 3: The segmentation labels in BTCV dataset contain 13 organs. Therefore there are 14 intensity levels in the label images.
 In this experiment, we focus on spleen only, which has intensity = 1 in the label images. We split the labels and create binary spleen masks by running `python ./split_spleen_labels.py`.
 
-Step 4: `cp -avr ./data/RawData/Training/img ./data/spleen/imagesTr`
+Step 4: `cp -avr ./data/RawData/Training/img ./data/btcv_spleen/imagesTr`
 
 ## Download example monai bundle from model-zoo
 ```
@@ -34,7 +34,7 @@ Actual Model Input: 96 x 96 x 96
 | Old json config | Updated json config |
 | --- | --- |
 | "bundle_root": "/workspace/data/tutorials/modules/bundle/spleen_segmentation", | "bundle_root": "./spleen_ct_segmentation", |
-| "dataset_dir": "/workspace/data/Task09_Spleen",| "data_file_base_dir": "./data/spleen", |
+| "dataset_dir": "/workspace/data/Task09_Spleen",| "data_file_base_dir": "./data/btcv_spleen", |
 | "images": "$list(sorted(glob.glob(@dataset_dir + '/imagesTr/*.nii.gz')))",| "data_list_file_path": "./data/dataset_0.json", |
 | "labels": "$list(sorted(glob.glob(@dataset_dir + '/labelsTr/*.nii.gz')))",| "train_datalist": "$monai.data.load_decathlon_datalist(@data_list_file_path, is_segmentation=True, data_list_key='training', base_dir=@data_file_base_dir)", |
 | (In "train#dataset",) "data": "$[{'image': i, 'label': l} for i, l in zip(@images[:-9], @labels[:-9])]",| "data": "$@train_datalist[: int(0.8 * len(@train_datalist))]", |

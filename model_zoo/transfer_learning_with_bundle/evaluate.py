@@ -59,7 +59,7 @@ def main(tempdir, load_pretrained_ckpt=False):
     torch.backends.cudnn.benchmark = True
 
     # define path
-    data_file_base_dir = "./data/spleen"
+    data_file_base_dir = "./data/btcv_spleen"
     data_list_file_path = "./data/dataset_0.json"
 
     if load_pretrained_ckpt:

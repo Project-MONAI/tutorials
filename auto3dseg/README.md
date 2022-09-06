@@ -47,6 +47,11 @@ pip install nibabel==4.0.2 fire==0.4.0 scikit-image==0.19.3
 ```
 
 ## Get Started
+
+We offer users different ways to use **Auto3DSeg** to suit their needs.
+
+### Run with Minimal Input
+
 The user needs to provide the following data root and data list for a new task as minimum input.
 
 ```python
@@ -62,7 +67,7 @@ datalist = {
 }
 ```
 
-### Run with Minimal Input
+And user can futher utilize the following command to launch the pipeline.
 
 ```bash
 CONFIG="tasks/task_x/input.yaml"

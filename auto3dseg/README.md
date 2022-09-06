@@ -83,6 +83,7 @@ python run_auto3dseg.py  --input "${CONFIG}" \
 
 - [Data analyzer](notebooks/data_analyzer.ipynb)
 - Algorithm generation
+- BYOW
 - Unified algorithm API
 - Model training, validation, and inference
 - Hyper-parameter optimization

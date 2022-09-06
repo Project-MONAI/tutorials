@@ -44,35 +44,3 @@ for path, subdirs, files in os.walk(src_label):
                 nib.Nifti1Image(mask, affine),
                 os.path.join(dst_Spleen, file),
             )
-
-        # mask = label.copy()
-        # mask[mask != 2] = 0
-        # if (mask == 2).sum() != 0:
-        #     mask[mask == 2] = 1
-        # 	nib.save(nib.Nifti1Image(mask, affine), os.path.join(dst_Right_Kidney, file))
-
-        # mask = label.copy()
-        # mask[mask != 3] = 0
-        # if (mask == 3).sum() != 0:
-        #     mask[mask == 3] = 1
-        # 	nib.save(nib.Nifti1Image(mask, affine), os.path.join(dst_Left_Kidney, file))
-
-        # mask = label.copy()
-        # mask[mask != 6] = 0
-        # if (mask == 6).sum() != 0:
-        #     mask[mask == 6] = 1
-        # 	nib.save(nib.Nifti1Image(mask, affine), os.path.join(dst_Pancreas, file))
-
-        # mask = label.copy()
-        # mask[mask != 5] = 0
-        # if (mask == 5).sum() != 0:
-        #     mask[mask == 5] = 1
-        #     nib.save(
-        #         nib.Nifti1Image(mask, affine), os.path.join(dst_Liver, file),
-        #     )
-
-        # mask = label.copy()
-        # mask[mask != 4] = 0
-        # if (mask == 4).sum() != 0:
-        #     mask[mask == 4] = 1
-        # 	nib.save(nib.Nifti1Image(mask, affine), os.path.join(dst_Gallbladder, file))

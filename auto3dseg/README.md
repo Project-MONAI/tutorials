@@ -62,9 +62,7 @@ datalist = {
 }
 ```
 
-### Pipeline Usage
-
-We demonstrate the entire pipeline with all necessary componets in the [tutorial notebooks](notebooks/pipeline.ipynb). For high-level usage, we provide a simple API call as shown in the example.
+### Run with Minimal Input
 
 ```bash
 CONFIG="tasks/task_x/input.yaml"
@@ -79,15 +77,20 @@ python run_auto3dseg.py  --input "${CONFIG}" \
                          --ensemble
 ```
 
-### Component Usage
+### Run with Components
+
+We demonstrate the entire pipeline with all necessary componets in the [tutorial notebooks](notebooks/pipeline.ipynb). For high-level usage, we provide a simple API call as shown in the example.
 
 - [Data analyzer](notebooks/data_analyzer.ipynb)
 - Algorithm generation
-- BYOW
 - Unified algorithm API
 - Model training, validation, and inference
 - Hyper-parameter optimization
 - Model ensemble
+
+### Run with Customization / Bring-Your-Own-Algorithm (BYOA)
+
+We also give users the option to bring their own segmentation algorithm to **Auto3DSeg**. Users can add custom algorithms or custom algorithm templates.
 
 ## Benchmarks
 

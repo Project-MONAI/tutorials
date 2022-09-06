@@ -66,7 +66,7 @@ datalist = {
 
 ### Component Usage
 
-- [Data analyzer](tutorials/data_analyzer.ipynb)
+- [Data analyzer](notebooks/data_analyzer.ipynb)
 - Algorithm generation
 - Unified algorithm API
 - Model training, validation, and inference

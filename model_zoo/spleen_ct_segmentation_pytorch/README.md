@@ -1,5 +1,5 @@
 # Description
-Load pre-trained model from MONAI model-zoo with pytorch and train it on a new dataset.
+Load the pre-trained weights from a MONAI model-zoo model and execute the transfer-learning in a typical PyTroch training program based on it.
 
 # Overview
 This tutorial shows how to load a pretrained U-net from MONAI model-zoo and train it on BTCV dataset using pytorch. The pretrained U-net was trained on volumetric (3D) segmentation of CT spleen from MSD dataset.
@@ -11,7 +11,7 @@ The description of data and data preparation can be found in [spleen_ct_segmenta
 The pretrained model is from MONAI model-zoo spleen_ct_segmentation.
 It was trained using the runner-up [1] awarded pipeline of the "Medical Segmentation Decathlon Challenge 2018" using the UNet architecture [2] with 32 training images and 9 validation images.
 
-It is loaded with the following python code, which can be found in `train.py`.
+It can automatically download the bundle and load the model with the following code, which can be found in `train.py`.
 ```
 import monai
 pretrained_model = monai.bundle.load(

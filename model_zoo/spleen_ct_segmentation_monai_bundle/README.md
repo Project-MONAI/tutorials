@@ -1,5 +1,5 @@
 # Description
-Adapt a bundle to another dataset
+Adapt a bundle to another dataset.
 
 # Overview
 This tutorial shows how to adapt an example monai bundle from MONAI model-zoo to a new dataset.

@@ -37,7 +37,7 @@ For more information please check out [the installation guide](https://docs.mona
 Check all possible options
 
 ```bash
-python ./easy_integrate_bundle.py -h
+python ./ensemble.py -h
 ```
 ### Get started
 1. Prepare your bundle.
@@ -73,7 +73,7 @@ python ./easy_integrate_bundle.py -h
 3. Run the script. Make sure `bundle_root_path` and `data_root_path` is correct.
 
 ```bash
-python easy_integrate_bundle.py --bundle_root bundle_root_path --dataset_dir data_root_path
+python ensemble.py --bundle_root bundle_root_path --dataset_dir data_root_path
 --ensemble Mean
 ```
 

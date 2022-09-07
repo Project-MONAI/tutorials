@@ -1,5 +1,5 @@
 # Description
-Load the pre-trained weights from a MONAI model-zoo model and execute the transfer-learning in a typical PyTroch training program based on it.
+Load the pre-trained weights from a MONAI model-zoo model and execute the transfer-learning in a typical PyTorch training program based on it.
 
 # Overview
 This tutorial shows how to load a pretrained U-net from MONAI model-zoo and train it on BTCV dataset using pytorch. The pretrained U-net was trained on volumetric (3D) segmentation of CT spleen from MSD dataset.

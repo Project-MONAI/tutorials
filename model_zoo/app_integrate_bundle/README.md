@@ -68,7 +68,7 @@ python ./ensemble.py -h
         ]
     }
     ```
-    The data in training will random split into `n_splits` which you can specifiy with `--n_splits xx`
+    The data in training will random split into `n_splits` which you can specify with `--n_splits xx`
 
 3. Run the script. Make sure `bundle_root_path` and `data_root_path` is correct.
 

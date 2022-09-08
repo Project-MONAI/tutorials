@@ -66,7 +66,7 @@ User needs to define the modality of data. Currently **Auto3DSeg** supports both
 python run_auto3dseg.py --input "task.yaml"
 ```
 
-An example with detailed description is discussed in this [tutorial](docs/run_with_minimal_input.md).
+The Python script **run_auto3dseg.py** can be found [here](scripts/run_auto3dseg.py). An example with detailed description is discussed in this [tutorial](docs/run_with_minimal_input.md).
 
 ### 2. Run with Components
 

@@ -1,6 +1,10 @@
 ## Run with Minimal Input
 
-The user needs to provide the following data list (a ".json" file) for a new task and the data root. The typical data list is shown as follows.
+Here are steps to quickly launch **Auto3DSeg** for general medical image segmentation.
+
+**Step 0.** Download public data or prepare internal data in a custom data root.
+
+**Step 1.** Provide the following data list (a ".json" file) for a new task and the data root. The typical data list is shown as follows.
 
 ```
 {

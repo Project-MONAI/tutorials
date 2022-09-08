@@ -94,7 +94,6 @@ We demonstrate the entire pipeline with all necessary componets in the [tutorial
 	- Customized training options
 	- BYOC
 - Hyper-parameter optimization
-	- BYOC
 - Model ensemble
 	- BYOC
 

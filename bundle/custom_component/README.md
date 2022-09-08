@@ -11,6 +11,8 @@ export PYTHONPATH=$PYTHONPATH:"<path to 'custom_component/scripts'>"
 And please make sure the folder `custom_component/scripts` is a valid python module (it has a `__init__.py` file in the folder).
 
 Override the `train` config with the customized `transform` and execute training:
-```
-python -m monai.bundle run training --meta_file <spleen_configs_path>/metadata.json --config_file "['<spleen_configs_path>/train.json','configs/custom_train.json']" --logging_file <spleen_configs_path>/logging.conf
+```bash
+python -m monai.bundle run training --meta_file <spleen_configs_path>/metadata.json \
+    --config_file "['<spleen_configs_path>/train.json','configs/custom_train.json']" \
+    --logging_file <spleen_configs_path>/logging.conf
 ```

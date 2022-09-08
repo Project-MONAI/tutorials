@@ -1,4 +1,4 @@
-### Run with Minimal Input
+## Run with Minimal Input
 
 The user needs to provide the following data list (a ".json" file) for a new task and the data root. The typical data list is shown as follows.
 
@@ -43,3 +43,4 @@ The user needs to provide the following data list (a ".json" file) for a new tas
     ]
 }
 ```
+

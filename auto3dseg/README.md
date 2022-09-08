@@ -52,7 +52,7 @@ We offer users different ways to use **Auto3DSeg** to suit their needs.
 
 ### 1. Run with Minimal Input
 
-The user needs to provide the following data list (a ".json" file) for a new task and the data root. The typical data list is shown as follows. Once the data list is generated, user can create a "task.yaml" file as the minimum input of **Auto3DSeg**.
+The user needs to provide a data list (".json" file) for the new task and data root. A typical data list is as this [example](tasks/msd/Task05_Prostate/msd_task05_prostate_folds.json). After creating the data list, the user can create a simple "task.yaml" file (shown below) as the minimum input for **Auto3DSeg**. And user needs to define the modality of data. Currently **Auto3DSeg** supports both CT and MRI (single- or multi-modality MRI).
 
 ```
 modality: CT
@@ -60,7 +60,7 @@ datalist: "./task.json"
 dataroot: "/workspace/data/task"
 ```
 
-And user can futher utilize the following simple command to launch the pipeline.
+user can futher utilize the following simple bash command to launch the pipeline.
 
 ```bash
 python run_auto3dseg.py --input "task.yaml"

@@ -43,4 +43,3 @@ The user needs to provide the following data list (a ".json" file) for a new tas
     ]
 }
 ```
-

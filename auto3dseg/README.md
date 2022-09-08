@@ -52,63 +52,21 @@ We offer users different ways to use **Auto3DSeg** to suit their needs.
 
 ### 1. Run with Minimal Input
 
-The user needs to provide the following data list (a ".json" file) for a new task and the data root. The typical data list is shown as follows.
-
-```
-{
-    "training": [
-        {
-            "fold": 0,
-            "image": "image_001.nii.gz",
-            "label": "label_001.nii.gz"
-        },
-        {
-            "fold": 0,
-            "image": "image_002.nii.gz",
-            "label": "label_002.nii.gz"
-        },
-        {
-            "fold": 1,
-            "image": "image_003.nii.gz",
-            "label": "label_001.nii.gz"
-        },
-        {
-            "fold": 2,
-            "image": "image_004.nii.gz",
-            "label": "label_002.nii.gz"
-        },
-        {
-            "fold": 3,
-            "image": "image_005.nii.gz",
-            "label": "label_003.nii.gz"
-        },
-        {
-            "fold": 4,
-            "image": "image_006.nii.gz",
-            "label": "label_004.nii.gz"
-        }
-    ],
-    "testing": [
-        {
-            "image": "image_010.nii.gz"
-        }
-    ]
-}
-```
-
-Once the data list is generated, user can create a "task.yaml" file as the minimum input of **Auto3DSeg**.
+The user needs to provide the following data list (a ".json" file) for a new task and the data root. The typical data list is shown as follows. Once the data list is generated, user can create a "task.yaml" file as the minimum input of **Auto3DSeg**.
 
 ```
 modality: CT
-datalist: "./task_x_folds.json"
-dataroot: "/workspace/data/task_x_folds"
+datalist: "./task.json"
+dataroot: "/workspace/data/task"
 ```
 
 And user can futher utilize the following simple command to launch the pipeline.
 
 ```bash
-python run_auto3dseg.py  --input "task.yaml"
+python run_auto3dseg.py --input "task.yaml"
 ```
+
+An example with detailed description is discussed in this [tutorial](docs/run_with_minimal_input.md).
 
 ### 2. Run with Components
 

@@ -47,4 +47,3 @@ Here are steps to quickly launch **Auto3DSeg** for general medical image segment
     ]
 }
 ```
-

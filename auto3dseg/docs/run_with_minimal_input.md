@@ -59,3 +59,15 @@ if os.path.exists(root):
     ]
 }
 ```
+
+**Step 2.** Prepare "input.yaml" with necessary information as follows.
+
+```
+modality: CT
+datalist: "./task.json"
+dataroot: "/workspace/data/task"
+```
+
+**Step 3.** Get **run_auto3dseg.py** [here](../scripts).
+
+**Step 4.** Get **run_auto3dseg.py** [here](../scripts).

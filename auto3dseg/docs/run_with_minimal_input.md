@@ -2,7 +2,11 @@
 
 Here are steps to quickly launch **Auto3DSeg** for general medical image segmentation.
 
-**Step 0.** Download public data or prepare internal data in a custom data root.
+**Step 0.** Download public data or prepare internal data in a custom data root. For data from [Medical Segmentation Decathlon](http://medicaldecathlon.com/) (MSD), user can use the following Python script to download it.
+
+```python
+
+```
 
 **Step 1.** Provide the following data list (a ".json" file) for a new task and the data root. The typical data list is shown as follows.
 

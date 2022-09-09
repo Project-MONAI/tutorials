@@ -102,6 +102,7 @@ Please refer to [FAQ](docs/faq.md) for frequently asked questions.
 
 - [ ] data analysis with multi-modal data with different spacing across modalities
 - [ ] model training/inference with multi-modal data with different spacing across modalities
+- [ ] SwinUNERT with small input patch size
 
 ## Contributing
 

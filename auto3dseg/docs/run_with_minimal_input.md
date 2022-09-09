@@ -76,3 +76,94 @@ dataroot: "/workspace/data/task"
 python run_auto3dseg.py --input "task.yaml"
 ```
 
+## Input
+
+A typical example of an input folder structure with all necessary components is as follows. Components can be located anywhere in the machine as long as the paths in **task.yaml** are correct.
+
+```
+./Task/
+├─ Data/
+├─ task.json
+└─ task.yaml
+```
+
+## Output
+
+When the pipeline finishes, all output files will be saved in the directory "./workdir" by default. And the output folder structure is shown as follows.
+
+```
+./Task/
+├── Data/
+├── task.json
+├── task.yaml
+└── workdir/
+    ├── datastats.yaml
+    ├── algorithm_templates
+    │   ├── dints
+    │   ├── segresnet
+    │   ├── segresnet2d
+    │   ├── swinunetr
+    ├── dints_0
+    │   ├── configs
+    │   ├── model_fold0
+    │   └── scripts
+	...
+    ├── segresnet_0
+    │   ├── configs
+    │   ├── model_fold0
+    │   └── scripts
+	...
+    ├── segresnet2d_0
+    │   ├── configs
+    │   ├── model_fold0
+    │   └── scripts
+	...
+    ├── swinunetr_0
+    │   ├── configs
+    │   ├── model_fold0
+    │   └── scripts
+    ...
+    └── predictions_testing
+```
+
+Several important components are generated along the way.
+
+1."datastats.yaml" is a summary of the dataset from the data analyzer. The summary report includes information such as data size, spacing, intensity distribution, etc., for a better understanding of the dataset. An example "datastats.yaml" is shown as follows.
+
+```
+...
+stats_summary:
+  image_foreground_stats:
+    intensity: {max: 1326.0, mean: 353.68545989990236, median: 339.03333333333336,
+      min: 0.0, percentile_00_5: 94.70366643269857, percentile_10_0: 210.9, percentile_90_0: 518.3333333333334,
+      percentile_99_5: 734.7439453125, stdev: 122.72876790364583}
+  image_stats:
+    channels:
+      max: 2
+      mean: 2.0
+      median: 2.0
+      min: 2
+      percentile: [2, 2, 2, 2]
+      percentile_00_5: 2
+      percentile_10_0: 2
+      percentile_90_0: 2
+      percentile_99_5: 2
+      stdev: 0.0
+    intensity: {max: 2965.0, mean: 307.1866872151693, median: 239.9, min: 0.0, percentile_00_5: 1.5333333333333334,
+      percentile_10_0: 54.53333333333333, percentile_90_0: 649.3333333333334, percentile_99_5: 1044.0333333333333,
+      stdev: 238.39599100748697}
+    shape:
+      max: [384, 384, 24]
+      mean: [317.8666666666667, 317.8666666666667, 18.8]
+...
+```
+
+2."algorithm_templates" is the algorithm templates that used to generate actual algorithm bundle folders with information from data statistics.
+
+3."dints_x", "segresnet_x", "segresnet2d_x", "swinunetr_x" are automically generated 5-fold MONAI bundle. They are self-contained folder, which can be used for model training, inference, validation via executing commands in the README document of each bundle folder. More information can be referred via this [link](https://docs.monai.io/en/latest/bundle.html). And "model_foldx" is where checkpoints after training are saved together with training history and tensorboard event files.
+
+Note: if user would like to run model training paralelly with more computing resource, user can stop the pipeline after bundle folders are generated and executed model training via commands in the README document of each bundle folder.
+
+4."predictions_testing" are the predictions for the test data (with "test" key in the data list) from model ensemble. By default, We select the best model/algorithm from each fold for ensemble.
+
+

@@ -160,7 +160,7 @@ stats_summary:
 
 2."algorithm_templates" is the algorithm templates that used to generate actual algorithm bundle folders with information from data statistics.
 
-3."dints_x", "segresnet_x", "segresnet2d_x", "swinunetr_x" are automically generated 5-fold MONAI bundle. They are self-contained folder, which can be used for model training, inference, validation via executing commands in the README document of each bundle folder. More information can be referred via this [link](https://docs.monai.io/en/latest/bundle.html). And "model_foldx" is where checkpoints after training are saved together with training history and tensorboard event files.
+3."dints_x", "segresnet_x", "segresnet2d_x", "swinunetr_x" are automically generated 5-fold MONAI bundle. They are self-contained folder, which can be used for model training, inference, validation via executing commands in the README document of each bundle folder. More information can be referred via this [link](https://docs.monai.io/en/latest/mb_specification.html). And "model_foldx" is where checkpoints after training are saved together with training history and tensorboard event files.
 
 Note: if user would like to run model training paralelly with more computing resource, user can stop the pipeline after bundle folders are generated and executed model training via commands in the README document of each bundle folder.
 

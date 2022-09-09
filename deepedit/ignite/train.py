@@ -402,7 +402,7 @@ def main():
     parser.add_argument(
         "-i",
         "--input",
-        default="/home/andres/Documents/workspace/Datasets/MSD_datasets/Task09_Spleen",
+        default="/Datasets/MSD_datasets/Task09_Spleen",
     )
     parser.add_argument("-o", "--output", default="output")
 

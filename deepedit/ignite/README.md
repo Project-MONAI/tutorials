@@ -70,6 +70,21 @@ python ./train.py
     --output      deepedit_model/ \
     --epochs      100
 
+# Train a DeepEdit model using multi gpu
+
+# We recommend using the new PyTorch API
+torchrun --standalone \
+       --nnodes=1 \
+       --nproc_per_node=`nvidia-smi -L | wc -l` train.py --input /PATH_TO_DATASET/ --output deepedit_model/ --epochs 100 --multi_gpu True
+
+# Using to-be deprecated PyTorch API
+python -m torch.distributed.launch \
+       --nproc_per_node=`nvidia-smi -L | wc -l` \
+       --nnodes=1 \
+       --node_rank=0 \
+       --master_addr="localhost" \
+       --master_port=1234 train.py --input /PATH_TO_DATASET/ --output deepedit_model/ --epochs 100 --multi_gpu True
+
 # After training to export/save as torch script model
 python ./train.py
     --input       deepedit_model/model.pt \

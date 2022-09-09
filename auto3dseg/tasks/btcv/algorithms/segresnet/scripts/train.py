@@ -164,8 +164,8 @@ def run(config_file: Optional[Union[str, Sequence[str]]] = None, **override):
 #         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
     if torch.cuda.device_count() > 1:
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
-        
-        
+
+
     if softmax:
         post_pred = transforms.Compose(
             [transforms.EnsureType(), transforms.AsDiscrete(argmax=True, to_onehot=output_classes)]

@@ -1,4 +1,4 @@
-# BTCV Dataset For Auto3dseg
+# MSD Dataset Task05 Prostate
 
 This repository provides a benmarking guide and recipe to train the template algorithms, validation performance, and is tested and maintained by NVIDIA.
 

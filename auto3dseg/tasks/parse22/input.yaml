@@ -1,8 +1,0 @@
-name: parse22
-task: segmentation
-
-modality: CT
-datalist: ./datafolds/parse22_folds.json # list of files
-dataroot: /data/parse22 # data location
-
-multigpu: True

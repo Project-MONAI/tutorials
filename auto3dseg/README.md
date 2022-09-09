@@ -91,6 +91,7 @@ We also give users the option to bring their own segmentation algorithm to **Aut
 Some benchmark results of public datasets are described in the [tasks](tasks) folder.
 
 - [Beyond the Cranial Vault (BTCV) Abdomen Dataset](tasks/btcv)
+- [Medical Segmentation Decathlon (MSD) Dataset](tasks/msd/Task05_Prostate)
 
 ## FAQ
 

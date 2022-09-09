@@ -75,4 +75,3 @@ dataroot: "/workspace/data/task"
 ```bash
 python run_auto3dseg.py --input "task.yaml"
 ```
-

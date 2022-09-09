@@ -73,7 +73,7 @@ The Python script **run_auto3dseg.py** can be found [here](scripts/run_auto3dseg
 We demonstrate the entire pipeline with all necessary componets in the [tutorial notebooks](notebooks/pipeline.ipynb). And each component can be individually used for different purposes. And functions/methods in the components can be customized by users.
 
 - [Data analyzer](notebooks/data_analyzer.ipynb)
-	- Bring-Your-Own-Components (BYOC)
+	- [Bring-Your-Own-Components (BYOC)](notebooks/data_analyzer_byoc.ipynb)
 - Algorithm generation
 - Model training, validation, and inference
 	- Customized training options
@@ -98,8 +98,8 @@ Please refer to [FAQ](docs/faq.md) for frequently asked questions.
 
 ## Work-in-Progress
 
-- [ ] data analysis with multi-modal data with different spacing
-- [ ] model training/inference with multi-modal data with different spacing
+- [ ] data analysis with multi-modal data with different spacing across modalities
+- [ ] model training/inference with multi-modal data with different spacing across modalities
 
 ## Contributing
 

@@ -60,7 +60,7 @@ if os.path.exists(root):
 }
 ```
 
-**Step 2.** Prepare "input.yaml" with necessary information as follows.
+**Step 2.** Prepare "task.yaml" with necessary information as follows.
 
 ```
 modality: CT
@@ -68,6 +68,11 @@ datalist: "./task.json"
 dataroot: "/workspace/data/task"
 ```
 
-**Step 3.** Get **run_auto3dseg.py** [here](../scripts).
+**Step 3.** Get Python script **run_auto3dseg.py** [here](../scripts/run_auto3dseg.py).
 
-**Step 4.** Get **run_auto3dseg.py** [here](../scripts).
+**Step 4.** Run the follow bash command to start the pipeline without any further intervetion.
+
+```bash
+python run_auto3dseg.py --input "task.yaml"
+```
+

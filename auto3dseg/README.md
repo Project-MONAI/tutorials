@@ -75,7 +75,6 @@ We demonstrate the entire pipeline with all necessary componets in the [tutorial
 - [Data analyzer](notebooks/data_analyzer.ipynb)
 	- Bring-Your-Own-Components (BYOC)
 - Algorithm generation
-- Unified algorithm API
 - Model training, validation, and inference
 	- Customized training options
 	- BYOC
@@ -99,8 +98,8 @@ Please refer to [FAQ](docs/faq.md) for frequently asked questions.
 
 ## Work-in-Progress
 
-- [ ] run with multi-modal data with different spacing
-- [ ] run with multi-modal data with different spacing
+- [ ] data analysis with multi-modal data with different spacing
+- [ ] model training/inference with multi-modal data with different spacing
 
 ## Contributing
 

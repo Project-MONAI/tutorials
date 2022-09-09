@@ -5,7 +5,15 @@ Here are steps to quickly launch **Auto3DSeg** for general medical image segment
 **Step 0.** Download public data or prepare internal data in a custom data root. For data from [Medical Segmentation Decathlon](http://medicaldecathlon.com/) (MSD), user can use the following Python script to download it.
 
 ```python
+import os
+from monai.apps import download_and_extract
 
+root = "./"
+msd_task = "Task05_Prostate"
+resource = "https://msd-for-monai.s3-us-west-2.amazonaws.com/" + msd_task + ".tar"
+compressed_file = os.path.join(root, msd_task + ".tar")
+if os.path.exists(root):
+    download_and_extract(resource, compressed_file, args.root)
 ```
 
 **Step 1.** Provide the following data list (a ".json" file) for a new task and the data root. The typical data list is shown as follows.

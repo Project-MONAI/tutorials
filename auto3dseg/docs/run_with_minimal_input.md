@@ -75,6 +75,7 @@ dataroot: "/workspace/data/task"
 ```bash
 python run_auto3dseg.py --input "task.yaml"
 ```
+<<<<<<< HEAD
 
 ## Input
 
@@ -165,5 +166,3 @@ stats_summary:
 Note: if user would like to run model training paralelly with more computing resource, user can stop the pipeline after bundle folders are generated and executed model training via commands in the README document of each bundle folder.
 
 4."predictions_testing" are the predictions for the test data (with "test" key in the data list) from model ensemble. By default, We select the best model/algorithm from each fold for ensemble.
-
-

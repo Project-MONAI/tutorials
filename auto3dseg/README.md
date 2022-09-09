@@ -91,14 +91,16 @@ We also give users the option to bring their own segmentation algorithm to **Aut
 
 Some benchmark results of public datasets are described in the [tasks](tasks) folder.
 
+- [Beyond the Cranial Vault (BTCV) Abdomen Dataset](tasks/btcv)
+
 ## FAQ
 
 Please refer to [FAQ](docs/faq.md) for frequently asked questions.
 
 ## Work-in-Progress
 
-- [ ] A
-- [ ] B
+- [ ] run with multi-modal data with different spacing
+- [ ] run with multi-modal data with different spacing
 
 ## Contributing
 

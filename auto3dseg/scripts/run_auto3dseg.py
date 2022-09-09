@@ -60,14 +60,6 @@ def main():
     bundle_generator.generate(work_dir, num_fold=5)
     history = bundle_generator.get_history()
 
-    new_history = []
-    for _j in range(len(history)):
-        for _key, _ in history[_j].items():
-            if "swinunetr_" not in _key and "segresnet_" not in _key:
-                new_history.append(history[_j])
-    history = new_history
-    print(history)
-
     ## model training
     gpus = [_i for _i in range(torch.cuda.device_count())]
 

@@ -75,7 +75,7 @@ We demonstrate the entire pipeline with all necessary componets in the [tutorial
 - [Data analyzer](notebooks/data_analyzer.ipynb)
 	- [Bring-Your-Own-Components (BYOC)](notebooks/data_analyzer_byoc.ipynb)
 - Algorithm generation
-- Model training, validation, and inference
+- [Model training, validation, and inference](docs/bundle.md)
 	- Customized training options
 	- BYOC
 - Hyper-parameter optimization

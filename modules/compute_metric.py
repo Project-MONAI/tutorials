@@ -62,7 +62,7 @@ from monai.utils import string_list_all_gather
 
 def compute(args):
     # generate synthetic data for the example
-    local_rank = int(os.environ["LOCAL_RANK"]) 
+    local_rank = int(os.environ["LOCAL_RANK"])
     if local_rank == 0 and not os.path.exists(args.dir):
         # create 16 random pred, label paris for evaluation
         print(f"generating synthetic data to {args.dir} (this may take a while)")

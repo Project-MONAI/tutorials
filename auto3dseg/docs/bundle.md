@@ -1,1 +1,3 @@
 ## Algorithm Bundle
+
+We provide four default algorithms (DiNTS, 2D/3D SegResNet, SwinUNETR) as baseline algorithms of **Auto3DSeg**. Each algorithm includes adavanced network architecture and well-tuned model training strategies. And the algorithm is formulated in the MONAI bundle format with a self-contained folder structure. The details of MONAI bundle can be found in the following [link](https://docs.monai.io/en/latest/mb_specification.html).

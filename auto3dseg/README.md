@@ -74,10 +74,10 @@ We demonstrate the entire pipeline with all necessary componets in the [tutorial
 
 - [Data analyzer](notebooks/data_analyzer.ipynb)
 	- [Bring-Your-Own-Components (BYOC)](notebooks/data_analyzer_byoc.ipynb)
-- Algorithm generation
+- [Algorithm generation](docs/algorithm_generation.md)
 - [Model training, validation, and inference](docs/bundle.md)
 - Hyper-parameter optimization
-- Model ensemble
+- [Model ensemble](docs/ensemble.md)
 	- BYOC
 
 ### 3. Run with Customization / Bring-Your-Own-Algorithm (BYOA)

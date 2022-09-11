@@ -37,7 +37,6 @@ python -m scripts.train run --config_file "['configs/hyper_parameters.json','con
 torchrun --nnodes=1 --nproc_per_node=8 -m scripts.train run --config_file "['configs/hyper_parameters.json','configs/network.yaml','configs/transforms_train.json','configs/transforms_validate.json']"
 ```
 
-<<<<<<< HEAD
 After model is trained, all related output files are saved in the **models** folder, including model checkpoint **best_metric_model.pt** (with best validation accuracy), and training history files. Among all training history files, **Events** folders contains event files for learning curve visualization via [TensorBoard](https://www.tensorflow.org/tensorboard). The file **accuracy_history.csv** lists details about the model training progress, including training loss, validation accuracy, number of training steps, and training time cost. It can be used as an alternative of TensorBoard events. The file **progress.yaml** records the best validation accuracy and when it was reached.
 
 ### An Quick Way to Try Different Hyper-Parameters
@@ -47,6 +46,4 @@ In each bundle algorithm, we provide an easy API for users to quickly update hyp
 ```bash
 torchrun --nnodes=1 --nproc_per_node=8 -m scripts.train run --config_file "['configs/hyper_parameters.json','configs/network.yaml','configs/transforms_train.json','configs/transforms_validate.json']  --learning_rate 0.001 --num_images_per_batch 6 --optimizer#momentum 0.99"
 ```
-=======
-### Easy to Change Hyper-Parameters
->>>>>>> 506406a09a52cc8dc644f3d4d369d68cf47ac913
+

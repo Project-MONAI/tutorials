@@ -46,4 +46,3 @@ In each bundle algorithm, we provide an easy API for users to quickly update hyp
 ```bash
 torchrun --nnodes=1 --nproc_per_node=8 -m scripts.train run --config_file "['configs/hyper_parameters.json','configs/network.yaml','configs/transforms_train.json','configs/transforms_validate.json']  --learning_rate 0.001 --num_images_per_batch 6 --optimizer#momentum 0.99"
 ```
-

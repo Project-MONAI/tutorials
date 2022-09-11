@@ -64,7 +64,7 @@ During training, the top three models will be selected based on the per-epoch va
 
 The training uses convenient file loading modules and a few intensity and spatial random augmentations using [MONAI](https://github.com/Project-MONAI/MONAI):
 
-- `LoadImaged`, `AddChanneld`, `Orientationd`, `Spacingd`, `ScaleIntensityRanged`
+- `LoadImaged`, `Orientationd`, `Spacingd`, `ScaleIntensityRanged`
 
 Load the image data into the LPS orientation (Left to right, Posterior to anterior, Superior to inferior), with a resolution of 1.25mm x 1.25mm x 5.00mm, and intensity between [-1000.0, 500.0] scaled to [0.0, 1.0].
 

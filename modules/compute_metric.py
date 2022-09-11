@@ -15,25 +15,22 @@ and references in multi-processing based on MONAI's metrics API.
 It can even run on multi-nodes.
 Main steps to set up the distributed data parallel:
 
-- Execute `torch.distributed.launch` to create processes on every node for every process.
+- Execute `torchrun` to create processes on every node for every process.
   It receives parameters as below:
   `--nproc_per_node=NUM_PROCESSES_PER_NODE`
   `--nnodes=NUM_NODES`
-  `--node_rank=INDEX_CURRENT_NODE`
-  `--master_addr="localhost"`
-  `--master_port=1234`
-  For more details, refer to https://github.com/pytorch/pytorch/blob/master/torch/distributed/launch.py.
+  For more details, refer to https://github.com/pytorch/pytorch/blob/master/torch/distributed/run.py.
   Alternatively, we can also use `torch.multiprocessing.spawn` to start program, but it that case, need to handle
   all the above parameters and compute `rank` manually, then set to `init_process_group`, etc.
-  `torch.distributed.launch` is even more efficient than `torch.multiprocessing.spawn`.
+  `torchrun` is even more efficient than `torch.multiprocessing.spawn`.
 - Use `init_process_group` to initialize every process.
 - Partition the saved predictions and labels into ranks for parallel computation.
 - Compute `Dice Metric` on every process, reduce the results after synchronization.
 
 Note:
-    `torch.distributed.launch` will launch `nnodes * nproc_per_node = world_size` processes in total.
+    `torchrun` will launch `nnodes * nproc_per_node = world_size` processes in total.
     Example script to execute this program on a single node with 2 processes:
-    `python -m torch.distributed.launch --nproc_per_node=2 compute_metric.py`
+    `torchrun --nproc_per_node=2 compute_metric.py`
 
 Referring to: https://pytorch.org/tutorials/intermediate/ddp_tutorial.html
 
@@ -65,7 +62,8 @@ from monai.utils import string_list_all_gather
 
 def compute(args):
     # generate synthetic data for the example
-    if args.local_rank == 0 and not os.path.exists(args.dir):
+    local_rank = int(os.environ["LOCAL_RANK"])
+    if local_rank == 0 and not os.path.exists(args.dir):
         # create 16 random pred, label paris for evaluation
         print(f"generating synthetic data to {args.dir} (this may take a while)")
         os.makedirs(args.dir)
@@ -93,7 +91,7 @@ def compute(args):
         even_divisible=False,
     )[dist.get_rank()]
 
-    device = torch.device(f"cuda:{args.local_rank}")
+    device = torch.device(f"cuda:{local_rank}")
     torch.cuda.set_device(device)
     # define transforms for predictions and labels
     transforms = Compose(
@@ -116,7 +114,7 @@ def compute(args):
     result = metric.aggregate().item()
     filenames = string_list_all_gather(strings=filenames)
 
-    if args.local_rank == 0:
+    if local_rank == 0:
         print("mean dice: ", result)
         # generate metrics reports at: output/mean_dice_raw.csv, output/mean_dice_summary.csv, output/metrics.csv
         write_metrics_reports(
@@ -134,16 +132,11 @@ def compute(args):
 
 # usage example(refer to https://github.com/pytorch/pytorch/blob/master/torch/distributed/launch.py):
 
-# python -m torch.distributed.launch --nproc_per_node=NUM_GPUS_PER_NODE
-#        --nnodes=NUM_NODES --node_rank=INDEX_CURRENT_NODE
-#        --master_addr="192.168.1.1" --master_port=1234
-#        compute_metric.py -d DIR_OF_OUTPUT
+# torchrun --standalone --nnodes=NUM_NODES --nproc_per_node=NUM_GPUS_PER_NODE compute_metric.py -d DIR_OF_OUTPUT
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--dir", default="./output", type=str, help="root directory of labels and predictions.")
-    # must parse the command-line argument: ``--local_rank=LOCAL_PROCESS_RANK``, which will be provided by DDP
-    parser.add_argument("--local_rank", type=int)
     args = parser.parse_args()
 
     compute(args=args)

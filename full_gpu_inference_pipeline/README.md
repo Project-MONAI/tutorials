@@ -78,10 +78,7 @@ export PYTHONNOUSERSITE=True
 ```
 If this variable is not exported and similar packages are installed outside your conda environment, your tar file may not contain all the dependencies required for an isolated Python environment.
 Install MONAI and the recommended dependencies, you can also refer to the [installation guide](https://docs.monai.io/en/latest/installation.html) of MONAI.
-```bash
-pip install monai==1.0.0rc1
-```
-Install the dependencies of MONAI:
+
 ```bash
 pip install 'monai[all]'
 pip install cupy

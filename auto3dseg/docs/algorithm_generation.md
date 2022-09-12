@@ -1,5 +1,9 @@
 ## Algorithm Generation
 
+<div align="center"> <img src="../figures/data_analysis.png" width="360"/> </div>
+
+<div align="center"> <img src="../figures/algorithm_generation.png" width="600"/> </div>
+
 The module of algorithm generation is to create self-contained algorithm folders for further model training, inference, and validation with various neural netwrok architecture and training recipes. This module takes input configuration ".yaml" files (shown below), dataset summaries (e.g. "datastats.yaml") from our provided data analysis tools, and algorithm templates. And it outputs different algorithm folders under cross-validation. In the default design, the generated algorithm folders follow the designs of [MONAI bundle](https://docs.monai.io/en/latest/mb_specification.html). User can run model training, inference, and validation inside those self-contained folders.
 
 ```

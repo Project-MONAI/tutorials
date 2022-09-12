@@ -16,7 +16,7 @@ The input configuration files and dataset summaries are critical for algorithm g
 
 ### Python Command
 
-The follow Python scripts shows how to generate algorithm bundles using Python class **BundleGen**.
+The follow Python script shows how to generate algorithm bundles using Python class **BundleGen**.
 
 ```python
 ## algorithm generation

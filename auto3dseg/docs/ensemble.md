@@ -2,7 +2,7 @@
 
 <div align="center"> <img src="../figures/ensemble.png" width="600"/> </div>
 
-To achieve robust predictions for unseen data, the **auto3dseg** provide a model ensemble module to summarize predictions from various trained models. The module firstly ranks checkpoints of different algorithms based on validation accuracy in each fold of ```N```-fold cross-valition, picks the top-```M``` algorithms from each fold, and creates ensemble predictions using ```MN``` checkpoints.
+To achieve robust predictions for unseen data, the **auto3dseg** provide a model ensemble module to summarize predictions from various trained models. The module firstly ranks checkpoints of different algorithms based on validation accuracy in each fold of ```N```-fold cross-valition, picks the top-```M``` algorithms from each fold, and creates ensemble predictions using ```MN``` checkpoints. The default ensemble algorithm averages the probability maps (from softmax/sigmoid activations) of candidate predictions.
 
 ### How to Run Model Ensemble Independently
 

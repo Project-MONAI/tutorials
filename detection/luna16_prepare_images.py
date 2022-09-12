@@ -88,7 +88,7 @@ def main():
     for data_list_key in ["training", "validation"]:
         # create a data loader
         process_data = load_decathlon_datalist(
-            args.orig_data_list_file_path,
+            args.data_list_file_path,
             is_segmentation=True,
             data_list_key=data_list_key,
             base_dir=args.orig_data_base_dir,

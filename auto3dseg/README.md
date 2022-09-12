@@ -76,7 +76,7 @@ We demonstrate the entire pipeline with all necessary componets in the [tutorial
 	- [Bring-Your-Own-Components (BYOC)](notebooks/data_analyzer_byoc.ipynb)
 - Step 2: [Algorithm generation](docs/algorithm_generation.md)
 - Step 3: [Model training, validation, and inference](docs/bundle.md)
-- Step 4: [Hyper-parameter optimization](hpo.md)
+- Step 4: [Hyper-parameter optimization](docs/hpo.md)
 - Step 5: [Model ensemble](docs/ensemble.md)
 	- BYOC
 

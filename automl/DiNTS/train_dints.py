@@ -268,7 +268,7 @@ def main():
             CopyItemsd(keys=["label"], times=1, names=["label4crop"]),
             Lambdad(
                 keys=["label4crop"],
-                func=lambda x: np.concatenate(tuple([ndimage.binary_dilation((x==_k).astype(x.dtype), iterations=48).astype(x.dtype) for _k in range(output_classes)]), axis=0),
+                func=lambda x: np.concatenate(tuple([ndimage.binary_dilation((x==_k).astype(x.dtype), iterations=48).astype(float) for _k in range(output_classes)]), axis=0),
                 overwrite=True,
             ),
             EnsureTyped(keys=["image", "label"]),

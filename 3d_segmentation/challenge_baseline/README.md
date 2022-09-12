@@ -25,7 +25,7 @@ This directory contains a simple baseline method [using MONAI](https://monai.io)
 
 The script is tested with:
 
-- `Ubuntu 18.04` | `Python 3.6` | `CUDA 10.2`
+- `Ubuntu 20.04` | `Python 3.8` | `CUDA 11.7`
 
 On a GPU with [automatic mixed precision support](https://developer.nvidia.com/automatic-mixed-precision):
 
@@ -64,7 +64,7 @@ During training, the top three models will be selected based on the per-epoch va
 
 The training uses convenient file loading modules and a few intensity and spatial random augmentations using [MONAI](https://github.com/Project-MONAI/MONAI):
 
-- `LoadImaged`, `AddChanneld`, `Orientationd`, `Spacingd`, `ScaleIntensityRanged`
+- `LoadImaged`, `Orientationd`, `Spacingd`, `ScaleIntensityRanged`
 
 Load the image data into the LPS orientation (Left to right, Posterior to anterior, Superior to inferior), with a resolution of 1.25mm x 1.25mm x 5.00mm, and intensity between [-1000.0, 500.0] scaled to [0.0, 1.0].
 

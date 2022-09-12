@@ -1,6 +1,6 @@
 <h1 align="center"> Auto3DSeg </h1>
 
-<div align="center"> <img src="figures/workflow.png" width="800"/> </div>
+<div align="center"> <img src="figures/workflow_v1.png" width="800"/> </div>
 
 ## Introduction
 

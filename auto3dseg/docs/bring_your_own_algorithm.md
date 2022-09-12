@@ -52,14 +52,13 @@ class NetAlgo(BundleAlgo):
         return fill_records
 ```
 
-After creating a new template, the user can add the template and start the process by following the tutorial "[Running **Auto3DSeg** with Components](../notebooks/pipeline.ipynb)".
+After creating a new template, the user can add the template and start the process by following the tutorial "[Running **Auto3DSeg** with Components](../notebooks/pipeline.ipynb)". A algorithm template example with 3D U-Net can be found [here](../scripts/byoa/). Then, the user can start the process by following the tutorial "[Running **Auto3DSeg** with Components](../notebooks/pipeline.ipynb)".
 
 ### 2. Create customized algorithm (or template)
 
 Users can also introduce a new algorithm to **Auto3DSeg**. The minimum requirements for the new algorithm are shown below.
 
-1. A "run" function in "scripts/train.py" or an Algo class with train() function to return validation accuracy;
-2. A "infer()" function in the "InferClass" class of the script "scripts/infer.py", which takes image file names as input, and outputs multi-channel probablity maps; or the same Algo class with infer() function;
-3. If needed, a "fill\_template\_config()" function to customize training configuration given different datasets.
+1. A complete [Algorithm class](https://github.com/Project-MONAI/MONAI/blob/dev/monai/auto3dseg/algo_gen.py#L15-L49) with function implementaions;
+2. A complete [Algorithm generation class](https://github.com/Project-MONAI/MONAI/blob/dev/monai/auto3dseg/algo_gen.py#L52-L112) with function implementaions.
 
-A algorithm template example with 3D U-Net can be found [here](../scripts/byoa/). Then, the user can start the process by following the tutorial "[Running **Auto3DSeg** with Components](../notebooks/pipeline.ipynb)".
+Examples of algorithm classes and algorithm generation classes can be found [here](https://github.com/Project-MONAI/MONAI/blob/dev/monai/apps/auto3dseg/bundle_gen.py).

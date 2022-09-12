@@ -1,11 +1,6 @@
 
 ## Model Ensemble
 
-<<<<<<< HEAD
-=======
-To achieve robust predictions of
-
->>>>>>> f83f165e1c2d17f15da67242dca39ec425d93014
 <div align="center"> <img src="../figures/ensemble.png" width="600"/> </div>
 
 To achieve robust predictions for unseen data, the **auto3dseg** provide a model ensemble module to summarize predictions from various trained models. The module firstly ranks checkpoints of different algorithms based on validation accuracy in each fold of ```N```-fold cross-valition, picks the top-```M``` algorithms from each fold, and creates ensemble predictions using ```MN``` checkpoints.
@@ -48,7 +43,6 @@ for algo in ensemble.get_algo_ensemble():
 ```
 
 ### Essential Component for General Algorithm/Mdoel Ensemble
-<<<<<<< HEAD
 
 The essential component for model ensemble is the "infer()" function in the "InferClass" class of the script "scripts/infer.py". After class initializaiton of the "InferClass", "infer()" takes image file names as input, and outputs multi-channel probablity maps. And the "infer.py" of different algorithms are located inside their bundle templates. In general, the ensemble module would work for any algorithms as long as the "infer()" function is provided with proper setup.
 
@@ -78,5 +72,3 @@ class InferClass:
         return batch_data[0]["pred"]
 	...
 ```
-=======
->>>>>>> f83f165e1c2d17f15da67242dca39ec425d93014

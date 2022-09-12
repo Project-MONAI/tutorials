@@ -17,7 +17,7 @@ from monai.bundle import ConfigParser
 from monai.bundle.scripts import _update_args
 
 
-class DintsAlgo(BundleAlgo):
+class UnetAlgo(BundleAlgo):
     def fill_template_config(self, data_stats, **override):
         if data_stats is None:
             return

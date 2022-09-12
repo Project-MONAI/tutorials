@@ -23,7 +23,7 @@ def run(config_file: Union[str, Sequence[str]], ckpt_path: str):
     # edit the config content at runtime for input / output information and lazy instantiation
     datalist = list(sorted(glob.glob("/workspace/data/Task09_Spleen/imagesTs/*.nii.gz")))
     input_data = [{f"{parser['image_key']}": i} for i in datalist]
-    output_dir = "/workspace/data/tutorials/modules/bundle/hybrid_programming/eval"
+    output_dir = "/workspace/data/tutorials/bundle/hybrid_programming/eval"
     parser["input_data"] = input_data
     parser["output_dir"] = output_dir
     parser["inferer"]["roi_size"] = [160, 160, 160]

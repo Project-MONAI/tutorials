@@ -1,7 +1,7 @@
 
 ## Model Ensemble
 
-To achieve robust predictions of 
+To achieve robust predictions of
 
 <div align="center"> <img src="../figures/ensemble.png" width="600"/> </div>
 
@@ -20,4 +20,3 @@ for algo in ensemble.get_algo_ensemble():
 ```
 
 ### Essential Component for General Algorithm/Mdoel Ensemble
-

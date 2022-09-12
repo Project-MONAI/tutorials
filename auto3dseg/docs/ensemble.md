@@ -1,4 +1,3 @@
-
 ## Model Ensemble
 
 <div align="center"> <img src="../figures/ensemble.png" width="600"/> </div>

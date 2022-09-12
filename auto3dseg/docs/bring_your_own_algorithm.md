@@ -62,4 +62,4 @@ Users can also introduce a new algorithm to **Auto3DSeg**. The minimum requireme
 2. A "infer()" function in the "InferClass" class of the script "scripts/infer.py", which takes image file names as input, and outputs multi-channel probablity maps; or the same Algo class with infer() function;
 3. If needed, a "fill\_template\_config()" function to customize training configuration given different datasets.
 
-A algorithm template example can be found [here](../scripts/byoa/). Then, the user can start the process by following the tutorial "[Running **Auto3DSeg** with Components](../notebooks/pipeline.ipynb)".
+A algorithm template example with 3D U-Net can be found [here](../scripts/byoa/). Then, the user can start the process by following the tutorial "[Running **Auto3DSeg** with Components](../notebooks/pipeline.ipynb)".

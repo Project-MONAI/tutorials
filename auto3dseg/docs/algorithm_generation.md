@@ -18,14 +18,6 @@ The input configuration files and dataset summaries are critical for algorithm g
 
 The default algorithms are based on three different networks, [DiNTS](https://openaccess.thecvf.com/content/CVPR2021/html/He_DiNTS_Differentiable_Neural_Network_Topology_Search_for_3D_Medical_Image_CVPR_2021_paper.html), (2D/3D) [SegResNest](https://arxiv.org/abs/1810.11654), and [SwinUNETR](https://arxiv.org/abs/2201.01266), with their well-tuned training recipes.
 
-**DiNTS**
-
-**2D SegResNet**
-
-**3D SegResNet**
-
-**SwinUNETR**
-
 | **Algorithm** | **DiNTS**  | **2D SegResNet**  | **SegResNet**  | **SwinUNETR**  |
 | ------------ | ------------ | ------------ | ------------ | ------------ |
 | **Network** | Densely-connected lattice-based network | U-shape network architecture with 2D residual blocks | U-shape network architecture with 3D residual blocks | U-shape network architecture with Swin-Transformer based encoder |

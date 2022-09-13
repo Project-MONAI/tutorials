@@ -19,7 +19,7 @@ from monai.data import create_test_image_3d
 class InferClass:
     def __init__(self):
         pass
-    
+
     def infer(self, image_file):
         # The inference does nothing but just load the image
         filename = image_file['image']
@@ -32,20 +32,20 @@ class MyMinimalAlgo(Algo):
         self.output_path = output_path
         if isinstance(output_path, str) and not os.path.isdir(output_path):
             os.makedirs(output_path)
-    
+
     def train(self):
         # run the neural network training
         best_metric = {"score": float(np.random.rand(1))}
         ConfigParser.export_config_file(
-            best_metric, 
+            best_metric,
             os.path.join(self.output_path, 'progress.yaml'),
             fmt='yaml'
         )
-    
+
     def get_inferer(self):
         infer_class = InferClass
         return infer_class()
-    
+
     def get_score(self):
         dict_file = ConfigParser.load_config_file(os.path.join(self.output_path, "progress.yaml"))
         return dict_file["score"]
@@ -58,7 +58,7 @@ class MyMinimalAlgo(Algo):
         files = params.pop("files", ".")
         inferer = self.get_inferer()
         return [inferer.infer(f) for f in files]
-    
+
     def get_output_path(self):
         return self.output_path
 

@@ -14,6 +14,20 @@ dataroot: "/workspace/data/task"
 
 The input configuration files and dataset summaries are critical for algorithm generation. For example, the data modality is important for intensity normalization strategies, average image shape determines image region-of-interest (ROI) cropping, and input/output channels decide first/last layers of network.
 
+### Algorithms
+
+The default algorithms are based on three different networks, [DiNTS](https://openaccess.thecvf.com/content/CVPR2021/html/He_DiNTS_Differentiable_Neural_Network_Topology_Search_for_3D_Medical_Image_CVPR_2021_paper.html), (2D/3D) [SegResNest](https://arxiv.org/abs/1810.11654), and [SwinUNETR](https://arxiv.org/abs/2201.01266), with their well-tuned training recipes.
+
+**DiNTS**
+
+**2D SegResNet**
+
+**3D SegResNet**
+
+**SwinUNETR**
+
+For model inference, we use a sliding-window scheme to generate probability maps for output classes/channels through a softmax/sigmoid layer. The overlap for sliding window inference more than 50\% of the window size. The probability map is re-sampled back to its original spacing through each class channel. Next, a segmentation mask is generated using the argmax or thresholding operation on the channel dimension (with or without model ensemble) and saved with the original affine matrix.
+
 ### Python Command
 
 The follow Python script shows how to generate algorithm bundles using Python class **BundleGen**.

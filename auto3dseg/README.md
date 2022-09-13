@@ -68,7 +68,7 @@ User needs to define the modality of data. Currently **Auto3DSeg** supports both
 python -m monai.apps.auto3dseg AutoRunner run --input='./task.yaml'
 ```
 
-The Python script **run_auto3dseg.py** can be found [here](scripts/run_auto3dseg.py). An example with detailed description is discussed in this [tutorial](docs/run_with_minimal_input.md).
+An example with detailed description is discussed in this [tutorial](docs/run_with_minimal_input.md).
 
 ### 2. Run with Components
 

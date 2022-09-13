@@ -93,7 +93,7 @@ Some benchmark results of public datasets are described in the [tasks](tasks) fo
 - [Beyond the Cranial Vault (BTCV) Abdomen Dataset](tasks/btcv)
 - Medical Segmentation Decathlon (MSD) Dataset
 	- [Task05 Prostate](tasks/msd/Task05_Prostate)
-	- [Task09 Spleen](tasks/msd/Task09 Spleen)
+	- [Task09 Spleen](tasks/msd/Task09_Spleen)
 
 ## FAQ
 

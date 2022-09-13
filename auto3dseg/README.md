@@ -72,7 +72,7 @@ The Python script **run_auto3dseg.py** can be found [here](scripts/run_auto3dseg
 
 ### 2. Run with Components
 
-We demonstrate the entire pipeline with all necessary componets in the [tutorial notebooks](notebooks/pipeline.ipynb). And each component can be individually used for different purposes. And functions/methods in the components can be customized by users.
+We demonstrate the entire pipeline with all necessary componets in the [tutorial notebooks](notebooks/auto_runner.ipynb) using the AutoRunner class. And each component can be individually used for different purposes. And functions/methods in the components can be customized by users.
 
 - Step 1: [Data analyzer](notebooks/data_analyzer.ipynb)
 	- [Bring-Your-Own-Components (BYOC)](notebooks/data_analyzer_byoc.ipynb)
@@ -80,7 +80,7 @@ We demonstrate the entire pipeline with all necessary componets in the [tutorial
 - Step 3: [Model training, validation, and inference](docs/bundle.md)
 - Step 4: [Hyper-parameter optimization](docs/hpo.md)
 - Step 5: [Model ensemble](docs/ensemble.md)
-	- [BYOC](docs/ensemble_byoc.md)
+	- [BYOC](notebooks/ensemble_byoc.ipynb)
 
 ### 3. Run with Customization / Bring-Your-Own-Algorithm (BYOA)
 

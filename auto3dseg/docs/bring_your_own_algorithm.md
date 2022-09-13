@@ -61,4 +61,4 @@ Users can also introduce a new algorithm to **Auto3DSeg**. The minimum requireme
 1. A complete [Algorithm class](https://github.com/Project-MONAI/MONAI/blob/dev/monai/auto3dseg/algo_gen.py#L15-L49) with function implementaions;
 2. A complete [Algorithm generation class](https://github.com/Project-MONAI/MONAI/blob/dev/monai/auto3dseg/algo_gen.py#L52-L112) with function implementaions.
 
-Examples of algorithm classes and algorithm generation classes can be found [here](https://github.com/Project-MONAI/MONAI/blob/dev/monai/apps/auto3dseg/bundle_gen.py).
+Examples of algorithm classes and algorithm generation classes can be found [here](scripts/add_new_algo.py).

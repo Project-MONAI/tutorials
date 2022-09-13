@@ -29,25 +29,6 @@
 
 </details>
 
-## What's New
-
-v0.1.0 was released in 9/12/2022:
-
-- Initiaze repository with complete functionalities
-- Add four default algorithms for segmentation
-
-Please refer to [changelog.md](docs/changelog.md) for details and release history.
-
-## Installation
-
-**Auto3DSeg** is a GPU based application. The minimum requirement is a single GPU with more than 16GB RAM, which supports PyTorch version 1.7+.
-
-**Auto3DSeg** is a direct application of the MONAI library. To use **Auto3DSeg**, MONAI needs to be installed following the [official instructions](https://docs.monai.io/en/stable/installation.html). Alternatively, user can run scripts inside the [MONAI docker container](https://hub.docker.com/r/projectmonai/monai). Meanwhile, additional Python libraries need to be installed as well with the following command.
-
-```bash
-pip install nibabel==4.0.2 fire==0.4.0 scikit-image==0.19.3
-```
-
 ## Get Started
 
 We offer users different ways to use **Auto3DSeg** to suit their needs.
@@ -98,40 +79,3 @@ Some benchmark results of public datasets are described in the [tasks](tasks) fo
 ## FAQ
 
 Please refer to [FAQ](docs/faq.md) for frequently asked questions.
-
-## Work-in-Progress
-
-- [ ] data analysis with multi-modal data with different spacing across modalities
-- [ ] model training/inference with multi-modal data with different spacing across modalities
-- [ ] SwinUNERT with small input patch size
-
-## Citation
-
-If you find this project useful in your research, please consider cite:
-
-```bibtex
-@inproceedings{myronenko20183d,
-  title={3D MRI brain tumor segmentation using autoencoder regularization},
-  author={Myronenko, Andriy},
-  booktitle={International MICCAI Brainlesion Workshop},
-  pages={311--320},
-  year={2018},
-  organization={Springer}
-}
-
-@inproceedings{he2021dints,
-  title={Dints: Differentiable neural network topology search for 3d medical image segmentation},
-  author={He, Yufan and Yang, Dong and Roth, Holger and Zhao, Can and Xu, Daguang},
-  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
-  pages={5841--5850},
-  year={2021}
-}
-
-@inproceedings{tang2022self,
-  title={Self-supervised pre-training of swin transformers for 3d medical image analysis},
-  author={Tang, Yucheng and Yang, Dong and Li, Wenqi and Roth, Holger R and Landman, Bennett and Xu, Daguang and Nath, Vishwesh and Hatamizadeh, Ali},
-  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
-  pages={20730--20740},
-  year={2022}
-}
-```

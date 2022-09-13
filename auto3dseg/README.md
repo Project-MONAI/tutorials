@@ -61,7 +61,6 @@ We demonstrate the entire pipeline with all necessary componets in the [tutorial
 - Step 3: [Model training, validation, and inference](docs/bundle.md)
 - Step 4: [Hyper-parameter optimization](docs/hpo.md)
 - Step 5: [Model ensemble](docs/ensemble.md)
-	- [BYOC](notebooks/ensemble_byoc.ipynb)
 
 ### 3. Run with Customization / Bring-Your-Own-Algorithm (BYOA)
 

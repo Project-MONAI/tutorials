@@ -73,7 +73,7 @@ dataroot: "/workspace/data/task"
 **Step 4.** Run the follow bash command to start the pipeline without any further intervetion.
 
 ```bash
-python run_auto3dseg.py --input "task.yaml"
+python -m monai.apps.auto3dseg AutoRunner run --input='./task.yaml'
 ```
 
 ## Input

@@ -55,8 +55,7 @@ An example with detailed description is discussed in this [tutorial](docs/run_wi
 
 We demonstrate the entire pipeline with all necessary componets in the [tutorial notebooks](notebooks/auto_runner.ipynb) using the AutoRunner class. And each component can be individually used for different purposes. And functions/methods in the components can be customized by users.
 
-- Step 1: [Data analyzer](notebooks/data_analyzer.ipynb)
-	- [Bring-Your-Own-Components (BYOC)](notebooks/data_analyzer_byoc.ipynb)
+- Step 1: [Data analyzer](docs/data_analyzer.md)
 - Step 2: [Algorithm generation](docs/algorithm_generation.md)
 - Step 3: [Model training, validation, and inference](docs/bundle.md)
 - Step 4: [Hyper-parameter optimization](docs/hpo.md)

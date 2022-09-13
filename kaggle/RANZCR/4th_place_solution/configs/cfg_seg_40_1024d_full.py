@@ -41,7 +41,6 @@ cfg.train_aug = Compose(
             rotate_range=np.pi / 14.4,
             translate_range=(63, 63),
             scale_range=(0.1, 0.1),
-            as_tensor_output=False,
         ),
         RandSpatialCropd(
             keys=("input", "mask"),

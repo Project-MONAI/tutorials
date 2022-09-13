@@ -77,49 +77,11 @@ Before installing the packages in your conda environment, make sure that you hav
 export PYTHONNOUSERSITE=True
 ```
 If this variable is not exported and similar packages are installed outside your conda environment, your tar file may not contain all the dependencies required for an isolated Python environment.
-Install Pytorch with CUDA 11.3 support. 
-```bash
-pip install torch==1.10.1+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
-```
-Install MONAI and the recommended dependencies.
-```bash
-BUILD_MONAI=1 pip install --no-build-isolation git+https://github.com/Project-MONAI/MONAI#egg=monai
-```
-Then we can verify the installation of MONAI and all its dependencies:
-```bash
-python -c 'import monai; monai.config.print_config()'
-```
-You'll see the output below, which lists the versions of MONAI and relevant dependencies.
+Install MONAI and the recommended dependencies, you can also refer to the [installation guide](https://docs.monai.io/en/latest/installation.html) of MONAI.
 
 ```bash
-MONAI version: 0.8.0+65.g4bd13fe
-Numpy version: 1.21.4
-Pytorch version: 1.10.1+cu113
-MONAI flags: HAS_EXT = True, USE_COMPILED = False
-MONAI rev id: 4bd13fefbafbd0076063201f0982a2af8b56ff09
-MONAI __file__: /usr/local/lib/python3.8/dist-packages/monai/__init__.py
-Optional dependencies:
-Pytorch Ignite version: NOT INSTALLED or UNKNOWN VERSION.
-Nibabel version: 3.2.1
-scikit-image version: 0.19.1
-Pillow version: 9.0.0
-Tensorboard version: NOT INSTALLED or UNKNOWN VERSION.
-gdown version: NOT INSTALLED or UNKNOWN VERSION.
-TorchVision version: NOT INSTALLED or UNKNOWN VERSION.
-tqdm version: NOT INSTALLED or UNKNOWN VERSION.
-lmdb version: NOT INSTALLED or UNKNOWN VERSION.
-psutil version: NOT INSTALLED or UNKNOWN VERSION.
-pandas version: NOT INSTALLED or UNKNOWN VERSION.
-einops version: NOT INSTALLED or UNKNOWN VERSION.
-transformers version: NOT INSTALLED or UNKNOWN VERSION.
-mlflow version: NOT INSTALLED or UNKNOWN VERSION.
-
-For details about installing the optional dependencies, please visit:
-    https://docs.monai.io/en/latest/installation.html#installing-the-recommended-dependencies
-```
-Install the dependencies of MONAI:
-```bash
-pip install nibabel scikit-image pillow tensorboard gdown ignite torchvision itk tqdm lmdb psutil cucim  pandas einops transformers mlflow matplotlib tensorboardX tifffile cupy
+pip install 'monai[all]'
+pip install cupy
 ```
 Next, we should package the conda environment by using `conda-pack` command, which will produce a package of monai.tar.gz. This file contains all the environments needed by the python backend model and is portable. Then put the created monai.tar.gz under the spleen_seg folder, and the config.pbtxt should be set as:
 ```bash

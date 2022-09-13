@@ -142,6 +142,12 @@ This is a simple example of training and deploying a MONAI network with [BentoML
 #### [Ray](./deployment/ray)
 This uses the previous notebook's trained network to demonstrate deployment a web server using [Ray](https://docs.ray.io/en/master/serve/index.html#rayserve).
 
+**experiment management**
+#### [Aim](./experiment_management/spleen_segmentation_aim.ipynb)
+An example of experiment management with [Aim](https://aimstack.io/aim-monai-tutorial/), using 3D spleen segmentation as an example.
+#### [MLFlow](./experiment_management/spleen_segmentation_mlflow.ipynb)
+An example of experiment management with [MLFlow](https://www.mlflow.org/docs/latest/tracking.html), using 3D spleen segmentation as an example.
+
 **federated learning**
 #### [NVFlare](./federated_learning/nvflare)
 The examples show how to train federated learning models with [NVFlare](https://pypi.org/project/nvflare/) and MONAI-based trainers.
@@ -183,8 +189,12 @@ Demonstrates the use of the `ThreadBuffer` class used to generate data batches d
 #### [transform_speed](./acceleration/transform_speed.ipynb)
 Illustrate reading NIfTI files and test speed of different transforms on different devices.
 
+**model_zoo**
+#### [easy_integrate_bundle](./model_zoo/easy_integrate_bundle.py)
+This tutorial shows a straightforward ensemble application to instruct users on how to integrate existing bundles in their own projects. By simply changing the data path and the path where the bundle is located, training and ensemble inference can be performed.
+
 **modules**
-#### [bundle](./modules/bundle)
+#### [bundle](./bundle)
 Get started tutorial and concrete training / inference examples for MONAI bundle features.
 #### [engines](./modules/engines)
 Training and evaluation examples of 3D segmentation based on UNet3D and synthetic dataset with MONAI workflows, which contains engines, event-handlers, and post-transforms. And GAN training and evaluation example for a medical image generative adversarial network. Easy run training script uses `GanTrainer` to train a 2D CT scan reconstruction network. Evaluation script generates random samples from a trained network.

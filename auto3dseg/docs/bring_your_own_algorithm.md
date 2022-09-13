@@ -9,7 +9,7 @@ The easy way to add customized algorithm is through modifying existing [algorith
 ```python
 class NetAlgo(BundleAlgo):
     def fill_template_config(self, data_stats_file, output_path, **kwargs):
-			...
+            ...
             # increase patch_size from [128, 128, 96]
             patch_size = [160, 160, 96]
             max_shape = data_stats["stats_summary#image_stats#shape#max"]
@@ -17,7 +17,7 @@ class NetAlgo(BundleAlgo):
                 max(32, shape_k // 32 * 32) if shape_k < p_k else p_k for p_k, shape_k in zip(patch_size, max_shape)
             ]
 
-			...
+            ...
 
             modality = data_src_cfg.get("modality", "ct").lower()
             spacing = data_stats["stats_summary#image_stats#spacing#median"]
@@ -48,7 +48,7 @@ class NetAlgo(BundleAlgo):
                 "nonzero": True,
                 "channel_wise": True,
             }
-			...
+            ...
         return fill_records
 ```
 

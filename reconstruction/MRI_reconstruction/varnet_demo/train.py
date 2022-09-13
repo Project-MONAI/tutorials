@@ -103,7 +103,7 @@ def trainer(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = VariationalNetworkModel(coil_sens_model, refinement_model, num_cascades=args.num_cascades).to(device)
     print('#model_params:',np.sum([len(p.flatten()) for p in model.parameters()]))
-    
+
     if args.resume_checkpoint:
         model.load_state_dict(torch.load(args.checkpoint_dir))
         print('resume training from a given checkpoint...')
@@ -128,7 +128,7 @@ def trainer(args):
         step = 0
         for batch_data in train_loader:
             input, mask, target, max_value = batch_data["kspace_masked"].to(device), batch_data["mask"][0].to(device), batch_data["reconstruction_rss"].to(device), batch_data["kspace_meta_dict"]["max"]
-            
+
             final_shape = target.shape[-2:]
             max_value = torch.tensor(max_value).unsqueeze(0).to(device)
 
@@ -186,10 +186,10 @@ def trainer(args):
                         roi_center = tuple(i // 2 for i in output.shape[-2:])
                         cropper = SpatialCrop(roi_center=roi_center, roi_size=final_shape)
                         output_crp = cropper(output).unsqueeze(0)
-                        
+
                         outputs.append(output_crp.data.cpu().numpy()[0][0])
                         targets.append(tar.data.cpu().numpy()[0][0])
-                        
+
                     outputs = np.stack(outputs)
                     targets = np.stack(targets)
                     val_ssim.append(skimage_ssim(targets,outputs))

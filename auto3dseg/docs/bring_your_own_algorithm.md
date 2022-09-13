@@ -22,7 +22,7 @@ class NetAlgo(BundleAlgo):
             modality = data_src_cfg.get("modality", "ct").lower()
             spacing = data_stats["stats_summary#image_stats#spacing#median"]
 
-			# change intensity range
+            # change intensity range
             intensity_upper_bound = float(data_stats["stats_summary#image_foreground_stats#intensity#max"])
             intensity_lower_bound = float(data_stats["stats_summary#image_foreground_stats#intensity#min"])
 

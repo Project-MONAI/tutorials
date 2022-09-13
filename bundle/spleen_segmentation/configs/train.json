@@ -4,7 +4,7 @@
         "$import os",
         "$import ignite"
     ],
-    "bundle_root": "/workspace/data/tutorials/modules/bundle/spleen_segmentation",
+    "bundle_root": "/workspace/data/tutorials/bundle/spleen_segmentation",
     "ckpt_dir": "$@bundle_root + '/models'",
     "output_dir": "$@bundle_root + '/eval'",
     "dataset_dir": "/workspace/data/Task09_Spleen",

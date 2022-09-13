@@ -33,7 +33,7 @@ Actual Model Input: 96 x 96 x 96
 ## Modify ./spleen_ct_segmentation/configs/train.json from the downloaded example
 | Old json config | Updated json config |
 | --- | --- |
-| "bundle_root": "/workspace/data/tutorials/modules/bundle/spleen_segmentation", | "bundle_root": "./spleen_ct_segmentation", |
+| "bundle_root": "/workspace/data/tutorials/bundle/spleen_segmentation", | "bundle_root": "./spleen_ct_segmentation", |
 | "dataset_dir": "/workspace/data/Task09_Spleen",| "data_file_base_dir": "./data/btcv_spleen", |
 | "images": "$list(sorted(glob.glob(@dataset_dir + '/imagesTr/*.nii.gz')))",| "data_list_file_path": "./data/dataset_0.json", |
 | "labels": "$list(sorted(glob.glob(@dataset_dir + '/labelsTr/*.nii.gz')))",| "train_datalist": "$monai.data.load_decathlon_datalist(@data_list_file_path, is_segmentation=True, data_list_key='training', base_dir=@data_file_base_dir)", |

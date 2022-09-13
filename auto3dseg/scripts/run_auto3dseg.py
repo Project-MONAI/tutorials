@@ -16,11 +16,8 @@ def main():
     )
     args = parser.parse_args()
 
-    data_src_cfg = args.input
-    cfg = ConfigParser.load_config_file(data_src_cfg)
-
     work_dir = "./work_dir"
-    runner = AutoRunner(work_dir=work_dir, input=cfg)
+    runner = AutoRunner(work_dir=work_dir, input=args.input)
     runner.run()
 
 if __name__ == "__main__":

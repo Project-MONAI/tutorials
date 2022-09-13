@@ -65,7 +65,7 @@ dataroot: "/workspace/data/task"
 User needs to define the modality of data. Currently **Auto3DSeg** supports both CT and MRI (single- or multi-modality MRI). Then user can run the pipeline further from start to finish using the following simple bash command.
 
 ```bash
-python run_auto3dseg.py --input "task.yaml"
+python -m monai.apps.auto3dseg AutoRunner run --input='./task.yaml'
 ```
 
 The Python script **run_auto3dseg.py** can be found [here](scripts/run_auto3dseg.py). An example with detailed description is discussed in this [tutorial](docs/run_with_minimal_input.md).

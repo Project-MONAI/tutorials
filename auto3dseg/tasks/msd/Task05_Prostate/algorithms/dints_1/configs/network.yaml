@@ -1,2 +1,0 @@
-network: {_target_: DiNTS, dints_space: $@dints_space, in_channels: '@input_channels',
-  num_classes: '@output_classes', use_downsample: true}

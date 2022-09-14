@@ -48,7 +48,6 @@ from monai.losses import DiceCELoss
 from monai.networks.nets import DynUNet, UNETR
 from monai.transforms import (
     Activationsd,
-    AddChanneld,
     AsDiscreted,
     Compose,
     LoadImaged,
@@ -59,7 +58,7 @@ from monai.transforms import (
     Resized,
     ScaleIntensityRanged,
     ToNumpyd,
-    ToTensord,
+    ToTensord, EnsureChannelFirstd,
 )
 from monai.utils import set_determinism
 
@@ -98,8 +97,8 @@ def get_network(network, labels, spatial_size):
 def get_pre_transforms(labels, spatial_size):
     t = [
         LoadImaged(keys=("image", "label"), reader="ITKReader"),
+        EnsureChannelFirstd(keys=("image", "label")),
         NormalizeLabelsInDatasetd(keys="label", label_names=labels),
-        AddChanneld(keys=("image", "label")),
         Orientationd(keys=["image", "label"], axcodes="RAS"),
         # This transform may not work well for MR images
         ScaleIntensityRanged(keys="image", a_min=-175, a_max=250, b_min=0.0, b_max=1.0, clip=True),

@@ -50,6 +50,7 @@ from monai.transforms import (
     Activationsd,
     AsDiscreted,
     Compose,
+    EnsureChannelFirstd,
     LoadImaged,
     Orientationd,
     RandFlipd,
@@ -58,7 +59,7 @@ from monai.transforms import (
     Resized,
     ScaleIntensityRanged,
     ToNumpyd,
-    ToTensord, EnsureChannelFirstd,
+    ToTensord,
 )
 from monai.utils import set_determinism
 

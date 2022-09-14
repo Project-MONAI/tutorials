@@ -38,13 +38,11 @@ We have demonstrated preliminary results of public datasets are described in the
 	- [Task05 Prostate](tasks/msd/Task05_Prostate)
 	- [Task09 Spleen](tasks/msd/Task09_Spleen)
 
-## Get Started
-
-### A Two-Minute "Hello-World" Example
+## A Two-Minute "Hello-World" Example
 
 We provide [a two-minute example](notebooks/auto3dseg_hello_world.ipynb) for users to get initial impressions of **Auto3DSeg**.
 
-### Run with different options
+## Run with different options
 
 **Auto3DSeg** offers users different ways to run pipelines that suit their needs.
 

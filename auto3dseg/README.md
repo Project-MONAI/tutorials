@@ -60,6 +60,8 @@ python -m monai.apps.auto3dseg AutoRunner run --input='./task.yaml'
 
 An example with detailed description is discussed in this [tutorial](docs/run_with_minimal_input.md).
 
+#### An "Hello-World" Example
+
 ### 2. Run with Components
 
 We demonstrate the entire pipeline with all necessary componets in the [tutorial notebooks](notebooks/auto_runner.ipynb) using the AutoRunner class. And each component can be individually used for different purposes. And functions/methods in the components can be customized by users.

@@ -24,6 +24,7 @@ from monai.transforms import (
     RandGridPatchd,
     RandRotate90d,
     ScaleIntensityRanged,
+    SplitDimd,
     ToTensord,
 )
 from sklearn.metrics import cohen_kappa_score
@@ -235,9 +236,10 @@ def list_data_collate(batch: collections.abc.Sequence):
     """
 
     for i, item in enumerate(batch):
+        # print(f"{i} = {item['image'].shape=} >> {item['image'].keys=}")
         data = item[0]
         data["image"] = torch.stack([ix["image"] for ix in item], dim=0)
-        data["patch_location"] = torch.stack([ix["patch_location"] for ix in item], dim=0)
+        # data["patch_location"] = torch.stack([ix["patch_location"] for ix in item], dim=0)
         batch[i] = data
     return default_collate(batch)
 
@@ -289,6 +291,7 @@ def main_worker(gpu, args):
                 pad_mode=None,
                 constant_values=255,
             ),
+            SplitDimd(keys=["image"], dim=0, keepdim=False, list_output=True),
             RandFlipd(keys=["image"], spatial_axis=0, prob=0.5),
             RandFlipd(keys=["image"], spatial_axis=1, prob=0.5),
             RandRotate90d(keys=["image"], prob=0.5),
@@ -308,6 +311,7 @@ def main_worker(gpu, args):
                 pad_mode=None,
                 constant_values=255,
             ),
+            SplitDimd(keys=["image"], dim=0, keepdim=False, list_output=True),
             ScaleIntensityRanged(keys=["image"], a_min=np.float32(255), a_max=np.float32(0)),
             ToTensord(keys=["image", "label"]),
         ]

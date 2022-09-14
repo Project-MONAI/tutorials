@@ -1,6 +1,6 @@
 ## Run with Minimal Input
 
-To get initial impressions of **Auto3DSeg**, user can try this [two-minute example](../notebooks/auto3dseg_hello_world.ipynb). The example covers the entire pipeline from start to finish, and can be done in two minutes using a single GPU (GPU RAM >= 12GB).
+To get initial impressions of **Auto3DSeg**, user can try this [two-minute example](../notebooks/auto3dseg_hello_world.ipynb). The example covers the entire pipeline from start to finish, and can be done in two minutes using a single GPU (GPU RAM >= 8GB).
 
 Here are detailed steps to quickly launch **Auto3DSeg** for general medical image segmentation.
 
@@ -123,7 +123,7 @@ When the pipeline finishes, all output files will be saved in the directory "./w
     │   ├── model_fold0
     │   └── scripts
     ...
-    └── predictions_testing
+    └── ensemble_output
 ```
 
 Several important components are generated along the way.

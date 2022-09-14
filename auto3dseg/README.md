@@ -29,7 +29,18 @@
 
 </details>
 
-## Benchmarks
+## Preliminary Results
+
+### Success Stories
+
+- **Auto3DSeg** won 1st place in MICCAI 2022 challenge **[HECKTOR 2022: Head and neck tumor segmentation and outcome prediction in PET/CT images](https://hecktor.grand-challenge.org/)**
+  - 1st place GTVp and GTVn segmentation (Task 1)
+- **Auto3DSeg** won 2nd place in MICCAI 2022 challenge **[INSTANCE22: The 2022 Intracranial Hemorrhage Segmentation Challenge on Non-Contrast head CT (NCCT)](https://instance.grand-challenge.org/)**
+  - 1st place in terms of Dice score
+- **Auto3DSeg** won a top-3 place in MICCAI 2022 challenge **[ISLES'22: Ischemic Stroke Lesion Segmentation Challenge](https://isles22.grand-challenge.org/)**
+  - The final results will announced at MICCAI 2022
+
+### Benchmarks
 
 We have demonstrated preliminary results of public datasets are described in the [tasks](tasks) folder.
 
@@ -40,7 +51,7 @@ We have demonstrated preliminary results of public datasets are described in the
 
 ## A Two-Minute "Hello-World" Example
 
-We provide [a two-minute example](notebooks/auto3dseg_hello_world.ipynb) for users to get initial impressions of **Auto3DSeg**. The example covers the entire pipeline from start to finish, and can be done in two minutes using a single GPU (GPU RAM >= 12GB).
+We provide [a two-minute example](notebooks/auto3dseg_hello_world.ipynb) for users to get initial impressions of **Auto3DSeg**. The example covers the entire pipeline from start to finish, and can be done in two minutes using a single GPU (GPU RAM >= 8GB).
 
 ## Run with different options
 

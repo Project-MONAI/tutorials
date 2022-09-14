@@ -49,7 +49,7 @@ from uuid import uuid4
 import glob
 
 from monai.apps.utils import download_and_extract
-from monai.transforms.utils import convert_to_numpy
+from monai.utils.type_conversion import convert_to_numpy
 
 MEDNIST_CLASSES = ["AbdomenCT", "BreastMRI", "CXR", "ChestCT", "Hand", "HeadCT"]
 
@@ -90,7 +90,7 @@ if __name__ == "__main__":
         print("No valid inputs provided")
         sys.exit(1)
 
-    with httpclient.InferenceServerClient("localhost:7555") as client:
+    with httpclient.InferenceServerClient("localhost:8000") as client:
         image_bytes = b''
         for jpeg_file in jpeg_files:
             with open(jpeg_file, 'rb') as f:

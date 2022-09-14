@@ -28,6 +28,8 @@ def create_report(img_names_list_, report_list_, gt_list_, save_add):
 
 report_file_add= './monai_data/dataset_orig/NLMCXR_reports/ecgen-radiology'
 img_file_add= './monai_data/dataset_orig/NLMCXR_png'
+npy_add= './monai_data/TransChex_openi/'
+
 img_save_add = './monai_data/dataset_proc/images'
 report_train_save_add = './monai_data/dataset_proc/train.csv'
 report_val_save_add = './monai_data/dataset_proc/validation.csv'
@@ -37,15 +39,15 @@ if not os.path.isdir(img_save_add):
     os.makedirs(img_save_add)
 report_files = [f for f in listdir(report_file_add) if isfile(join(report_file_add, f))]
 
-train_data = np.load('./train.npy', allow_pickle=True).item()
+train_data = np.load(npy_add+'train.npy', allow_pickle=True).item()
 train_data_id = train_data['id_GT']
 train_data_gt = train_data['label_GT']
 
-val_data = np.load('./validation.npy', allow_pickle=True).item()
+val_data = np.load(npy_add+'validation.npy', allow_pickle=True).item()
 val_data_id = val_data['id_GT']
 val_data_gt = val_data['label_GT']
 
-test_data = np.load('./test.npy', allow_pickle=True).item()
+test_data = np.load(npy_add+'test.npy', allow_pickle=True).item()
 test_data_id = test_data['id_GT']
 test_data_gt = test_data['label_GT']
 

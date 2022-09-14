@@ -29,6 +29,15 @@
 
 </details>
 
+## Benchmarks
+
+We have demonstrated preliminary results of public datasets are described in the [tasks](tasks) folder.
+
+- [Beyond the Cranial Vault (BTCV) Abdomen Dataset](tasks/btcv)
+- Medical Segmentation Decathlon (MSD) Dataset
+	- [Task05 Prostate](tasks/msd/Task05_Prostate)
+	- [Task09 Spleen](tasks/msd/Task09_Spleen)
+
 ## Get Started
 
 We offer users different ways to use **Auto3DSeg** to suit their needs.
@@ -64,15 +73,6 @@ We demonstrate the entire pipeline with all necessary componets in the [tutorial
 ### 3. Run with Customization / Bring-Your-Own-Algorithm (BYOA)
 
 **Auto3DSeg** also gives users the option to bring their own segmentation algorithm to **Auto3DSeg**. Users can add custom algorithms or custom algorithm templates. The details of adding customized algorithms can be found [here](docs/bring_your_own_algorithm.md).
-
-## Benchmarks
-
-Some benchmark results of public datasets are described in the [tasks](tasks) folder.
-
-- [Beyond the Cranial Vault (BTCV) Abdomen Dataset](tasks/btcv)
-- Medical Segmentation Decathlon (MSD) Dataset
-	- [Task05 Prostate](tasks/msd/Task05_Prostate)
-	- [Task09 Spleen](tasks/msd/Task09_Spleen)
 
 ## FAQ
 

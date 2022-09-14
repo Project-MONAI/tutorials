@@ -29,9 +29,7 @@
 
 </details>
 
-## Preliminary Results
-
-### Success Stories
+## Auto3DSeg Leaderboard Performance
 
 - **Auto3DSeg** won 1st place in MICCAI 2022 challenge **[HECKTOR 2022: Head and neck tumor segmentation and outcome prediction in PET/CT images](https://hecktor.grand-challenge.org/)**
   - 1st place GTVp and GTVn segmentation (Task 1)
@@ -40,10 +38,9 @@
 - **Auto3DSeg** won a top-3 place in MICCAI 2022 challenge **[ISLES'22: Ischemic Stroke Lesion Segmentation Challenge](https://isles22.grand-challenge.org/)**
   - The final results will announced at MICCAI 2022
 
-### Benchmarks
-
 We have demonstrated preliminary results of public datasets are described in the [tasks](tasks) folder.
 
+- INSTANCE22
 - [Beyond the Cranial Vault (BTCV) Abdomen Dataset](tasks/btcv)
 - Medical Segmentation Decathlon (MSD) Dataset
 	- [Task05 Prostate](tasks/msd/Task05_Prostate)
@@ -75,7 +72,7 @@ python -m monai.apps.auto3dseg AutoRunner run --input='./task.yaml'
 
 An example with detailed description is discussed in this [tutorial](docs/run_with_minimal_input.md).
 
-#### 2. Run with Components
+#### 2. Demystifying Auto3D Components
 
 We demonstrate the entire pipeline with all necessary componets in the [tutorial notebooks](notebooks/auto_runner.ipynb) using the AutoRunner class. And each component can be individually used for different purposes. And functions/methods in the components can be customized by users.
 

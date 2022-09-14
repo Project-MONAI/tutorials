@@ -40,7 +40,7 @@ We have demonstrated preliminary results of public datasets are described in the
 
 ## A Two-Minute "Hello-World" Example
 
-We provide [a two-minute example](notebooks/auto3dseg_hello_world.ipynb) for users to get initial impressions of **Auto3DSeg**.
+We provide [a two-minute example](notebooks/auto3dseg_hello_world.ipynb) for users to get initial impressions of **Auto3DSeg**. The example covers the entire pipeline from start to finish, and can be done in two minutes using a single GPU (GPU RAM >= 12GB).
 
 ## Run with different options
 

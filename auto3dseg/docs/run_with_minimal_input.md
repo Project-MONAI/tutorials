@@ -1,6 +1,8 @@
 ## Run with Minimal Input
 
-Here are steps to quickly launch **Auto3DSeg** for general medical image segmentation.
+To get initial impressions of **Auto3DSeg**, user can try this [two-minute example](../notebooks/auto3dseg_hello_world.ipynb). The example covers the entire pipeline from start to finish, and can be done in two minutes using a single GPU (GPU RAM >= 12GB).
+
+Here are detailed steps to quickly launch **Auto3DSeg** for general medical image segmentation.
 
 **Step 0.** Download public data or prepare internal data in a custom data root. For data from [Medical Segmentation Decathlon](http://medicaldecathlon.com/) (MSD), user can use the following Python script to download it.
 

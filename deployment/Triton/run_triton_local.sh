@@ -41,7 +41,7 @@ demo_app_image_name="monai_triton:class"
 
 docker run  \
             --rm \
-            -p7555:8000 -p 8001:8001 -p 8002:8002 \
+            -p 8000:8000 -p 8001:8001 -p 8002:8002 \
             --runtime=nvidia \
             --shm-size=1g \
             --ulimit memlock=-1 \

@@ -90,7 +90,7 @@ if __name__ == "__main__":
         print("No valid inputs provided")
         sys.exit(1)
 
-    with httpclient.InferenceServerClient("localhost:7555") as client:
+    with httpclient.InferenceServerClient("localhost:8000") as client:
         image_bytes = b''
         for jpeg_file in jpeg_files:
             with open(jpeg_file, 'rb') as f:

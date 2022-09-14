@@ -49,7 +49,7 @@ from uuid import uuid4
 import glob
 
 from monai.apps.utils import download_and_extract
-from monai.transforms.utils import convert_to_numpy
+from monai.utils.type_conversion import convert_to_numpy
 
 MEDNIST_CLASSES = ["AbdomenCT", "BreastMRI", "CXR", "ChestCT", "Hand", "HeadCT"]
 

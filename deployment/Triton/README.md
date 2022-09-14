@@ -203,6 +203,18 @@ $ ./mednist_client_run.sh
 ```
 The expected result is variety of classification results for body images and local inference times.
 
+## Notes about the `requirements.txt` file and installed CUDA Drivers
+- The requirements.txt file is used to place requirements into the Triton Server Container, but also for the client environment.  
+- Take care with the version of PyTorch (torch) used based on the specific GPU and installed driver versions. The --extra-index-url flag may need to be modified to correspond with the CUDA version installed on the local GPU.
+- Determine your driver and CUDA version with the following command:
+```
+nvidia-smi
+```
+- Then choose the appropriate library to load for PyTorch by adding the helper flag in the `requirements.txt` file.
+```
+--extra-index-url https://download.pytorch.org/whl/cu116
+```
+- Note: in the above example the cu116 instructs to install the latest torch version that supports CUDA 11.6
 -------
 ## Usage
 [See Triton Inference Server/python_backend documentation](https://github.com/triton-inference-server/python_backend#usage)

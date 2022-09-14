@@ -40,9 +40,15 @@ We have demonstrated preliminary results of public datasets are described in the
 
 ## Get Started
 
-We offer users different ways to use **Auto3DSeg** to suit their needs.
+### A Two-Minute "Hello-World" Example
 
-### 1. Run with Minimal Input
+We provide [a two-minute example](notebooks/auto3dseg_hello_world.ipynb) for users to get initial impressions of **Auto3DSeg**.
+
+### Run with different options
+
+**Auto3DSeg** offers users different ways to run pipelines that suit their needs.
+
+#### 1. Run with Minimal Input
 
 The user needs to provide a data list (".json" file) for the new task and data root. A typical data list is as this [example](tasks/msd/Task05_Prostate/msd_task05_prostate_folds.json). After creating the data list, the user can create a simple "task.yaml" file (shown below) as the minimum input for **Auto3DSeg**.
 
@@ -60,9 +66,7 @@ python -m monai.apps.auto3dseg AutoRunner run --input='./task.yaml'
 
 An example with detailed description is discussed in this [tutorial](docs/run_with_minimal_input.md).
 
-#### An "Hello-World" Example
-
-### 2. Run with Components
+#### 2. Run with Components
 
 We demonstrate the entire pipeline with all necessary componets in the [tutorial notebooks](notebooks/auto_runner.ipynb) using the AutoRunner class. And each component can be individually used for different purposes. And functions/methods in the components can be customized by users.
 
@@ -72,7 +76,7 @@ We demonstrate the entire pipeline with all necessary componets in the [tutorial
 - Step 4: [Hyper-parameter optimization](docs/hpo.md)
 - Step 5: [Model ensemble](docs/ensemble.md)
 
-### 3. Run with Customization / Bring-Your-Own-Algorithm (BYOA)
+#### 3. Run with Customization / Bring-Your-Own-Algorithm (BYOA)
 
 **Auto3DSeg** also gives users the option to bring their own segmentation algorithm to **Auto3DSeg**. Users can add custom algorithms or custom algorithm templates. The details of adding customized algorithms can be found [here](docs/bring_your_own_algorithm.md).
 

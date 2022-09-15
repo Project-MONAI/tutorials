@@ -19,6 +19,8 @@ This folder contains code to train and validate a U-Net for accelerated MRI reco
 
 * [Inference](#Inference)
 
+* [Acknowledgement](#Acknowledgement)
+
 ***
 
 # Questions and bugs
@@ -70,3 +72,7 @@ one sample is picked for visualization.
 Our checkpoint achieves `0.9436` SSIM on our test subset which is comparable to the original result reported on the
 [fastMRI public leaderboard](https://fastmri.org/leaderboards/) (which is `0.9474` SSIM). Note that the results reported
 on the leaderboard are for the unreleased test set. Moreover, the leaderboard model is trained on the validation set.
+
+# Acknowledgement
+Data used in the preparation of this tutorial were obtained from the NYU fastMRI Initiative database (fastmri.med.nyu.edu).[citation of Knoll et al Radiol Artif Intell. 2020 Jan 29;2(1):e190007.
+doi: 10.1148/ryai.2020190007. (https://pubs.rsna.org/doi/10.1148/ryai.2020190007), and the arXiv paper: https://arxiv.org/abs/1811.08839] As such, NYU fastMRI investigators provided data but did not participate in analysis or writing of this tutorial. A listing of NYU fastMRI investigators, subject to updates, can be found at:fastmri.med.nyu.edu. The primary goal of fastMRI is to test whether machine learning can aid in the reconstruction of medical images.

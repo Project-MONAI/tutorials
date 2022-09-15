@@ -158,6 +158,9 @@ The examples show how to train federated learning models based on [OpenFL](https
 #### [Substra](./federated_learning/substra)
 The example show how to execute the 3d segmentation torch tutorial on a federated learning platform, Substra.
 
+#### [Triton](./deployment/Triton/)
+This is example walks through using a Triton Server and Python client using MONAI on the MedNIST classification problem. The demo is self contained and the Readme explains how to use Triton "backends" to inject the MONAI code into the server.  [See Triton Inference Server/python_backend documentation](https://github.com/triton-inference-server/python_backend#usage)
+
 **Digital Pathology**
 #### [Whole Slide Tumor Detection](./pathology/tumor_detection)
 The example show how to train and evaluate a tumor detection model (based on patch classification) on whole-slide histopathology images.

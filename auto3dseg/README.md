@@ -48,7 +48,7 @@ We have demonstrated preliminary results of public datasets are described in the
 
 ## A Two-Minute "Hello-World" Example
 
-We provide [a two-minute example](notebooks/auto3dseg_hello_world.ipynb) for users to get initial impressions of **Auto3DSeg**. The example covers the entire pipeline from start to finish, and can be done in two minutes using a single GPU (GPU RAM >= 8GB).
+We provide [a two-minute example](notebooks/auto3dseg_hello_world.ipynb) for users to get initial impressions of **Auto3DSeg**. The example covers the entire pipeline from start to finish, and can be done in two minutes using a single GPU (GPU RAM >= 8GB). Each fold of cross validation consumes about 1.2 GB of disk space, and in this example, about 2.4 GB in total. All the results will be written to user's working directory.
 
 ## Run with different options
 

@@ -21,7 +21,7 @@ algorithm_x
     │   │   └── events.out.tfevents.12345678
     │   └──  progress.yaml
     └── scripts
-	    ├── __init__.py
+        ├── __init__.py
         ├── infer.py
         ├── train.py
         └── validate.py

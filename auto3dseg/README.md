@@ -40,7 +40,7 @@
 
 We have demonstrated preliminary results of public datasets are described in the [tasks](tasks) folder.
 
-- INSTANCE22
+- [INSTANCE22](tasks/instance22)
 - [Beyond the Cranial Vault (BTCV) Abdomen Dataset](tasks/btcv)
 - Medical Segmentation Decathlon (MSD) Dataset
 	- [Task05 Prostate](tasks/msd/Task05_Prostate)
@@ -51,6 +51,8 @@ We have demonstrated preliminary results of public datasets are described in the
 We provide [a two-minute example](notebooks/auto3dseg_hello_world.ipynb) for users to get initial impressions of **Auto3DSeg**. The example covers the entire pipeline from start to finish, and can be done in two minutes using a single GPU (GPU RAM >= 8GB). Each fold of cross validation consumes about 1.2 GB of disk space, and in this example, about 2.4 GB in total. All the results will be written to user's working directory.
 
 ## A "Real-World" Example
+
+To further demonstrate the capabilities of **Auto3DSeg**, [here](tasks/instance22) is the detailed performance of the algorithm in **Auto3DSeg**, which won 2nd place in the MICCAI 2022 challenge** [INSTANCE22: The 2022 Intracranial Hemorrhage Segmentation Challenge on Non-Contrast Head CT (NCCT)](https://instance.grand-challenge.org/)**
 
 ## Reference Python APIs for Auto3DSeg
 

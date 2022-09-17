@@ -52,7 +52,7 @@ class NetAlgo(BundleAlgo):
         return fill_records
 ```
 
-After creating a new template, the user can add the template and start the process by following the tutorial "[Running **Auto3DSeg** with Components](../notebooks/auto_runner.ipynb)". A algorithm template example with 3D U-Net can be found [here](../scripts/byoa/). Then, the user can start the process by following the tutorial "[Running **Auto3DSeg** with Components](../notebooks/auto_runner.ipynb)".
+After creating a new template, the user can add the template and start the process by following the notebook "[Running **Auto3DSeg** with Components](../notebooks/auto_runner.ipynb)". A algorithm template example with 3D U-Net can be found [here](../scripts/byoa/). Then, the user can start the process by following the notebook "[Running **Auto3DSeg** with Components](../notebooks/auto_runner.ipynb)".
 
 ### 2. Create customized algorithm (or template)
 

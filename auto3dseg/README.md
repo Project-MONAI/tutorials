@@ -82,10 +82,6 @@ We demonstrate the entire pipeline with all necessary componets in this example 
 - Step 4: [Hyper-parameter optimization](docs/hpo.md)
 - Step 5: [Model ensemble](docs/ensemble.md)
 
-#### 3. Run with Customization / Bring-Your-Own-Algorithm (BYOA)
-
-**Auto3DSeg** also gives users the option to bring their own segmentation algorithm to **Auto3DSeg**. Users can add custom algorithms or custom algorithm templates. The details of adding customized algorithms can be found [here](docs/bring_your_own_algorithm.md).
-
 ## FAQ
 
 Please refer to [FAQ](docs/faq.md) for frequently asked questions.

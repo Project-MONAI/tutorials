@@ -168,3 +168,7 @@ class DintsAlgo(BundleAlgo):
 			...
         return fill_records
 ```
+
+### Algorithm Customization
+
+**Auto3DSeg** also gives users the option to bring their own segmentation algorithm to **Auto3DSeg**. Users can add custom algorithms or custom algorithm templates. The details of adding customized algorithms can be found [here](../docs/bring_your_own_algorithm.md).

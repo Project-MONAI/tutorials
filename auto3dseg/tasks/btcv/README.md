@@ -43,11 +43,7 @@ The image patches show anatomies of a subject, including:
 
 ##### Validation performance: NVIDIA DGX-1 (4x V100 32G)
 
-Our results were obtained by running the
-```
-torchrun --nnodes=1 --nproc_per_node=4 scripts/train.py run --config_file configs/algo_config.yaml
-```
-training script in the MONAI 0.9.1 container on NVIDIA DGX-1 with (4x V100 32G) GPUs. Performance numbers (in volumes per second) were averaged over an entire training epoch.
+The complete command of **Auto3DSeg** can be found [here](../../README.md#reference-python-apis-for-auto3dseg). And our validation results are obtained on NVIDIA DGX-1 with (4x V100 16GB) GPUs.
 
 | Methods| Dimension | GPUs | Batch size / GPU | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Avg |
 |:------:|:---------:|:----:|:----------------:|:------:|:------:|:------:|:------:|:------:|:---:|

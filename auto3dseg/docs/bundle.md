@@ -23,8 +23,8 @@ algorithm_x
     └── scripts
 	    ├── __init__.py
         ├── infer.py
-	    ├── train.py
-	    └── validate.py
+        ├── train.py
+        └── validate.py
 ```
 
 In order to run model training of several bundle algorithms in parallel, users can manually utilize the following bash commands inside bundle folder to launch model traning within different computing environments (via [Python Fire library](https://github.com/google/python-fire)). After model training is accomplished, the model ensemble can be further conducted with existing bundle algorithms. All commands (including model training, inference, validation) are decribed in **README.md** file of each bundle.

@@ -70,11 +70,11 @@ User needs to define the modality of data. Currently **Auto3DSeg** supports both
 python -m monai.apps.auto3dseg AutoRunner run --input='./task.yaml'
 ```
 
-An example with detailed description is discussed in this [tutorial](docs/run_with_minimal_input.md).
+An example with detailed description is discussed [here](docs/run_with_minimal_input.md).
 
 #### 2. Demystifying Auto3D Components
 
-We demonstrate the entire pipeline with all necessary componets in the [tutorial notebooks](notebooks/auto_runner.ipynb) using the AutoRunner class. And each component can be individually used for different purposes. And functions/methods in the components can be customized by users.
+We demonstrate the entire pipeline with all necessary componets in this example [notebook](notebooks/auto_runner.ipynb) using the AutoRunner class. And each component can be individually used for different purposes. And functions/methods in the components can be customized by users.
 
 - Step 1: [Data analyzer](docs/data_analyzer.md)
 - Step 2: [Algorithm generation](docs/algorithm_generation.md)

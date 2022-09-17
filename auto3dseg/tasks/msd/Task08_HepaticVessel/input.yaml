@@ -1,8 +1,0 @@
-name: Task08_HepaticVessel
-task: segmentation
-
-modality: CT
-datalist: ./datafolds/msd_task08_hepaticvessel_folds.json # list of files
-dataroot: /data/Task08_HepaticVessel # data location
-
-multigpu: True

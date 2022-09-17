@@ -1,8 +1,0 @@
-name: Task10_Colon
-task: segmentation
-
-modality: CT
-datalist: ./datafolds/msd_task10_colon_folds.json # list of files
-dataroot: /data/Task10_Colon # data location
-
-multigpu: True

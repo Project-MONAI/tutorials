@@ -64,17 +64,23 @@ datalist: "./task.json"
 dataroot: "/workspace/data/task"
 ```
 
-User needs to define the modality of data. Currently **Auto3DSeg** supports both CT and MRI (single- or multi-modality MRI). Then user can run the pipeline further from start to finish using the following simple bash command.
+User needs to define the modality of data. Currently **Auto3DSeg** supports both CT and MRI (single- or multi-modality MRI). Then user can run the pipeline further from start to finish using the following simple bash command with the ```AutoRunner``` class.
 
 ```bash
 python -m monai.apps.auto3dseg AutoRunner run --input='./task.yaml'
 ```
 
-An example with detailed description is discussed [here](docs/run_with_minimal_input.md).
+An example with detailed description is discussed [here](docs/run_with_minimal_input.md). And we demonstrate the entire pipeline with all necessary components in this example [notebook](notebooks/auto_runner.ipynb) using the AutoRunner class.
 
 #### 2. Demystifying Auto3D Components
 
-We demonstrate the entire pipeline with all necessary componets in this example [notebook](notebooks/auto_runner.ipynb) using the AutoRunner class. And each component can be individually used for different purposes. And functions/methods in the components can be customized by users.
+##### Reference Python APIs for Auto3DSeg
+
+**Auto3DSeg** offers the one-stop AutoRunner API to execute the pipeline, as well as the APIs to access the underlying components built to support the AutoRunner. In this [notebook](notebooks/auto3dseg_autorunner_ref_api.ipynb), AutoRunner is broken down by the step-by-step and we will introduce the API calls in Python and CLI commands. Particularly, we will map the AutoRunner commands and configurations to each of the Auto3Dseg module APIs.
+
+##### Modules
+
+Each module of **Auto3DSeg** in different steps can be individually used for different purposes. And functions/methods in the components can be customized by users.
 
 - Step 1: [Data analyzer](docs/data_analyzer.md)
 - Step 2: [Algorithm generation](docs/algorithm_generation.md)

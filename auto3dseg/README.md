@@ -50,11 +50,13 @@ We have demonstrated preliminary results of public datasets are described in the
 
 We provide [a two-minute example](notebooks/auto3dseg_hello_world.ipynb) for users to get initial impressions of **Auto3DSeg**. The example covers the entire pipeline from start to finish, and can be done in two minutes using a single GPU (GPU RAM >= 8GB). Each fold of cross validation consumes about 1.2 GB of disk space, and in this example, about 2.4 GB in total. All the results will be written to user's working directory.
 
-## Run with different options
+## A "Real-World" Example
 
-**Auto3DSeg** offers users different ways to run pipelines that suit their needs.
+## Reference Python APIs for Auto3DSeg
 
-#### 1. Run with Minimal Input
+**Auto3DSeg** offers users different levels of APIs to run pipelines that suit their needs.
+
+### 1. Run with Minimal Input using ```AutoRunner```
 
 The user needs to provide a data list (".json" file) for the new task and data root. A typical data list is as this [example](tasks/msd/Task05_Prostate/msd_task05_prostate_folds.json). After creating the data list, the user can create a simple "task.yaml" file (shown below) as the minimum input for **Auto3DSeg**.
 
@@ -72,13 +74,11 @@ python -m monai.apps.auto3dseg AutoRunner run --input='./task.yaml'
 
 An example with detailed description is discussed [here](docs/run_with_minimal_input.md). And we demonstrate the entire pipeline with all necessary components in this example [notebook](notebooks/auto_runner.ipynb) using the AutoRunner class.
 
-#### 2. Demystifying Auto3D Components
+### 2. Run with Module APIs
 
-##### Reference Python APIs for Auto3DSeg
+**Auto3DSeg** offers the one-stop AutoRunner API to execute the pipeline, as well as the APIs to access the underlying components built to support the AutoRunner. In this [notebook](notebooks/auto3dseg_autorunner_ref_api.ipynb), AutoRunner is broken down by the step-by-step and we will introduce the API calls in Python and CLI commands. Particularly, we will map the AutoRunner commands and configurations to each of the **Auto3DSeg** module APIs.
 
-**Auto3DSeg** offers the one-stop AutoRunner API to execute the pipeline, as well as the APIs to access the underlying components built to support the AutoRunner. In this [notebook](notebooks/auto3dseg_autorunner_ref_api.ipynb), AutoRunner is broken down by the step-by-step and we will introduce the API calls in Python and CLI commands. Particularly, we will map the AutoRunner commands and configurations to each of the Auto3Dseg module APIs.
-
-##### Modules
+## Demystifying Auto3DSeg Components
 
 Each module of **Auto3DSeg** in different steps can be individually used for different purposes. And functions/methods in the components can be customized by users.
 

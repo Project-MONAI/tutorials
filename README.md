@@ -267,3 +267,6 @@ This tutorial demonstrates a transfer learning pipeline from a pretrained model 
 
 #### [Transform visualization](./modules/transform_visualization.ipynb)
 This tutorial shows several visualization approaches for 3D image during transform augmentation.
+
+#### [Auto3DSeg](./auto3dseg/)
+This folder shows how to run the comprehensive Auto3Dseg pipeline with minimal inputs and customize the Auto3Dseg modules to meet different user requirements.

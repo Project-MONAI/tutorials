@@ -316,28 +316,28 @@ def main(cfg):
     # Create MONAI dataset
     train_data_list = CSVDataset(
         cfg["train_file"],
-        col_groups={"image": 0, "location": [2, 1], "label": list(range(3, 12))},
+        col_groups={"image": 0, "location": [2, 1], "label": [3, 6, 9, 4, 7, 10, 5, 8, 11]},
         kwargs_read_csv={"header": None},
         transform=Lambdad("image", lambda x: os.path.join(cfg["root"], "training/images", x + ".tif")),
     )
     train_dataset = PatchWSIDataset(
         data=train_data_list,
-        size=cfg["region_size"],
-        level=0,
+        patch_size=cfg["region_size"],
+        patch_level=0,
         transform=preprocess_cpu_train,
         reader="openslide" if cfg["use_openslide"] else "cuCIM",
     )
 
     valid_data_list = CSVDataset(
         cfg["valid_file"],
-        col_groups={"image": 0, "location": [2, 1], "label": list(range(3, 12))},
+        col_groups={"image": 0, "location": [2, 1], "label": [3, 6, 9, 4, 7, 10, 5, 8, 11]},
         kwargs_read_csv={"header": None},
-        transform=Lambdad("image", lambda x: os.path.join(cfg["root"], "validation/images", x + ".tif")),
+        transform=Lambdad("image", lambda x: os.path.join(cfg["root"], "training/images", x + ".tif")),
     )
     valid_dataset = PatchWSIDataset(
         data=valid_data_list,
-        size=cfg["region_size"],
-        level=0,
+        patch_size=cfg["region_size"],
+        patch_level=0,
         transform=preprocess_cpu_valid,
         reader="openslide" if cfg["use_openslide"] else "cuCIM",
     )
@@ -368,7 +368,7 @@ def main(cfg):
     # Deep Learning Model and Configurations
     # -------------------------------------------------------------------------
     # Initialize model
-    model = TorchVisionFCModel("resnet18", n_classes=1, use_conv=True, pretrained=cfg["pretrain"])
+    model = TorchVisionFCModel("resnet18", num_classes=1, use_conv=True, pretrained=cfg["pretrain"])
     model = model.to(device)
 
     # Loss function

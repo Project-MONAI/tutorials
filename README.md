@@ -141,6 +141,8 @@ inference on a pretrained DeepEdit model.
 This is a simple example of training and deploying a MONAI network with [BentoML](https://www.bentoml.ai/) as a web server, either locally using the BentoML respository or as a containerized service.
 #### [Ray](./deployment/ray)
 This uses the previous notebook's trained network to demonstrate deployment a web server using [Ray](https://docs.ray.io/en/master/serve/index.html#rayserve).
+#### [Triton](./deployment/Triton/)
+This is example walks through using a Triton Server and Python client using MONAI on the MedNIST classification problem. The demo is self contained and the Readme explains how to use Triton "backends" to inject the MONAI code into the server.  [See Triton Inference Server/python_backend documentation](https://github.com/triton-inference-server/python_backend#usage)
 
 **experiment management**
 #### [Aim](./experiment_management/spleen_segmentation_aim.ipynb)
@@ -148,7 +150,7 @@ An example of experiment management with [Aim](https://aimstack.io/aim-monai-tut
 #### [MLFlow](./experiment_management/spleen_segmentation_mlflow.ipynb)
 An example of experiment management with [MLFlow](https://www.mlflow.org/docs/latest/tracking.html), using 3D spleen segmentation as an example.
 
-**federated learning**
+**Federated Learning**
 #### [NVFlare](./federated_learning/nvflare)
 The examples show how to train federated learning models with [NVFlare](https://pypi.org/project/nvflare/) and MONAI-based trainers.
 
@@ -158,8 +160,8 @@ The examples show how to train federated learning models based on [OpenFL](https
 #### [Substra](./federated_learning/substra)
 The example show how to execute the 3d segmentation torch tutorial on a federated learning platform, Substra.
 
-#### [Triton](./deployment/Triton/)
-This is example walks through using a Triton Server and Python client using MONAI on the MedNIST classification problem. The demo is self contained and the Readme explains how to use Triton "backends" to inject the MONAI code into the server.  [See Triton Inference Server/python_backend documentation](https://github.com/triton-inference-server/python_backend#usage)
+#### [Breast Density FL Challenge](./federated_learning/breast_density_challenge)
+Reference implementation used in MICCAI 2022 [ACR-NVIDIA-NCI Breast Density FL challenge](http://breastdensityfl.acr.org).
 
 **Digital Pathology**
 #### [Whole Slide Tumor Detection](./pathology/tumor_detection)

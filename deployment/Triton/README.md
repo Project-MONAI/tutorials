@@ -96,14 +96,18 @@ $ pip install nvidia-pyindex
 $ pip install tritonclient[all]
 ```
 5. Run the client program
-The [client](./client/client.py) program will take an optional file input and perform  classification to determine whether the study shows COVID-19 or not COVID-19.  See the [NVIDIA COVID-19 Classification ](https://ngc.nvidia.com/catalog/models/nvidia:med:clara_pt_covid19_3d_ct_classification) example in NGC for more background.
+The [client](./client/client_mednist.py) program will take an optional file input and perform classification on body parts using the MedNIST data set.  A small subset of the database is included.
 ```
-$ python -u client/client.py [filename/directory]
+$ mkdir -p client/test_data/MedNist
+$ python -u client/client_mednist.py client/test_data/MedNist
 ```
-and the program returns
-``` Default input for the client is client/test_data/prostate_24.nii.gz
-$ Classification result: ['Prostate segmented']
+Alternatively, the user can just run the shell script provided the previous steps 1 -4 in the [Quick Start](#quick-start) were followed.
 ```
+$ ./mednist_client_run.sh
+```
+The expected result is variety of classification results for body images and local inference times.
+```
+
 ## Examples:
 The example demonstrates running a Triton Python Backend on a single image classification problem.
 1. First, a Dockerfile and build script is used to build a container to Run the Triton Service and copy the model specific files in the container.
@@ -171,7 +175,7 @@ filename = 'client/test_data/volume-covid19-A-0000.nii.gz'
 ```
 - The client calls the Triton Service using the external port configured previously.
 ```python:
-with httpclient.InferenceServerClient("localhost:7555") as client:
+with httpclient.InferenceServerClient("localhost:8000") as client:
 ```
 - The Triton inference response is returned :
 ```python:
@@ -199,6 +203,18 @@ $ ./mednist_client_run.sh
 ```
 The expected result is variety of classification results for body images and local inference times.
 
+## Notes about the `requirements.txt` file and installed CUDA Drivers
+- The requirements.txt file is used to place requirements into the Triton Server Container, but also for the client environment.
+- Take care with the version of PyTorch (torch) used based on the specific GPU and installed driver versions. The --extra-index-url flag may need to be modified to correspond with the CUDA version installed on the local GPU.
+- Determine your driver and CUDA version with the following command:
+```
+nvidia-smi
+```
+- Then choose the appropriate library to load for PyTorch by adding the helper flag in the `requirements.txt` file.
+```
+--extra-index-url https://download.pytorch.org/whl/cu116
+```
+- Note: in the above example the cu116 instructs to install the latest torch version that supports CUDA 11.6
 -------
 ## Usage
 [See Triton Inference Server/python_backend documentation](https://github.com/triton-inference-server/python_backend#usage)

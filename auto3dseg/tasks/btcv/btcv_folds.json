@@ -1,0 +1,203 @@
+{
+"description": "btcv yucheng",
+"labels": {
+    "0": "background",
+    "1": "spleen",
+    "2": "rkid",
+    "3": "lkid",
+    "4": "gall",
+    "5": "eso",
+    "6": "liver",
+    "7": "sto",
+    "8": "aorta",
+    "9": "IVC",
+    "10": "veins",
+    "11": "pancreas",
+    "12": "rad",
+    "13": "lad"
+},
+"licence": "yt",
+"modality": {
+    "0": "CT"
+},
+"name": "btcv",
+"numTest": 20,
+"numTraining": 80,
+"reference": "Vanderbilt University",
+"release": "1.0 06/08/2015",
+"tensorImageSize": "3D",
+"test": [
+    "imagesTs/img0061.nii.gz",
+    "imagesTs/img0062.nii.gz",
+    "imagesTs/img0063.nii.gz",
+    "imagesTs/img0064.nii.gz",
+    "imagesTs/img0065.nii.gz",
+    "imagesTs/img0066.nii.gz",
+    "imagesTs/img0067.nii.gz",
+    "imagesTs/img0068.nii.gz",
+    "imagesTs/img0069.nii.gz",
+    "imagesTs/img0070.nii.gz",
+    "imagesTs/img0071.nii.gz",
+    "imagesTs/img0072.nii.gz",
+    "imagesTs/img0073.nii.gz",
+    "imagesTs/img0074.nii.gz",
+    "imagesTs/img0075.nii.gz",
+    "imagesTs/img0076.nii.gz",
+    "imagesTs/img0077.nii.gz",
+    "imagesTs/img0078.nii.gz",
+    "imagesTs/img0079.nii.gz",
+    "imagesTs/img0080.nii.gz"
+],
+"training": [
+    {
+        "fold": 4,
+        "image": "imagesTr/img0001.nii.gz",
+        "label": "labelsTr/label0001.nii.gz"
+    },
+    {
+        "fold": 4,
+        "image": "imagesTr/img0002.nii.gz",
+        "label": "labelsTr/label0002.nii.gz"
+    },
+    {
+        "fold": 4,
+        "image": "imagesTr/img0003.nii.gz",
+        "label": "labelsTr/label0003.nii.gz"
+    },
+    {
+        "fold": 4,
+        "image": "imagesTr/img0004.nii.gz",
+        "label": "labelsTr/label0004.nii.gz"
+    },
+    {
+        "fold": 4,
+        "image": "imagesTr/img0005.nii.gz",
+        "label": "labelsTr/label0005.nii.gz"
+    },
+    {
+        "fold": 4,
+        "image": "imagesTr/img0006.nii.gz",
+        "label": "labelsTr/label0006.nii.gz"
+    },
+    {
+        "fold": 3,
+        "image": "imagesTr/img0007.nii.gz",
+        "label": "labelsTr/label0007.nii.gz"
+    },
+    {
+        "fold": 3,
+        "image": "imagesTr/img0008.nii.gz",
+        "label": "labelsTr/label0008.nii.gz"
+    },
+    {
+        "fold": 3,
+        "image": "imagesTr/img0009.nii.gz",
+        "label": "labelsTr/label0009.nii.gz"
+    },
+    {
+        "fold": 3,
+        "image": "imagesTr/img0010.nii.gz",
+        "label": "labelsTr/label0010.nii.gz"
+    },
+    {
+        "fold": 3,
+        "image": "imagesTr/img0021.nii.gz",
+        "label": "labelsTr/label0021.nii.gz"
+    },
+    {
+        "fold": 3,
+        "image": "imagesTr/img0022.nii.gz",
+        "label": "labelsTr/label0022.nii.gz"
+    },
+    {
+        "fold": 2,
+        "image": "imagesTr/img0023.nii.gz",
+        "label": "labelsTr/label0023.nii.gz"
+    },
+    {
+        "fold": 2,
+        "image": "imagesTr/img0024.nii.gz",
+        "label": "labelsTr/label0024.nii.gz"
+    },
+    {
+        "fold": 2,
+        "image": "imagesTr/img0025.nii.gz",
+        "label": "labelsTr/label0025.nii.gz"
+    },
+    {
+        "fold": 2,
+        "image": "imagesTr/img0026.nii.gz",
+        "label": "labelsTr/label0026.nii.gz"
+    },
+    {
+        "fold": 2,
+        "image": "imagesTr/img0027.nii.gz",
+        "label": "labelsTr/label0027.nii.gz"
+    },
+    {
+        "fold": 2,
+        "image": "imagesTr/img0028.nii.gz",
+        "label": "labelsTr/label0028.nii.gz"
+    },
+    {
+        "fold": 1,
+        "image": "imagesTr/img0029.nii.gz",
+        "label": "labelsTr/label0029.nii.gz"
+    },
+    {
+        "fold": 1,
+        "image": "imagesTr/img0030.nii.gz",
+        "label": "labelsTr/label0030.nii.gz"
+    },
+    {
+        "fold": 1,
+        "image": "imagesTr/img0031.nii.gz",
+        "label": "labelsTr/label0031.nii.gz"
+    },
+    {
+        "fold": 1,
+        "image": "imagesTr/img0032.nii.gz",
+        "label": "labelsTr/label0032.nii.gz"
+    },
+    {
+        "fold": 1,
+        "image": "imagesTr/img0033.nii.gz",
+        "label": "labelsTr/label0033.nii.gz"
+    },
+    {
+        "fold": 1,
+        "image": "imagesTr/img0034.nii.gz",
+        "label": "labelsTr/label0034.nii.gz"
+    },
+    {
+        "fold": 0,
+        "image": "imagesTr/img0035.nii.gz",
+        "label": "labelsTr/label0035.nii.gz"
+    },
+    {
+        "fold": 0,
+        "image": "imagesTr/img0036.nii.gz",
+        "label": "labelsTr/label0036.nii.gz"
+    },
+    {
+        "fold": 0,
+        "image": "imagesTr/img0037.nii.gz",
+        "label": "labelsTr/label0037.nii.gz"
+    },
+    {
+        "fold": 0,
+        "image": "imagesTr/img0038.nii.gz",
+        "label": "labelsTr/label0038.nii.gz"
+    },
+    {
+        "fold": 0,
+        "image": "imagesTr/img0039.nii.gz",
+        "label": "labelsTr/label0039.nii.gz"
+    },
+    {
+        "fold": 0,
+        "image": "imagesTr/img0040.nii.gz",
+        "label": "labelsTr/label0040.nii.gz"
+    }
+]
+}

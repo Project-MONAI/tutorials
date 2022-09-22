@@ -171,7 +171,7 @@ The example show how to train and evaluate a tumor detection model (based on pat
 The example show how to use MONAI NVTX transforms to tag and profile pre- and post-processing transforms in the digital pathology whole slide tumor detection pipeline.
 
 #### [NuClick:Interactive Annotation for Pathologyk](./pathology/nuclick)
-The notebook demonstrates examples of training and inference pipeline with interactive annotation for pathology, NuClick is used  for delineating nuclei, cells and a squiggle for outlining glands.
+The notebook demonstrates examples of training and inference pipeline with interactive annotation for pathology, NuClick is used for delineating nuclei, cells and a squiggle for outlining glands.
 
 **acceleration**
 #### [fast_model_training_guide](./acceleration/fast_model_training_guide.md)

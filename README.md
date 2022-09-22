@@ -173,7 +173,7 @@ The example show how to use MONAI NVTX transforms to tag and profile pre- and po
 #### [NuClick:Interactive Annotation for Pathology: Inference Notebook](./pathology/nuclick/nuclick_infer.ipynb)
 The notebook demonstrates examples of inference pipeline with interactive annotation for pathology, NuClick is used  for delineating nuclei, cells and a squiggle for outlining glands.
 
-### [NuClick:Interactive Annotation for Pathology: Training Notebook](./pathology/nuclick/nuclick_training_notebook.ipynb)
+#### [NuClick:Interactive Annotation for Pathology: Training Notebook](./pathology/nuclick/nuclick_training_notebook.ipynb)
 The tutorials show a training workflow with deep learning framework for interactive segmentation for microscopic images, the framework uses NuClick. 
 
 **acceleration**

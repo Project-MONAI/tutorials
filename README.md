@@ -201,6 +201,10 @@ Illustrate reading NIfTI files and test speed of different transforms on differe
 #### [easy_integrate_bundle](./model_zoo/easy_integrate_bundle.py)
 This tutorial shows a straightforward ensemble application to instruct users on how to integrate existing bundles in their own projects. By simply changing the data path and the path where the bundle is located, training and ensemble inference can be performed.
 
+**computer_assisted_intervention**
+#### [video segmentation](./computer_assisted_intervention/video_seg.ipynb)
+This tutorial shows how to train a surgical tool segmentation model to locate tools in a given image. In addition, it also builds an example pipeline of an end-to-end video tool segmentation, with video input and video output.
+
 **modules**
 #### [bundle](./bundle)
 Get started tutorial and concrete training / inference examples for MONAI bundle features.

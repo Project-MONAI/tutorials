@@ -41,7 +41,9 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" resample_benchmark.
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" infoANDinference.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" dice_loss_metric_notes.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 2d_slices_from_3d_sampling.ipynb)
-doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 2d_slices_from_3d_training.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" data_analyzer.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" data_analyzer_byoc.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" transforms_metatensor.ipynb)
 
 # output formatting
 separator=""

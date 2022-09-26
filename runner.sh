@@ -321,7 +321,7 @@ for file in "${files[@]}"; do
 		done
 
 		python -c 'import monai; monai.config.print_config()'
-		time out=$(echo "$notebook" | papermill --progress-bar -k "$kernelspec")
+		time out=$(echo "$notebook" | papermill --log-output --progress-bar -k "$kernelspec")
 		success=$?
 	    if [[ ${success} -ne 0 || "$out" =~ "\"status\": \"failed\"" ]]; then
 	        test_fail ${success}

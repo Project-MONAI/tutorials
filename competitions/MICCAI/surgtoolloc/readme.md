@@ -16,4 +16,3 @@ In this notebook, we extract frame images from training videos and process them 
 ## `preprocess_detect_scene_and_split_fold.ipynb`
 
 The 30 second videos in this dataset are continous segments from surgical procedures. Each surgical operation contain several to dozens of continuous videos. Identifying which videos belong to the same operation (or scene) is important to make fold splits without leakage. We compare image hash of last and first frames to identify scenes, then use iterative stratification to split the folds to make sure each fold contain similar number of videos from similar number of scenes.
-

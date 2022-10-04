@@ -31,7 +31,7 @@ Main steps to set up the distributed evaluation:
 - Wrap the model with `DistributedDataParallel` after moving to expected device.
 - Put model file on every node, then load and map to expected GPU device in every process.
 - Wrap Dataset with `DistributedSampler`, disable the `shuffle` in sampler and DataLoader.
-- Add `StatsHandler` and `SegmentationSaver` to the master process which is `dist.get_rank() == 0`.
+- Add `StatsHandler` to the master process which is `dist.get_rank() == 0`.
 - ignite can automatically reduce metrics for distributed evaluation, refer to:
   https://github.com/pytorch/ignite/blob/v0.4.2/ignite/metrics/metric.py#L507
 
@@ -79,7 +79,6 @@ from monai.transforms import (
     KeepLargestConnectedComponentd,
     LoadImaged,
     ScaleIntensityd,
-    EnsureTyped,
     SaveImaged,
 )
 
@@ -113,7 +112,6 @@ def evaluate(args):
             LoadImaged(keys=["image", "label"]),
             AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
             ScaleIntensityd(keys="image"),
-            EnsureTyped(keys=["image", "label"]),
         ]
     )
 

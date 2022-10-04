@@ -238,7 +238,7 @@ class MammoLearner(Learner):
             base_dir=self.dataset_root,
         )
 
-        num_workers = 1
+        num_workers = 4  # tuned for challenge system. Please do not change.
         cache_rate = 1.0
         self.train_dataset = CacheDataset(
             data=train_datalist,
@@ -646,11 +646,11 @@ if __name__ == "__main__":
     inside_container = True
     if inside_container:
         debug_dataset_root = "/data/preprocessed"
-        debug_datalist_prefix = "/data/dataset_blinded_phase1_"
+        debug_datalist_prefix = "/data/dataset_blinded_"
     else:
         # assumes script is run in from repo root, e.g. using `python3 code/pt/learners/mammo_learner.py`
         debug_dataset_root = "./data/preprocessed"
-        debug_datalist_prefix = "./data/dataset_blinded_phase1_"
+        debug_datalist_prefix = "./data/dataset_blinded_"
 
     print("Testing MammoLearner...")
     learner = MammoLearner(

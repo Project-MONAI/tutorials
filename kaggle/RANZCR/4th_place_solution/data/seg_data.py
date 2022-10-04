@@ -72,7 +72,7 @@ class CustomDataset(Dataset):
         """
         ext = self.cfg.image_extension
         fp = self.data_folder + study_id + ext
-        img = self.img_reader(filename=fp).transpose(1, 0)
+        img = self.img_reader(filename=fp).numpy().transpose(1, 0)
         img = img[:, :, None]
 
         return img
@@ -129,7 +129,7 @@ class CustomDataset(Dataset):
         img = self.load_one(study_id)
         # convert the shape into (Channel, height, width)
         mask = self.get_mask(study_id, img.shape, is_annotated).transpose(2, 0, 1)
-        data = {"input": img.transpose(2, 0, 1), "mask": mask}
+        data = {"input": torch.tensor(img.transpose(2, 0, 1)), "mask": torch.tensor(mask)}
         if self.aug:
             data = self.aug(data)
 

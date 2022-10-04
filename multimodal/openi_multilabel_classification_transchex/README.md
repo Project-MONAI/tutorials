@@ -14,10 +14,8 @@ completed, the dataset can be readily used for the tutorial.
 
 ### Preprocessing Steps
 1) Create a new folder named 'monai_data' for downloading the raw data and preprocessing.
-2) Download the chest X-ray images in PNG format from this [link](https://openi.nlm.nih.gov/imgs/collections/NLMCXR_png.tgz). Copy the downloaded file (NLMCXR_png.tgz)
-to 'monai_data' directory and extract it.
-3) Download the reports in XML format from this [link](https://openi.nlm.nih.gov/imgs/collections/NLMCXR_reports.tgz). Copy the downloaded file (NLMCXR_reports.tgz)
-to 'monai_data' directory and extract it.
+2) Download the chest X-ray images in PNG format from this [link](https://openi.nlm.nih.gov/imgs/collections/NLMCXR_png.tgz). Copy the downloaded file (NLMCXR_png.tgz) to 'monai_data' directory and extract it to 'monai_data/dataset_orig/NLMCXR_png/'.
+3) Download the reports in XML format from this [link](https://openi.nlm.nih.gov/imgs/collections/NLMCXR_reports.tgz). Copy the downloaded file (NLMCXR_reports.tgz) to 'monai_data' directory and extract it to 'monai_data/dataset_orig/NLMCXR_reports/'.
 4) Download the splits of train, validation and test datasets from this [link](https://drive.google.com/u/1/uc?id=1jvT0jVl9mgtWy4cS7LYbF43bQE4mrXAY&export=download). Copy the downloaded file (TransChex_openi.zip)
-to 'monai_data' directory and extract it.
+to 'monai_data' directory and extract it here.
 5) Run 'preprocess_openi.py' to process the images and reports.

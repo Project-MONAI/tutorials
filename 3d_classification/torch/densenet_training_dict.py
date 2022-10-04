@@ -15,13 +15,12 @@ import sys
 
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 import monai
-from monai.data import decollate_batch
+from monai.data import decollate_batch, DataLoader
 from monai.metrics import ROCAUCMetric
-from monai.transforms import Activations, AddChanneld, AsDiscrete, Compose, LoadImaged, RandRotate90d, Resized, ScaleIntensityd, EnsureTyped, EnsureType
+from monai.transforms import Activations, AsDiscrete, Compose, LoadImaged, RandRotate90d, Resized, ScaleIntensityd
 
 
 def main():
@@ -63,25 +62,21 @@ def main():
     # Define transforms for image
     train_transforms = Compose(
         [
-            LoadImaged(keys=["img"]),
-            AddChanneld(keys=["img"]),
+            LoadImaged(keys=["img"], ensure_channel_first=True),
             ScaleIntensityd(keys=["img"]),
             Resized(keys=["img"], spatial_size=(96, 96, 96)),
             RandRotate90d(keys=["img"], prob=0.8, spatial_axes=[0, 2]),
-            EnsureTyped(keys=["img"]),
         ]
     )
     val_transforms = Compose(
         [
-            LoadImaged(keys=["img"]),
-            AddChanneld(keys=["img"]),
+            LoadImaged(keys=["img"], ensure_channel_first=True),
             ScaleIntensityd(keys=["img"]),
             Resized(keys=["img"], spatial_size=(96, 96, 96)),
-            EnsureTyped(keys=["img"]),
         ]
     )
-    post_pred = Compose([EnsureType(), Activations(softmax=True)])
-    post_label = Compose([EnsureType(), AsDiscrete(to_onehot=2)])
+    post_pred = Compose([Activations(softmax=True)])
+    post_label = Compose([AsDiscrete(to_onehot=2)])
 
     # Define dataset, data loader
     check_ds = monai.data.Dataset(data=train_files, transform=train_transforms)
@@ -142,7 +137,7 @@ def main():
 
                 acc_value = torch.eq(y_pred.argmax(dim=1), y)
                 acc_metric = acc_value.sum().item() / len(acc_value)
-                y_onehot = [post_label(i) for i in decollate_batch(y)]
+                y_onehot = [post_label(i) for i in decollate_batch(y, detach=False)]
                 y_pred_act = [post_pred(i) for i in decollate_batch(y_pred)]
                 auc_metric(y_pred_act, y_onehot)
                 auc_result = auc_metric.aggregate()

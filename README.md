@@ -141,8 +141,16 @@ inference on a pretrained DeepEdit model.
 This is a simple example of training and deploying a MONAI network with [BentoML](https://www.bentoml.ai/) as a web server, either locally using the BentoML respository or as a containerized service.
 #### [Ray](./deployment/ray)
 This uses the previous notebook's trained network to demonstrate deployment a web server using [Ray](https://docs.ray.io/en/master/serve/index.html#rayserve).
+#### [Triton](./deployment/Triton/)
+This is example walks through using a Triton Server and Python client using MONAI on the MedNIST classification problem. The demo is self contained and the Readme explains how to use Triton "backends" to inject the MONAI code into the server.  [See Triton Inference Server/python_backend documentation](https://github.com/triton-inference-server/python_backend#usage)
 
-**federated learning**
+**experiment management**
+#### [Aim](./experiment_management/spleen_segmentation_aim.ipynb)
+An example of experiment management with [Aim](https://aimstack.io/aim-monai-tutorial/), using 3D spleen segmentation as an example.
+#### [MLFlow](./experiment_management/spleen_segmentation_mlflow.ipynb)
+An example of experiment management with [MLFlow](https://www.mlflow.org/docs/latest/tracking.html), using 3D spleen segmentation as an example.
+
+**Federated Learning**
 #### [NVFlare](./federated_learning/nvflare)
 The examples show how to train federated learning models with [NVFlare](https://pypi.org/project/nvflare/) and MONAI-based trainers.
 
@@ -152,12 +160,18 @@ The examples show how to train federated learning models based on [OpenFL](https
 #### [Substra](./federated_learning/substra)
 The example show how to execute the 3d segmentation torch tutorial on a federated learning platform, Substra.
 
+#### [Breast Density FL Challenge](./federated_learning/breast_density_challenge)
+Reference implementation used in MICCAI 2022 [ACR-NVIDIA-NCI Breast Density FL challenge](http://breastdensityfl.acr.org).
+
 **Digital Pathology**
 #### [Whole Slide Tumor Detection](./pathology/tumor_detection)
 The example show how to train and evaluate a tumor detection model (based on patch classification) on whole-slide histopathology images.
 
 #### [Profiling Whole Slide Tumor Detection](./pathology/tumor_detection)
 The example show how to use MONAI NVTX transforms to tag and profile pre- and post-processing transforms in the digital pathology whole slide tumor detection pipeline.
+
+#### [NuClick:Interactive Annotation for Pathology](./pathology/nuclick)
+The notebook demonstrates examples of training and inference pipelines with interactive annotation for pathology, NuClick is used for delineating nuclei, cells and a squiggle for outlining glands.
 
 **acceleration**
 #### [fast_model_training_guide](./acceleration/fast_model_training_guide.md)
@@ -175,7 +189,7 @@ And compares the training speed and memory usage with/without AMP.
 This notebook compares the performance of `Dataset`, `CacheDataset` and `PersistentDataset`. These classes differ in how data is stored (in memory or on disk), and at which moment transforms are applied.
 #### [fast_training_tutorial](./acceleration/fast_training_tutorial.ipynb)
 This tutorial compares the training performance of pure PyTorch program and optimized program in MONAI based on NVIDIA GPU device and latest CUDA library.
-The optimization methods mainly include: `AMP`, `CacheDataset` and `Novograd`.
+The optimization methods mainly include: `AMP`, `CacheDataset`, `GPU transforms`, `ThreadDataLoader`, `DiceCELoss` and `SGD`.
 #### [multi_gpu_test](./acceleration/multi_gpu_test.ipynb)
 This notebook is a quick demo for devices, run the Ignite trainer engine on CPU, GPU and multiple GPUs.
 #### [threadbuffer_performance](./acceleration/threadbuffer_performance.ipynb)
@@ -183,8 +197,16 @@ Demonstrates the use of the `ThreadBuffer` class used to generate data batches d
 #### [transform_speed](./acceleration/transform_speed.ipynb)
 Illustrate reading NIfTI files and test speed of different transforms on different devices.
 
+**model_zoo**
+#### [easy_integrate_bundle](./model_zoo/easy_integrate_bundle.py)
+This tutorial shows a straightforward ensemble application to instruct users on how to integrate existing bundles in their own projects. By simply changing the data path and the path where the bundle is located, training and ensemble inference can be performed.
+
+**computer_assisted_intervention**
+#### [video segmentation](./computer_assisted_intervention/video_seg.ipynb)
+This tutorial shows how to train a surgical tool segmentation model to locate tools in a given image. In addition, it also builds an example pipeline of an end-to-end video tool segmentation, with video input and video output.
+
 **modules**
-#### [bundle](./modules/bundle)
+#### [bundle](./bundle)
 Get started tutorial and concrete training / inference examples for MONAI bundle features.
 #### [engines](./modules/engines)
 Training and evaluation examples of 3D segmentation based on UNet3D and synthetic dataset with MONAI workflows, which contains engines, event-handlers, and post-transforms. And GAN training and evaluation example for a medical image generative adversarial network. Easy run training script uses `GanTrainer` to train a 2D CT scan reconstruction network. Evaluation script generates random samples from a trained network.
@@ -254,3 +276,6 @@ This tutorial demonstrates a transfer learning pipeline from a pretrained model 
 
 #### [Transform visualization](./modules/transform_visualization.ipynb)
 This tutorial shows several visualization approaches for 3D image during transform augmentation.
+
+#### [Auto3DSeg](./auto3dseg/)
+This folder shows how to run the comprehensive Auto3Dseg pipeline with minimal inputs and customize the Auto3Dseg modules to meet different user requirements.

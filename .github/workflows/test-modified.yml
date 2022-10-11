@@ -31,6 +31,7 @@ jobs:
     - name: Notebook quick check
       shell: bash
       run: |
+        git config --global --add safe.directory /__w/tutorials/tutorials
         git fetch origin main
         python -m pip install -r requirements.txt; python -m pip list
         git diff --name-only origin/main | while read line; do if [[ $line == *.ipynb ]]; then ./runner.sh -p "-and -wholename './${line}'"; fi; done;

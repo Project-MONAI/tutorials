@@ -33,5 +33,6 @@ jobs:
       shell: bash
       run: |
         git fetch origin main
-        git diff --name-only origin/main | while read line; do if [[ $line == *.ipynb ]]; then ./runner.sh --file "$line"; fi; done;
+        python -m pip install -r requirements.txt; python -m pip list
+        git diff --name-only origin/main | while read line; do if [[ $line == *.ipynb ]]; then ./runner.sh -p "-and -wholename './${line}'"; fi; done;
           # [[ $line == *.ipynb ]] && ./runner.sh --file "$line"

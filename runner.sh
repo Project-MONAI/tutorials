@@ -141,7 +141,8 @@ do
             failfast=true
         ;;
         -p|--pattern)
-            pattern="$2"
+            pattern+="$2"
+            echo $pattern
             shift
         ;;
         -k|--kernelspec)

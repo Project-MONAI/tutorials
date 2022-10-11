@@ -16,7 +16,7 @@ jobs:
   build:
     if: github.repository == 'Project-MONAI/tutorials'
     container:
-      image: nvcr.io/nvidia/pytorch:21.06-py3  # CUDA 11.3
+      image: nvcr.io/nvidia/pytorch:22.08-py3
       options: "--gpus 0"
     runs-on: [self-hosted, linux, x64]
     steps:

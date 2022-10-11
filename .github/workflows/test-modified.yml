@@ -1,0 +1,37 @@
+name: build
+
+on:
+  # quick tests of modified notebooks for every pull request
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  # automatically cancel the previously triggered workflows when there's a newer version
+  group: build-gpu-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.repository == 'Project-MONAI/tutorials'
+    container:
+      image: nvcr.io/nvidia/pytorch:21.06-py3  # CUDA 11.3
+      options: "--gpus 0"
+    runs-on: [self-hosted, linux, x64]
+    steps:
+    - name: Install MONAI
+      id: monai-install
+      run: |
+        which python
+        python -m pip install --upgrade pip wheel
+        BUILD_MONAI=0 python -m pip install git+https://github.com/Project-MONAI/MONAI#egg=MONAI
+        python -m pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/main/requirements-dev.txt
+    - uses: actions/checkout@v3
+    - name: Notebook quick check
+      shell: bash
+      run: |
+        git fetch origin main
+        python -m pip install -r requirements.txt; python -m pip list
+        git diff --name-only origin/main | while read line; do if [[ $line == *.ipynb ]]; then ./runner.sh -p "-and -wholename './${line}'"; fi; done;
+          # [[ $line == *.ipynb ]] && ./runner.sh --file "$line"

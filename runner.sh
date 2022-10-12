@@ -222,7 +222,7 @@ function replace_text {
 files=($(echo $pattern | xargs find . -type f -name "*.ipynb" -and ! -wholename "*.ipynb_checkpoints*"))
 if [[ $files == "" ]]; then
 	print_error_msg "No files match pattern"
-	exit 1
+	exit 0
 fi
 echo "Files to be tested:"
 for i in "${files[@]}"; do echo $i; done

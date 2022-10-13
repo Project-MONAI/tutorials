@@ -37,7 +37,7 @@ For more information please check out [the installation guide](https://docs.mona
 Check all possible options
 
 ```bash
-python ./easy_integrate_bundle.py -h
+python ./ensemble.py -h
 ```
 ### Get started
 1. Prepare your bundle.
@@ -68,12 +68,12 @@ python ./easy_integrate_bundle.py -h
         ]
     }
     ```
-    The data in training will random split into `n_splits` which you can specifiy with `--n_splits xx`
+    The data in training will random split into `n_splits` which you can specify with `--n_splits xx`
 
 3. Run the script. Make sure `bundle_root_path` and `data_root_path` is correct.
 
 ```bash
-python easy_integrate_bundle.py --bundle_root bundle_root_path --dataset_dir data_root_path
+python ensemble.py --bundle_root bundle_root_path --dataset_dir data_root_path
 --ensemble Mean
 ```
 

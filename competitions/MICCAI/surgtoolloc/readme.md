@@ -26,13 +26,22 @@ In this notebook, we make use of these labels and prepare the yolo format datase
 
 ## Detection
 
-We use [yolov5](https://github.com/ultralytics/yolov5) as our detection model training pipeline. The hyperparameters and training script is in `detection_files`. Please modify the script file `run_5fold.sh`, especially for `CUDA_VISIBLE_DEVICES` and the `--data` option to based on your actual GPU devices and dataset directory.
+We use [yolov5](https://github.com/ultralytics/yolov5) as our detection model training pipeline. The training script `run_5fold.sh` is in `detection_files`. Please modify the file, especially for `CUDA_VISIBLE_DEVICES` and the `--data` option to based on your actual GPU devices and dataset directory.
 
-The commands to prepare the pipeline and train the model is like:
+The commands to prepare the pipeline is like:
 ```
 git clone https://github.com/ultralytics/yolov5.git
 cp detection_files/* yolov5
 cd yolov5/
 git checkout tags/v6.2
-bash run_5fold.sh
+cp data/hyps/hyp.scratch-low.yaml v5m_surg.yaml
 ```
+
+As for the hyperparameters, we refer to the default `hyp.scratch-low.yaml`, and do the following changes:
+
+1. set initial learning rate `lr0` into `5e-4`.
+1. set the rotate degree `degree` into `30.0`.
+1. set `shear` into `0.1`.
+1. set `mixup` into `0.0`.
+
+After changing the hyperparameters and the script file, you can start trainining via running `bash run_5fold.sh`.

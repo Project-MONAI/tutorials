@@ -45,6 +45,9 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" data_analyzer.ipynb
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" data_analyzer_byoc.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" transforms_metatensor.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 2d_slices_from_3d_training.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" prepare_14tool_dataset.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" preprocess_detect_scene_and_split_fold.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" preprocess_extract_images_from_video.ipynb)
 
 # output formatting
 separator=""
@@ -83,11 +86,7 @@ pattern="-and -name '*' -and ! -wholename '*federated_learning*'\
  -and ! -wholename '*tcia_dataset*'\
  -and ! -wholename '*MRI_reconstruction*'\
  -and ! -wholename '*auto3dseg_autorunner_ref_api*'\
- -and ! -wholename '*get_started*'\
- -and ! -wholename '*prepare_14tool_dataset*'\
- -and ! -wholename '*preprocess_detect_scene_and_split_fold*'\
- -and ! -wholename '*preprocess_extract_images_from_video*'"
-
+ -and ! -wholename '*get_started*'"
 kernelspec="python3"
 
 function print_usage {

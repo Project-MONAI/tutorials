@@ -23,7 +23,7 @@ data_src_cfg = "./task.yaml"
 ## algorithm generation
 bundle_generator = BundleGen(
     algo_path=work_dir,
-    data_stats_filename=da_output_yaml,
+    data_stats_filename=data_output_yaml,
     data_src_cfg_name=data_src_cfg,
 )
 

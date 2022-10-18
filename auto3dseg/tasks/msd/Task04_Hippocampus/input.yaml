@@ -1,7 +1,7 @@
 name: Task04_Hippocampus
 task: segmentation
 
-modality: MRI   
+modality: MRI
 datalist: ./datafolds/msd_task04_hippocampus_folds.json # list of files
 dataroot: /data/Task04_Hippocampus # data location
 

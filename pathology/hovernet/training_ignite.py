@@ -117,10 +117,10 @@ def cropping_center(x, crop_shape, batch=False):
     Args:
         x: input array
         crop_shape: dimensions of cropped array
-    
+
     Returns:
         x: cropped array
-    
+
     """
     orig_shape = x.shape
     if not batch:
@@ -219,7 +219,7 @@ def run(cfg):
     # Create Model, Loss, Optimizer, lr_scheduler
     # --------------------------------------------------------------------------
     # __________________________________________________________________________
-    # initialize model 
+    # initialize model
     model = HoVerNet(
         mode="fast",
         in_channels=3,

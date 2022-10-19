@@ -82,7 +82,6 @@ pattern="-and -name '*' -and ! -wholename '*federated_learning*'\
  -and ! -wholename '*video_seg*'\
  -and ! -wholename '*tcia_dataset*'\
  -and ! -wholename '*MRI_reconstruction*'\
- -and ! -wholename '*auto3dseg_autorunner_ref_api*'\
  -and ! -wholename '*get_started*'"
 kernelspec="python3"
 

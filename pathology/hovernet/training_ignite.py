@@ -1,3 +1,7 @@
+import sys
+sys.path.append('/workspace/Code/tutorials/pathology/hovernet/loss')
+sys.path.append('/workspace/Code/tutorials/pathology/hovernet/transforms')
+from functools import partial
 import logging
 import os
 import time
@@ -6,7 +10,6 @@ import torch
 import numpy as np
 import pandas as pd
 from monai.data import DataLoader, Dataset
-from monai.losses import HoVerNetLoss
 from monai.networks.nets import HoVerNet
 from monai.engines import SupervisedEvaluator, SupervisedTrainer, PrepareBatchExtraInput
 from monai.transforms import (
@@ -20,6 +23,13 @@ from monai.transforms import (
     SplitDimd,
     EnsureChannelFirstd,
     ComputeHoVerMapsd,
+    CenterSpatialCropd,
+    FillHoles,
+    BoundingRect,
+    ThresholdIntensity,
+    RandFlipd,
+    RandRotate90d,
+    RandGaussianSmoothd,
 )
 from monai.handlers import (
     MeanDice,
@@ -30,9 +40,21 @@ from monai.handlers import (
     ValidationHandler,
     from_engine,
 )
-from monai.utils import set_determinism, ensure_tuple
+from monai.utils import set_determinism, ensure_tuple, convert_to_tensor
 from monai.utils.enums import HoVerNetBranch
 from sklearn.model_selection import StratifiedShuffleSplit
+
+from loss import HoVerNetLoss
+from transforms import (
+    GenerateWatershedMaskd,
+    GenerateInstanceBorderd,
+    GenerateDistanceMapd,
+    GenerateWatershedMarkersd,
+    Watershedd,
+    GenerateInstanceContour,
+    GenerateInstanceCentroid,
+    GenerateInstanceType,
+)
 
 
 set_determinism(seed=0)
@@ -102,41 +124,6 @@ def prepare_datasets(data_dir):
 
     return train_data, valid_data
 
-def cropping_center(x, crop_shape, batch=False):
-    """Crop an input image at the centre.
-    Args:
-        x: input array
-        crop_shape: dimensions of cropped array
-
-    Returns:
-        x: cropped array
-
-    """
-    orig_shape = x.shape
-    if not batch:
-        h0 = int((orig_shape[1] - crop_shape[0]) * 0.5)
-        w0 = int((orig_shape[2] - crop_shape[1]) * 0.5)
-        x = x[:, h0: h0 + crop_shape[0], w0: w0 + crop_shape[1]]
-    else:
-        h0 = int((orig_shape[2] - crop_shape[0]) * 0.5)
-        w0 = int((orig_shape[3] - crop_shape[1]) * 0.5)
-        x = x[..., h0: h0 + crop_shape[0], w0: w0 + crop_shape[1]]
-    return x
-
-def val_post_process(data):
-    seg_pred = data["pred"][HoVerNetBranch.NP.value]
-    trans = Compose([Activations(softmax=True), AsDiscrete(argmax=True, to_onehot=2)])
-    data["pred"][HoVerNetBranch.NP.value] = trans(seg_pred)
-
-    return data
-
-def train_post_process(data):
-    seg_pred = data["pred"][HoVerNetBranch.NP.value]
-    trans = Compose([Activations(softmax=True), AsDiscrete(argmax=True, to_onehot=2)])
-    data["pred"][HoVerNetBranch.NP.value] = trans(seg_pred)
-
-    return data
-
 def _from_engine(keys):
     keys = ensure_tuple(keys)
 
@@ -145,6 +132,60 @@ def _from_engine(keys):
         return tuple(ret) if len(ret) > 1 else ret[0]
 
     return _wrapper
+
+def post_process(output, return_binary=True, return_centroids=False, output_classes=None):
+    pred = output["pred"]
+    device = pred[HoVerNetBranch.NP.value].device
+    if HoVerNetBranch.NC.value in pred.keys():
+        type_pred = Activations(softmax=True)(pred[HoVerNetBranch.NC.value])
+        type_pred = AsDiscrete(argmax=True)(pred[HoVerNetBranch.NC.value])
+
+    post_trans_seg = Compose([
+        GenerateWatershedMaskd(keys=HoVerNetBranch.NP.value, softmax=True),
+        GenerateInstanceBorderd(keys='mask', hover_map_key=HoVerNetBranch.HV, kernel_size=3),
+        GenerateDistanceMapd(keys='mask', border_key='border', smooth_fn="gaussian"),
+        GenerateWatershedMarkersd(keys='mask', border_key='border', threshold=0.6, radius=2, postprocess_fn=FillHoles()),
+        Watershedd(keys='dist', mask_key='mask', markers_key='markers')
+    ])
+    pred_inst_dict = post_trans_seg(pred)
+    pred_inst = pred_inst_dict['dist']
+
+    inst_id_list = np.unique(pred_inst)[1:]  # exclude background
+
+    inst_info_dict = None
+    if return_centroids:
+        inst_id_list = np.unique(pred_inst)[1:]  # exclude background
+        inst_info_dict = {}
+        for inst_id in inst_id_list:
+            inst_map = pred_inst == inst_id
+            inst_bbox = BoundingRect()(inst_map)
+            inst_map = inst_map[:, inst_bbox[0][0]: inst_bbox[0][1], inst_bbox[0][2]: inst_bbox[0][3]]
+            offset = [inst_bbox[0][2], inst_bbox[0][0]]
+            inst_contour = GenerateInstanceContour()(inst_map.squeeze(), offset)
+            inst_centroid = GenerateInstanceCentroid()(inst_map, offset)
+            if inst_contour is not None:
+                inst_info_dict[inst_id] = {  # inst_id should start at 1
+                    "bounding_box": inst_bbox,
+                    "centroid": inst_centroid,
+                    "contour": inst_contour,
+                    "type_probability": None,
+                    "type": None,
+                }
+
+    if output_classes is not None:
+        for inst_id in list(inst_info_dict.keys()):
+            inst_type, type_prob = GenerateInstanceType()(
+                bbox=inst_info_dict[inst_id]["bounding_box"], type_pred=type_pred, seg_pred=pred_inst, instance_id=inst_id)
+            inst_info_dict[inst_id]["type"] = inst_type
+            inst_info_dict[inst_id]["type_probability"] = type_prob
+
+    pred_inst = convert_to_tensor(pred_inst, device=device)
+    if return_binary: 
+        pred_inst = ThresholdIntensity(threshold=0)(pred_inst)
+    output["pred"][HoVerNetBranch.NP.value] = pred_inst
+    output["pred"]["inst_info_dict"] = inst_info_dict
+    output["pred"]["pred_inst_dict"] = pred_inst_dict
+    return output
 
 
 class PrepareBatchExtraInput_v2():
@@ -180,8 +221,12 @@ def run(cfg):
             CastToTyped(keys=["image", "label_inst", "label_type", "hover_label_inst"], dtype=torch.float32),
             Lambdad(keys="label", func=lambda x: x[1: 2, ...] > 0),
             AsDiscreted(keys=["label", "label_type"], to_onehot=[2, 7]),
-            Lambdad(keys=["label", "label_inst", "label_type", "hover_label_inst"], func=lambda x: cropping_center(x, crop_shape=(164, 164))),
-            ScaleIntensityRanged( keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
+            CenterSpatialCropd(keys=["label", "label_inst", "label_type", "hover_label_inst"], roi_size=(164,164)),
+            ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
+            RandFlipd(keys=["image", "label", "label_inst", "label_type", "hover_label_inst"], prob=0.5, spatial_axis=0),
+            RandFlipd(keys=["image", "label", "label_inst", "label_type", "hover_label_inst"], prob=0.5, spatial_axis=1),
+            RandRotate90d(keys=["image", "label", "label_inst", "label_type", "hover_label_inst"], prob=0.5, max_k=1),
+            RandGaussianSmoothd(keys=["image"], sigma_x=(0.5,1.15), sigma_y=(0.5,1.15), prob=0.5),
         ]
     )
     val_transforms = Compose(
@@ -192,8 +237,8 @@ def run(cfg):
             CastToTyped(keys=["image", "label_inst", "label_type", "hover_label_inst"], dtype=torch.float32),
             Lambdad(keys="label", func=lambda x: x[1: 2, ...] > 0),
             AsDiscreted(keys=["label", "label_type"], to_onehot=[2, 7]),
-            Lambdad(keys=["label", "label_inst", "label_type", "hover_label_inst"], func=lambda x: cropping_center(x, crop_shape=(164, 164))),
-            ScaleIntensityRanged( keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
+            CenterSpatialCropd(keys=["label", "label_inst", "label_type", "hover_label_inst"], roi_size=(164,164)),
+            ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
         ]
     )
     # __________________________________________________________________________
@@ -202,8 +247,8 @@ def run(cfg):
     valid_ds = Dataset(data=valid_data, transform=val_transforms)
     # __________________________________________________________________________
     # DataLoaders
-    train_loader = DataLoader(train_ds, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"], pin_memory=True)
-    val_loader = DataLoader(valid_ds, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"], pin_memory=True)
+    train_loader = DataLoader(train_ds, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"], shuffle=True, pin_memory=torch.cuda.is_available())
+    val_loader = DataLoader(valid_ds, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"], pin_memory=torch.cuda.is_available())
 
     # --------------------------------------------------------------------------
     # Create Model, Loss, Optimizer, lr_scheduler
@@ -236,7 +281,7 @@ def run(cfg):
         val_data_loader=val_loader,
         prepare_batch=PrepareBatchExtraInput_v2(extra_keys=['label_type', 'hover_label_inst']),
         network=model,
-        postprocessing=val_post_process,
+        postprocessing=partial(post_process, return_binary=True, return_centroids=False, output_classes=None),
         key_val_metric={"val_dice": MeanDice(include_background=False, output_transform=_from_engine(keys=["pred", "label"]))},
         val_handlers=val_handlers,
         amp=cfg["amp"],
@@ -262,13 +307,12 @@ def run(cfg):
         network=model,
         optimizer=optimizer,
         loss_function=loss_function,
-        postprocessing=train_post_process,
+        postprocessing=partial(post_process, return_binary=True, return_centroids=False, output_classes=None),
         key_train_metric={"train_dice": MeanDice(include_background=False, output_transform=_from_engine(keys=["pred", "label"]))},
         train_handlers=train_handlers,
         amp=cfg["amp"],
     )
     trainer.run()
-
 
 
 def parse_arguments():

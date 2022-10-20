@@ -9,7 +9,8 @@ from argparse import ArgumentParser
 import torch
 import numpy as np
 import pandas as pd
-from monai.data import DataLoader, Dataset
+import torch.distributed as dist
+from monai.data import DataLoader, Dataset, partition_dataset
 from monai.networks.nets import HoVerNet
 from monai.engines import SupervisedEvaluator, SupervisedTrainer, PrepareBatchExtraInput
 from monai.transforms import (
@@ -70,9 +71,6 @@ def create_log_dir(cfg):
         os.makedirs(log_dir)
     return log_dir
 
-def set_device(cfg):
-    return torch.device(cfg['gpu'] if torch.cuda.is_available() else "cpu")
-
 def prepare_datasets(data_dir):
     info = pd.read_csv(os.path.join(data_dir, "patch_info.csv"))
     file_names = np.squeeze(info.to_numpy()).tolist()
@@ -83,28 +81,38 @@ def prepare_datasets(data_dir):
     cohort_sources = [v.split("_")[0] for v in img_sources]
     _, cohort_sources = np.unique(cohort_sources, return_inverse=True)
 
-    splitter = StratifiedShuffleSplit(n_splits=1, train_size=0.8, test_size=0.2, random_state=0)
+    splitter = StratifiedShuffleSplit(n_splits=1, train_size=0.7, test_size=0.3, random_state=0)
 
     split_generator = splitter.split(img_sources, cohort_sources)
-    for train_indices, valid_indices in split_generator:
+    for train_indices, valid_test_indices in split_generator:
         train_cohorts = img_sources[train_indices]
-        valid_cohorts = img_sources[valid_indices]
-        if np.intersect1d(train_cohorts, valid_cohorts).size != 0:
-            raise ValueError("Train and validation cohorts has an overlap.")
-        train_names = [
-            file_name for file_name in file_names for source in train_cohorts if source == file_name.split("-")[0]
-        ]
-        valid_names = [
-            file_name for file_name in file_names for source in valid_cohorts if source == file_name.split("-")[0]
-        ]
-        train_names = np.unique(train_names)
-        valid_names = np.unique(valid_names)
-        print(f"Train: {len(train_names):04d} - Valid: {len(valid_names):04d}")
-        if np.intersect1d(train_names, valid_names).size != 0:
-            raise ValueError("Train and validation cohorts has an overlap.")
+        valid_test_sources = img_sources[valid_test_indices]
+        valid_test_cohorts = cohort_sources[valid_test_indices]
+        _split_generator = splitter.split(valid_test_sources, valid_test_cohorts)
+        for valid_indices, test_indices in _split_generator:
+            valid_cohorts = valid_test_sources[valid_indices]
+            test_cohorts = valid_test_sources[test_indices]
+            train_names = [
+                file_name for file_name in file_names for source in train_cohorts if source == file_name.split("-")[0]
+            ]
+            valid_names = [
+                file_name for file_name in file_names for source in valid_cohorts if source == file_name.split("-")[0]
+            ]
+            test_names = [
+                file_name for file_name in file_names for source in test_cohorts if source == file_name.split("-")[0]
+            ]
+            train_names = np.unique(train_names)
+            valid_names = np.unique(valid_names)
+            test_names = np.unique(test_names)
+            print(f"Train: {len(train_names):04d} - Valid: {len(valid_names):04d} - Test: {len(test_names):04d}")
+            if np.intersect1d(train_names, valid_names).size != 0:
+                raise ValueError("Train and validation cohorts has an overlap.")
+            if np.intersect1d(valid_names, test_names).size != 0:
+                raise ValueError("Validation and test cohorts has an overlap.")
 
-        train_indices = [file_names.index(v) for v in train_names]
-        valid_indices = [file_names.index(v) for v in valid_names]
+            train_indices = [file_names.index(v) for v in train_names]
+            valid_indices = [file_names.index(v) for v in valid_names]
+            test_indices = [file_names.index(v) for v in test_names]
 
     images = np.load(os.path.join(data_dir, "images.npy"))
     labels = np.load(os.path.join(data_dir, "labels.npy"))
@@ -121,8 +129,9 @@ def prepare_datasets(data_dir):
 
     train_data = [data[i] for i in train_indices]
     valid_data = [data[i] for i in valid_indices]
+    test_data = [data[i] for i in test_indices]
 
-    return train_data, valid_data
+    return train_data, valid_data, test_data
 
 def _from_engine(keys):
     keys = ensure_tuple(keys)
@@ -138,7 +147,7 @@ def post_process(output, return_binary=True, return_centroids=False, output_clas
     device = pred[HoVerNetBranch.NP.value].device
     if HoVerNetBranch.NC.value in pred.keys():
         type_pred = Activations(softmax=True)(pred[HoVerNetBranch.NC.value])
-        type_pred = AsDiscrete(argmax=True)(pred[HoVerNetBranch.NC.value])
+        type_pred = AsDiscrete(argmax=True)(type_pred)
 
     post_trans_seg = Compose([
         GenerateWatershedMaskd(keys=HoVerNetBranch.NP.value, softmax=True),
@@ -181,7 +190,7 @@ def post_process(output, return_binary=True, return_centroids=False, output_clas
 
     pred_inst = convert_to_tensor(pred_inst, device=device)
     if return_binary:
-        pred_inst = ThresholdIntensity(threshold=0)(pred_inst)
+        pred_inst[pred_inst > 0] = 1
     output["pred"][HoVerNetBranch.NP.value] = pred_inst
     output["pred"]["inst_info_dict"] = inst_info_dict
     output["pred"]["pred_inst_dict"] = pred_inst_dict
@@ -203,16 +212,63 @@ class PrepareBatchExtraInput_v2():
         return image, all_label
 
 
+def get_loaders(cfg, train_transforms, val_transforms):
+    multi_gpu = cfg["multi_gpu"]
+
+    train_data, valid_data, test_data = prepare_datasets(cfg["root"])
+
+    total_l = len(train_data) + len(valid_data) + len(test_data)
+
+    if multi_gpu:
+        train_data = partition_dataset(
+            data=train_data,
+            num_partitions=dist.get_world_size(),
+            even_divisible=True,
+            shuffle=True,
+            seed=cfg["seed"],
+        )[dist.get_rank()]
+        valid_data = partition_dataset(
+            data=valid_data,
+            num_partitions=dist.get_world_size(),
+            even_divisible=True,
+            shuffle=True,
+            seed=cfg["seed"],
+        )[dist.get_rank()]
+
+
+    train_ds = Dataset(data=train_data, transform=train_transforms)
+    valid_ds = Dataset(data=valid_data, transform=val_transforms)
+    train_loader = DataLoader(train_ds, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"], shuffle=True, pin_memory=torch.cuda.is_available())
+    val_loader = DataLoader(valid_ds, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"], pin_memory=torch.cuda.is_available())
+
+    logging.info(
+        "{}:: Total Records used for Training is: {}/{}".format(
+            dist.get_rank(), len(train_ds), total_l
+        )
+    )
+    logging.info(
+        "{}:: Total Records used for Validation is: {}/{}".format(
+            dist.get_rank(), len(valid_ds), total_l
+        )
+    )
+
+    return train_loader, val_loader
+
 def run(cfg):
     log_dir = create_log_dir(cfg)
-    device = set_device(cfg)
+    multi_gpu = cfg["multi_gpu"]
+    if multi_gpu:
+        dist.init_process_group(backend="nccl", init_method="env://")
+        device = torch.device("cuda:{}".format(dist.get_rank()))
+        torch.cuda.set_device(device)
+    else:
+        device = torch.device("cuda" if cfg["use_gpu"] else "cpu")
     # --------------------------------------------------------------------------
     # Data Loading and Preprocessing
     # --------------------------------------------------------------------------
     # __________________________________________________________________________
     # __________________________________________________________________________
     # Build MONAI preprocessing
-    train_data, valid_data = prepare_datasets(cfg["root"])
     train_transforms = Compose(
         [
             EnsureChannelFirstd(keys=("image", "label"), channel_dim=-1),
@@ -242,13 +298,8 @@ def run(cfg):
         ]
     )
     # __________________________________________________________________________
-    # Create MONAI dataset
-    train_ds = Dataset(data=train_data, transform=train_transforms)
-    valid_ds = Dataset(data=valid_data, transform=val_transforms)
-    # __________________________________________________________________________
-    # DataLoaders
-    train_loader = DataLoader(train_ds, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"], shuffle=True, pin_memory=torch.cuda.is_available())
-    val_loader = DataLoader(valid_ds, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"], pin_memory=torch.cuda.is_available())
+    # Create MONAI DataLoaders
+    train_loader, val_loader = get_loaders(cfg, train_transforms, val_transforms)
 
     # --------------------------------------------------------------------------
     # Create Model, Loss, Optimizer, lr_scheduler
@@ -263,6 +314,10 @@ def run(cfg):
         norm="batch",
         dropout_prob=0.2,
     ).to(device)
+    if multi_gpu:
+        model = torch.nn.parallel.DistributedDataParallel(
+            model, device_ids=[dist.get_rank()], output_device=dist.get_rank()
+        )
     loss_function = HoVerNetLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg["lr"], weight_decay=1e-5)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=cfg["step_size"])
@@ -276,6 +331,7 @@ def run(cfg):
         StatsHandler(output_transform=lambda x: None),
         TensorBoardStatsHandler(log_dir=log_dir, output_transform=lambda x: None),
     ]
+    val_handlers = val_handlers if dist.get_rank() == 0 else None
     evaluator = SupervisedEvaluator(
         device=device,
         val_data_loader=val_loader,
@@ -290,15 +346,16 @@ def run(cfg):
     # Trainer
     train_handlers = [
         LrScheduleHandler(lr_scheduler=lr_scheduler, print_lr=True),
+        ValidationHandler(validator=evaluator, interval=cfg["val_freq"], epoch_level=True),
         CheckpointSaver(
             save_dir=cfg["logdir"], save_dict={"net": model, "opt": optimizer}, save_interval=1, epoch_level=True
         ),
         StatsHandler(tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
-        ValidationHandler(validator=evaluator, interval=1, epoch_level=True),
         TensorBoardStatsHandler(
             log_dir=cfg["logdir"], tag_name="train_loss", output_transform=from_engine(["loss"], first=True)
         ),
     ]
+    train_handlers = train_handlers if dist.get_rank() == 0 else train_handlers[:2]
     trainer = SupervisedTrainer(
         device=device,
         max_epochs=cfg["n_epochs"],
@@ -314,6 +371,9 @@ def run(cfg):
     )
     trainer.run()
 
+    if cfg["multi_gpu"]:
+        dist.destroy_process_group()
+
 
 def parse_arguments():
     parser = ArgumentParser(description="Tumor detection on whole slide pathology images.")
@@ -324,16 +384,19 @@ def parse_arguments():
         help="root data dir",
     )
     parser.add_argument("--logdir", type=str, default="./logs/", dest="logdir", help="log directory")
+    parser.add_argument("-s", "--seed", type=int, default=23)
 
     parser.add_argument("--bs", type=int, default=15, dest="batch_size", help="batch size")
     parser.add_argument("--ep", type=int, default=300, dest="n_epochs", help="number of epochs")
     parser.add_argument("--lr", type=float, default=1e-4, dest="lr", help="initial learning rate")
     parser.add_argument("--step", type=int, default=25, dest="step_size", help="period of learning rate decay")
+    parser.add_argument("-f", "--val_freq", type=int, default=1, help="validation frequence")
 
     parser.add_argument("--no-amp", action="store_false", dest="amp", help="deactivate amp")
 
     parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")
-    parser.add_argument("--gpu", type=str, default="cuda:1", dest="gpu", help="which gpu to use")
+    parser.add_argument("--use_gpu", type=bool, default=True, dest="use_gpu", help="whether to use gpu")
+    parser.add_argument("--multi_gpu", action="store_false", dest="multi_gpu")
 
     args = parser.parse_args()
     config_dict = vars(args)

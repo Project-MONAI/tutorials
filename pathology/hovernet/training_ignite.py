@@ -49,17 +49,7 @@ def create_log_dir(cfg):
     return log_dir
 
 def set_device(cfg):
-    # Define the device, GPU or CPU
-    gpus = [int(n.strip()) for n in cfg["gpu"].split(",")]
-    gpus = set(gpus) & set(range(16))  # limit to 16-gpu machines
-    if gpus and torch.cuda.is_available():
-        os.environ["CUDA_VISIBLE_DEVICES"] = ",".join([str(n) for n in gpus])
-        device = torch.device("cuda")
-        print(f'CUDA is being used with GPU Id(s): {os.environ["CUDA_VISIBLE_DEVICES"]}')
-    else:
-        device = torch.device("cpu")
-        print("CPU only!")
-    return device
+    return torch.device(cfg['gpu'] if torch.cuda.is_available() else "cpu")
 
 def prepare_datasets(data_dir):
     info = pd.read_csv(os.path.join(data_dir, "patch_info.csv"))
@@ -126,11 +116,11 @@ def cropping_center(x, crop_shape, batch=False):
     if not batch:
         h0 = int((orig_shape[1] - crop_shape[0]) * 0.5)
         w0 = int((orig_shape[2] - crop_shape[1]) * 0.5)
-        x = x[:, h0 : h0 + crop_shape[0], w0 : w0 + crop_shape[1]]
+        x = x[:, h0: h0 + crop_shape[0], w0: w0 + crop_shape[1]]
     else:
         h0 = int((orig_shape[2] - crop_shape[0]) * 0.5)
         w0 = int((orig_shape[3] - crop_shape[1]) * 0.5)
-        x = x[..., h0 : h0 + crop_shape[0], w0 : w0 + crop_shape[1]]
+        x = x[..., h0: h0 + crop_shape[0], w0: w0 + crop_shape[1]]
     return x
 
 def val_post_process(data):
@@ -188,7 +178,7 @@ def run(cfg):
             SplitDimd(keys="label", output_postfixes=["inst", "type"]),
             ComputeHoVerMapsd(keys="label_inst"),
             CastToTyped(keys=["image", "label_inst", "label_type", "hover_label_inst"], dtype=torch.float32),
-            Lambdad(keys="label", func=lambda x: x[1:2, ...] > 0),
+            Lambdad(keys="label", func=lambda x: x[1: 2, ...] > 0),
             AsDiscreted(keys=["label", "label_type"], to_onehot=[2, 7]),
             Lambdad(keys=["label", "label_inst", "label_type", "hover_label_inst"], func=lambda x: cropping_center(x, crop_shape=(164, 164))),
             ScaleIntensityRanged( keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
@@ -200,7 +190,7 @@ def run(cfg):
             SplitDimd(keys="label", output_postfixes=["inst", "type"]),
             ComputeHoVerMapsd(keys="label_inst"),
             CastToTyped(keys=["image", "label_inst", "label_type", "hover_label_inst"], dtype=torch.float32),
-            Lambdad(keys="label", func=lambda x: x[1:2, ...] > 0),
+            Lambdad(keys="label", func=lambda x: x[1: 2, ...] > 0),
             AsDiscreted(keys=["label", "label_type"], to_onehot=[2, 7]),
             Lambdad(keys=["label", "label_inst", "label_type", "hover_label_inst"], func=lambda x: cropping_center(x, crop_shape=(164, 164))),
             ScaleIntensityRanged( keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
@@ -212,8 +202,8 @@ def run(cfg):
     valid_ds = Dataset(data=valid_data, transform=val_transforms)
     # __________________________________________________________________________
     # DataLoaders
-    train_loader = DataLoader(train_ds[:10], batch_size=cfg["batch_size"], num_workers=cfg["num_workers"], pin_memory=True)
-    val_loader = DataLoader(valid_ds[:10], batch_size=cfg["batch_size"], num_workers=cfg["num_workers"], pin_memory=True)
+    train_loader = DataLoader(train_ds, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"], pin_memory=True)
+    val_loader = DataLoader(valid_ds, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"], pin_memory=True)
 
     # --------------------------------------------------------------------------
     # Create Model, Loss, Optimizer, lr_scheduler
@@ -291,15 +281,15 @@ def parse_arguments():
     )
     parser.add_argument("--logdir", type=str, default="./logs/", dest="logdir", help="log directory")
 
-    parser.add_argument("--bs", type=int, default=4, dest="batch_size", help="batch size")
-    parser.add_argument("--ep", type=int, default=10, dest="n_epochs", help="number of epochs")
+    parser.add_argument("--bs", type=int, default=15, dest="batch_size", help="batch size")
+    parser.add_argument("--ep", type=int, default=300, dest="n_epochs", help="number of epochs")
     parser.add_argument("--lr", type=float, default=1e-4, dest="lr", help="initial learning rate")
     parser.add_argument("--step", type=int, default=25, dest="step_size", help="period of learning rate decay")
 
     parser.add_argument("--no-amp", action="store_false", dest="amp", help="deactivate amp")
 
     parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")
-    parser.add_argument("--gpu", type=str, default="0", dest="gpu", help="which gpu to use")
+    parser.add_argument("--gpu", type=str, default="cuda:1", dest="gpu", help="which gpu to use")
 
     args = parser.parse_args()
     config_dict = vars(args)

@@ -180,7 +180,7 @@ def post_process(output, return_binary=True, return_centroids=False, output_clas
             inst_info_dict[inst_id]["type_probability"] = type_prob
 
     pred_inst = convert_to_tensor(pred_inst, device=device)
-    if return_binary: 
+    if return_binary:
         pred_inst = ThresholdIntensity(threshold=0)(pred_inst)
     output["pred"][HoVerNetBranch.NP.value] = pred_inst
     output["pred"]["inst_info_dict"] = inst_info_dict

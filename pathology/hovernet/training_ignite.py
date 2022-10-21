@@ -235,7 +235,7 @@ def get_loaders(cfg, train_transforms, val_transforms):
             shuffle=False,
             seed=cfg["seed"],
         )[dist.get_rank()]
-    
+
     print("train_files:", len(train_data))
     print("val_files:", len(valid_data))
 
@@ -332,11 +332,11 @@ def run(cfg):
     # Evaluator
     val_handlers = [
         CheckpointSaver(
-            save_dir=log_dir, 
-            save_dict={"net": model}, 
-            save_key_metric=True, 
-            save_final=True, 
-            save_interval=cfg["save_interval"], 
+            save_dir=log_dir,
+            save_dict={"net": model},
+            save_key_metric=True,
+            save_final=True,
+            save_interval=cfg["save_interval"],
             final_filename="model.pt",
         ),
         StatsHandler(output_transform=lambda x: None),
@@ -359,11 +359,11 @@ def run(cfg):
         LrScheduleHandler(lr_scheduler=lr_scheduler, print_lr=True),
         ValidationHandler(validator=evaluator, interval=cfg["val_freq"], epoch_level=True),
         CheckpointSaver(
-            save_dir=log_dir, 
-            save_dict={"net": model, "opt": optimizer}, 
+            save_dir=log_dir,
+            save_dict={"net": model, "opt": optimizer},
             save_interval=cfg["save_interval"] * 2,
-            epoch_level=True, 
-            save_final=True, 
+            epoch_level=True,
+            save_final=True,
             final_filename="checkpoint.pt",
         ),
         StatsHandler(tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),

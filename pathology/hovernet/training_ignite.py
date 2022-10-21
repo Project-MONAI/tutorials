@@ -55,6 +55,7 @@ from transforms import (
     GenerateInstanceContour,
     GenerateInstanceCentroid,
     GenerateInstanceType,
+    ComputeHoVerMapsd,
 )
 
 
@@ -213,7 +214,7 @@ class PrepareBatchExtraInput_v2():
 
 
 def get_loaders(cfg, train_transforms, val_transforms):
-    multi_gpu = cfg["multi_gpu"]
+    multi_gpu = True if torch.cuda.device_count() > 1 else False
 
     train_data, valid_data, test_data = prepare_datasets(cfg["root"])
 
@@ -231,9 +232,12 @@ def get_loaders(cfg, train_transforms, val_transforms):
             data=valid_data,
             num_partitions=dist.get_world_size(),
             even_divisible=True,
-            shuffle=True,
+            shuffle=False,
             seed=cfg["seed"],
         )[dist.get_rank()]
+    
+    print("train_files:", len(train_data))
+    print("val_files:", len(valid_data))
 
 
     train_ds = Dataset(data=train_data, transform=train_transforms)
@@ -256,7 +260,7 @@ def get_loaders(cfg, train_transforms, val_transforms):
 
 def run(cfg):
     log_dir = create_log_dir(cfg)
-    multi_gpu = cfg["multi_gpu"]
+    multi_gpu = True if torch.cuda.device_count() > 1 else False
     if multi_gpu:
         dist.init_process_group(backend="nccl", init_method="env://")
         device = torch.device("cuda:{}".format(dist.get_rank()))
@@ -327,7 +331,14 @@ def run(cfg):
     # --------------------------------------------
     # Evaluator
     val_handlers = [
-        CheckpointSaver(save_dir=log_dir, save_dict={"net": model}, save_key_metric=True),
+        CheckpointSaver(
+            save_dir=log_dir, 
+            save_dict={"net": model}, 
+            save_key_metric=True, 
+            save_final=True, 
+            save_interval=cfg["save_interval"], 
+            final_filename="model.pt",
+        ),
         StatsHandler(output_transform=lambda x: None),
         TensorBoardStatsHandler(log_dir=log_dir, output_transform=lambda x: None),
     ]
@@ -348,11 +359,16 @@ def run(cfg):
         LrScheduleHandler(lr_scheduler=lr_scheduler, print_lr=True),
         ValidationHandler(validator=evaluator, interval=cfg["val_freq"], epoch_level=True),
         CheckpointSaver(
-            save_dir=cfg["logdir"], save_dict={"net": model, "opt": optimizer}, save_interval=1, epoch_level=True
+            save_dir=log_dir, 
+            save_dict={"net": model, "opt": optimizer}, 
+            save_interval=cfg["save_interval"] * 2,
+            epoch_level=True, 
+            save_final=True, 
+            final_filename="checkpoint.pt",
         ),
         StatsHandler(tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
         TensorBoardStatsHandler(
-            log_dir=cfg["logdir"], tag_name="train_loss", output_transform=from_engine(["loss"], first=True)
+            log_dir=log_dir, tag_name="train_loss", output_transform=from_engine(["loss"], first=True)
         ),
     ]
     train_handlers = train_handlers if dist.get_rank() == 0 else train_handlers[:2]
@@ -371,7 +387,7 @@ def run(cfg):
     )
     trainer.run()
 
-    if cfg["multi_gpu"]:
+    if torch.cuda.device_count() > 1:
         dist.destroy_process_group()
 
 
@@ -394,9 +410,9 @@ def parse_arguments():
 
     parser.add_argument("--no-amp", action="store_false", dest="amp", help="deactivate amp")
 
+    parser.add_argument("--save_interval", type=int, default=3)
     parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")
     parser.add_argument("--use_gpu", type=bool, default=True, dest="use_gpu", help="whether to use gpu")
-    parser.add_argument("--multi_gpu", action="store_false", dest="multi_gpu")
 
     args = parser.parse_args()
     config_dict = vars(args)

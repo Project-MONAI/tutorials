@@ -53,8 +53,8 @@ from transforms import (
     GenerateInstanceContour,
     GenerateInstanceCentroid,
     GenerateInstanceType,
-    GenerateInstanceCentroid, 
-    GenerateInstanceContour, 
+    GenerateInstanceCentroid,
+    GenerateInstanceContour,
     GenerateInstanceType,
 )
 
@@ -101,7 +101,7 @@ def prepare_data(data_dir, fold, splits):
     ]
     train_data = [data[i] for i in splits[fold]['train']]
     valid_data = [data[i] for i in splits[fold]['valid']]
-    
+
     return train_data, valid_data
 
 def post_process(output, device, return_binary=True, return_centroids=False, output_classes=None):
@@ -257,7 +257,7 @@ def run(data_dir, fold, args):
                 with autocast():
                     outputs = model(inputs)
                     loss = loss_function(outputs, labels)
-                
+
                 scaler.scale(loss).backward()
                 scaler.unscale_(optimizer)
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
@@ -337,7 +337,7 @@ def main():
     parser.add_argument("-f", "--val_freq", type=int, default=1, help="validation frequence")
 
     args = parser.parse_args()
-    
+
     set_determinism(seed=0)
     import sys
     if args.ngc:

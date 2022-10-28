@@ -113,7 +113,7 @@ def prepare_data(data_dir, fold, splits):
     ]
     train_data = [data[i] for i in splits[fold]['train']]
     valid_data = [data[i] for i in splits[fold]['valid']]
-    
+
     return train_data, valid_data
 
 def _from_engine(keys):

@@ -1,6 +1,5 @@
 import sys
-sys.path.append('/workspace/Code/tutorials/pathology/hovernet/loss')
-sys.path.append('/workspace/Code/tutorials/pathology/hovernet/transforms')
+
 from functools import partial
 import logging
 import os
@@ -10,7 +9,7 @@ import torch
 import numpy as np
 import pandas as pd
 import torch.distributed as dist
-from monai.data import DataLoader, Dataset, partition_dataset
+from monai.data import DataLoader, partition_dataset, CacheDataset
 from monai.networks.nets import HoVerNet
 from monai.engines import SupervisedEvaluator, SupervisedTrainer, PrepareBatchExtraInput
 from monai.transforms import (
@@ -28,6 +27,7 @@ from monai.transforms import (
     FillHoles,
     BoundingRect,
     ThresholdIntensity,
+    GaussianSmooth,
     RandFlipd,
     RandRotate90d,
     RandGaussianSmoothd,
@@ -38,14 +38,15 @@ from monai.handlers import (
     LrScheduleHandler,
     StatsHandler,
     TensorBoardStatsHandler,
+    TensorBoardImageHandler,
     ValidationHandler,
     from_engine,
 )
 from monai.utils import set_determinism, ensure_tuple, convert_to_tensor
 from monai.utils.enums import HoVerNetBranch
-from sklearn.model_selection import StratifiedShuffleSplit
 
 from loss import HoVerNetLoss
+from net import HoVerNet
 from transforms import (
     GenerateWatershedMaskd,
     GenerateInstanceBorderd,
@@ -59,12 +60,10 @@ from transforms import (
 )
 
 
-set_determinism(seed=0)
-
-def create_log_dir(cfg):
+def create_log_dir(cfg, fold):
     timestamp = time.strftime("%y%m%d-%H%M%S")
     run_folder_name = (
-        f"{timestamp}_hovernet_bs{cfg['batch_size']}_ep{cfg['n_epochs']}_lr{cfg['lr']}"
+        f"{timestamp}_hovernet_bs{cfg['batch_size']}_ep{cfg['n_epochs']}_lr{cfg['lr']}_fold{fold}"
     )
     log_dir = os.path.join(cfg["logdir"], run_folder_name)
     print(f"Logs and model are saved at '{log_dir}'.")
@@ -72,49 +71,34 @@ def create_log_dir(cfg):
         os.makedirs(log_dir)
     return log_dir
 
-def prepare_datasets(data_dir):
-    info = pd.read_csv(os.path.join(data_dir, "patch_info.csv"))
+def split_dataset(cfg):
+    # using original split in the paper
+    info = pd.read_csv(os.path.join(cfg["root"], "patch_info.csv"))
     file_names = np.squeeze(info.to_numpy()).tolist()
+    split_info = pd.read_csv(os.path.join(cfg["root"], "split_info.csv"))
 
-    img_sources = [v.split("-")[0] for v in file_names]
-    img_sources = np.unique(img_sources)
+    indices, splits = [], []
+    for i in range(3):
+        fold_case = split_info.loc[split_info['Split'] == i+1, 'Filename'].tolist()
+        fold_patches = [
+            file_name for file_name in file_names for _name in fold_case if _name == file_name.split("-")[0]
+        ]
+        fold_patches = np.unique(fold_patches)
+        print(f"Fold: {i} - {len(fold_patches):04d}")
 
-    cohort_sources = [v.split("_")[0] for v in img_sources]
-    _, cohort_sources = np.unique(cohort_sources, return_inverse=True)
+        fold_indices = [file_names.index(v) for v in fold_patches]
+        indices.append(fold_indices)
 
-    splitter = StratifiedShuffleSplit(n_splits=1, train_size=0.7, test_size=0.3, random_state=0)
+    for i in range(3):
+        _indices = indices.copy()
+        splits.append({
+            "valid": _indices.pop(i),
+            "train": sum(_indices, []),
+        })
 
-    split_generator = splitter.split(img_sources, cohort_sources)
-    for train_indices, valid_test_indices in split_generator:
-        train_cohorts = img_sources[train_indices]
-        valid_test_sources = img_sources[valid_test_indices]
-        valid_test_cohorts = cohort_sources[valid_test_indices]
-        _split_generator = splitter.split(valid_test_sources, valid_test_cohorts)
-        for valid_indices, test_indices in _split_generator:
-            valid_cohorts = valid_test_sources[valid_indices]
-            test_cohorts = valid_test_sources[test_indices]
-            train_names = [
-                file_name for file_name in file_names for source in train_cohorts if source == file_name.split("-")[0]
-            ]
-            valid_names = [
-                file_name for file_name in file_names for source in valid_cohorts if source == file_name.split("-")[0]
-            ]
-            test_names = [
-                file_name for file_name in file_names for source in test_cohorts if source == file_name.split("-")[0]
-            ]
-            train_names = np.unique(train_names)
-            valid_names = np.unique(valid_names)
-            test_names = np.unique(test_names)
-            print(f"Train: {len(train_names):04d} - Valid: {len(valid_names):04d} - Test: {len(test_names):04d}")
-            if np.intersect1d(train_names, valid_names).size != 0:
-                raise ValueError("Train and validation cohorts has an overlap.")
-            if np.intersect1d(valid_names, test_names).size != 0:
-                raise ValueError("Validation and test cohorts has an overlap.")
+    return splits
 
-            train_indices = [file_names.index(v) for v in train_names]
-            valid_indices = [file_names.index(v) for v in valid_names]
-            test_indices = [file_names.index(v) for v in test_names]
-
+def prepare_data(data_dir, fold, splits):
     images = np.load(os.path.join(data_dir, "images.npy"))
     labels = np.load(os.path.join(data_dir, "labels.npy"))
 
@@ -127,12 +111,10 @@ def prepare_datasets(data_dir):
         }
         for image, label in zip(images, labels)
     ]
-
-    train_data = [data[i] for i in train_indices]
-    valid_data = [data[i] for i in valid_indices]
-    test_data = [data[i] for i in test_indices]
-
-    return train_data, valid_data, test_data
+    train_data = [data[i] for i in splits[fold]['train']]
+    valid_data = [data[i] for i in splits[fold]['valid']]
+    
+    return train_data, valid_data
 
 def _from_engine(keys):
     keys = ensure_tuple(keys)
@@ -153,8 +135,8 @@ def post_process(output, return_binary=True, return_centroids=False, output_clas
     post_trans_seg = Compose([
         GenerateWatershedMaskd(keys=HoVerNetBranch.NP.value, softmax=True),
         GenerateInstanceBorderd(keys='mask', hover_map_key=HoVerNetBranch.HV, kernel_size=3),
-        GenerateDistanceMapd(keys='mask', border_key='border', smooth_fn="gaussian"),
-        GenerateWatershedMarkersd(keys='mask', border_key='border', threshold=0.6, radius=2, postprocess_fn=FillHoles()),
+        GenerateDistanceMapd(keys='mask', border_key='border', smooth_fn=GaussianSmooth()),
+        GenerateWatershedMarkersd(keys='mask', border_key='border', threshold=0.7, radius=2, postprocess_fn=FillHoles()),
         Watershedd(keys='dist', mask_key='mask', markers_key='markers')
     ])
     pred_inst_dict = post_trans_seg(pred)
@@ -164,14 +146,13 @@ def post_process(output, return_binary=True, return_centroids=False, output_clas
 
     inst_info_dict = None
     if return_centroids:
-        inst_id_list = np.unique(pred_inst)[1:]  # exclude background
         inst_info_dict = {}
         for inst_id in inst_id_list:
             inst_map = pred_inst == inst_id
             inst_bbox = BoundingRect()(inst_map)
             inst_map = inst_map[:, inst_bbox[0][0]: inst_bbox[0][1], inst_bbox[0][2]: inst_bbox[0][3]]
             offset = [inst_bbox[0][2], inst_bbox[0][0]]
-            inst_contour = GenerateInstanceContour()(inst_map.squeeze(), offset)
+            inst_contour = GenerateInstanceContour()(inst_map, offset)
             inst_centroid = GenerateInstanceCentroid()(inst_map, offset)
             if inst_contour is not None:
                 inst_info_dict[inst_id] = {  # inst_id should start at 1
@@ -213,13 +194,11 @@ class PrepareBatchExtraInput_v2():
         return image, all_label
 
 
-def get_loaders(cfg, train_transforms, val_transforms):
+def get_loaders(cfg, train_transforms, val_transforms, fold):
     multi_gpu = True if torch.cuda.device_count() > 1 else False
 
-    train_data, valid_data, test_data = prepare_datasets(cfg["root"])
-
-    total_l = len(train_data) + len(valid_data) + len(test_data)
-
+    splits = split_dataset(cfg)
+    train_data, valid_data = prepare_data(cfg["root"], fold, splits)
     if multi_gpu:
         train_data = partition_dataset(
             data=train_data,
@@ -239,27 +218,15 @@ def get_loaders(cfg, train_transforms, val_transforms):
     print("train_files:", len(train_data))
     print("val_files:", len(valid_data))
 
-
-    train_ds = Dataset(data=train_data, transform=train_transforms)
-    valid_ds = Dataset(data=valid_data, transform=val_transforms)
+    train_ds = CacheDataset(data=train_data, transform=train_transforms, cache_rate=1.0, num_workers=4)
+    valid_ds = CacheDataset(data=valid_data, transform=val_transforms, cache_rate=1.0, num_workers=4)
     train_loader = DataLoader(train_ds, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"], shuffle=True, pin_memory=torch.cuda.is_available())
     val_loader = DataLoader(valid_ds, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"], pin_memory=torch.cuda.is_available())
 
-    logging.info(
-        "{}:: Total Records used for Training is: {}/{}".format(
-            dist.get_rank(), len(train_ds), total_l
-        )
-    )
-    logging.info(
-        "{}:: Total Records used for Validation is: {}/{}".format(
-            dist.get_rank(), len(valid_ds), total_l
-        )
-    )
-
     return train_loader, val_loader
 
-def run(cfg):
-    log_dir = create_log_dir(cfg)
+def run(cfg, fold):
+    log_dir = create_log_dir(cfg, fold)
     multi_gpu = True if torch.cuda.device_count() > 1 else False
     if multi_gpu:
         dist.init_process_group(backend="nccl", init_method="env://")
@@ -303,7 +270,7 @@ def run(cfg):
     )
     # __________________________________________________________________________
     # Create MONAI DataLoaders
-    train_loader, val_loader = get_loaders(cfg, train_transforms, val_transforms)
+    train_loader, val_loader = get_loaders(cfg, train_transforms, val_transforms, fold)
 
     # --------------------------------------------------------------------------
     # Create Model, Loss, Optimizer, lr_scheduler
@@ -323,7 +290,7 @@ def run(cfg):
             model, device_ids=[dist.get_rank()], output_device=dist.get_rank()
         )
     loss_function = HoVerNetLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=cfg["lr"], weight_decay=1e-5)
+    optimizer = torch.optim.Adam(model.parameters(), lr=cfg["lr"], betas=(0.9, 0.999), weight_decay=0.0)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=cfg["step_size"])
 
     # --------------------------------------------
@@ -335,14 +302,12 @@ def run(cfg):
             save_dir=log_dir,
             save_dict={"net": model},
             save_key_metric=True,
-            save_final=True,
-            save_interval=cfg["save_interval"],
-            final_filename="model.pt",
         ),
         StatsHandler(output_transform=lambda x: None),
         TensorBoardStatsHandler(log_dir=log_dir, output_transform=lambda x: None),
     ]
-    val_handlers = val_handlers if dist.get_rank() == 0 else None
+    if multi_gpu:
+        val_handlers = val_handlers if dist.get_rank() == 0 else None
     evaluator = SupervisedEvaluator(
         device=device,
         val_data_loader=val_loader,
@@ -361,17 +326,16 @@ def run(cfg):
         CheckpointSaver(
             save_dir=log_dir,
             save_dict={"net": model, "opt": optimizer},
-            save_interval=cfg["save_interval"] * 2,
+            save_interval=cfg["save_interval"],
             epoch_level=True,
-            save_final=True,
-            final_filename="checkpoint.pt",
         ),
         StatsHandler(tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
         TensorBoardStatsHandler(
             log_dir=log_dir, tag_name="train_loss", output_transform=from_engine(["loss"], first=True)
         ),
     ]
-    train_handlers = train_handlers if dist.get_rank() == 0 else train_handlers[:2]
+    if multi_gpu:
+        train_handlers = train_handlers if dist.get_rank() == 0 else train_handlers[:2]
     trainer = SupervisedTrainer(
         device=device,
         max_epochs=cfg["n_epochs"],
@@ -387,11 +351,11 @@ def run(cfg):
     )
     trainer.run()
 
-    if torch.cuda.device_count() > 1:
+    if multi_gpu:
         dist.destroy_process_group()
 
 
-def parse_arguments():
+def main():
     parser = ArgumentParser(description="Tumor detection on whole slide pathology images.")
     parser.add_argument(
         "--root",
@@ -402,7 +366,7 @@ def parse_arguments():
     parser.add_argument("--logdir", type=str, default="./logs/", dest="logdir", help="log directory")
     parser.add_argument("-s", "--seed", type=int, default=23)
 
-    parser.add_argument("--bs", type=int, default=15, dest="batch_size", help="batch size")
+    parser.add_argument("--bs", type=int, default=8, dest="batch_size", help="batch size")
     parser.add_argument("--ep", type=int, default=300, dest="n_epochs", help="number of epochs")
     parser.add_argument("--lr", type=float, default=1e-4, dest="lr", help="initial learning rate")
     parser.add_argument("--step", type=int, default=25, dest="step_size", help="period of learning rate decay")
@@ -410,17 +374,31 @@ def parse_arguments():
 
     parser.add_argument("--no-amp", action="store_false", dest="amp", help="deactivate amp")
 
-    parser.add_argument("--save_interval", type=int, default=3)
+    parser.add_argument("--save_interval", type=int, default=10)
     parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")
     parser.add_argument("--use_gpu", type=bool, default=True, dest="use_gpu", help="whether to use gpu")
+    parser.add_argument("--ngc", action="store_true", dest="ngc", help="use ngc")
 
     args = parser.parse_args()
-    config_dict = vars(args)
-    print(config_dict)
-    return config_dict
+    cfg = vars(args)
+    print(cfg)
+    set_determinism(seed=0)
+
+    import sys
+    if cfg["ngc"]:
+        sys.path.append('/workspace/pathology/lizard/transforms')
+        sys.path.append('/workspace/pathology/lizard/loss')
+        sys.path.append('/workspace/pathology/lizard/net')
+    else:
+        sys.path.append('/workspace/Code/tutorials/pathology/hovernet/transforms')
+        sys.path.append('/workspace/Code/tutorials/pathology/hovernet/loss')
+        sys.path.append('/workspace/Code/tutorials/pathology/hovernet/net')
 
 
-if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    cfg = parse_arguments()
-    run(cfg)
+    for i in range(3):
+        run(cfg, i)
+
+    # export CUDA_VISIBLE_DIVICE=0; python training_ignite.py --root /Lizard
+if __name__ == "__main__":
+    main()

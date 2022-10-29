@@ -239,11 +239,11 @@ def trainer(args):
                         )
                         output_crp = cropper(output).unsqueeze(0)
 
-                        outputs.append(output_crp.data.cpu().numpy()[0][0])
-                        targets.append(tar.data.cpu().numpy()[0][0])
+                        outputs.append(output_crp.data.cpu().numpy()[0])
+                        targets.append(tar.data.cpu().numpy()[0])
 
-                    outputs = np.stack(outputs)
-                    targets = np.stack(targets)
+                    outputs = numpy.concatenate(outputs)
+                    targets = numpy.concatenate(targets)
                     val_ssim.append(skimage_ssim(targets, outputs))
 
                 metric = np.mean(val_ssim)
@@ -278,7 +278,7 @@ def __main__():
         "--batch_size",
         default=1,
         type=int,
-        help="Data loader batch size (batch_size>1 is suitable for varying input size",
+        help="Training batch size",
     )
 
     parser.add_argument(

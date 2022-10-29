@@ -236,14 +236,14 @@ def trainer(args):
                         _std = std[0][i].item()
                         _mean = mean[0][i].item()
                         outputs[fname[0]].append(
-                            output.data.cpu().numpy()[0][0] * _std + _mean
+                            output.data.cpu().numpy()[0] * _std + _mean
                         )
-                        targets[fname[0]].append(tar.numpy()[0][0] * _std + _mean)
+                        targets[fname[0]].append(tar.numpy()[0] * _std + _mean)
 
                 # compute validation ssims
                 for fname in outputs:
-                    outputs[fname] = np.stack(outputs[fname])
-                    targets[fname] = np.stack(targets[fname])
+                    outputs[fname] = numpy.concatenate(outputs[fname])
+                    targets[fname] = numpy.concatenate(targets[fname])
                     val_ssim.append(skimage_ssim(targets[fname], outputs[fname]))
 
                 metric = np.mean(val_ssim)
@@ -278,7 +278,7 @@ def __main__():
         "--batch_size",
         default=1,
         type=int,
-        help="Data loader batch size (batch_size>1 is suitable for varying input size",
+        help="Training batch size",
     )
 
     parser.add_argument(

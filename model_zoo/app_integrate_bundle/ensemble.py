@@ -118,19 +118,19 @@ class EnsembleTrainTask():
         bundle_inference_config.update({Const.KEY_INFERENCE_DATASET_DATA: test_datalist})
 
         # update postprocessing with mean ensemble or vote ensemble
-        post_tranform = bundle_inference_config.config['postprocessing']
-        ensemble_tranform = {
+        post_transform = bundle_inference_config.config['postprocessing']
+        ensemble_transform = {
             "_target_": f"{ensemble}Ensembled",
             "keys": ["pred", "pred", "pred", "pred", "pred"],
             "output_key": "pred"
         }
         if ensemble == 'Mean':
-            post_tranform["transforms"].insert(0, ensemble_tranform)
+            post_transform["transforms"].insert(0, ensemble_transform)
         elif ensemble == 'Vote':
-            post_tranform["transforms"].insert(-1, ensemble_tranform)
+            post_transform["transforms"].insert(-1, ensemble_transform)
         else:
             raise NotImplementedError
-        bundle_inference_config.update({Const.KEY_INFERENCE_POSTPROCESSING: post_tranform})
+        bundle_inference_config.update({Const.KEY_INFERENCE_POSTPROCESSING: post_transform})
 
         # update network weights
         _networks = [bundle_inference_config.get_parsed_content("network")] * 5

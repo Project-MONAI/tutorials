@@ -69,7 +69,7 @@ class UNetDecoder(nn.Module):
         ):
             blocks.append(
                 UpCat(
-                    dim=dim,
+                    spatial_dims=dim,
                     in_chns=in_chn,
                     cat_chns=skip_chn,
                     out_chns=out_chn,

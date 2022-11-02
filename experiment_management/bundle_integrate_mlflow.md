@@ -26,7 +26,7 @@ This tutorial shows how to add mlflow handler to a bundle to do experiment manag
         "output_transform": "$monai.handlers.from_engine(['loss'], first=True)"
     }
 ],
-``` 
+```
 After adding mlflow handler to this bundle, handler list should look like below. A MLFlowHandler was added to the end of handler list with a specified experiment name and output transform to get loss scalar.
 ```
 "handlers": [
@@ -94,7 +94,7 @@ This part shows how to use mlflow handler to record artifacts like images. As an
             "output_transform": "$monai.handlers.from_engine(['loss'], first=True)",
             "experiment_name": "spleen_ct_segmentation",
             "artifacts":"$[@output_dir]"
-        
+
         }
     ],
 ```

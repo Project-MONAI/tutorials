@@ -27,7 +27,7 @@ This tutorial shows how to add mlflow handler to a bundle to do experiment manag
     }
 ],
 ``` 
-After adding mlflow handler to this bundle, handler list should look like:
+After adding mlflow handler to this bundle, handler list should look like below. A MLFlowHandler was added to the end of handler list with a specified experiment name and output transform to get loss scalar.
 ```
 "handlers": [
     {
@@ -71,4 +71,30 @@ mlflow_handler = MLFlowHandler(output_transform=monai.handlers.from_engine(["los
 experiment_name="spleen_ct_segmentation")
 mlflow_handler.attach(trainer)
 trainer.run()
+```
+
+## Add artifacts to mlflow handler
+This part shows how to use mlflow handler to record artifacts like images. As an example, we will save some prediction results. `inference.json` in spleen ct segmentation bundle is used here to demo the process. We only need to add a mlflow handler to `handlers` in it and specified `artifacts` parameter in mlflow handler with coresponding path. Then, all files in given path will be recorded in mlflow.
+
+```
+    "handlers": [
+        {
+            "_target_": "CheckpointLoader",
+            "load_path": "$@bundle_root + '/models/model.pt'",
+            "load_dict": {
+                "model": "@network"
+            }
+        },
+        {
+            "_target_": "StatsHandler",
+            "iteration_log": false
+        },
+        {
+            "_target_": "MLFlowHandler",
+            "output_transform": "$monai.handlers.from_engine(['loss'], first=True)",
+            "experiment_name": "spleen_ct_segmentation",
+            "artifacts":"$[@output_dir]"
+        
+        }
+    ],
 ```

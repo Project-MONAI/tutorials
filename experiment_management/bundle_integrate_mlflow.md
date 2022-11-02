@@ -51,14 +51,14 @@ After adding mlflow handler to this bundle, handler list should look like below.
         "_target_": "MLFlowHandler",
         "output_transform": "$monai.handlers.from_engine(['loss'], first=True)",
         "experiment_name": "spleen_ct_segmentation"
-        
+
     }
 ],
 ```
 When using mlflow handler in evaluation process, the modify is same with training process.
 
 ## Usage 2
-Mlflow handler can also be added to a bundle through python script without changing the original bundle json file. The code of this usage is shown below. 
+Mlflow handler can also be added to a bundle through python script without changing the original bundle json file. The code of this usage is shown below.
 
 ```
 from monai.bundle import ConfigParser

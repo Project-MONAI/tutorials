@@ -109,7 +109,8 @@ preprocessing:
 
 The rest of the keys are the arguments to the transforms. In this case, the `LoadImaged` transform is used to load the images from the file paths, `EnsureChannelFirstd` transform is used to ensure the image data is in channel-first format, `ScaleIntensityRanged` transform is used to scale the image intensity to `[0, 1]`. `RandRotated` transform is used to randomly rotate the moving image, and `RandZoomd` transform is used to randomly zoom the moving image.
 
-## The equivalent Python code of the yaml config file
+
+_The equivalent Python code of the yaml config file as a comparison_
 
 ```py
 import glob
@@ -151,8 +152,8 @@ plt.show()
 
 ## Topics not covered but possible in the config
 
-- Running customized Python components (made available on the `PYTHONPATH`).
+- Running customized Python components (made available on the `PYTHONPATH`, more examples [in the model_zoo](https://github.com/Project-MONAI/model-zoo)).
 - Overriding the component in `example.yaml` using, for example, `--id=new_value` in the command line.
 - Multiple configuration files and cross-file references.
-- Replacing in terms of plain texts instead of Python objects.
+- Replacing in terms of plain texts instead of Python objects ([tutorial](https://github.com/Project-MONAI/tutorials/blob/main/bundle/get_started.ipynb)).
 - The debugging mode to investigate the intermediate variables and results.

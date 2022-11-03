@@ -1,23 +1,24 @@
 # An example of how to use the bundle config
 
-By running the following command within the same directory of this readme file, an example MedNIST dataset (~60MB) will be downloaded
-and a PyTorch-style `Dataset` will be created. The yaml config file also specifies the necessary commands to display the first pair of images in the dataset (shown in the figure).
-
-<div> <img src="../../figures/mednist_config_intro.png"/> </div>
-
 ```bash
 python -m monai.bundle run display --config_file example.yaml
 ```
 
+By running the command within the same directory of this readme file, an example MedNIST dataset (~60MB) will be downloaded
+and a PyTorch-style `Dataset` will be created. The yaml config file also specifies the necessary commands to display the first pair of images in the dataset (shown in the figure).
+
+<div> <img src="../../figures/mednist_config_intro.png"/> </div>
+
+More specifically:
 - `python -m monai.bundle run` is the command [provided by the `monai.bundle` module](https://docs.monai.io/en/stable/bundle.html#monai.bundle.run). Apart from `run`, there are other actions available, such as `download` and `init_bundle`.
 - `display` is a user-defined component name in the `example.yaml` config file.
 - `--config_file example.yaml` specifies the config file describing the workflow, `monai.bundle` module supports both yaml and json formats ([syntax quick ref.](https://docs.monai.io/en/stable/config_syntax.html)).
 
 The rest of the readme file will explain how the yaml config file is parsed in detail.
 
-### Pre-requisites
+_Pre-requisites_
 
-install MONAI (<https://docs.monai.io/en/stable/installation.html>) and basic knowledge of Python and Pytorch.
+Installing MONAI (<https://docs.monai.io/en/stable/installation.html>) and basic knowledge of Python and Pytorch.
 
 ## Parsing the `example.yaml`
 
@@ -110,8 +111,6 @@ The rest of the keys are the arguments to the transforms. In this case, the `Loa
 
 ## The equivalent Python code of the yaml config file
 
-```python
-
 ```py
 import glob
 import matplotlib.pyplot as plt
@@ -150,7 +149,7 @@ plt.show()
 
 ```
 
-## Topics not covered but possible in the yaml config file
+## Topics not covered but possible in the config
 
 - Running customized Python components (made available on the `PYTHONPATH`).
 - Overriding the component in `example.yaml` using, for example, `--id=new_value` in the command line.

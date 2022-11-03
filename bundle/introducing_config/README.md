@@ -50,7 +50,7 @@ display:
   - $plt.show()
 ```
 
-`_require_` is a special key for the bundle parsing, it specifies the dependencies of the component. In this case, the `display` component requires the `downloading` component to be executed first.
+`_requires_` is a special key for the bundle parsing, it specifies the dependencies of the component. In this case, the `display` component requires the `downloading` component to be executed first.
 
 The rest of the keys are the list of commands to be executed. The bundle parser will evaluate the commands in the order they are defined in the config file.
 

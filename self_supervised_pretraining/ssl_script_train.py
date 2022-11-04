@@ -27,9 +27,9 @@ from monai.transforms import (
 def main():
 
     #TODO Defining file paths & output directory path
-    json_Path = os.path.normpath('/scratch/data_2021/tcia_covid19/dataset_split_debug.json')
-    data_Root = os.path.normpath('/scratch/data_2021/tcia_covid19')
-    logdir_path = os.path.normpath('/home/vishwesh/monai_tutorial_testing/issue_467')
+    json_Path = os.path.normpath('/to/be/defined/by/user/')
+    data_Root = os.path.normpath('/to/be/defined/by/user/')
+    logdir_path = os.path.normpath('/to/be/defined/by/user/')
 
     if os.path.exists(logdir_path)==False:
         os.mkdir(logdir_path)

@@ -3,4 +3,5 @@ papermill
 autopep8
 jupytext
 autoflake
+ipywidgets
 tensorboard>=2.4.0

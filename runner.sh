@@ -41,6 +41,9 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" resample_benchmark.
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" infoANDinference.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" dice_loss_metric_notes.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 2d_slices_from_3d_sampling.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" data_analyzer.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" data_analyzer_byoc.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" transforms_metatensor.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 2d_slices_from_3d_training.ipynb)
 
 # output formatting
@@ -76,6 +79,9 @@ pattern="-and -name '*' -and ! -wholename '*federated_learning*'\
  -and ! -wholename '*full_gpu_inference_pipeline*'\
  -and ! -wholename '*generate_random_permutations*'\
  -and ! -wholename '*transforms_update_meta_data*'\
+ -and ! -wholename '*video_seg*'\
+ -and ! -wholename '*tcia_dataset*'\
+ -and ! -wholename '*MRI_reconstruction*'\
  -and ! -wholename '*get_started*'"
 kernelspec="python3"
 
@@ -135,7 +141,8 @@ do
             failfast=true
         ;;
         -p|--pattern)
-            pattern="$2"
+            pattern+="$2"
+            echo $pattern
             shift
         ;;
         -k|--kernelspec)
@@ -214,7 +221,7 @@ function replace_text {
 files=($(echo $pattern | xargs find . -type f -name "*.ipynb" -and ! -wholename "*.ipynb_checkpoints*"))
 if [[ $files == "" ]]; then
 	print_error_msg "No files match pattern"
-	exit 1
+	exit 0
 fi
 echo "Files to be tested:"
 for i in "${files[@]}"; do echo $i; done

@@ -57,7 +57,6 @@ def get_xforms(mode="train", keys=("image", "label")):
                     rotate_range=(0.05, 0.05, None),  # 3 parameters control the transform on 3 dimensions
                     scale_range=(0.1, 0.1, None),
                     mode=("bilinear", "nearest"),
-                    as_tensor_output=False,
                 ),
                 RandCropByPosNegLabeld(keys, label_key=keys[1], spatial_size=(192, 192, 16), num_samples=3),
                 RandGaussianNoised(keys[0], prob=0.15, std=0.01),

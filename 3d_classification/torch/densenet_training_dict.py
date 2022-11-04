@@ -137,7 +137,7 @@ def main():
 
                 acc_value = torch.eq(y_pred.argmax(dim=1), y)
                 acc_metric = acc_value.sum().item() / len(acc_value)
-                y_onehot = [post_label(i) for i in decollate_batch(y)]
+                y_onehot = [post_label(i) for i in decollate_batch(y, detach=False)]
                 y_pred_act = [post_pred(i) for i in decollate_batch(y_pred)]
                 auc_metric(y_pred_act, y_onehot)
                 auc_result = auc_metric.aggregate()

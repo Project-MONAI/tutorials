@@ -1,0 +1,5 @@
+shard_descriptor:
+  template: mednist_dataset_shard_descriptor.MedNistShardDescriptor
+  params:
+    data_folder: './'
+    rank_worldsize: 2,2

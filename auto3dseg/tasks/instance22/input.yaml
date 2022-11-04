@@ -1,0 +1,10 @@
+name: instance22
+task: segmentation
+
+modality: CT
+datalist: ./instance22_folds.json # list of files
+dataroot: /workspace/data/instance22 # data location
+
+multigpu: True
+
+class_names: ["val_acc_ich"]

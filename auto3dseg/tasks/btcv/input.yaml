@@ -1,0 +1,6 @@
+name: instance22
+task: segmentation
+
+modality: CT
+datalist: ./btcv_folds.json # list of files
+dataroot: /workspace/data/btcv # data location

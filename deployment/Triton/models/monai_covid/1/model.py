@@ -110,7 +110,7 @@ class TritonPythonModel:
             Lambda(func=lambda x: x.to(device="cpu")),
             Activations(sigmoid=True),
             ToNumpy(),
-            AsDiscrete(threshold_values=True, logit_thresh=0.5),
+            AsDiscrete(threshold=True),
         ])
 
         self.inferer = SimpleInferer()

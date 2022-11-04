@@ -1,0 +1,57 @@
+---
+imports:
+  - $import glob
+  - $import matplotlib.pyplot as plt
+
+# download and extract dataset (60MB):
+url: "https://github.com/Project-MONAI/MONAI-extra-test-data/releases/download/0.8.1/MedNIST.tar.gz"
+downloading: "$monai.apps.utils.download_and_extract(@url, './mednist.tar.gz')"
+
+# construct the input paired data (moving and fixed images)
+dataset_dir: "MedNIST/Hand"
+datalist: $list(sorted(glob.glob(@dataset_dir + '/*.jpeg')))
+paired_dataset: "$[{'f_img': item, 'm_img': item} for item in @datalist]"
+
+# define preprocessing (additional randomization on the moving image)
+preprocessing:
+  _target_: Compose
+  transforms:
+
+    - _target_: LoadImaged
+      keys: [f_img, m_img]
+      image_only: True
+
+    - _target_: EnsureChannelFirstd
+      keys: [f_img, m_img]
+
+    - _target_: ScaleIntensityRanged
+      keys: [f_img, m_img]
+      a_min: 0.
+      a_max: 255.
+      b_min: 0.0
+      b_max: 1.0
+
+    - _target_: RandRotated
+      keys: [m_img]
+      range_x: $np.pi/4
+      prob: 1.0
+      mode: "bicubic"
+      keep_size: True
+
+    - _target_: RandZoomd
+      keys: [m_img]
+      min_zoom: 0.9
+      max_zoom: 1.1
+      prob: 1.0
+      mode: "bicubic"
+
+# display the first pair of moving and fixed images
+first_pair: $@preprocessing(@paired_dataset[0])
+display:
+  - _requires_: "@downloading"
+  - $print("displaying images:")
+  - $plt.subplot(1,2,1)
+  - $plt.imshow(@first_pair['f_img'][0], cmap="gray")
+  - $plt.subplot(1,2,2)
+  - $plt.imshow(@first_pair['m_img'][0], cmap="gray")
+  - $plt.show()

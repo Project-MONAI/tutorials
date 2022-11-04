@@ -1,6 +1,9 @@
 # MONAI bundle
 This folder contains the getting started tutorial and code examples of training / inference for MONAI bundle parser.
 
+### [introducing_config](./introducing_config)
+A simple example to introduce the MONAI bundle config and parsing.
+
 ### [spleen segmentation](./spleen_segmentation)
 A bundle example for volumetric (3D) segmentation of the spleen from CT image.
 

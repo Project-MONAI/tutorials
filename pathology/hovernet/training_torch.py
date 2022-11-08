@@ -11,36 +11,36 @@
 
 import os
 import time
+import glob
 import torch
 from torch.utils.tensorboard import SummaryWriter
 import numpy as np
-import pandas as pd
 from argparse import ArgumentParser
-from monai.data import DataLoader, decollate_batch, CacheDataset, partition_dataset
+from monai.data import DataLoader, decollate_batch, CacheDataset
 from monai.metrics import DiceMetric
 # from monai.networks.nets import HoVerNet
+# from monai.apps.pathology.losses.hovernet_loss import HoVerNetLoss
 from monai.transforms import (
     Activations,
     AsDiscrete,
     AsDiscreted,
     Compose,
-    ScaleIntensityRanged,
+    RandAdjustContrastd,
     CastToTyped,
-    Lambdad,
-    SplitDimd,
-    EnsureChannelFirstd,
     ComputeHoVerMapsd,
     RandFlipd,
+    RandAffined,
     RandRotate90d,
+    GaussianSmooth,
     RandGaussianSmoothd,
     FillHoles,
     BoundingRect,
     CenterSpatialCropd,
 )
-
 from monai.utils import set_determinism, convert_to_tensor
 from monai.utils.enums import HoVerNetBranch
 from monai.visualize import plot_2d_or_3d_image
+from skimage import measure
 
 from loss import HoVerNetLoss
 from net import HoVerNet
@@ -53,62 +53,43 @@ from transforms import (
     GenerateInstanceContour,
     GenerateInstanceCentroid,
     GenerateInstanceType,
-    GenerateInstanceCentroid, 
-    GenerateInstanceContour, 
-    GenerateInstanceType,
 )
 
 
-def split_dataset(data_dir):
-    # using original split in the paper
-    info = pd.read_csv(os.path.join(data_dir, "patch_info.csv"))
-    file_names = np.squeeze(info.to_numpy()).tolist()
-    split_info = pd.read_csv(os.path.join(data_dir, "split_info.csv"))
+def prepare_data(data_dir, phase):
+    data_dir = os.path.join(data_dir, phase)
 
-    indices, splits = [], []
-    for i in range(3):
-        fold_case = split_info.loc[split_info['Split'] == i+1, 'Filename'].tolist()
-        fold_patches = [
-            file_name for file_name in file_names for _name in fold_case if _name == file_name.split("-")[0]
-        ]
-        fold_patches = np.unique(fold_patches)
-        print(f"Fold: {i} - {len(fold_patches):04d}")
+    files = sorted(
+        glob.glob(os.path.join(data_dir, "*/*.npy")))
 
-        fold_indices = [file_names.index(v) for v in fold_patches]
-        indices.append(fold_indices)
+    images, labels, inst_maps, type_maps = [], [], [], []
+    for file in files:
+        data = np.load(file)
+        images.append(data[..., :3].transpose(2, 0, 1))
+        inst_maps.append(measure.label(data[..., 3][None]).astype(int))
+        type_maps.append(data[..., 4][None])
+        labels.append(np.array(data[..., 3][None] > 0, dtype=int))
 
-    for i in range(3):
-        _indices = indices.copy()
-        splits.append({
-            "valid": _indices.pop(i),
-            "train": sum(_indices, []),
-        })
-
-    return splits
-
-def prepare_data(data_dir, fold, splits):
-    images = np.load(os.path.join(data_dir, "images.npy"))
-    labels = np.load(os.path.join(data_dir, "labels.npy"))
-
-    data = [
-        {
-            "image": image,
-            "image_meta_dict": {"original_channel_dim": -1},
-            "label": label,
-            "label_meta_dict": {"original_channel_dim": -1},
-        }
-        for image, label in zip(images, labels)
+    data_dicts = [
+        {"image": _image, "label": _label, "label_inst": _inst_map, "label_type": _type_map}
+        for _image, _label, _inst_map, _type_map in zip(images, labels, inst_maps, type_maps)
     ]
-    train_data = [data[i] for i in splits[fold]['train']]
-    valid_data = [data[i] for i in splits[fold]['valid']]
-    
-    return train_data, valid_data
 
-def post_process(output, device, return_binary=True, return_centroids=False, output_classes=None):
+    return data_dicts
+
+def _dice_info(true, pred, label):
+    true = np.array(true == label, np.int32)
+    pred = np.array(pred == label, np.int32)
+    inter = (pred * true).sum()
+    total = (pred + true).sum()
+    return inter, total
+
+
+def post_process_WS(output, device, return_binary=True, return_centroids=False, output_classes=None):
     post_trans_seg = Compose([
         GenerateWatershedMaskd(keys=HoVerNetBranch.NP.value, softmax=True),
         GenerateInstanceBorderd(keys='mask', hover_map_key=HoVerNetBranch.HV, kernel_size=3),
-        GenerateDistanceMapd(keys='mask', border_key='border', smooth_fn="gaussian"),
+        GenerateDistanceMapd(keys='mask', border_key='border', smooth_fn=GaussianSmooth()),
         GenerateWatershedMarkersd(keys='mask', border_key='border', threshold=0.7, radius=2, postprocess_fn=FillHoles()),
         Watershedd(keys='dist', mask_key='mask', markers_key='markers')
     ])
@@ -154,17 +135,56 @@ def post_process(output, device, return_binary=True, return_centroids=False, out
     return (pred_inst, inst_info_dict, pred_inst_dict)
 
 
-def run(data_dir, fold, args):
+def create_model(args, device):
+    if args.stage == 0:
+        model = HoVerNet(
+            mode="original",
+            in_channels=3,
+            out_classes=args.out_classes,
+            act=("relu", {"inplace": True}),
+            norm="batch",
+            pretrained=True,
+        ).to(device)
+        model.freeze_encoder()
+    else:
+        model = HoVerNet(
+            mode="original",
+            in_channels=3,
+            out_classes=args.out_classes,
+            act=("relu", {"inplace": True}),
+            norm="batch",
+            pretrained=False,
+        ).to(device)
+        model.load_state_dict(torch.load(args.ckpt_path))
+        print('success load weight!')
+    return model
+
+
+def run(data_dir, args):
     train_transforms = Compose(
         [
-            EnsureChannelFirstd(keys=("image", "label"), channel_dim=-1),
-            SplitDimd(keys="label", output_postfixes=["inst", "type"]),
             ComputeHoVerMapsd(keys="label_inst"),
             CastToTyped(keys=["image", "label_inst", "label_type", "hover_label_inst"], dtype=torch.float32),
-            Lambdad(keys="label", func=lambda x: x[1: 2, ...] > 0),
-            AsDiscreted(keys=["label", "label_type"], to_onehot=[2, 7]),
-            CenterSpatialCropd(keys=["label", "label_inst", "label_type", "hover_label_inst"], roi_size=(164,164)),
-            ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
+            AsDiscreted(keys=["label", "label_type"], to_onehot=[2, 5]),
+#             ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
+            RandAffined(
+                keys=["image", "label", "label_inst", "label_type", "hover_label_inst"],
+                prob=0.5,
+                rotate_range=((-np.pi) / 2, np.pi / 2),
+                scale_range=(0.8, 1.2),
+                shear_range=(-1, 1),
+                padding_mode="zeros",
+                mode="nearest",
+                      ),
+            RandAdjustContrastd(keys=["image"], prob=0.5, gamma=(0.75,1.25)),
+            CenterSpatialCropd(
+                keys="image", 
+                roi_size=(270, 270),
+            ),
+            CenterSpatialCropd(
+                keys=["label", "label_inst", "label_type", "hover_label_inst"], 
+                roi_size=(80, 80),
+            ),
             RandFlipd(keys=["image", "label", "label_inst", "label_type", "hover_label_inst"], prob=0.5, spatial_axis=0),
             RandFlipd(keys=["image", "label", "label_inst", "label_type", "hover_label_inst"], prob=0.5, spatial_axis=1),
             RandRotate90d(keys=["image", "label", "label_inst", "label_type", "hover_label_inst"], prob=0.5, max_k=1),
@@ -173,19 +193,26 @@ def run(data_dir, fold, args):
     )
     val_transforms = Compose(
         [
-            EnsureChannelFirstd(keys=("image", "label"), channel_dim=-1),
-            SplitDimd(keys="label", output_postfixes=["inst", "type"]),
             ComputeHoVerMapsd(keys="label_inst"),
             CastToTyped(keys=["image", "label_inst", "label_type", "hover_label_inst"], dtype=torch.float32),
-            Lambdad(keys="label", func=lambda x: x[1: 2, ...] > 0),
-            AsDiscreted(keys=["label", "label_type"], to_onehot=[2, 7]),
-            CenterSpatialCropd(keys=["label", "label_inst", "label_type", "hover_label_inst"], roi_size=(164,164)),
-            ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
+            AsDiscreted(keys="label_type", to_onehot=5),
+#             ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
+            CenterSpatialCropd(
+                keys="image", 
+                roi_size=(270, 270),
+            ),
+            CenterSpatialCropd(
+                keys=["label", "label_inst", "label_type", "hover_label_inst"], 
+                roi_size=(80, 80),
+            ),
         ]
     )
+    
+    post_process = Compose([Activations(softmax=True)])
 
-    splits = split_dataset(data_dir)
-    train_data, valid_data = prepare_data(data_dir, fold, splits)
+    
+    train_data = prepare_data(data_dir, "train")
+    valid_data = prepare_data(data_dir, "valid")
 
     print("train_files:", len(train_data))
     print("val_files:", len(valid_data))
@@ -194,22 +221,15 @@ def run(data_dir, fold, args):
                         cache_rate=1.0, num_workers=4)
     valid_ds = CacheDataset(data=valid_data, transform=val_transforms,
                         cache_rate=1.0, num_workers=4)
-    train_loader = DataLoader(train_ds, batch_size=args.batch_size, num_workers=4, shuffle=True, pin_memory=True)
+
+    train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, num_workers=4, pin_memory=True)
     val_loader = DataLoader(valid_ds, batch_size=args.batch_size, num_workers=4, pin_memory=True)
 
     device = torch.device(f"cuda:0")
     torch.cuda.set_device(device)
-    model = HoVerNet(
-        mode="fast",
-        in_channels=3,
-        out_classes=7,
-        act=("relu", {"inplace": True}),
-        norm="batch",
-        pretrained=True,
-    ).to(device)
-    model.freeze_encoder()
-    loss_function = HoVerNetLoss()
-    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=1e-4, betas=(0.9, 0.999), weight_decay=0.0)
+    model = create_model(args, device)
+    loss_function = HoVerNetLoss(lambda_hv_mse_grad=1.0, lambda_hv_mse=1.0)
+    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr, weight_decay=1e-5)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=25)
     dice_metric = DiceMetric(include_background=False, reduction="mean")
 
@@ -223,14 +243,16 @@ def run(data_dir, fold, args):
     best_metric = -1
     best_metric_epoch = -1
     metric_values = []
-    writer = SummaryWriter(comment=f'_{fold}')
+    
+    writer = SummaryWriter(comment=f'bs{args.batch_size}_ep{max_epochs}_lr{args.lr}_{out_classes}_{args.log_postfix}')
 
     total_start = time.time()
+    globel_step = 0
     for epoch in range(max_epochs):
-        if epoch > 50:
-            model.res_blocks.requires_grad_(True)
-            optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, betas=(0.9, 0.999), weight_decay=0.0)
-            lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=25)
+#         if epoch > 50:
+#             model.res_blocks.requires_grad_(True)
+#             optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-5)
+#             lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=25)
         epoch_start = time.time()
         print("-" * 10)
         print(f"epoch {epoch + 1}/{max_epochs}")
@@ -240,6 +262,7 @@ def run(data_dir, fold, args):
         step = 0
         for batch_data in train_loader:
             step += 1
+            globel_step += 1 
             inputs, label, label_type, hover_map = (
                 batch_data["image"].to(device),
                 batch_data["label"].to(device),
@@ -273,13 +296,14 @@ def run(data_dir, fold, args):
 
             lr_scheduler.step()
             epoch_loss += loss.item()
-            epoch_len = len(train_ds) // train_loader.batch_size
-            print(f"{step}/{epoch_len}, train_loss: {loss.item():.4f}")
-            writer.add_scalar("train_loss", loss.item(), epoch_len * epoch + step)
+            print(f"{step}, train_loss: {loss.item():.4f}")
+            writer.add_scalar("train_loss", loss.item(), globel_step)
 
         if (epoch + 1) % val_interval == 0:
             torch.cuda.empty_cache()
             model.eval()
+            over_inter = 0
+            over_total = 0
             with torch.no_grad():
                 for val_data in val_loader:
                     val_inputs, val_label = (
@@ -288,29 +312,33 @@ def run(data_dir, fold, args):
                     )
                     with torch.cuda.amp.autocast(enabled=args.amp):
                         val_outputs = model(val_inputs)
-                    val_outputs = [post_process(i, device=device)[0] for i in decollate_batch(val_outputs)]
+#                     val_outputs = [post_process_WS(i, device=device)[0] for i in decollate_batch(val_outputs)]
+                    
+                    # hover origin post
+                    val_outputs = [post_process(i[HoVerNetBranch.NP.value])[1:2, ...] > 0.5 for i in decollate_batch(val_outputs)]
                     val_label = [i for i in decollate_batch(val_label)]
+                    for i, out in enumerate(val_outputs):
+                        inter, total = _dice_info(val_label[i].detach().cpu(), out.detach().cpu(), 1)
+                        over_inter += inter
+                        over_total += total
+                
 
                     dice_metric(y_pred=val_outputs, y=val_label)
 
                 metric = dice_metric.aggregate().item()
                 metric_values.append(metric)
                 dice_metric.reset()
+                dice_np = 2 * over_inter / (over_total + 1.0e-8)
 
-                if metric > best_metric:
-                    best_metric = metric
-                    best_metric_epoch = epoch + 1
-                    torch.save(
-                        model.state_dict(),
-                        os.path.join(writer.log_dir, f"best_metric_model{fold}.pth"),
-                    )
-                    print("saved new best metric model")
+                torch.save(
+                    model.state_dict(),
+                    os.path.join(writer.log_dir, f"model_{epoch}.pth"),
+                )
                 print(
-                    f"current epoch: {epoch + 1} current mean dice: {metric:.4f}"
-                    f"\nbest mean dice: {best_metric:.4f}"
-                    f" at epoch: {best_metric_epoch}"
+                    f"current epoch: {epoch + 1} current mean dice: {metric:.4f}, {dice_np:.4f}"
                 )
                 writer.add_scalar("val_mean_dice", metric, epoch + 1)
+                writer.add_scalar("val_mean_dice_origin", dice_np, epoch + 1)
                 plot_2d_or_3d_image(val_inputs, epoch + 1, writer, index=0, tag="image")
                 plot_2d_or_3d_image(val_label, epoch + 1, writer, index=0, tag="label")
                 plot_2d_or_3d_image(val_outputs, epoch + 1, writer, index=0, tag="output")
@@ -326,22 +354,29 @@ def run(data_dir, fold, args):
     writer.flush()
     writer.close()
 
+
+# -
+
 def main():
     parser = ArgumentParser(description="HoVerNet training torch pipeline")
     parser.add_argument("--ngc", action="store_true", dest="ngc", help="use ngc")
     parser.add_argument("--no-amp", action="store_false", dest="amp", help="deactivate amp")
 
-    parser.add_argument("--n", type=int, default=3, dest="n_fold", help="fold of cross validation")
-    parser.add_argument("--bs", type=int, default=8, dest="batch_size", help="batch size")
-    parser.add_argument("--ep", type=int, default=200, dest="max_epochs", help="max epochs")
+    parser.add_argument("--bs", type=int, default=16, dest="batch_size", help="batch size")
+    parser.add_argument("--classes", type=int, default=5, dest="out_classes", help="output classes")
+    parser.add_argument("--ep", type=int, default=50, dest="max_epochs", help="max epochs")
+    parser.add_argument("--s", type=int, default=0, dest="stage", help="training stage")
     parser.add_argument("-f", "--val_freq", type=int, default=1, help="validation frequence")
+    parser.add_argument("--lr", type=float, default=1e-4, dest="lr", help="initial learning rate")
+    parser.add_argument("--lp", type=str, default='', dest="log_postfix", help="log postfix")
+    parser.add_argument("--ckpt", type=str, dest="ckpt_path", help="checkpoint path")
 
     args = parser.parse_args()
     
     set_determinism(seed=0)
     import sys
     if args.ngc:
-        data_dir = "/Lizard"
+        data_dir = "/consep/Prepared/consep"
         sys.path.append('/workspace/pathology/lizard/transforms')
         sys.path.append('/workspace/pathology/lizard/loss')
         sys.path.append('/workspace/pathology/lizard/net')
@@ -351,8 +386,9 @@ def main():
         sys.path.append('/workspace/Code/tutorials/pathology/hovernet/loss')
         sys.path.append('/workspace/Code/tutorials/pathology/hovernet/net')
 
-    for i in range(args.n_fold):
-        run(data_dir, i, args)
+    run(data_dir, args)
 
 if __name__ == "__main__":
     main()
+
+

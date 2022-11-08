@@ -181,11 +181,11 @@ def run(data_dir, args):
                       ),
             RandAdjustContrastd(keys=["image"], prob=0.5, gamma=(0.75,1.25)),
             CenterSpatialCropd(
-                keys="image", 
+                keys="image",
                 roi_size=(270, 270),
             ),
             CenterSpatialCropd(
-                keys=["label", "label_inst", "label_type", "hover_label_inst"], 
+                keys=["label", "label_inst", "label_type", "hover_label_inst"],
                 roi_size=(80, 80),
             ),
             RandFlipd(keys=["image", "label", "label_inst", "label_type", "hover_label_inst"], prob=0.5, spatial_axis=0),
@@ -201,19 +201,19 @@ def run(data_dir, args):
             AsDiscreted(keys="label_type", to_onehot=5),
 #             ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
             CenterSpatialCropd(
-                keys="image", 
+                keys="image",
                 roi_size=(270, 270),
             ),
             CenterSpatialCropd(
-                keys=["label", "label_inst", "label_type", "hover_label_inst"], 
+                keys=["label", "label_inst", "label_type", "hover_label_inst"],
                 roi_size=(80, 80),
             ),
         ]
     )
-    
+
     post_process = Compose([Activations(softmax=True)])
 
-    
+
     train_data = prepare_data(data_dir, "train")
     valid_data = prepare_data(data_dir, "valid")
 
@@ -246,7 +246,7 @@ def run(data_dir, args):
     best_metric = -1
     best_metric_epoch = -1
     metric_values = []
-    
+
     writer = SummaryWriter(comment=f'bs{args.batch_size}_ep{max_epochs}_lr{args.lr}_{out_classes}_{args.log_postfix}')
 
     total_start = time.time()
@@ -265,7 +265,7 @@ def run(data_dir, args):
         step = 0
         for batch_data in train_loader:
             step += 1
-            globel_step += 1 
+            globel_step += 1
             inputs, label, label_type, hover_map = (
                 batch_data["image"].to(device),
                 batch_data["label"].to(device),
@@ -316,7 +316,7 @@ def run(data_dir, args):
                     with torch.cuda.amp.autocast(enabled=args.amp):
                         val_outputs = model(val_inputs)
 #                     val_outputs = [post_process_WS(i, device=device)[0] for i in decollate_batch(val_outputs)]
-                    
+
                     # hover origin post
                     val_outputs = [post_process(i[HoVerNetBranch.NP.value])[1:2, ...] > 0.5 for i in decollate_batch(val_outputs)]
                     val_label = [i for i in decollate_batch(val_label)]
@@ -324,7 +324,7 @@ def run(data_dir, args):
                         inter, total = _dice_info(val_label[i].detach().cpu(), out.detach().cpu(), 1)
                         over_inter += inter
                         over_total += total
-                
+
 
                     dice_metric(y_pred=val_outputs, y=val_label)
 

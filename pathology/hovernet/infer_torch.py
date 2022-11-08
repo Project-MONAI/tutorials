@@ -158,11 +158,11 @@ def main(data_dir, args):
             CastToTyped(keys=["image", "label_inst", "label_type"], dtype=torch.float32),
             AsDiscreted(keys="label_type", to_onehot=5),
             CenterSpatialCropd(
-                keys="image", 
+                keys="image",
                 roi_size=(270, 270),
             ),
             CenterSpatialCropd(
-                keys=["label", "label_inst", "label_type"], 
+                keys=["label", "label_inst", "label_type"],
                 roi_size=(80, 80),
             ),
             CastToTyped(keys="label_inst", dtype=torch.int),
@@ -170,9 +170,9 @@ def main(data_dir, args):
             CastToTyped(keys=["image", "label_inst", "label_type"], dtype=torch.float32),
         ]
     )
-        
+
     post_process = Compose([Activations(softmax=True)])
-    
+
     valid_data = prepare_data(data_dir, "valid")
     test_ds = Dataset(data=valid_data, transform=test_transforms)
     test_loader = DataLoader(test_ds, batch_size=args.batch_size, num_workers=4, pin_memory=True)
@@ -202,21 +202,21 @@ def main(data_dir, args):
                 )
 
             test_outputs = model(test_inputs)
-            
+
             test_outputs_seg, test_outputs_type = [], []
             for i in decollate_batch(test_outputs):
                 out = post_process_WS(i, device=device, return_binary=True, return_centroids=True, output_classes=args.out_classes)
                 test_outputs_seg.append(out[0])
                 test_outputs_type.append(out[1])
             test_outputs = [post_process(i[HoVerNetBranch.NP.value])[1:2, ...] > 0.5 for i in decollate_batch(test_outputs)]
-        
+
             test_label = [i for i in decollate_batch(test_label)]
             test_label_type = [i for i in decollate_batch(test_label_type)]
             for i, out in enumerate(test_outputs):
                 inter, total = _dice_info(test_label[i].detach().cpu(), out.detach().cpu(), 1)
                 over_inter += inter
                 over_total += total
-    
+
             # compute metric for current iteration
             dice_metric(y_pred=test_outputs, y=test_label)
             matrix_metric(y_pred=test_outputs_type, y=test_label_type)
@@ -238,10 +238,10 @@ if __name__ == "__main__":
     parser.add_argument("--bs", type=int, default=16, dest="batch_size", help="batch size")
     parser.add_argument("--ckpt", type=str, dest="ckpt_path", help="checkpoint path")
     parser.add_argument("--classes", type=int, default=5, dest="out_classes", help="output classes")
-    
+
 
     args = parser.parse_args()
-    
+
     set_determinism(seed=0)
     import sys
     if args.ngc:
@@ -254,4 +254,3 @@ if __name__ == "__main__":
         sys.path.append('/workspace/Code/tutorials/pathology/hovernet/net')
 
     main(data_dir, args)
-

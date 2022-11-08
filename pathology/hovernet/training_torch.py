@@ -180,11 +180,11 @@ def run(data_dir, args):
                       ),
             RandAdjustContrastd(keys=["image"], prob=0.5, gamma=(0.75,1.25)),
             CenterSpatialCropd(
-                keys="image", 
+                keys="image",
                 roi_size=(270, 270),
             ),
             CenterSpatialCropd(
-                keys=["label", "label_inst", "label_type"], 
+                keys=["label", "label_inst", "label_type"],
                 roi_size=(80, 80),
             ),
             RandFlipd(keys=["image", "label", "label_inst", "label_type"], prob=0.5, spatial_axis=0),
@@ -201,11 +201,11 @@ def run(data_dir, args):
             AsDiscreted(keys="label_type", to_onehot=5),
             ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
             CenterSpatialCropd(
-                keys="image", 
+                keys="image",
                 roi_size=(270, 270),
             ),
             CenterSpatialCropd(
-                keys=["label", "label_inst", "label_type"], 
+                keys=["label", "label_inst", "label_type"],
                 roi_size=(80, 80),
             ),
             CastToTyped(keys="label_inst", dtype=torch.int),

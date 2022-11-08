@@ -139,7 +139,6 @@ tests/testing_data/*Hippocampus*
 */torch/runs
 logs
 */runs
-*/*/runs
 lightning_logs
 
 # ignore automatically created files

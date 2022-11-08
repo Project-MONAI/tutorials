@@ -53,6 +53,9 @@ from transforms import (
     GenerateInstanceContour,
     GenerateInstanceCentroid,
     GenerateInstanceType,
+    GenerateInstanceCentroid,
+    GenerateInstanceContour,
+    GenerateInstanceType,
 )
 
 
@@ -280,7 +283,7 @@ def run(data_dir, args):
                 with autocast():
                     outputs = model(inputs)
                     loss = loss_function(outputs, labels)
-                
+
                 scaler.scale(loss).backward()
                 scaler.unscale_(optimizer)
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
@@ -372,7 +375,7 @@ def main():
     parser.add_argument("--ckpt", type=str, dest="ckpt_path", help="checkpoint path")
 
     args = parser.parse_args()
-    
+
     set_determinism(seed=0)
     import sys
     if args.ngc:
@@ -390,5 +393,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

@@ -28,6 +28,7 @@ from monai.transforms import (
     RandAdjustContrastd,
     CastToTyped,
     ComputeHoVerMapsd,
+    ScaleIntensityRanged,
     RandFlipd,
     RandAffined,
     RandRotate90d,
@@ -166,12 +167,10 @@ def create_model(args, device):
 def run(data_dir, args):
     train_transforms = Compose(
         [
-            ComputeHoVerMapsd(keys="label_inst"),
-            CastToTyped(keys=["image", "label_inst", "label_type", "hover_label_inst"], dtype=torch.float32),
             AsDiscreted(keys=["label", "label_type"], to_onehot=[2, 5]),
-#             ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
+            # ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
             RandAffined(
-                keys=["image", "label", "label_inst", "label_type", "hover_label_inst"],
+                keys=["image", "label", "label_inst", "label_type"],
                 prob=0.5,
                 rotate_range=((-np.pi) / 2, np.pi / 2),
                 scale_range=(0.8, 1.2),
@@ -181,33 +180,37 @@ def run(data_dir, args):
                       ),
             RandAdjustContrastd(keys=["image"], prob=0.5, gamma=(0.75,1.25)),
             CenterSpatialCropd(
-                keys="image",
+                keys="image", 
                 roi_size=(270, 270),
             ),
             CenterSpatialCropd(
-                keys=["label", "label_inst", "label_type", "hover_label_inst"],
+                keys=["label", "label_inst", "label_type"], 
                 roi_size=(80, 80),
             ),
-            RandFlipd(keys=["image", "label", "label_inst", "label_type", "hover_label_inst"], prob=0.5, spatial_axis=0),
-            RandFlipd(keys=["image", "label", "label_inst", "label_type", "hover_label_inst"], prob=0.5, spatial_axis=1),
-            RandRotate90d(keys=["image", "label", "label_inst", "label_type", "hover_label_inst"], prob=0.5, max_k=1),
+            RandFlipd(keys=["image", "label", "label_inst", "label_type"], prob=0.5, spatial_axis=0),
+            RandFlipd(keys=["image", "label", "label_inst", "label_type"], prob=0.5, spatial_axis=1),
+            RandRotate90d(keys=["image", "label", "label_inst", "label_type"], prob=0.5, max_k=1),
             RandGaussianSmoothd(keys=["image"], sigma_x=(0.5,1.15), sigma_y=(0.5,1.15), prob=0.5),
+            CastToTyped(keys="label_inst", dtype=torch.int),
+            ComputeHoVerMapsd(keys="label_inst"),
+            CastToTyped(keys=["image", "label_inst", "label_type"], dtype=torch.float32),
         ]
     )
     val_transforms = Compose(
         [
-            ComputeHoVerMapsd(keys="label_inst"),
-            CastToTyped(keys=["image", "label_inst", "label_type", "hover_label_inst"], dtype=torch.float32),
             AsDiscreted(keys="label_type", to_onehot=5),
-#             ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
+            ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
             CenterSpatialCropd(
-                keys="image",
+                keys="image", 
                 roi_size=(270, 270),
             ),
             CenterSpatialCropd(
-                keys=["label", "label_inst", "label_type", "hover_label_inst"],
+                keys=["label", "label_inst", "label_type"], 
                 roi_size=(80, 80),
             ),
+            CastToTyped(keys="label_inst", dtype=torch.int),
+            ComputeHoVerMapsd(keys="label_inst"),
+            CastToTyped(keys=["image", "label_inst", "label_type"], dtype=torch.float32),
         ]
     )
 

@@ -53,9 +53,6 @@ from transforms import (
     GenerateInstanceContour,
     GenerateInstanceCentroid,
     GenerateInstanceType,
-    GenerateInstanceCentroid, 
-    GenerateInstanceContour, 
-    GenerateInstanceType,
 )
 
 
@@ -108,7 +105,7 @@ def post_process(output, device, return_binary=True, return_centroids=False, out
     post_trans_seg = Compose([
         GenerateWatershedMaskd(keys=HoVerNetBranch.NP.value, softmax=True),
         GenerateInstanceBorderd(keys='mask', hover_map_key=HoVerNetBranch.HV, kernel_size=3),
-        GenerateDistanceMapd(keys='mask', border_key='border', smooth_fn="gaussian"),
+        GenerateDistanceMapd(keys='mask', border_key='border', smooth_fn=GaussianSmooth()),
         GenerateWatershedMarkersd(keys='mask', border_key='border', threshold=0.7, radius=2, postprocess_fn=FillHoles()),
         Watershedd(keys='dist', mask_key='mask', markers_key='markers')
     ])
@@ -277,7 +274,7 @@ def run(data_dir, fold, args):
             print(f"{step}/{epoch_len}, train_loss: {loss.item():.4f}")
             writer.add_scalar("train_loss", loss.item(), epoch_len * epoch + step)
 
-        if (epoch + 1) % val_interval == 0:
+        if epoch > 50 and (epoch + 1) % val_interval == 0:
             torch.cuda.empty_cache()
             model.eval()
             with torch.no_grad():

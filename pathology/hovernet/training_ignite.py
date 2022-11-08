@@ -3,16 +3,19 @@ import sys
 from functools import partial
 import logging
 import os
+import glob
 import time
-from argparse import ArgumentParser
 import torch
 import numpy as np
-import pandas as pd
+import scipy.io as sio
 import torch.distributed as dist
-from monai.data import DataLoader, partition_dataset, CacheDataset
+from argparse import ArgumentParser
+from monai.data import DataLoader, decollate_batch, CacheDataset, GridPatchDataset, PatchIterd, ShuffleBuffer, partition_dataset
 from monai.networks.nets import HoVerNet
 from monai.engines import SupervisedEvaluator, SupervisedTrainer, PrepareBatchExtraInput
 from monai.transforms import (
+    LoadImaged,
+    Transposed,
     Activations,
     AsDiscrete,
     AsDiscreted,
@@ -20,13 +23,11 @@ from monai.transforms import (
     ScaleIntensityRanged,
     CastToTyped,
     Lambdad,
-    SplitDimd,
-    EnsureChannelFirstd,
+    ToMetaTensord,
     ComputeHoVerMapsd,
     CenterSpatialCropd,
     FillHoles,
     BoundingRect,
-    ThresholdIntensity,
     GaussianSmooth,
     RandFlipd,
     RandRotate90d,
@@ -60,10 +61,10 @@ from transforms import (
 )
 
 
-def create_log_dir(cfg, fold):
+def create_log_dir(cfg):
     timestamp = time.strftime("%y%m%d-%H%M%S")
     run_folder_name = (
-        f"{timestamp}_hovernet_bs{cfg['batch_size']}_ep{cfg['n_epochs']}_lr{cfg['lr']}_fold{fold}"
+        f"{timestamp}_hovernet_bs{cfg['batch_size']}_ep{cfg['n_epochs']}_lr{cfg['lr']}"
     )
     log_dir = os.path.join(cfg["logdir"], run_folder_name)
     print(f"Logs and model are saved at '{log_dir}'.")
@@ -71,49 +72,27 @@ def create_log_dir(cfg, fold):
         os.makedirs(log_dir)
     return log_dir
 
-def split_dataset(cfg):
-    # using original split in the paper
-    info = pd.read_csv(os.path.join(cfg["root"], "patch_info.csv"))
-    file_names = np.squeeze(info.to_numpy()).tolist()
-    split_info = pd.read_csv(os.path.join(cfg["root"], "split_info.csv"))
+def prepare_data(data_dir):
+    train_data_dir = os.path.join(data_dir, 'Train')
 
-    indices, splits = [], []
-    for i in range(3):
-        fold_case = split_info.loc[split_info['Split'] == i+1, 'Filename'].tolist()
-        fold_patches = [
-            file_name for file_name in file_names for _name in fold_case if _name == file_name.split("-")[0]
-        ]
-        fold_patches = np.unique(fold_patches)
-        print(f"Fold: {i} - {len(fold_patches):04d}")
+    train_images = sorted(
+        glob.glob(os.path.join(train_data_dir, "Images/*.png")))
+    train_labels = sorted(
+        glob.glob(os.path.join(train_data_dir, "Labels/*.mat")))
 
-        fold_indices = [file_names.index(v) for v in fold_patches]
-        indices.append(fold_indices)
-
-    for i in range(3):
-        _indices = indices.copy()
-        splits.append({
-            "valid": _indices.pop(i),
-            "train": sum(_indices, []),
-        })
-
-    return splits
-
-def prepare_data(data_dir, fold, splits):
-    images = np.load(os.path.join(data_dir, "images.npy"))
-    labels = np.load(os.path.join(data_dir, "labels.npy"))
-
-    data = [
-        {
-            "image": image,
-            "image_meta_dict": {"original_channel_dim": -1},
-            "label": label,
-            "label_meta_dict": {"original_channel_dim": -1},
-        }
-        for image, label in zip(images, labels)
+    labels, inst_maps, type_maps = [], [], []
+    for label in train_labels:
+        label_data = sio.loadmat(label)
+        inst_maps.append(label_data['inst_map'][None].astype(int))
+        type_maps.append(label_data['type_map'][None])
+        labels.append(np.array(label_data['inst_map'][None] > 0, dtype=int))
+        
+    data_dicts = [
+        {"image": _image, "label": _label, "label_inst": _inst_map, "label_type": _type_map}
+        for _image, _label, _inst_map, _type_map in zip(train_images, labels, inst_maps, type_maps)
     ]
-    train_data = [data[i] for i in splits[fold]['train']]
-    valid_data = [data[i] for i in splits[fold]['valid']]
-    
+    train_data, valid_data = data_dicts[:5], data_dicts[-5:]
+
     return train_data, valid_data
 
 def _from_engine(keys):
@@ -194,11 +173,10 @@ class PrepareBatchExtraInput_v2():
         return image, all_label
 
 
-def get_loaders(cfg, train_transforms, val_transforms, fold):
+def get_loaders(cfg, train_transforms, val_transforms):
     multi_gpu = True if torch.cuda.device_count() > 1 else False
 
-    splits = split_dataset(cfg)
-    train_data, valid_data = prepare_data(cfg["root"], fold, splits)
+    train_data, valid_data = prepare_data(cfg["root"])
     if multi_gpu:
         train_data = partition_dataset(
             data=train_data,
@@ -218,15 +196,39 @@ def get_loaders(cfg, train_transforms, val_transforms, fold):
     print("train_files:", len(train_data))
     print("val_files:", len(valid_data))
 
-    train_ds = CacheDataset(data=train_data, transform=train_transforms, cache_rate=1.0, num_workers=4)
-    valid_ds = CacheDataset(data=valid_data, transform=val_transforms, cache_rate=1.0, num_workers=4)
-    train_loader = DataLoader(train_ds, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"], shuffle=True, pin_memory=torch.cuda.is_available())
+    patch_iter = PatchIterd(
+        keys=["image", "label", "label_inst", "label_type", "hover_label_inst"], 
+        patch_size=(256, 256), 
+        start_pos=(0, 0),
+        mode="reflect"
+    )
+    cropper = Compose([
+        ToMetaTensord(keys=["image", "label", "label_inst", "label_type", "hover_label_inst"]),
+        CenterSpatialCropd(keys=["label", "label_inst", "label_type", "hover_label_inst"], roi_size=(164,164)),
+        ])
+
+    _train_ds = CacheDataset(data=train_data, transform=train_transforms,
+                        cache_rate=1.0, num_workers=4)
+    _valid_ds = CacheDataset(data=valid_data, transform=val_transforms,
+                        cache_rate=1.0, num_workers=4)
+    train_ds = GridPatchDataset(
+        data=_train_ds,
+        patch_iter=patch_iter,
+        transform=cropper,
+        with_coordinates=False)
+    valid_ds = GridPatchDataset(
+        data=_valid_ds,
+        patch_iter=patch_iter,
+        transform=cropper,
+        with_coordinates=False)
+    shuffle_ds = ShuffleBuffer(train_ds, buffer_size=30, seed=cfg.seed)
+    train_loader = DataLoader(shuffle_ds, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"], pin_memory=torch.cuda.is_available())
     val_loader = DataLoader(valid_ds, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"], pin_memory=torch.cuda.is_available())
 
     return train_loader, val_loader
 
-def run(cfg, fold):
-    log_dir = create_log_dir(cfg, fold)
+def run(cfg):
+    log_dir = create_log_dir(cfg)
     multi_gpu = True if torch.cuda.device_count() > 1 else False
     if multi_gpu:
         dist.init_process_group(backend="nccl", init_method="env://")
@@ -242,13 +244,12 @@ def run(cfg, fold):
     # Build MONAI preprocessing
     train_transforms = Compose(
         [
-            EnsureChannelFirstd(keys=("image", "label"), channel_dim=-1),
-            SplitDimd(keys="label", output_postfixes=["inst", "type"]),
+            LoadImaged(keys="image", image_only=True),
+            Transposed(keys="image", indices=[2, 1, 0]), # make channel first
+            Lambdad(keys="image", func=lambda x: x[:3, ...]),
             ComputeHoVerMapsd(keys="label_inst"),
             CastToTyped(keys=["image", "label_inst", "label_type", "hover_label_inst"], dtype=torch.float32),
-            Lambdad(keys="label", func=lambda x: x[1: 2, ...] > 0),
-            AsDiscreted(keys=["label", "label_type"], to_onehot=[2, 7]),
-            CenterSpatialCropd(keys=["label", "label_inst", "label_type", "hover_label_inst"], roi_size=(164,164)),
+            AsDiscreted(keys=["label", "label_type"], to_onehot=[2, 8]),
             ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
             RandFlipd(keys=["image", "label", "label_inst", "label_type", "hover_label_inst"], prob=0.5, spatial_axis=0),
             RandFlipd(keys=["image", "label", "label_inst", "label_type", "hover_label_inst"], prob=0.5, spatial_axis=1),
@@ -258,19 +259,18 @@ def run(cfg, fold):
     )
     val_transforms = Compose(
         [
-            EnsureChannelFirstd(keys=("image", "label"), channel_dim=-1),
-            SplitDimd(keys="label", output_postfixes=["inst", "type"]),
+            LoadImaged(keys="image", image_only=True),
+            Transposed(keys="image", indices=[2, 1, 0]), # make channel first
+            Lambdad(keys="image", func=lambda x: x[:3, ...]),
             ComputeHoVerMapsd(keys="label_inst"),
             CastToTyped(keys=["image", "label_inst", "label_type", "hover_label_inst"], dtype=torch.float32),
-            Lambdad(keys="label", func=lambda x: x[1: 2, ...] > 0),
-            AsDiscreted(keys=["label", "label_type"], to_onehot=[2, 7]),
-            CenterSpatialCropd(keys=["label", "label_inst", "label_type", "hover_label_inst"], roi_size=(164,164)),
+            AsDiscreted(keys=["label", "label_type"], to_onehot=[2, 8]),
             ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
         ]
     )
     # __________________________________________________________________________
     # Create MONAI DataLoaders
-    train_loader, val_loader = get_loaders(cfg, train_transforms, val_transforms, fold)
+    train_loader, val_loader = get_loaders(cfg, train_transforms, val_transforms)
 
     # --------------------------------------------------------------------------
     # Create Model, Loss, Optimizer, lr_scheduler
@@ -280,17 +280,22 @@ def run(cfg, fold):
     model = HoVerNet(
         mode="fast",
         in_channels=3,
-        out_classes=7,
+        out_classes=8,
         act=("relu", {"inplace": True}),
         norm="batch",
-        dropout_prob=0.2,
+        pretrained=True,
     ).to(device)
+    if cfg["resume_checkpoint"]:
+        model.load_state_dict(torch.load(cfg["checkpoint_dir"]))
+        print('resume training from a given checkpoint...')
+    else:
+        model.freeze_encoder()
     if multi_gpu:
         model = torch.nn.parallel.DistributedDataParallel(
             model, device_ids=[dist.get_rank()], output_device=dist.get_rank()
         )
     loss_function = HoVerNetLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=cfg["lr"], betas=(0.9, 0.999), weight_decay=0.0)
+    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=1e-4, weight_decay=1e-5)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=cfg["step_size"])
 
     # --------------------------------------------
@@ -360,20 +365,31 @@ def main():
     parser.add_argument(
         "--root",
         type=str,
-        default="/workspace/Data/Lizard/Prepared",
+        default="/consep",
         help="root data dir",
     )
     parser.add_argument("--logdir", type=str, default="./logs/", dest="logdir", help="log directory")
     parser.add_argument("-s", "--seed", type=int, default=23)
 
     parser.add_argument("--bs", type=int, default=8, dest="batch_size", help="batch size")
-    parser.add_argument("--ep", type=int, default=300, dest="n_epochs", help="number of epochs")
+    parser.add_argument("--ep", type=int, default=100, dest="n_epochs", help="number of epochs")
     parser.add_argument("--lr", type=float, default=1e-4, dest="lr", help="initial learning rate")
     parser.add_argument("--step", type=int, default=25, dest="step_size", help="period of learning rate decay")
     parser.add_argument("-f", "--val_freq", type=int, default=1, help="validation frequence")
+    parser.add_argument(
+        "--resume_checkpoint",
+        default=False,
+        type=bool,
+        help="if True, training statrts from a model checkpoint"
+    )
+    parser.add_argument(
+        "--checkpoint_dir",
+        default=None,
+        type=str,
+        help="model checkpoint path to resume training from"
+    )
 
     parser.add_argument("--no-amp", action="store_false", dest="amp", help="deactivate amp")
-
     parser.add_argument("--save_interval", type=int, default=10)
     parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")
     parser.add_argument("--use_gpu", type=bool, default=True, dest="use_gpu", help="whether to use gpu")
@@ -382,9 +398,8 @@ def main():
     args = parser.parse_args()
     cfg = vars(args)
     print(cfg)
-    set_determinism(seed=0)
+    set_determinism(seed=cfg["seed"])
 
-    import sys
     if cfg["ngc"]:
         sys.path.append('/workspace/pathology/lizard/transforms')
         sys.path.append('/workspace/pathology/lizard/loss')
@@ -396,8 +411,7 @@ def main():
 
 
     logging.basicConfig(level=logging.INFO)
-    for i in range(3):
-        run(cfg, i)
+    run(cfg)
 
     # export CUDA_VISIBLE_DIVICE=0; python training_ignite.py --root /Lizard
 if __name__ == "__main__":

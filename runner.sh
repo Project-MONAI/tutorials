@@ -85,7 +85,6 @@ pattern="-and -name '*' -and ! -wholename '*federated_learning*'\
  -and ! -wholename '*video_seg*'\
  -and ! -wholename '*tcia_dataset*'\
  -and ! -wholename '*MRI_reconstruction*'\
- -and ! -wholename '*auto3dseg_autorunner_ref_api*'\
  -and ! -wholename '*preprocess_detect_scene_and_split_fold*'\
  -and ! -wholename '*prepare_14tool_dataset*'\
  -and ! -wholename '*preprocess_extract_images_from_video*'\

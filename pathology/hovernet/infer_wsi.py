@@ -179,7 +179,7 @@ def run(cfg):
     model = HoVerNet(
         mode="fast", in_channels=3, out_classes=7, act=("relu", {"inplace": True}), norm="batch", dropout_prob=0.2
     ).to(device)
-    # model.load_state_dict(torch.load(cfg["ckpt"]))
+    model.load_state_dict(torch.load(cfg["ckpt"]))
     model.eval()
     # Handlers
     inference_handlers = [

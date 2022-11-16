@@ -1,1 +1,0 @@
-{"name": "Task04_Hippocampus", "task": "segmentation", "modality": "MRI", "datalist": "../tasks/msd/Task04_Hippocampus/msd_task04_hippocampus_folds.json", "dataroot": "/workspace/data/Task04_Hippocampus"}

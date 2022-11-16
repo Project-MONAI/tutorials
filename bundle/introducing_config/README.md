@@ -155,5 +155,5 @@ plt.show()
 - Running customized Python components (made available on the `PYTHONPATH`, more examples [in the model_zoo](https://github.com/Project-MONAI/model-zoo)).
 - Overriding the component in `example.yaml` using, for example, `--id=new_value` in the command line.
 - Multiple configuration files and cross-file references.
-- Replacing in terms of plain texts instead of Python objects ([tutorial](https://github.com/Project-MONAI/tutorials/blob/main/bundle/get_started.ipynb)).
+- Replacing in terms of plain texts instead of Python objects ([tutorial](https://github.com/Project-MONAI/tutorials/blob/main/bundle/get_started.md)).
 - The debugging mode to investigate the intermediate variables and results.

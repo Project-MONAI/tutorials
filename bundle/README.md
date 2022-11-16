@@ -1,5 +1,5 @@
 # MONAI bundle
-This folder contains the getting started tutorial and code examples of training / inference for MONAI bundle parser.
+This folder contains the `getting started` tutorial and below code examples of training / inference for MONAI bundle parser.
 
 ### [introducing_config](./introducing_config)
 A simple example to introduce the MONAI bundle config and parsing.

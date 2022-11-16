@@ -6,7 +6,6 @@ A MONAI bundle usually includes the stored weights of a model, TorchScript model
 For more information about MONAI bundle, please read the description: https://docs.monai.io/en/latest/bundle_intro.html.
 
 This is a step-by-step tutorial to help get started to develop a bundle package, which contains a config file to construct the training pipeline and also has a `metadata.json` file to define the metadata information.
-The whole example bundle is available and can be a reference: https://github.com/Project-MONAI/tutorials/blob/main/bundle/spleen_segmentation
 
 Mainly contains the below sections:
 - Define a training config with `JSON` or `YAML` format.
@@ -47,7 +46,7 @@ if not os.path.exists(data_dir):
 
 ## Define train config - Set imports and input / output environments
 
-Now let's start to define the config file for a regular training task. MONAI bundle support both `JSON` and `YAML` format, here we use `JSON` as the example.
+Now let's start to define the config file for a regular training task. MONAI bundle support both `JSON` and `YAML` format, here we use `JSON` as the example. the whole config for training is available and can be a reference: https://github.com/Project-MONAI/tutorials/blob/main/bundle/spleen_segmentation/configs/train.json.
 
 According to the predefined syntax of MONAI bundle, `$` indicates an expression to evaluate, `@` refers to another object in the config content. For more details about the syntax in bundle config, please check: https://docs.monai.io/en/latest/config_syntax.html.
 
@@ -282,8 +281,7 @@ If users have customized logic, then can put the logic in the `iteration_update`
 
 Usually we need to execute validation for every N epochs during training to verify the model and save the best model.
 
-Here we don't define the `validate` section step by step as it's similar to the `train` section. The full config is available:
-https://github.com/Project-MONAI/tutorials/blob/main/bundle/spleen_segmentation/configs/train.json
+Here we don't define the `validate` section step by step as it's similar to the `train` section, please refer to the full training config of the spleen bundle example.
 
 Just show an example of `macro text replacement` to simplify the config content and avoid duplicated text. Please note that it's just token text replacement of the config content, not refer to the instantiated python objects.
 

@@ -26,16 +26,18 @@ You can find the usage examples of MONAI bundle key features and syntax in this 
 
 Downloads and extracts the dataset for this example.
 The dataset comes from http://medicaldecathlon.com/.
-Here specify a directory with the `MONAI_DATA_DIRECTORY` environment variable to save downloaded dataset and outputs.
+Here specify a directory with the `MONAI_DATA_DIRECTORY` environment variable to save downloaded dataset and outputs, if no environment, save to the temorary directory.
 
 ```python
 import os
+import tempfile
 from monai.apps import download_and_extract
 
 resource = "https://msd-for-monai.s3-us-west-2.amazonaws.com/Task09_Spleen.tar"
 md5 = "410d4a301da4e5b2f6f86ec3ddba524e"
 
-root_dir = os.environ.get("MONAI_DATA_DIRECTORY")
+directory = os.environ.get("MONAI_DATA_DIRECTORY")
+root_dir = tempfile.mkdtemp() if directory is None else directory
 compressed_file = os.path.join(root_dir, "Task09_Spleen.tar")
 data_dir = os.path.join(root_dir, "Task09_Spleen")
 if not os.path.exists(data_dir):
@@ -51,6 +53,8 @@ According to the predefined syntax of MONAI bundle, `$` indicates an expression 
 Please note that a MONAI bundle doesn't require any hard-coded logic in the config, so users can define the config content in any structure.
 
 For the first step, import `os` and `glob` to use in the `python expressions` (start with `$`), then define input / output environments and enable `cudnn.benchmark` for better performance.
+
+The `dataset_dir` in the config is the directory of downloaded dataset. Please check the `root_dir` and update this accordingly when you are writing your config.
 
 Note that the `imports` are only used to execute the `python expressions`, and already imported `monai`, `numpy`, `np`, `torch` internally as these are mininum dependencies of MONAI.
 

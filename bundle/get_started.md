@@ -5,7 +5,8 @@ A MONAI bundle usually includes the stored weights of a model, TorchScript model
 
 For more information about MONAI bundle, please read the description: https://docs.monai.io/en/latest/bundle_intro.html.
 
-This is a step-by-step tutorial to help get started to develop a bundle package, which contains a config file to construct the training pipeline and also has a `metadata.json` file to define the metadata information.
+This is a step-by-step tutorial to help get started to develop a bundle package, which contains a config file to construct the training pipeline and also has a `metadata.json` file to define the metadata information. 
+The whole example bundle is available and can be a reference: https://github.com/Project-MONAI/tutorials/blob/main/bundle/spleen_segmentation
 
 Mainly contains the below sections:
 - Define a training config with `JSON` or `YAML` format.

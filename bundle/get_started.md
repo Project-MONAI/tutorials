@@ -46,9 +46,9 @@ if not os.path.exists(data_dir):
 
 ## Define train config - Set imports and input / output environments
 
-Now let's start to define the config file for a regular training task. MONAI bundle support both `JSON` and `YAML` format, here we use `JSON` as the example. the whole config for training is available and can be a reference: https://github.com/Project-MONAI/tutorials/blob/main/bundle/spleen_segmentation/configs/train.json.
+Now let's start to define the config file for a regular training task. MONAI bundle support both `JSON` and `YAML` format, here we use `JSON` as the example. the [whole config for training](spleen_segmentation/configs/train.json) is available and can be a reference.
 
-According to the predefined syntax of MONAI bundle, `$` indicates an expression to evaluate, `@` refers to another object in the config content. For more details about the syntax in bundle config, please check: https://docs.monai.io/en/latest/config_syntax.html.
+According to the predefined syntax of MONAI bundle, `$` indicates an expression to evaluate and `@` refers to another object in the config content. For more details about the syntax in bundle config, please check: https://docs.monai.io/en/latest/config_syntax.html.
 
 Please note that a MONAI bundle doesn't require any hard-coded logic in the config, so users can define the config content in any structure.
 
@@ -94,7 +94,7 @@ Note that for all the MONAI classes and functions, we can use its name in `_targ
 }
 ```
 
-Move the network to the expected `device`
+Move the network to the expected device which was defined earlier by `"device": "$torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')"`.
 
 ```json
 "network": "$@network_def.to(@device)"
@@ -305,8 +305,7 @@ Just show an example of `macro text replacement` to simplify the config content 
 
 We can define a `metadata` file in the bundle, which contains the metadata information relating to the model, including what the shape and format of inputs and outputs are, what the meaning of the outputs are, what type of model is present, and other information. The structure is a dictionary containing a defined set of keys with additional user-specified keys.
 
-A typical `metadata` example is available:
-https://github.com/Project-MONAI/tutorials/blob/main/bundle/spleen_segmentation/configs/metadata.json
+A typical [metadata example](spleen_segmentation/configs/metadata.json) is available.
 
 ## Execute training with bundle script - `run`
 

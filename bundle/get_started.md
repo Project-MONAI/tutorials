@@ -24,8 +24,8 @@ You can find the usage examples of MONAI bundle key features and syntax in this 
 
 ## Download dataset
 
-Downloads and extracts the dataset for this example. 
-The dataset comes from http://medicaldecathlon.com/. 
+Downloads and extracts the dataset for this example.
+The dataset comes from http://medicaldecathlon.com/.
 Here specify a directory with the `MONAI_DATA_DIRECTORY` environment variable to save downloaded dataset and outputs.
 
 ```python
@@ -277,7 +277,7 @@ If users have customized logic, then can put the logic in the `iteration_update`
 
 Usually we need to execute validation for every N epochs during training to verify the model and save the best model.
 
-Here we don't define the `validate` section step by step as it's similar to the `train` section. The full config is available:  
+Here we don't define the `validate` section step by step as it's similar to the `train` section. The full config is available:
 https://github.com/Project-MONAI/tutorials/blob/main/bundle/spleen_segmentation/configs/train.json
 
 Just show an example of `macro text replacement` to simplify the config content and avoid duplicated text. Please note that it's just token text replacement of the config content, not refer to the instantiated python objects.
@@ -302,7 +302,7 @@ Just show an example of `macro text replacement` to simplify the config content 
 
 We can define a `metadata` file in the bundle, which contains the metadata information relating to the model, including what the shape and format of inputs and outputs are, what the meaning of the outputs are, what type of model is present, and other information. The structure is a dictionary containing a defined set of keys with additional user-specified keys.
 
-A typical `metadata` example is available:  
+A typical `metadata` example is available:
 https://github.com/Project-MONAI/tutorials/blob/main/bundle/spleen_segmentation/configs/metadata.json
 
 ## Execute training with bundle script - `run`

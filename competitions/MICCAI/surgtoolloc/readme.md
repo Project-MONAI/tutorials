@@ -20,9 +20,26 @@ The 30 second videos in this dataset are continous segments from surgical proced
 
 ### `preprocess_to_build_detection_dataset.ipynb`
 
-Based on the video level labels, we randomly select 1126 frames (covers all 14 tools) and labeled the bounding boxes. The yolo format labels is uploaded into [google drive](https://drive.google.com/file/d/1iO4bXTGdhRLIoxIKS6P_nNAgI_1Fp_Vg/view?usp=sharing).
+Based on the video level labels, we randomly select 1126 frames (covers all 14 tools) and labeled the bounding boxes. The yolo format labels can be downloaded from [here](https://github.com/Project-MONAI/MONAI-extra-test-data/releases/download/0.8.1/surgtoolloc_tutorial_1126_frame_labels.zip).
 
 In this notebook, we make use of these labels and prepare the yolo format dataset.
+
+## Classification
+
+In order to cast the challenge into a classification task we need to create a dataset with reliable image level labels when only video level labels are given. Because not all frames in a given video will have all tool types from the video level labels, we decided to first use segmentation models to identify frames where we could identify three unique tools per frame. By identifying three tools, we could then apply the video level labels to the given frame. In order to do this we used models published from the MICCAI 2017 Robotic Instrument Segmentation Challenge found [here](https://github.com/ternaus/robot-surgery-segmentation). After applying segmentation models we then used traditional computer vision techniques to count the contours of each unique instrument, and layered additional logic (ie instrument contour needs to touch frame edge) to filter out false positives (The tutorial of this technique will be updated later).
+
+All frames where we could positively identify three unique instruments per frame then formed the basis of our training dataset. The selected frames with cleaned labels is prepared and can be download from [here](https://github.com/Project-MONAI/MONAI-extra-test-data/releases/download/0.8.1/surgtoolloc_tutorial_cleaned_data.zip).
+
+With the cleaned data, we trained 5 EfficientNet-B4 models (on 5 fold splits) and 5 ConvNext-tiny models, and ensembled them as our final model. In this tutorial, the MONAI EfficientNet-B4 model based training pipeline is prepared, and training methods include cosine learning rate schedule, mixed precision training, mixup augmentations, and weighted loss functions.
+Please modify the config file `cfg_efnb4.py` in `classification_files/configs`
+according to your actual dataset path. The command to train the model is like:
+
+```
+cd classification_files
+python train.py --fold 0
+```
+
+The cross validation F1 score on this model is around 0.8470.
 
 ## Detection
 

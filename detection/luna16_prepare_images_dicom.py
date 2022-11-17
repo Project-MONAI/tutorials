@@ -76,11 +76,11 @@ def main():
 
     # 2. prepare data
     meta_dict = {}
-    with open(env_dict['dicom_meta_data_csv'], newline='') as csvfile:
-        print('open '+env_dict['dicom_meta_data_csv'])
+    with open(env_dict["dicom_meta_data_csv"], newline="") as csvfile:
+        print("open " + env_dict["dicom_meta_data_csv"])
         reader = csv.DictReader(csvfile)
         for row in reader:
-            meta_dict[row['File Location'][12:]] = str(row['Series UID'])
+            meta_dict[row["File Location"][12:]] = str(row["Series UID"])
 
     for data_list_key in ["training", "validation"]:
         # create a data loader
@@ -105,17 +105,21 @@ def main():
 
         print("-" * 10)
         for batch_data in process_loader:
-            for batch_data_i in batch_data:              
-                subj_id = meta_dict["/".join(batch_data_i['image_meta_dict']['filename_or_obj'].split("/")[-3:])]
-                new_path = os.path.join(args.data_base_dir,subj_id)
+            for batch_data_i in batch_data:
+                subj_id = meta_dict[
+                    "/".join(
+                        batch_data_i["image_meta_dict"]["filename_or_obj"].split("/")[
+                            -3:
+                        ]
+                    )
+                ]
+                new_path = os.path.join(args.data_base_dir, subj_id)
                 Path(new_path).mkdir(parents=True, exist_ok=True)
-                new_filename = os.path.join(new_path,subj_id+'.nii.gz')
+                new_filename = os.path.join(new_path, subj_id + ".nii.gz")
                 writer = NibabelWriter()
                 writer.set_data_array(data_array=batch_data_i["image"])
                 writer.set_metadata(meta_dict=batch_data_i["image"].meta)
                 writer.write(new_filename, verbose=True)
-
-
 
 
 if __name__ == "__main__":

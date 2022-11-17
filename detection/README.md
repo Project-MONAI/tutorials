@@ -19,7 +19,7 @@ The dataset we are experimenting in this example is LUNA16 (https://luna16.grand
 
 LUNA16 is a public dataset of CT lung nodule detection. Using raw CT scans, the goal is to identify locations of possible nodules, and to assign a probability for being a nodule to each location.
 
-Users can either download mhd/raw data from LUNA16(https://luna16.grand-challenge.org/Home/), or DICOM data from LIDC-IDRI(https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=1966254).
+Users can either download mhd/raw data from [LUNA16](https://luna16.grand-challenge.org/Home/), or DICOM data from [LIDC-IDRI](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=1966254).
 
 Disclaimer: We are not the host of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the dataset! We acknowledge the National Cancer Institute and the Foundation for the National Institutes of Health, and their critical role in the creation of the free publicly available LIDC/IDRI Database used in this study.
 

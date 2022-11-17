@@ -84,11 +84,11 @@ pattern="-and -name '*' -and ! -wholename '*federated_learning*'\
  -and ! -wholename '*transforms_update_meta_data*'\
  -and ! -wholename '*video_seg*'\
  -and ! -wholename '*tcia_dataset*'\
- -and ! -wholename '*MRI_reconstruction*'\
  -and ! -wholename '*preprocess_detect_scene_and_split_fold*'\
  -and ! -wholename '*prepare_14tool_dataset*'\
  -and ! -wholename '*preprocess_extract_images_from_video*'\
  -and ! -wholename '*get_started*'"
+ -and ! -wholename '*MRI_reconstruction*'"
 kernelspec="python3"
 
 function print_usage {

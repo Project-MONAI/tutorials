@@ -75,7 +75,6 @@ def main():
             out_trained_models_dir, "model_luna16_fold" + str(fold) + ".pt"
         )
         env_dict["data_base_dir"] = resampled_data_base_dir
-<<<<<<< HEAD
         env_dict["data_list_file_path"] = os.path.join(
             downloaded_datasplit_dir, "dataset_fold" + str(fold) + ".json"
         )
@@ -85,11 +84,6 @@ def main():
         env_dict["result_list_file_path"] = os.path.join(
             out_inference_result_dir, "result_luna16_fold" + str(fold) + ".json"
         )
-=======
-        env_dict["data_list_file_path"] = os.path.join(downloaded_datasplit_dir,"dataset_fold"+str(fold)+".json")
-        env_dict["tfevent_path"] = os.path.join(out_tensorboard_events_dir,"luna16_fold"+str(fold))
-        env_dict["result_list_file_path"] = os.path.join(out_inference_result_dir,"result_luna16_fold"+str(fold)+".json")
->>>>>>> 3a1d9e50f177ff3d8f939f4c63ff4a8d46ff6b12
         with open(out_file, "w") as outfile:
             json.dump(env_dict, outfile, indent=4)
 

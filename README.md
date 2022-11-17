@@ -43,7 +43,8 @@ in a cell will verify this has worked and show you what kind of hardware you hav
 
 #### Data
 
-Some notebooks will require additional data. They can be downloaded by running the [runexamples.sh](./runexamples.sh) script.
+Some notebooks will require additional data.
+Each user is responsible for checking the content of datasets and the applicable licenses and determining if suitable for the intended use.
 
 ### 2. Questions and bugs
 

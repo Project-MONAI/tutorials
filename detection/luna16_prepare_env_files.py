@@ -16,13 +16,16 @@ import sys
 
 def main():
     #  ------------- Modification starts -------------
-    raw_data_base_dir = "/orig_datasets/"  # the directory of the raw images
-    resampled_data_base_dir = "/datasets/"  # the directory of the resampled images
-    downloaded_datasplit_dir = "LUNA16_datasplit"  # the directory of downloaded data split files
+    raw_data_base_dir = '/home/canz/Projects/datasets/LIDC/manifest-1600709154662/LIDC-IDRI'  # the directory of the raw images
+    resampled_data_base_dir = '/home/canz/Projects/datasets/LIDC/manifest-1600709154662/LIDC-IDRI_resample'  # the directory of the resampled images
+    downloaded_datasplit_dir = './LUNA16_datasplit'  # the directory of downloaded data split files
 
     out_trained_models_dir = "trained_models"  # the directory to save trained model weights
     out_tensorboard_events_dir = "tfevent_train"  # the directory to save tensorboard training curves
     out_inference_result_dir = "result"  # the directory to save predicted boxes for inference
+
+    # if deal with DICOM data, also need metadata.csv
+    dicom_meta_data_csv = '/home/canz/Projects/datasets/LIDC/manifest-1600709154662/metadata.csv'
     #  ------------- Modification ends ---------------
 
     try:
@@ -46,6 +49,8 @@ def main():
     env_dict["orig_data_base_dir"] = raw_data_base_dir
     env_dict["data_base_dir"] = resampled_data_base_dir
     env_dict["data_list_file_path"] = os.path.join(downloaded_datasplit_dir,"original/dataset_fold0.json")
+    if dicom_meta_data_csv != None:
+        env_dict["dicom_meta_data_csv"] = dicom_meta_data_csv
     with open(out_file, "w") as outfile:
         json.dump(env_dict, outfile, indent=4)
 
@@ -58,7 +63,7 @@ def main():
         env_dict["data_base_dir"] = resampled_data_base_dir
         env_dict["data_list_file_path"] = os.path.join(downloaded_datasplit_dir,"dataset_fold"+str(fold)+".json")
         env_dict["tfevent_path"] = os.path.join(out_tensorboard_events_dir,"luna16_fold"+str(fold))
-        env_dict["result_list_file_path"] = os.path.join(out_inference_result_dir,"result_luna16_fold"+str(fold)+".json")
+        env_dict["result_list_file_path"] = os.path.join(out_inference_result_dir,"result_luna16_fold"+str(fold)+".json")        
         with open(out_file, "w") as outfile:
             json.dump(env_dict, outfile, indent=4)
 

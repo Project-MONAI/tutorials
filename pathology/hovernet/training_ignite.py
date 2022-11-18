@@ -100,8 +100,19 @@ def get_loaders(cfg, train_transforms, val_transforms):
 
     train_ds = CacheDataset(data=train_data, transform=train_transforms, cache_rate=1.0, num_workers=4)
     valid_ds = CacheDataset(data=valid_data, transform=val_transforms, cache_rate=1.0, num_workers=4)
-    train_loader = DataLoader(train_ds, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"], shuffle=True, pin_memory=torch.cuda.is_available())
-    val_loader = DataLoader(valid_ds, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"], pin_memory=torch.cuda.is_available())
+    train_loader = DataLoader(
+        train_ds,
+        batch_size=cfg["batch_size"],
+        num_workers=cfg["num_workers"],
+        shuffle=True,
+        pin_memory=torch.cuda.is_available()
+    )
+    val_loader = DataLoader(
+        valid_ds,
+        batch_size=cfg["batch_size"],
+        num_workers=cfg["num_workers"],
+        pin_memory=torch.cuda.is_available()
+    )
 
     return train_loader, val_loader
 
@@ -176,7 +187,12 @@ def run(cfg):
             ]),
             CastToTyped(keys="image", dtype=np.uint8),
             TorchVisiond(
-                keys=["image"], name="ColorJitter", brightness=(229 / 255.0, 281 / 255.0), contrast=(0.95, 1.10), saturation=(0.8, 1.2), hue=(-0.04, 0.04)
+                keys=["image"],
+                name="ColorJitter",
+                brightness=(229 / 255.0, 281 / 255.0),
+                contrast=(0.95, 1.10),
+                saturation=(0.8, 1.2),
+                hue=(-0.04, 0.04)
             ),
             AsDiscreted(keys=["label_type"], to_onehot=[5]),
             ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
@@ -228,7 +244,9 @@ def run(cfg):
     loss_function = HoVerNetLoss(lambda_hv_mse=1.0)
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=cfg["lr"], weight_decay=1e-5)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=25)
-    post_process_np = Compose([Activationsd(keys=HoVerNetBranch.NP.value, softmax=True), Lambdad(keys=HoVerNetBranch.NP.value, func=lambda x: x[1:2, ...] > 0.5)])
+    post_process_np = Compose([
+        Activationsd(keys=HoVerNetBranch.NP.value, softmax=True),
+        Lambdad(keys=HoVerNetBranch.NP.value, func=lambda x: x[1: 2, ...] > 0.5)])
     post_process = Lambdad(keys="pred", func=post_process_np)
 
     # --------------------------------------------
@@ -324,19 +342,9 @@ def main():
     print(cfg)
     set_determinism(seed=0)
 
-    import sys
-    if cfg["ngc"]:
-        sys.path.append('/workspace/pathology/lizard/transforms')
-        sys.path.append('/workspace/pathology/lizard/loss')
-        sys.path.append('/workspace/pathology/lizard/net')
-    else:
-        data_dir = "/workspace/Data/CoNSeP/Prepared/consep"
-        sys.path.append('/workspace/Code/tutorials/pathology/hovernet/transforms')
-
     logging.basicConfig(level=logging.INFO)
     run(cfg)
 
 
-    # export CUDA_VISIBLE_DIVICE=0; python training_ignite.py --root /Lizard
 if __name__ == "__main__":
     main()

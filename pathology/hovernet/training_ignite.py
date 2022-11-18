@@ -1,25 +1,19 @@
-import sys
-
-from functools import partial
-import logging
 import os
 import glob
 import time
-from argparse import ArgumentParser
+import logging
 import torch
 import numpy as np
-import pandas as pd
 import torch.distributed as dist
+from argparse import ArgumentParser
 from monai.data import DataLoader, partition_dataset, CacheDataset
 from monai.networks.nets import HoVerNet
-from monai.engines import SupervisedEvaluator, SupervisedTrainer, PrepareBatchExtraInput
+from monai.engines import SupervisedEvaluator, SupervisedTrainer
 from monai.transforms import (
     LoadImaged,
     TorchVisiond,
     Lambdad,
-    Lambda,
     Activationsd,
-    Activations,
     OneOf,
     MedianSmoothd,
     AsDiscreted,
@@ -27,7 +21,6 @@ from monai.transforms import (
     CastToTyped,
     ComputeHoVerMapsd,
     ScaleIntensityRanged,
-    RandShiftIntensityd,
     RandGaussianNoised,
     RandFlipd,
     RandAffined,
@@ -40,22 +33,19 @@ from monai.handlers import (
     LrScheduleHandler,
     StatsHandler,
     TensorBoardStatsHandler,
-    TensorBoardImageHandler,
     ValidationHandler,
     from_engine,
 )
-from monai.utils import set_determinism, ensure_tuple, convert_to_tensor
+from monai.utils import set_determinism
 from monai.utils.enums import HoVerNetBranch
-
-from loss import HoVerNetLoss
-
 from monai.apps.pathology.handlers.utils import from_engine_hovernet
 from monai.apps.pathology.engines.utils import PrepareBatchHoVerNet
-from transforms import RandShiftIntensityd, Compose
+from monai.apps.pathology.losses import HoVerNetLoss
 from skimage import measure
 
+
 def create_log_dir(cfg):
-    timestamp = time.strftime("%y%m%d-%H%M%S")
+    timestamp = time.strftime("%y%m%d-%H%M")
     run_folder_name = (
         f"{timestamp}_hovernet_bs{cfg['batch_size']}_ep{cfg['n_epochs']}_lr{cfg['lr']}_stage{cfg['stage']}"
     )
@@ -64,6 +54,7 @@ def create_log_dir(cfg):
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
     return log_dir
+
 
 def prepare_data(data_dir, phase):
     data_dir = os.path.join(data_dir, phase)
@@ -81,6 +72,7 @@ def prepare_data(data_dir, phase):
     ]
 
     return data_dicts
+
 
 def get_loaders(cfg, train_transforms, val_transforms):
     multi_gpu = True if torch.cuda.device_count() > 1 else False
@@ -138,6 +130,7 @@ def create_model(cfg, device):
         ).to(device)
         model.load_state_dict(torch.load(cfg["ckpt_path"])['net'])
         print(f'stage{cfg["stage"]}, success load weight!')
+
     return model
 
 
@@ -171,28 +164,27 @@ def run(cfg):
                 mode=("nearest"),
                     ),
             CenterSpatialCropd(
-                keys="image", 
+                keys="image",
                 roi_size=(270, 270),
             ),
             RandFlipd(keys=["image", "label_inst", "label_type"], prob=0.5, spatial_axis=0),
             RandFlipd(keys=["image", "label_inst", "label_type"], prob=0.5, spatial_axis=1),
             OneOf(transforms=[
-                RandGaussianSmoothd(keys=["image"], sigma_x=(0.1,1.1), sigma_y=(0.1,1.1), prob=1.0),
+                RandGaussianSmoothd(keys=["image"], sigma_x=(0.1, 1.1), sigma_y=(0.1, 1.1), prob=1.0),
                 MedianSmoothd(keys=["image"], radius=1),
                 RandGaussianNoised(keys=["image"], prob=1.0, std=0.05)
             ]),
-            RandShiftIntensityd(keys=["image"], offsets=(-26, 26), clip=True, prob=1.0),
             CastToTyped(keys="image", dtype=np.uint8),
             TorchVisiond(
-                keys=["image"], name="ColorJitter", contrast=(0.95, 1.10), saturation=(0.8,1.2), hue=(-0.04, 0.04)
+                keys=["image"], name="ColorJitter", brightness=(229 / 255.0, 281 / 255.0), contrast=(0.95, 1.10), saturation=(0.8, 1.2), hue=(-0.04, 0.04)
             ),
             AsDiscreted(keys=["label_type"], to_onehot=[5]),
             ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
             CastToTyped(keys="label_inst", dtype=torch.int),
             ComputeHoVerMapsd(keys="label_inst"),
-            Lambdad(keys="label_inst", func=lambda x: x>0, overwrite="label"),
+            Lambdad(keys="label_inst", func=lambda x: x > 0, overwrite="label"),
             CenterSpatialCropd(
-                keys=["label", "hover_label_inst", "label_inst", "label_type"], 
+                keys=["label", "hover_label_inst", "label_inst", "label_type"],
                 roi_size=(80, 80),
             ),
             AsDiscreted(keys=["label"], to_onehot=2),
@@ -205,14 +197,13 @@ def run(cfg):
             Lambdad(keys="label_inst", func=lambda x: measure.label(x)),
             CastToTyped(keys=["image", "label_inst"], dtype=torch.int),
             CenterSpatialCropd(
-                keys="image", 
-                roi_size=(270, 270),
+                keys="image", roi_size=(270, 270),
             ),
             ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
             ComputeHoVerMapsd(keys="label_inst"),
-            Lambdad(keys="label_inst", func=lambda x: x>0, overwrite="label"),
+            Lambdad(keys="label_inst", func=lambda x: x > 0, overwrite="label"),
             CenterSpatialCropd(
-                keys=["label", "hover_label_inst", "label_inst", "label_type"], 
+                keys=["label", "hover_label_inst", "label_inst", "label_type"],
                 roi_size=(80, 80),
             ),
             CastToTyped(keys=["image", "label_inst", "label_type"], dtype=torch.float32),
@@ -236,7 +227,6 @@ def run(cfg):
     loss_function = HoVerNetLoss(lambda_hv_mse=1.0)
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=cfg["lr"], weight_decay=1e-5)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=25)
-    # post_process_np = Compose([Activations(softmax=True), Lambda(func=lambda x: x[1:2, ...] > 0.5)])
     post_process_np = Compose([Activationsd(keys=HoVerNetBranch.NP.value, softmax=True), Lambdad(keys=HoVerNetBranch.NP.value, func=lambda x: x[1:2, ...] > 0.5)])
     post_process = Lambdad(keys="pred", func=post_process_np)
 
@@ -345,6 +335,7 @@ def main():
     logging.basicConfig(level=logging.INFO)
     run(cfg)
 
+ 
     # export CUDA_VISIBLE_DIVICE=0; python training_ignite.py --root /Lizard
 if __name__ == "__main__":
     main()

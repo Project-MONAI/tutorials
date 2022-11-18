@@ -171,7 +171,7 @@ def run(cfg):
                 mode=("nearest"),
                     ),
             CenterSpatialCropd(
-                keys="image", 
+                keys="image",
                 roi_size=(270, 270),
             ),
             RandFlipd(keys=["image", "label_inst", "label_type"], prob=0.5, spatial_axis=0),
@@ -192,7 +192,7 @@ def run(cfg):
             ComputeHoVerMapsd(keys="label_inst"),
             Lambdad(keys="label_inst", func=lambda x: x>0, overwrite="label"),
             CenterSpatialCropd(
-                keys=["label", "hover_label_inst", "label_inst", "label_type"], 
+                keys=["label", "hover_label_inst", "label_inst", "label_type"],
                 roi_size=(80, 80),
             ),
             AsDiscreted(keys=["label"], to_onehot=2),
@@ -205,14 +205,14 @@ def run(cfg):
             Lambdad(keys="label_inst", func=lambda x: measure.label(x)),
             CastToTyped(keys=["image", "label_inst"], dtype=torch.int),
             CenterSpatialCropd(
-                keys="image", 
+                keys="image",
                 roi_size=(270, 270),
             ),
             ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
             ComputeHoVerMapsd(keys="label_inst"),
             Lambdad(keys="label_inst", func=lambda x: x>0, overwrite="label"),
             CenterSpatialCropd(
-                keys=["label", "hover_label_inst", "label_inst", "label_type"], 
+                keys=["label", "hover_label_inst", "label_inst", "label_type"],
                 roi_size=(80, 80),
             ),
             CastToTyped(keys=["image", "label_inst", "label_type"], dtype=torch.float32),

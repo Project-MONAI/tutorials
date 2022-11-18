@@ -82,7 +82,7 @@ pattern="-and -name '*' -and ! -wholename '*federated_learning*'\
  -and ! -wholename '*video_seg*'\
  -and ! -wholename '*tcia_dataset*'\
  -and ! -wholename '*MRI_reconstruction*'\
- -and ! -wholename '*hovernet*'"
+ -and ! -wholename '*hovernet_training_torch*'"
 kernelspec="python3"
 
 function print_usage {

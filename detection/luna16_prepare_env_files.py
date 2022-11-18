@@ -59,9 +59,14 @@ def main():
     env_dict = {}
     env_dict["orig_data_base_dir"] = raw_data_base_dir
     env_dict["data_base_dir"] = resampled_data_base_dir
-    env_dict["data_list_file_path"] = os.path.join(
-        downloaded_datasplit_dir, "original/dataset_fold0.json"
-    )
+    if dicom_meta_data_csv != None:
+        env_dict["data_list_file_path"] = os.path.join(
+            downloaded_datasplit_dir, "dicom_original/dataset_fold0.json"
+        )
+    else:
+        env_dict["data_list_file_path"] = os.path.join(
+            downloaded_datasplit_dir, "mhd_original/dataset_fold0.json"
+        )
     if dicom_meta_data_csv != None:
         env_dict["dicom_meta_data_csv"] = dicom_meta_data_csv
     with open(out_file, "w") as outfile:

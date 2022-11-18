@@ -336,7 +336,7 @@ def main():
     logging.basicConfig(level=logging.INFO)
     run(cfg)
 
- 
+
     # export CUDA_VISIBLE_DIVICE=0; python training_ignite.py --root /Lizard
 if __name__ == "__main__":
     main()

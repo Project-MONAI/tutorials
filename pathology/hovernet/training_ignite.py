@@ -197,7 +197,8 @@ def run(cfg):
             Lambdad(keys="label_inst", func=lambda x: measure.label(x)),
             CastToTyped(keys=["image", "label_inst"], dtype=torch.int),
             CenterSpatialCropd(
-                keys="image", roi_size=(270, 270),
+                keys="image",
+                roi_size=(270, 270),
             ),
             ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
             ComputeHoVerMapsd(keys="label_inst"),

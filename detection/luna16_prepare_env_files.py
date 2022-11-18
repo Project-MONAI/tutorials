@@ -34,7 +34,7 @@ def main():
     )
 
     # if deal with mhd/raw data, set it to be None
-    # dicom_meta_data_csv = None 
+    # dicom_meta_data_csv = None
     # if deal with DICOM data, also need metadata.csv
     dicom_meta_data_csv = (
         "/home/canz/Projects/datasets/LIDC/manifest-1600709154662/metadata.csv"

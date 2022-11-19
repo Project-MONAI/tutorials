@@ -19,6 +19,8 @@ The dataset we are experimenting in this example is LUNA16 (https://luna16.grand
 
 LUNA16 is a public dataset of CT lung nodule detection. Using raw CT scans, the goal is to identify locations of possible nodules, and to assign a probability for being a nodule to each location.
 
+Users can either download mhd/raw data from [LUNA16](https://luna16.grand-challenge.org/Home/), or DICOM data from [LIDC-IDRI](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=1966254).
+
 Disclaimer: We are not the host of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the dataset! We acknowledge the National Cancer Institute and the Foundation for the National Institutes of Health, and their critical role in the creation of the free publicly available LIDC/IDRI Database used in this study.
 
 We follow the official 10-fold data splitting from LUNA16 challenge and generate data split json files using the script from [nnDetection](https://github.com/MIC-DKFZ/nnDetection/blob/main/projects/Task016_Luna/scripts/prepare.py).
@@ -36,15 +38,21 @@ In these files, the values of "box" are the ground truth boxes in world coordina
 
 The raw CT images in LUNA16 have various of voxel sizes. The first step is to resample them to the same voxel size, which is defined in the value of "spacing" in [./config/config_train_luna16_16g.json](./config/config_train_luna16_16g.json).
 
-Then, please open [luna16_prepare_env_files.py](luna16_prepare_env_files.py), change the value of "raw_data_base_dir" to the directory where you store the downloaded images, the value of "downloaded_datasplit_dir" to where you downloaded the data split json files, and the value of "resampled_data_base_dir" to the target directory where you will save the resampled images.
+Then, please open [luna16_prepare_env_files.py](luna16_prepare_env_files.py), change the value of "raw_data_base_dir" to the directory where you store the downloaded images, the value of "downloaded_datasplit_dir" to where you downloaded the data split json files, and the value of "resampled_data_base_dir" to the target directory where you will save the resampled images. If you are using DICOM data, please also provide path to "dicom_meta_data_csv" which can be found in the downloaded folder from LIDC-IDRI.
 
-Finally, resample the images by running
+If you downloaded mhd/raw data, please resample the images by running
 ```bash
 python3 luna16_prepare_env_files.py
 python3 luna16_prepare_images.py -c ./config/config_train_luna16_16g.json
 ```
 
-The original images are with mhd/raw format, the resampled images will be with Nifti format.
+If you downloaded DICOM data, please resample the images by running
+```bash
+python3 luna16_prepare_env_files.py
+python3 luna16_prepare_images_dicom.py -c ./config/config_train_luna16_16g.json
+```
+
+The resampled images will be with Nifti format.
 
 #### [3.2 3D Detection Training](./luna16_training.py)
 

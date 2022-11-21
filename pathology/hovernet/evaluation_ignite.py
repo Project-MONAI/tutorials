@@ -108,7 +108,7 @@ def run(cfg):
         val_handlers=val_handlers,
         amp=cfg["amp"],
     )
-    
+
     state = evaluator.run()
     print(state)
 

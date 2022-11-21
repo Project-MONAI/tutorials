@@ -4,14 +4,17 @@ import numpy as np
 import torch
 from monai.data.dataset import Dataset
 from monai.utils import set_determinism
-from torch.utils.data import DataLoader, SequentialSampler
+from torch.utils.data import DataLoader
 
 
 class SurgDataset(Dataset):
-    def __init__(self, cfg, df, transform):
+    def __init__(self, cfg, df, mode):
         self.df = df
         self.cfg = cfg
-        self.transform = transform
+        if mode == "train":
+            self.transform = cfg.train_aug
+        else:
+            self.transform = cfg.val_aug
 
     def __len__(self):
         return len(self.df)
@@ -42,7 +45,7 @@ def get_train_dataloader(train_dataset, cfg):
         num_workers=cfg.num_workers,
         pin_memory=False,
         collate_fn=None,
-        drop_last=cfg.drop_last,
+        drop_last=True,
     )
 
     return train_dataloader
@@ -52,7 +55,7 @@ def get_val_dataloader(val_dataset, cfg):
 
     val_dataloader = DataLoader(
         val_dataset,
-        sampler=SequentialSampler(val_dataset),
+        shuffle=False,
         batch_size=cfg.batch_size,
         num_workers=cfg.num_workers,
         pin_memory=False,

@@ -1,19 +1,25 @@
 import argparse
 import gc
-import importlib
 import os
 import sys
 
 import numpy as np
 import pandas as pd
 import torch
+from monai.bundle import ConfigParser
 from monai.metrics import ConfusionMatrixMetric
 from monai.networks.nets import EfficientNetBN
 from torch.cuda.amp import GradScaler, autocast
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
-from utils import (SurgDataset, create_checkpoint, get_train_dataloader,
-                   get_val_dataloader, mixup_data, set_seed)
+from utils import (
+    SurgDataset,
+    create_checkpoint,
+    get_train_dataloader,
+    get_val_dataloader,
+    mixup_data,
+    set_seed,
+)
 
 
 def main(cfg):
@@ -36,8 +42,8 @@ def main(cfg):
         + [df_oversample[df_oversample["fold"] != cfg.fold]] * cfg.oversample_rate
     )
 
-    train_dataset = SurgDataset(cfg, df=train_df, transform=cfg.train_aug)
-    val_dataset = SurgDataset(cfg, df=val_df, transform=cfg.val_aug)
+    train_dataset = SurgDataset(cfg, df=train_df, mode="train")
+    val_dataset = SurgDataset(cfg, df=val_df, mode="val")
 
     train_dataloader = get_train_dataloader(train_dataset, cfg)
     val_dataloader = get_val_dataloader(val_dataset, cfg)
@@ -215,21 +221,24 @@ if __name__ == "__main__":
     sys.path.append("models")
     sys.path.append("data")
 
-    parser = argparse.ArgumentParser(description="")
+    arg_parser = argparse.ArgumentParser(description="")
 
-    parser.add_argument(
-        "-c", "--config", type=str, default="cfg_efnb4", help="config filename"
+    arg_parser.add_argument(
+        "-c", "--config", type=str, default="cfg_efnb4.yaml", help="config filename"
     )
-    parser.add_argument("-f", "--fold", type=int, default=0, help="fold")
-    parser.add_argument("-s", "--seed", type=int, default=-1, help="seed")
-    parser.add_argument("-w", "--weights", default=None, help="the path of weights")
+    arg_parser.add_argument("-f", "--fold", type=int, default=0, help="fold")
+    arg_parser.add_argument("-s", "--seed", type=int, default=-1, help="seed")
+    arg_parser.add_argument("-w", "--weights", default=None, help="the path of weights")
 
-    parser_args, _ = parser.parse_known_args(sys.argv)
+    input_args, _ = arg_parser.parse_known_args(sys.argv)
 
-    cfg = importlib.import_module(parser_args.config).cfg
+    config_parser = ConfigParser()
+    config_parser.read_config(input_args.config)
+    config_parser.parse()
+    cfg = config_parser.get_parsed_content("cfg")
 
-    cfg.fold = parser_args.fold
-    cfg.seed = parser_args.seed
-    cfg.weights = parser_args.weights
+    cfg.fold = input_args.fold
+    cfg.seed = input_args.seed
+    cfg.weights = input_args.weights
 
     main(cfg)

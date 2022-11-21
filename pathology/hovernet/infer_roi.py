@@ -169,7 +169,7 @@ def run(cfg):
     # Inference engine
     sliding_inferer = SlidingWindowHoVerNetInferer(
         roi_size=cfg["patch_size"],
-        sw_batch_size=8,
+        sw_batch_size=cfg["sw_batch_size"],
         overlap=1.0 - float(cfg["out_size"]) / float(cfg["patch_size"]),
         padding_mode="constant",
         cval=0,
@@ -202,6 +202,7 @@ def main():
     parser.add_argument("--ckpt", type=str, default="./model_CoNSeP_new.pth", help="Path to the pytorch checkpoint")
     parser.add_argument("--mode", type=str, default="original", help="HoVerNet mode (original/fast)")
     parser.add_argument("--bs", type=int, default=1, dest="batch_size", help="batch size")
+    parser.add_argument("--swbs", type=int, default=8, dest="sw_batch_size", help="sliding window batch size")
     parser.add_argument("--no-amp", action="store_false", dest="amp", help="deactivate amp")
     parser.add_argument("--save_interval", type=int, default=10)
     parser.add_argument("--cpu", type=int, default=0, dest="num_workers", help="number of workers")

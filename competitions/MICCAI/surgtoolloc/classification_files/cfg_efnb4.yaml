@@ -60,4 +60,3 @@ cfg:
             - _target_: Lambdad
               keys: "input"
               func: "$lambda x: x / 255.0"
-

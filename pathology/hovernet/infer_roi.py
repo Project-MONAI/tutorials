@@ -6,20 +6,34 @@ from glob import glob
 
 import torch
 import torch.distributed as dist
-from imageio import imsave
 
 from monai.apps.pathology.inferers import SlidingWindowHoVerNetInferer
 from monai.apps.pathology.transforms import (
-    GenerateDistanceMapd, GenerateInstanceBorderd, GenerateWatershedMarkersd,
-    GenerateWatershedMaskd, HoVerNetNuclearTypePostProcessingd, Watershedd)
+    GenerateDistanceMapd,
+    GenerateInstanceBorderd,
+    GenerateWatershedMarkersd,
+    GenerateWatershedMaskd,
+    HoVerNetNuclearTypePostProcessingd,
+    Watershedd,
+)
 from monai.data import DataLoader, Dataset, PILReader
 from monai.engines import SupervisedEvaluator
 from monai.networks.nets import HoVerNet
-from monai.transforms import (Activationsd, AsDiscreted, CastToTyped,
-                              CenterSpatialCropd, Compose, Decollated,
-                              EnsureChannelFirstd, FillHoles, GaussianSmooth,
-                              LoadImaged, ScaleIntensityRanged)
-from monai.transforms.utils import apply_transform
+from monai.transforms import (
+    Activationsd,
+    AsDiscreted,
+    CastToTyped,
+    CenterSpatialCropd,
+    Compose,
+    EnsureChannelFirstd,
+    FillHoles,
+    FromMetaTensord,
+    GaussianSmooth,
+    LoadImaged,
+    PromoteChildItemsd,
+    SaveImaged,
+    ScaleIntensityRanged,
+)
 from monai.utils import HoVerNetBranch, first
 
 
@@ -33,7 +47,7 @@ def create_output_dir(cfg):
 
     timestamp = time.strftime("%y%m%d-%H%M%S")
     run_folder_name = f"{timestamp}_inference_hovernet_ps{cfg['patch_size']}"
-    log_dir = os.path.join(cfg["logdir"], run_folder_name)
+    log_dir = os.path.join(cfg["output"], run_folder_name)
     print(f"Logs and outputs are saved at '{log_dir}'.")
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
@@ -52,42 +66,33 @@ def run(cfg):
         torch.cuda.set_device(device)
     else:
         device = torch.device("cuda" if cfg["use_gpu"] else "cpu")
+
     # --------------------------------------------------------------------------
     # Transforms
     # --------------------------------------------------------------------------
     # Preprocessing transforms
     pre_transforms = Compose(
         [
-            LoadImaged(
-                keys=["image"], reader=PILReader, converter=lambda x: x.convert("RGB")
-            ),
+            LoadImaged(keys=["image"], reader=PILReader, converter=lambda x: x.convert("RGB")),
             EnsureChannelFirstd(keys=["image"]),
-            # CenterSpatialCropd(keys=["image"], roi_size=(80, 80)),  # for testing only
+            CenterSpatialCropd(keys=["image"], roi_size=(80, 80)),  # for testing only
             CastToTyped(keys=["image"], dtype=torch.float32),
-            ScaleIntensityRanged(
-                keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True
-            ),
+            ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
         ]
     )
     # Postprocessing transforms
     post_transforms = Compose(
         [
-            Decollated(
-                keys=[
-                    HoVerNetBranch.NC.value,
-                    HoVerNetBranch.NP.value,
-                    HoVerNetBranch.HV.value,
-                ]
+            PromoteChildItemsd(
+                keys="pred",
+                children_keys=[HoVerNetBranch.NC.value, HoVerNetBranch.NP.value, HoVerNetBranch.HV.value],
+                delete_keys=True,
             ),
             Activationsd(keys=HoVerNetBranch.NC.value, softmax=True),
             AsDiscreted(keys=HoVerNetBranch.NC.value, argmax=True),
             GenerateWatershedMaskd(keys=HoVerNetBranch.NP.value, softmax=True),
-            GenerateInstanceBorderd(
-                keys="mask", hover_map_key=HoVerNetBranch.HV.value, kernel_size=3
-            ),
-            GenerateDistanceMapd(
-                keys="mask", border_key="border", smooth_fn=GaussianSmooth()
-            ),
+            GenerateInstanceBorderd(keys="mask", hover_map_key=HoVerNetBranch.HV.value, kernel_size=3),
+            GenerateDistanceMapd(keys="mask", border_key="border", smooth_fn=GaussianSmooth()),
             GenerateWatershedMarkersd(
                 keys="mask",
                 border_key="border",
@@ -96,8 +101,17 @@ def run(cfg):
                 postprocess_fn=FillHoles(),
             ),
             Watershedd(keys="dist", mask_key="mask", markers_key="markers"),
-            HoVerNetNuclearTypePostProcessingd(
-                type_pred_key=HoVerNetBranch.NC.value, instance_pred_key="dist"
+            HoVerNetNuclearTypePostProcessingd(type_pred_key=HoVerNetBranch.NC.value, instance_pred_key="dist"),
+            FromMetaTensord(keys=["image", "pred_binary"]),
+            SaveImaged(
+                keys="pred_binary",
+                meta_keys="image_meta_dict",
+                output_ext="png",
+                output_dir=output_dir,
+                output_postfix="pred",
+                output_dtype="uint8",
+                separate_folder=False,
+                scale=255,
             ),
         ]
     )
@@ -105,10 +119,7 @@ def run(cfg):
     # Data and Data Loading
     # --------------------------------------------------------------------------
     # List of whole slide images
-    data_list = [
-        {"image": image, "filename": image}
-        for image in glob(os.path.join(cfg["root"], "*.png"))
-    ]
+    data_list = [{"image": image} for image in glob(os.path.join(cfg["root"], "*.png"))]
 
     # Dataset
     dataset = Dataset(data_list, transform=pre_transforms)
@@ -140,7 +151,7 @@ def run(cfg):
     # --------------------------------------------------------------------------
     # Create model and load weights
     model = HoVerNet(
-        mode="original",
+        mode=cfg["mode"],
         in_channels=3,
         out_classes=5,
         act=("relu", {"inplace": True}),
@@ -157,11 +168,11 @@ def run(cfg):
     # --------------------------------------------
     # Inference
     # --------------------------------------------
+    # Inference engine
     sliding_inferer = SlidingWindowHoVerNetInferer(
         roi_size=cfg["patch_size"],
         sw_batch_size=8,
         overlap=1.0 - float(cfg["out_size"]) / float(cfg["patch_size"]),
-        # overlap=0,
         padding_mode="constant",
         cval=0,
         sw_device=device,
@@ -170,28 +181,15 @@ def run(cfg):
         extra_input_padding=((cfg["patch_size"] - cfg["out_size"]) // 2,) * 4,
     )
 
-    for i, data in enumerate(data_loader):
-        print(">>>>> ", data["filename"])
-        image = data["image"]
-        output = sliding_inferer(image, model)
-        results = apply_transform(post_transforms, output)
-        for i, res in enumerate(results):
-            filename = os.path.join(
-                output_dir,
-                os.path.basename(data["filename"][i]).replace(".png", "_pred.png"),
-            )
-            print(f"Saving {filename}...")
-            imsave(filename, res["pred_binary"].permute(1, 2, 0).numpy())
-
-    # evaluator = SupervisedEvaluator(
-    #     device=device,
-    #     val_data_loader=data_loader,
-    #     network=model,
-    #     postprocessing=post_transforms,
-    #     inferer=sliding_inferer,
-    #     amp=cfg["amp"],
-    # )
-    # evaluator.run()
+    evaluator = SupervisedEvaluator(
+        device=device,
+        val_data_loader=data_loader,
+        network=model,
+        postprocessing=post_transforms,
+        inferer=sliding_inferer,
+        amp=cfg["amp"],
+    )
+    evaluator.run()
 
     if multi_gpu:
         dist.destroy_process_group()
@@ -200,45 +198,17 @@ def run(cfg):
 def main():
     logging.basicConfig(level=logging.INFO)
 
-    parser = ArgumentParser(
-        description="Tumor detection on whole slide pathology images."
-    )
-    parser.add_argument(
-        "--root",
-        type=str,
-        default="/Users/bhashemian/workspace/project-monai/tutorials/pathology/hovernet/CoNSeP/Test/Images",
-        help="image root dir",
-    )
-    parser.add_argument(
-        "--logdir", type=str, default="./logs/", dest="logdir", help="log directory"
-    )
-    parser.add_argument(
-        "--ckpt",
-        type=str,
-        default="/Users/bhashemian/workspace/project-monai/tutorials/pathology/hovernet/model_CoNSeP_new.pth",
-        dest="ckpt",
-        help="Path to the pytorch checkpoint",
-    )
-
-    parser.add_argument(
-        "--mode", type=str, default="original", help="HoVerNet mode (original/fast)"
-    )
-    parser.add_argument(
-        "--bs", type=int, default=1, dest="batch_size", help="batch size"
-    )
-    parser.add_argument(
-        "--no-amp", action="store_false", dest="amp", help="deactivate amp"
-    )
+    parser = ArgumentParser(description="Tumor detection on whole slide pathology images.")
+    parser.add_argument("--root", type=str, default="./CoNSeP/Test/Images", help="image root dir")
+    parser.add_argument("--output", type=str, default="./logs/", dest="output", help="log directory")
+    parser.add_argument("--ckpt", type=str, default="./model_CoNSeP_new.pth", help="Path to the pytorch checkpoint")
+    parser.add_argument("--mode", type=str, default="original", help="HoVerNet mode (original/fast)")
+    parser.add_argument("--bs", type=int, default=1, dest="batch_size", help="batch size")
+    parser.add_argument("--no-amp", action="store_false", dest="amp", help="deactivate amp")
     parser.add_argument("--save_interval", type=int, default=10)
-    parser.add_argument(
-        "--cpu", type=int, default=0, dest="num_workers", help="number of workers"
-    )
-    parser.add_argument(
-        "--use_gpu", type=bool, default=False, help="whether to use gpu"
-    )
-    parser.add_argument(
-        "--reader", type=str, default="OpenSlide", help="WSI reader backend"
-    )
+    parser.add_argument("--cpu", type=int, default=0, dest="num_workers", help="number of workers")
+    parser.add_argument("--use_gpu", type=bool, default=False, help="whether to use gpu")
+    parser.add_argument("--reader", type=str, default="OpenSlide", help="WSI reader backend")
     args = parser.parse_args()
 
     config_dict = vars(args)

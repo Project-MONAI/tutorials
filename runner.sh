@@ -45,6 +45,9 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" data_analyzer.ipynb
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" data_analyzer_byoc.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" transforms_metatensor.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 2d_slices_from_3d_training.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" preprocess_to_build_detection_dataset.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" preprocess_detect_scene_and_split_fold.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" preprocess_extract_images_from_video.ipynb)
 
 # output formatting
 separator=""
@@ -81,6 +84,9 @@ pattern="-and -name '*' -and ! -wholename '*federated_learning*'\
  -and ! -wholename '*transforms_update_meta_data*'\
  -and ! -wholename '*video_seg*'\
  -and ! -wholename '*tcia_dataset*'\
+ -and ! -wholename '*preprocess_detect_scene_and_split_fold*'\
+ -and ! -wholename '*preprocess_to_build_detection_dataset*'\
+ -and ! -wholename '*preprocess_extract_images_from_video*'\
  -and ! -wholename '*MRI_reconstruction*'"
 kernelspec="python3"
 

@@ -1,0 +1,48 @@
+---
+cfg:
+    output_dir: "./output/"
+    data_dir: "/raid/surg/image640_blur/"
+    backbone: "efficientnet-b4"
+    train_df: "cleaned_clf_train_data.csv"
+    img_size: [640, 640]
+    batch_size: 196
+    num_classes: 14
+    lr: 0.001
+    epochs: 5
+    oversample_rate: 4
+    clf_threshold: 0.4
+    num_workers: 8
+    gpu: 0
+    device: "cuda:0"
+    image_load:
+      - _target_: LoadImaged
+        keys: "input"
+        image_only: true
+      - _target_: EnsureChannelFirstd
+        keys: "input"
+      - _target_: Resized
+        keys: "input"
+        spatial_size: "@cfg#img_size"
+        mode: "bilinear"
+        align_corners: false
+      - _target_: Lambdad
+        keys: "input"
+        func: "$lambda x: x / 255.0"
+    image_aug:
+      - _target_: RandFlipd
+        keys: "input"
+        prob: 0.5
+        spatial_axis: 0
+      - _target_: RandFlipd
+        keys: "input"
+        prob: 0.5
+        spatial_axis: 1
+      - _target_: RandRotate90d
+        keys: "input"
+        prob: 0.5
+    train_aug:
+        _target_: Compose
+        transforms: "$@cfg#image_load + @cfg#image_aug"
+    val_aug:
+        _target_: Compose
+        transforms: "@cfg#image_load"

@@ -25,9 +25,21 @@ from monai.apps.detection.transforms.dictionary import (
     RandFlipBoxd,
     RandRotateBox90d,
     RandZoomBoxd,
-    ConvertBoxModed
+    ConvertBoxModed,
 )
-def generate_detection_train_transform(image_key, box_key, label_key, gt_box_mode, intensity_transform, patch_size, batch_size, affine_lps_to_ras=False, amp=True):
+
+
+def generate_detection_train_transform(
+    image_key,
+    box_key,
+    label_key,
+    gt_box_mode,
+    intensity_transform,
+    patch_size,
+    batch_size,
+    affine_lps_to_ras=False,
+    amp=True,
+):
     """
     Generate training transform for detection.
 
@@ -166,7 +178,16 @@ def generate_detection_train_transform(image_key, box_key, label_key, gt_box_mod
     )
     return train_transforms
 
-def generate_detection_val_transform(image_key, box_key, label_key, gt_box_mode, intensity_transform, affine_lps_to_ras=False, amp=True):
+
+def generate_detection_val_transform(
+    image_key,
+    box_key,
+    label_key,
+    gt_box_mode,
+    intensity_transform,
+    affine_lps_to_ras=False,
+    amp=True,
+):
     """
     Generate validation transform for detection.
 
@@ -211,7 +232,17 @@ def generate_detection_val_transform(image_key, box_key, label_key, gt_box_mode,
     )
     return val_transforms
 
-def generate_detection_inference_transform(image_key, pred_box_key, pred_label_key, pred_score_key, gt_box_mode, intensity_transform, affine_lps_to_ras=False, amp=True):
+
+def generate_detection_inference_transform(
+    image_key,
+    pred_box_key,
+    pred_label_key,
+    pred_score_key,
+    gt_box_mode,
+    intensity_transform,
+    affine_lps_to_ras=False,
+    amp=True,
+):
     """
     Generate validation transform for detection.
 
@@ -260,7 +291,9 @@ def generate_detection_inference_transform(image_key, pred_box_key, pred_label_k
                 image_meta_key_postfix="meta_dict",
                 affine_lps_to_ras=affine_lps_to_ras,
             ),
-            ConvertBoxModed(box_keys=[pred_box_key], src_mode = "xyzxyz", dst_mode=gt_box_mode),
+            ConvertBoxModed(
+                box_keys=[pred_box_key], src_mode="xyzxyz", dst_mode=gt_box_mode
+            ),
             DeleteItemsd(keys=[image_key]),
         ]
     )

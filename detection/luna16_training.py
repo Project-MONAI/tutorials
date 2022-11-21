@@ -229,8 +229,12 @@ def main():
         weight_decay=3e-5,
         nesterov=True,
     )
-    after_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=150, gamma=0.1)
-    scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=1, total_epoch=10, after_scheduler=after_scheduler)
+    after_scheduler = torch.optim.lr_scheduler.StepLR(
+        optimizer, step_size=150, gamma=0.1
+    )
+    scheduler_warmup = GradualWarmupScheduler(
+        optimizer, multiplier=1, total_epoch=10, after_scheduler=after_scheduler
+    )
     scaler = torch.cuda.amp.GradScaler() if amp else None
     optimizer.zero_grad()
     optimizer.step()
@@ -326,7 +330,7 @@ def main():
         )
 
         # save last trained model
-        torch.jit.save(detector.network,env_dict["model_path"][:-3] + "_last.pt")
+        torch.jit.save(detector.network, env_dict["model_path"][:-3] + "_last.pt")
         print("saved last model")
 
         # ------------- Validation for model selection -------------

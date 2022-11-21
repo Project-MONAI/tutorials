@@ -174,6 +174,9 @@ The example show how to use MONAI NVTX transforms to tag and profile pre- and po
 #### [NuClick:Interactive Annotation for Pathology](./pathology/nuclick)
 The notebook demonstrates examples of training and inference pipelines with interactive annotation for pathology, NuClick is used for delineating nuclei, cells and a squiggle for outlining glands.
 
+#### [HoVerNet:Nuclear segmentation and classification task](./pathology/hovernet)
+This tutorial demonstrates how to construct a training workflow of [HoVerNet](https://www.sciencedirect.com/science/article/abs/pii/S1361841519301045) on nuclear segmentation and classification task using the CoNSep dataset.
+
 **acceleration**
 #### [fast_model_training_guide](./acceleration/fast_model_training_guide.md)
 The document introduces details of how to profile the training pipeline, how to analyze the dataset and select suitable algorithms, and how to optimize GPU utilization in single GPU, multi-GPUs or even multi-nodes.

@@ -1,8 +1,5 @@
 ---
-imports:
-- "$import types"
 cfg:
-    _target_: types.SimpleNamespace
     output_dir: "./output/"
     data_dir: "/raid/surg/image640_blur/"
     backbone: "efficientnet-b4"

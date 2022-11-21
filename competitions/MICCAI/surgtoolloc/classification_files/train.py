@@ -2,6 +2,7 @@ import argparse
 import gc
 import os
 import sys
+from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
@@ -235,7 +236,7 @@ if __name__ == "__main__":
     config_parser = ConfigParser()
     config_parser.read_config(input_args.config)
     config_parser.parse()
-    cfg = config_parser.get_parsed_content("cfg")
+    cfg = SimpleNamespace(**config_parser.get_parsed_content("cfg"))
 
     cfg.fold = input_args.fold
     cfg.seed = input_args.seed

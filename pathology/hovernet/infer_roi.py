@@ -204,10 +204,8 @@ def main():
     parser.add_argument("--bs", type=int, default=1, dest="batch_size", help="batch size")
     parser.add_argument("--swbs", type=int, default=8, dest="sw_batch_size", help="sliding window batch size")
     parser.add_argument("--no-amp", action="store_false", dest="amp", help="deactivate amp")
-    parser.add_argument("--save_interval", type=int, default=10)
     parser.add_argument("--cpu", type=int, default=0, dest="num_workers", help="number of workers")
-    parser.add_argument("--use_gpu", type=bool, default=False, help="whether to use gpu")
-    parser.add_argument("--reader", type=str, default="OpenSlide", help="WSI reader backend")
+    parser.add_argument("--use-gpu", action="store_true", help="whether to use gpu")
     args = parser.parse_args()
 
     config_dict = vars(args)

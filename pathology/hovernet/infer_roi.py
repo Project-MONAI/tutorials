@@ -23,7 +23,6 @@ from monai.transforms import (
     Activationsd,
     AsDiscreted,
     CastToTyped,
-    CenterSpatialCropd,
     Compose,
     EnsureChannelFirstd,
     FillHoles,
@@ -75,7 +74,6 @@ def run(cfg):
         [
             LoadImaged(keys=["image"], reader=PILReader, converter=lambda x: x.convert("RGB")),
             EnsureChannelFirstd(keys=["image"]),
-            CenterSpatialCropd(keys=["image"], roi_size=(80, 80)),  # for testing only
             CastToTyped(keys=["image"], dtype=torch.float32),
             ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
         ]
@@ -85,7 +83,7 @@ def run(cfg):
         [
             PromoteChildItemsd(
                 keys="pred",
-                children_keys=[HoVerNetBranch.NC.value, HoVerNetBranch.NP.value, HoVerNetBranch.HV.value],
+                child_keys=[HoVerNetBranch.NC.value, HoVerNetBranch.NP.value, HoVerNetBranch.HV.value],
                 delete_keys=True,
             ),
             Activationsd(keys=HoVerNetBranch.NC.value, softmax=True),

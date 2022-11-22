@@ -20,8 +20,6 @@ from monai.data import DataLoader, Dataset, PILReader
 from monai.engines import SupervisedEvaluator
 from monai.networks.nets import HoVerNet
 from monai.transforms import (
-    Activationsd,
-    AsDiscreted,
     CastToTyped,
     Compose,
     EnsureChannelFirstd,
@@ -37,28 +35,21 @@ from monai.utils import HoVerNetBranch, first
 
 
 def create_output_dir(cfg):
-    if cfg["mode"].lower() == "original":
-        cfg["patch_size"] = 270
-        cfg["out_size"] = 80
-    elif cfg["mode"].lower() == "fast":
-        cfg["patch_size"] = 256
-        cfg["out_size"] = 164
-
     timestamp = time.strftime("%y%m%d-%H%M%S")
     run_folder_name = f"{timestamp}_inference_hovernet_ps{cfg['patch_size']}"
-    log_dir = os.path.join(cfg["output"], run_folder_name)
-    print(f"Logs and outputs are saved at '{log_dir}'.")
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-    return log_dir
+    output_dir = os.path.join(cfg["output"], run_folder_name)
+    print(f"Outputs are saved at '{output_dir}'.")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    return output_dir
 
 
 def run(cfg):
     # --------------------------------------------------------------------------
-    # Set Directory and Device
+    # Set Directory, Device,
     # --------------------------------------------------------------------------
     output_dir = create_output_dir(cfg)
-    device = torch.device("cuda" if cfg["use_gpu"] else "cpu")
+    device = torch.device("cuda" if not cfg["no_gpu"] and torch.cuda.is_available() else "cpu")
 
     # --------------------------------------------------------------------------
     # Transforms
@@ -117,7 +108,7 @@ def run(cfg):
     # Dataloader
     data_loader = DataLoader(
         dataset,
-        num_workers=cfg["num_workers"],
+        ncpu=cfg["ncpu"],
         batch_size=cfg["batch_size"],
         pin_memory=True,
     )
@@ -188,11 +179,20 @@ def main():
     parser.add_argument("--bs", type=int, default=1, dest="batch_size", help="batch size")
     parser.add_argument("--swbs", type=int, default=8, dest="sw_batch_size", help="sliding window batch size")
     parser.add_argument("--no-amp", action="store_false", dest="amp", help="deactivate amp")
-    parser.add_argument("--cpu", type=int, default=0, dest="num_workers", help="number of workers")
-    parser.add_argument("--use-gpu", action="store_true", help="whether to use gpu")
+    parser.add_argument("--ncpu", type=int, default=4, help="number of CPU workers")
+    parser.add_argument("--no-gpu", action="store_false", help="deactivate use of gpu")
     args = parser.parse_args()
 
     config_dict = vars(args)
+    if config_dict["mode"].lower() == "original":
+        config_dict["patch_size"] = 270
+        config_dict["out_size"] = 80
+    elif config_dict["mode"].lower() == "fast":
+        config_dict["patch_size"] = 256
+        config_dict["out_size"] = 164
+    else:
+        raise ValueError("`--mode` should be either `original` or `fast`.")
+
     print(config_dict)
     run(config_dict)
 

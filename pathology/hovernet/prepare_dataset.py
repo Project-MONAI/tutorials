@@ -9,7 +9,7 @@ def prepara_dataset(root_path, phase):
 
     files = sorted(
         glob.glob(os.path.join(data_dir, "*/*.npy")))
-    
+
     logging.info(f'Train total data {len(files)}')
     for file in files:
         data = np.load(file)

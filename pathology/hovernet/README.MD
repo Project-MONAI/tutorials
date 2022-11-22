@@ -40,7 +40,7 @@ This example is a ignite version program and helps user to run training over pre
 Since HoVerNet is training via a two-stage approach. First initialised the model with pre-trained weights on the [ImageNet dataset](https://ieeexplore.ieee.org/document/5206848), trained only the decoders for the first 50 epochs, and then fine-tuned all layers for another 50 epochs. We need to specify `--stage` during training.
 
 Each user is responsible for checking the content of models/datasets and the applicable licenses and determining if suitable for the intended use.
-The license for the pre-trained model used in examples is different than MONAI license. Please check the source where these weights are obtained from: 
+The license for the pre-trained model used in examples is different than MONAI license. Please check the source where these weights are obtained from:
 https://github.com/vqdang/hover_net#data-format
 
 

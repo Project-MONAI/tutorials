@@ -119,10 +119,10 @@ def get_loaders(cfg, train_transforms, val_transforms):
 
 
 def create_model(cfg, device):
-    # Each user is responsible for checking the content of models/datasets and the applicable licenses and 
+    # Each user is responsible for checking the content of models/datasets and the applicable licenses and
     # determining if suitable for the intended use.
-    # The license for the below pre-trained model is different than MONAI license.  
-    # Please check the source where these weights are obtained from: 
+    # The license for the below pre-trained model is different than MONAI license.
+    # Please check the source where these weights are obtained from:
     # https://github.com/vqdang/hover_net#data-format
     pretrained_model = "https://drive.google.com/u/1/uc?id=1KntZge40tAHgyXmHYVqZZ5d2p_4Qr2l5&export=download"
     if cfg["stage"] == 0:

@@ -106,12 +106,7 @@ def run(cfg):
     dataset = Dataset(data_list, transform=pre_transforms)
 
     # Dataloader
-    data_loader = DataLoader(
-        dataset,
-        ncpu=cfg["ncpu"],
-        batch_size=cfg["batch_size"],
-        pin_memory=True,
-    )
+    data_loader = DataLoader(dataset, num_workers=cfg["ncpu"], batch_size=cfg["batch_size"], pin_memory=True)
 
     # --------------------------------------------------------------------------
     # Run some sanity checks
@@ -179,7 +174,7 @@ def main():
     parser.add_argument("--bs", type=int, default=1, dest="batch_size", help="batch size")
     parser.add_argument("--swbs", type=int, default=8, dest="sw_batch_size", help="sliding window batch size")
     parser.add_argument("--no-amp", action="store_false", dest="amp", help="deactivate amp")
-    parser.add_argument("--ncpu", type=int, default=4, help="number of CPU workers")
+    parser.add_argument("--ncpu", type=int, default=0, help="number of CPU workers")
     parser.add_argument("--no-gpu", action="store_false", help="deactivate use of gpu")
     args = parser.parse_args()
 

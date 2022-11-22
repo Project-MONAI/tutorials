@@ -54,6 +54,8 @@ def run(cfg):
         dist.init_process_group(backend="nccl", init_method="env://")
         device = torch.device("cuda:{}".format(dist.get_rank()))
         torch.cuda.set_device(device)
+        if dist.get_rank() == 0:
+            print(f"Running multi-gpu with {dist.get_world_size()} GPUs")
     else:
         device = torch.device("cuda" if cfg["use_gpu"] and torch.cuda.is_available() else "cpu")
     # --------------------------------------------------------------------------
@@ -108,7 +110,6 @@ def run(cfg):
     data_list = [{"image": image} for image in glob(os.path.join(cfg["root"], "*.png"))]
 
     if multi_gpu:
-        print(f">>> rank = {dist.get_rank()}")
         data = partition_dataset(data=data_list, num_partitions=dist.get_world_size())[dist.get_rank()]
     else:
         data = data_list

@@ -38,6 +38,12 @@ python ./prepare_dataset.py -d `save_root`
 #### [HoVerNet Training](./training_ignite.py)
 This example is a ignite version program and helps user to run training over pre-processed dataset.
 Since HoVerNet is training via a two-stage approach. First initialised the model with pre-trained weights on the [ImageNet dataset](https://ieeexplore.ieee.org/document/5206848), trained only the decoders for the first 50 epochs, and then fine-tuned all layers for another 50 epochs. We need to specify `--stage` during training.
+
+Each user is responsible for checking the content of models/datasets and the applicable licenses and determining if suitable for the intended use.
+The license for the pre-trained model used in examples is different than MONAI license. Please check the source where these weights are obtained from: 
+https://github.com/vqdang/hover_net#data-format
+
+
 ```bash
 # Run to know all possible options
 python ./training_ignite.py -h

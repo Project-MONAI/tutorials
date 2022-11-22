@@ -46,6 +46,13 @@ def prepare_data(data_dir, phase):
 
 
 def run(cfg):
+    if cfg["mode"].lower() == "original":
+        cfg["patch_size"] = [270, 270]
+        cfg["out_size"] = [80, 80]
+    elif cfg["mode"].lower() == "fast":
+        cfg["patch_size"] = [256, 256]
+        cfg["out_size"] = [164, 164]
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     val_transforms = Compose(
         [
@@ -54,14 +61,14 @@ def run(cfg):
             CastToTyped(keys=["image", "label_inst"], dtype=torch.int),
             CenterSpatialCropd(
                 keys="image",
-                roi_size=(270, 270),
+                roi_size=cfg["patch_size"],
             ),
             ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
             ComputeHoVerMapsd(keys="label_inst"),
             Lambdad(keys="label_inst", func=lambda x: x > 0, overwrite="label"),
             CenterSpatialCropd(
                 keys=["label", "hover_label_inst", "label_inst", "label_type"],
-                roi_size=(80, 80),
+                roi_size=cfg["out_size"],
             ),
             CastToTyped(keys=["image", "label_inst", "label_type"], dtype=torch.float32),
         ]
@@ -79,7 +86,7 @@ def run(cfg):
 
     # initialize model
     model = HoVerNet(
-        mode="original",
+        mode=cfg["mode"],
         in_channels=3,
         out_classes=cfg["out_classes"],
         act=("relu", {"inplace": True}),
@@ -125,6 +132,7 @@ def main():
     parser.add_argument("--bs", type=int, default=16, dest="batch_size", help="batch size")
     parser.add_argument("--no-amp", action="store_false", dest="amp", help="deactivate amp")
     parser.add_argument("--classes", type=int, default=5, dest="out_classes", help="output classes")
+    parser.add_argument("--mode", type=str, default="original", help="choose either `original` or `fast`")
 
     parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")
     parser.add_argument("--use_gpu", type=bool, default=True, dest="use_gpu", help="whether to use gpu")

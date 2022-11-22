@@ -119,6 +119,12 @@ def get_loaders(cfg, train_transforms, val_transforms):
 
 
 def create_model(cfg, device):
+    # Each user is responsible for checking the content of models/datasets and the applicable licenses and 
+    # determining if suitable for the intended use.
+    # The license for the below pre-trained model is different than MONAI license.  
+    # Please check the source where these weights are obtained from: 
+    # https://github.com/vqdang/hover_net#data-format
+    pretrained_model = "https://drive.google.com/u/1/uc?id=1KntZge40tAHgyXmHYVqZZ5d2p_4Qr2l5&export=download"
     if cfg["stage"] == 0:
         model = HoVerNet(
             mode=cfg["mode"],
@@ -126,7 +132,7 @@ def create_model(cfg, device):
             out_classes=cfg["out_classes"],
             act=("relu", {"inplace": True}),
             norm="batch",
-            pretrained_url="https://drive.google.com/u/1/uc?id=1KntZge40tAHgyXmHYVqZZ5d2p_4Qr2l5&export=download",
+            pretrained_url=pretrained_model,
             freeze_encoder=True,
         ).to(device)
         print(f'stage{cfg["stage"]} start!')
@@ -154,6 +160,7 @@ def run(cfg):
     elif cfg["mode"].lower() == "fast":
         cfg["patch_size"] = [256, 256]
         cfg["out_size"] = [164, 164]
+
     multi_gpu = True if torch.cuda.device_count() > 1 else False
     if multi_gpu:
         dist.init_process_group(backend="nccl", init_method="env://")
@@ -161,6 +168,7 @@ def run(cfg):
         torch.cuda.set_device(device)
     else:
         device = torch.device("cuda" if cfg["use_gpu"] else "cpu")
+
     # --------------------------------------------------------------------------
     # Data Loading and Preprocessing
     # --------------------------------------------------------------------------

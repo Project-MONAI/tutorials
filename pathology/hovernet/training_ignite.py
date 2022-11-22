@@ -47,10 +47,11 @@ from skimage import measure
 def create_log_dir(cfg):
     timestamp = time.strftime("%y%m%d-%H%M")
     run_folder_name = (
-        f"{timestamp}_hovernet_bs{cfg['batch_size']}_ep{cfg['n_epochs']}_lr{cfg['lr']}_stage{cfg['stage']}"
+        f"{timestamp}_hovernet_bs{cfg['batch_size']}_ep{cfg['n_epochs']}_lr{cfg['lr']}_seed{cfg['seed']}_stage{cfg['stage']}"
     )
     log_dir = os.path.join(cfg["logdir"], run_folder_name)
     print(f"Logs and model are saved at '{log_dir}'.")
+    time.sleep(2)
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
     return log_dir
@@ -120,7 +121,7 @@ def get_loaders(cfg, train_transforms, val_transforms):
 def create_model(cfg, device):
     if cfg["stage"] == 0:
         model = HoVerNet(
-            mode="original",
+            mode=cfg["mode"],
             in_channels=3,
             out_classes=cfg["out_classes"],
             act=("relu", {"inplace": True}),
@@ -131,7 +132,7 @@ def create_model(cfg, device):
         print(f'stage{cfg["stage"]} start!')
     else:
         model = HoVerNet(
-            mode="original",
+            mode=cfg["mode"],
             in_channels=3,
             out_classes=cfg["out_classes"],
             act=("relu", {"inplace": True}),
@@ -147,6 +148,12 @@ def create_model(cfg, device):
 
 def run(cfg):
     log_dir = create_log_dir(cfg)
+    if cfg["mode"].lower() == "original":
+        cfg["patch_size"] = [270, 270]
+        cfg["out_size"] = [80, 80]
+    elif cfg["mode"].lower() == "fast":
+        cfg["patch_size"] = [256, 256]
+        cfg["out_size"] = [164, 164]
     multi_gpu = True if torch.cuda.device_count() > 1 else False
     if multi_gpu:
         dist.init_process_group(backend="nccl", init_method="env://")
@@ -176,7 +183,7 @@ def run(cfg):
                     ),
             CenterSpatialCropd(
                 keys="image",
-                roi_size=(270, 270),
+                roi_size=cfg["patch_size"],
             ),
             RandFlipd(keys=["image", "label_inst", "label_type"], prob=0.5, spatial_axis=0),
             RandFlipd(keys=["image", "label_inst", "label_type"], prob=0.5, spatial_axis=1),
@@ -201,7 +208,7 @@ def run(cfg):
             Lambdad(keys="label_inst", func=lambda x: x > 0, overwrite="label"),
             CenterSpatialCropd(
                 keys=["label", "hover_label_inst", "label_inst", "label_type"],
-                roi_size=(80, 80),
+                roi_size=cfg["out_size"],
             ),
             AsDiscreted(keys=["label"], to_onehot=2),
             CastToTyped(keys=["image", "label_inst", "label_type"], dtype=torch.float32),
@@ -214,14 +221,14 @@ def run(cfg):
             CastToTyped(keys=["image", "label_inst"], dtype=torch.int),
             CenterSpatialCropd(
                 keys="image",
-                roi_size=(270, 270),
+                roi_size=cfg["patch_size"],
             ),
             ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
             ComputeHoVerMapsd(keys="label_inst"),
             Lambdad(keys="label_inst", func=lambda x: x > 0, overwrite="label"),
             CenterSpatialCropd(
                 keys=["label", "hover_label_inst", "label_inst", "label_type"],
-                roi_size=(80, 80),
+                roi_size=cfg["out_size"],
             ),
             CastToTyped(keys=["image", "label_inst", "label_type"], dtype=torch.float32),
         ]
@@ -330,6 +337,7 @@ def main():
     parser.add_argument("--stage", type=int, default=0, dest="stage", help="training stage")
     parser.add_argument("--no-amp", action="store_false", dest="amp", help="deactivate amp")
     parser.add_argument("--classes", type=int, default=5, dest="out_classes", help="output classes")
+    parser.add_argument("--mode", type=str, default="original", help="choose either `original` or `fast`")
 
     parser.add_argument("--save_interval", type=int, default=10)
     parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")

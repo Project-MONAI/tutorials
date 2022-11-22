@@ -158,7 +158,7 @@ def run(cfg):
         network=model,
         postprocessing=post_transforms,
         inferer=sliding_inferer,
-        amp=cfg["amp"],
+        amp=not cfg["no_amp"],
     )
     evaluator.run()
 
@@ -173,9 +173,9 @@ def main():
     parser.add_argument("--mode", type=str, default="original", help="HoVerNet mode (original/fast)")
     parser.add_argument("--bs", type=int, default=1, dest="batch_size", help="batch size")
     parser.add_argument("--swbs", type=int, default=8, dest="sw_batch_size", help="sliding window batch size")
-    parser.add_argument("--no-amp", action="store_false", dest="amp", help="deactivate amp")
+    parser.add_argument("--no-amp", action="store_true", help="deactivate use of amp")
+    parser.add_argument("--no-gpu", action="store_true", help="deactivate use of gpu")
     parser.add_argument("--ncpu", type=int, default=0, help="number of CPU workers")
-    parser.add_argument("--no-gpu", action="store_false", help="deactivate use of gpu")
     args = parser.parse_args()
 
     config_dict = vars(args)

@@ -58,13 +58,7 @@ def run(cfg):
     # Set Directory and Device
     # --------------------------------------------------------------------------
     output_dir = create_output_dir(cfg)
-    multi_gpu = True if cfg["use_gpu"] and torch.cuda.device_count() > 1 else False
-    if multi_gpu:
-        dist.init_process_group(backend="nccl", init_method="env://")
-        device = torch.device("cuda:{}".format(dist.get_rank()))
-        torch.cuda.set_device(device)
-    else:
-        device = torch.device("cuda" if cfg["use_gpu"] else "cpu")
+    device = torch.device("cuda" if cfg["use_gpu"] else "cpu")
 
     # --------------------------------------------------------------------------
     # Transforms
@@ -86,8 +80,6 @@ def run(cfg):
                 child_keys=[HoVerNetBranch.NC.value, HoVerNetBranch.NP.value, HoVerNetBranch.HV.value],
                 delete_keys=True,
             ),
-            Activationsd(keys=HoVerNetBranch.NC.value, softmax=True),
-            AsDiscreted(keys=HoVerNetBranch.NC.value, argmax=True),
             GenerateWatershedMaskd(keys=HoVerNetBranch.NP.value, softmax=True),
             GenerateInstanceBorderd(keys="mask", hover_map_key=HoVerNetBranch.HV.value, kernel_size=3),
             GenerateDistanceMapd(keys="mask", border_key="border", smooth_fn=GaussianSmooth()),
@@ -158,11 +150,6 @@ def run(cfg):
     model.load_state_dict(torch.load(cfg["ckpt"], map_location=device))
     model.eval()
 
-    if multi_gpu:
-        model = torch.nn.parallel.DistributedDataParallel(
-            model, device_ids=[dist.get_rank()], output_device=dist.get_rank()
-        )
-
     # --------------------------------------------
     # Inference
     # --------------------------------------------
@@ -188,9 +175,6 @@ def run(cfg):
         amp=cfg["amp"],
     )
     evaluator.run()
-
-    if multi_gpu:
-        dist.destroy_process_group()
 
 
 def main():

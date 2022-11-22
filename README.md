@@ -211,6 +211,8 @@ Tutorial to show the pipeline of fine tuning an endoscopic inbody classification
 **modules**
 #### [bundle](./bundle)
 Get started tutorial and concrete training / inference examples for MONAI bundle features.
+#### [competitions](./competitions)
+MONAI based solutions of competitions in healthcare imaging.
 #### [engines](./modules/engines)
 Training and evaluation examples of 3D segmentation based on UNet3D and synthetic dataset with MONAI workflows, which contains engines, event-handlers, and post-transforms. And GAN training and evaluation example for a medical image generative adversarial network. Easy run training script uses `GanTrainer` to train a 2D CT scan reconstruction network. Evaluation script generates random samples from a trained network.
 

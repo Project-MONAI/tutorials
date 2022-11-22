@@ -89,7 +89,9 @@ def run(cfg):
                 postprocess_fn=FillHoles(),
             ),
             Watershedd(keys="dist", mask_key="mask", markers_key="markers"),
-            HoVerNetNuclearTypePostProcessingd(type_pred_key=HoVerNetBranch.NC.value, instance_pred_key="dist"),
+            HoVerNetNuclearTypePostProcessingd(
+                type_pred_key=HoVerNetBranch.NC.value, instance_pred_key="dist", output_classes=5
+            ),
             FromMetaTensord(keys=["image", "pred_binary"]),
             SaveImaged(
                 keys="pred_binary",

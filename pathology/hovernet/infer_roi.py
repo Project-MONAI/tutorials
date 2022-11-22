@@ -16,7 +16,7 @@ from monai.apps.pathology.transforms import (
     HoVerNetNuclearTypePostProcessingd,
     Watershedd,
 )
-from monai.data import DataLoader, Dataset, PILReader
+from monai.data import DataLoader, Dataset, PILReader, partition_dataset
 from monai.engines import SupervisedEvaluator
 from monai.networks.nets import HoVerNet
 from monai.transforms import (
@@ -49,8 +49,13 @@ def run(cfg):
     # Set Directory, Device,
     # --------------------------------------------------------------------------
     output_dir = create_output_dir(cfg)
-    device = torch.device("cuda" if not cfg["no_gpu"] and torch.cuda.is_available() else "cpu")
-
+    multi_gpu = cfg["use_gpu"] if torch.cuda.device_count() > 1 else False
+    if multi_gpu:
+        dist.init_process_group(backend="nccl", init_method="env://")
+        device = torch.device("cuda:{}".format(dist.get_rank()))
+        torch.cuda.set_device(device)
+    else:
+        device = torch.device("cuda" if cfg["use_gpu"] and torch.cuda.is_available() else "cpu")
     # --------------------------------------------------------------------------
     # Transforms
     # --------------------------------------------------------------------------
@@ -102,8 +107,14 @@ def run(cfg):
     # List of whole slide images
     data_list = [{"image": image} for image in glob(os.path.join(cfg["root"], "*.png"))]
 
+    if multi_gpu:
+        print(f">>> rank = {dist.get_rank()}")
+        data = partition_dataset(data=data_list, num_partitions=dist.get_world_size())[dist.get_rank()]
+    else:
+        data = data_list
+
     # Dataset
-    dataset = Dataset(data_list, transform=pre_transforms)
+    dataset = Dataset(data, transform=pre_transforms)
 
     # Dataloader
     data_loader = DataLoader(dataset, num_workers=cfg["ncpu"], batch_size=cfg["batch_size"], pin_memory=True)
@@ -135,6 +146,10 @@ def run(cfg):
     ).to(device)
     model.load_state_dict(torch.load(cfg["ckpt"], map_location=device))
     model.eval()
+    if multi_gpu:
+        model = torch.nn.parallel.DistributedDataParallel(
+            model, device_ids=[dist.get_rank()], output_device=dist.get_rank()
+        )
 
     # --------------------------------------------
     # Inference
@@ -158,9 +173,12 @@ def run(cfg):
         network=model,
         postprocessing=post_transforms,
         inferer=sliding_inferer,
-        amp=not cfg["no_amp"],
+        amp=cfg["use_amp"],
     )
     evaluator.run()
+
+    if multi_gpu:
+        dist.destroy_process_group()
 
 
 def main():
@@ -173,8 +191,8 @@ def main():
     parser.add_argument("--mode", type=str, default="original", help="HoVerNet mode (original/fast)")
     parser.add_argument("--bs", type=int, default=1, dest="batch_size", help="batch size")
     parser.add_argument("--swbs", type=int, default=8, dest="sw_batch_size", help="sliding window batch size")
-    parser.add_argument("--no-amp", action="store_true", help="deactivate use of amp")
-    parser.add_argument("--no-gpu", action="store_true", help="deactivate use of gpu")
+    parser.add_argument("--no-amp", action="store_false", dest="use_amp", help="deactivate use of amp")
+    parser.add_argument("--no-gpu", action="store_false", dest="use_gpu", help="deactivate use of gpu")
     parser.add_argument("--ncpu", type=int, default=0, help="number of CPU workers")
     args = parser.parse_args()
 

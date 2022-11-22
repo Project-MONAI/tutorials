@@ -342,7 +342,6 @@ def main():
     parser.add_argument("--save_interval", type=int, default=10)
     parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")
     parser.add_argument("--use_gpu", type=bool, default=True, dest="use_gpu", help="whether to use gpu")
-    parser.add_argument("--ngc", action="store_true", dest="ngc", help="use ngc")
     parser.add_argument("--ckpt", type=str, dest="ckpt_path", help="checkpoint path")
 
     args = parser.parse_args()

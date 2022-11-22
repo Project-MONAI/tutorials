@@ -113,7 +113,6 @@ def run(cfg):
     print(state)
 
 
-
 def main():
     parser = ArgumentParser(description="Tumor detection on whole slide pathology images.")
     parser.add_argument(

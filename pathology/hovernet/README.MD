@@ -27,16 +27,8 @@ CoNSeP datasets which are used in the examples can be downloaded from https://wa
 
 
 ### 3. List of notebooks and examples
-#### [Prepare Your Data](./prepare_dataset.py)
-This example is a to decollate images, instance maps and type maps in channel dim.
-
-```bash
-# Run to decollate
-python ./prepare_dataset.py -d `save_root`
-```
-
-#### [HoVerNet Training](./training_ignite.py)
-This example is a ignite version program and helps user to run training over pre-processed dataset.
+#### [HoVerNet Training](./training.py)
+This example uses MONAI workflow to train a HoVerNet model on prepared CoNSeP dataset.
 Since HoVerNet is training via a two-stage approach. First initialised the model with pre-trained weights on the [ImageNet dataset](https://ieeexplore.ieee.org/document/5206848), trained only the decoders for the first 50 epochs, and then fine-tuned all layers for another 50 epochs. We need to specify `--stage` during training.
 
 Each user is responsible for checking the content of models/datasets and the applicable licenses and determining if suitable for the intended use.
@@ -46,15 +38,15 @@ https://github.com/vqdang/hover_net#data-format
 
 ```bash
 # Run to know all possible options
-python ./training_ignite.py -h
+python ./training.py -h
 
 # Train a hovernet model on single-gpu(replace with your own ckpt path)
-export CUDA_VISIBLE_DEVICES=0; python training_ignite.py \
+export CUDA_VISIBLE_DEVICES=0; python training.py \
                                 --ep 50 \
                                 --stage 0 \
                                 --bs 16 \
                                 --root `save_root`
-export CUDA_VISIBLE_DEVICES=0; python training_ignite.py \
+export CUDA_VISIBLE_DEVICES=0; python training.py \
                                 --ep 50 \
                                 --stage 1 \
                                 --bs 4 \
@@ -62,12 +54,12 @@ export CUDA_VISIBLE_DEVICES=0; python training_ignite.py \
                                 --ckpt logs/stage0/checkpoint_epoch=50.pt
 
 # Train a hovernet model on multi-gpu (NVIDIA)(replace with your own ckpt path)
-torchrun --nnodes=1 --nproc_per_node=2 training_ignite.py \
+torchrun --nnodes=1 --nproc_per_node=2 training.py \
                                         --ep 50 \
                                         --bs 8 \
                                         --root `save_root` \
                                         --stage 0
-torchrun --nnodes=1 --nproc_per_node=2 training_ignite.py \
+torchrun --nnodes=1 --nproc_per_node=2 training.py \
                                         --ep 50 \
                                         --bs 2 \
                                         --root `save_root` \
@@ -75,14 +67,14 @@ torchrun --nnodes=1 --nproc_per_node=2 training_ignite.py \
                                         --ckpt logs/stage0/checkpoint_epoch=50.pt
 ```
 
-#### [HoVerNet Validation](./evaluation_ignite.py)
-This example is a ignite version program and helps user to run evaluation for a trained model.
+#### [HoVerNet Validation](./evaluation.py)
+This example uses MONAI workflow to evaluate the trained HoVerNet model on prepared test data from CoNSeP dataset.
 ```bash
 # Run to know all possible options
-python ./evaluation_ignite.py -h
+python ./evaluation.py -h
 
 # Evaluate a HoVerNet model
-python ./evaluation_ignite.py
+python ./evaluation.py
     --root `save_root` \
     --ckpt logs/stage0/checkpoint_epoch=50.pt
 ```

@@ -60,12 +60,24 @@ def create_log_dir(cfg):
 def prepare_data(data_dir, phase):
     data_dir = os.path.join(data_dir, phase)
 
-    images = list(sorted(
-        glob.glob(os.path.join(data_dir, "*/*image.npy"))))
-    inst_maps = list(sorted(
-        glob.glob(os.path.join(data_dir, "*/*inst_map.npy"))))
-    type_maps = list(sorted(
-        glob.glob(os.path.join(data_dir, "*/*type_map.npy"))))
+    files = sorted(
+        glob.glob(os.path.join(data_dir, "*/*.npy")))
+
+    logging.info(f'{phase} total data {len(files)}')
+    # decollate images, instance maps and type maps in channel dim
+    for file in files:
+        data = np.load(file)
+        np.save(file.replace('.npy', '_image.npy'), data[..., :3].transpose(2, 0, 1))
+        np.save(file.replace('.npy', '_inst_map.npy'), data[..., 3][None])
+        np.save(file.replace('.npy', '_type_map.npy'), data[..., 4][None])
+
+    # prepare datalist
+    images = sorted(
+        glob.glob(os.path.join(data_dir, "*/*image.npy")))
+    inst_maps = sorted(
+        glob.glob(os.path.join(data_dir, "*/*inst_map.npy")))
+    type_maps = sorted(
+        glob.glob(os.path.join(data_dir, "*/*type_map.npy")))
 
     data_dicts = [
         {"image": _image, "label_inst": _inst_map, "label_type": _type_map}
@@ -349,7 +361,7 @@ def main():
 
     parser.add_argument("--save_interval", type=int, default=10)
     parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")
-    parser.add_argument("--use_gpu", type=bool, default=True, dest="use_gpu", help="whether to use gpu")
+    parser.add_argument("--no-gpu", action="store_false", dest="use_gpu", help="deactivate use of gpu") 
     parser.add_argument("--ckpt", type=str, dest="ckpt_path", help="checkpoint path")
 
     args = parser.parse_args()

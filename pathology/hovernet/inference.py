@@ -27,7 +27,7 @@ from monai.transforms import (
     FromMetaTensord,
     GaussianSmooth,
     LoadImaged,
-    PromoteChildItemsd,
+    FlattenSubKeysd,
     SaveImaged,
     ScaleIntensityRanged,
 )
@@ -73,9 +73,9 @@ def run(cfg):
     # Postprocessing transforms
     post_transforms = Compose(
         [
-            PromoteChildItemsd(
+            FlattenSubKeysd(
                 keys="pred",
-                child_keys=[HoVerNetBranch.NC.value, HoVerNetBranch.NP.value, HoVerNetBranch.HV.value],
+                sub_keys=[HoVerNetBranch.NC.value, HoVerNetBranch.NP.value, HoVerNetBranch.HV.value],
                 delete_keys=True,
             ),
             GenerateWatershedMaskd(keys=HoVerNetBranch.NP.value, softmax=True),

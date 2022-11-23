@@ -361,7 +361,7 @@ def main():
 
     parser.add_argument("--save_interval", type=int, default=10)
     parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")
-    parser.add_argument("--no-gpu", action="store_false", dest="use_gpu", help="deactivate use of gpu") 
+    parser.add_argument("--no-gpu", action="store_false", dest="use_gpu", help="deactivate use of gpu")
     parser.add_argument("--ckpt", type=str, dest="ckpt_path", help="checkpoint path")
 
     args = parser.parse_args()

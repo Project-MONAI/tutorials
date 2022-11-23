@@ -347,7 +347,7 @@ def main():
         help="root data dir",
     )
     parser.add_argument("--logdir", type=str, default="./logs/", dest="logdir", help="log directory")
-    parser.add_argument("-s", "--seed", type=int, default=23)
+    parser.add_argument("-s", "--seed", type=int, default=24)
 
     parser.add_argument("--bs", type=int, default=16, dest="batch_size", help="batch size")
     parser.add_argument("--ep", type=int, default=3, dest="n_epochs", help="number of epochs")

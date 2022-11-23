@@ -69,6 +69,7 @@ torchrun --nnodes=1 --nproc_per_node=2 training.py \
 
 #### [HoVerNet Validation](./evaluation.py)
 This example uses MONAI workflow to evaluate the trained HoVerNet model on prepared test data from CoNSeP dataset.
+With their metrics on original mode. We reproduce the results with Dice: 0.82762; PQ: 0.48976; F1d: 0.73592.
 ```bash
 # Run to know all possible options
 python ./evaluation.py -h

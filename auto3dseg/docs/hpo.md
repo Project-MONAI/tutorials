@@ -65,7 +65,7 @@ override_param = {
 }
 ```
 
-Finally, to override HPO paramater for all algorithms, users can merge all parameters in one dictionary, as long as the parameters are not contracting with each other. 
+Finally, to override HPO paramater for all algorithms, users can merge all parameters in one dictionary, as long as the parameters are not contracting with each other.
 
 > Note: the algorithm will skip the parameter if its config files do not contain the key.
 > For example, SegResNet will ignore `num_iterations`

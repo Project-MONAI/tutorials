@@ -100,7 +100,7 @@ python3 luna16_testing.py \
 
 #### [3.4 LUNA16 Detection Evaluation](./run_luna16_offical_eval.sh)
 Please download the official LUNA16 evaluation scripts from https://luna16.grand-challenge.org/Evaluation/,
-and save it as ./evaluation_luna16. Note that these scripts are based on Python2.
+and save it as ./evaluation_luna16. Note that the official LUNA16 evaluation scripts are based on Python2.
 
 ./evaluation_luna16/noduleCADEvaluationLUNA16.py will be the main python script to generate evaluation scores.
 

@@ -25,7 +25,7 @@ python ./luna16_post_combine_cross_fold_results.py \
 	-o ./result/result_luna16_all.csv
 
 mkdir -p ./result/eval_luna16_scores
-python ./evaluation_luna16/noduleCADEvaluationLUNA16.py \
+python2 ./evaluation_luna16/noduleCADEvaluationLUNA16.py \
 	./evaluation_luna16/annotations/annotations.csv  \
 	./evaluation_luna16/annotations/annotations_excluded.csv \
 	./evaluation_luna16/annotations/seriesuids.csv \

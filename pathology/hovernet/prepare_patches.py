@@ -20,8 +20,7 @@ def load_ann(path):
     ann_inst = sio.loadmat(path)["inst_map"]
     ann_type = sio.loadmat(path)["type_map"]
 
-    # merge classes for CoNSeP (in paper we only utilise 3 nuclei classes and background)
-    # If own dataset is used, then the below may need to be modified
+    # merge classes for CoNSeP (utilise 3 nuclei classes and background keep the same with paper)
     ann_type[(ann_type == 3) | (ann_type == 4)] = 3
     ann_type[(ann_type == 5) | (ann_type == 6) | (ann_type == 7)] = 4
 
@@ -152,7 +151,6 @@ class PatchExtractor():
 
 
 def main(cfg):
-    phase = ["Train", "Test"]
     xtractor = PatchExtractor(cfg["patch_size"], cfg["step_size"])
 
     for phase in ["Train", "Test"]:

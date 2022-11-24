@@ -64,10 +64,10 @@ class PatchExtractor():
 
     def __extract_valid(self, x):
         """Extracted patches without padding, only work in case patch_size > step_size.
-        
+
         Note: to deal with the remaining portions which are at the boundary a.k.a
-        those which do not fit when slide left->right, top->bottom), we flip 
-        the sliding direction then extract 1 patch starting from right / bottom edge. 
+        those which do not fit when slide left->right, top->bottom), we flip
+        the sliding direction then extract 1 patch starting from right / bottom edge.
         There will be 1 additional patch extracted at the bottom-right corner.
 
         Args:
@@ -114,7 +114,7 @@ class PatchExtractor():
         return sub_patches
 
     def __extract_mirror(self, x):
-        """Extracted patches with mirror padding the boundary such that the 
+        """Extracted patches with mirror padding the boundary such that the
         central region of each patch is always within the orginal (non-padded)
         image while all patches' central region cover the whole orginal image.
 
@@ -124,7 +124,7 @@ class PatchExtractor():
             step_size : a tuple of (h, w)
         Return:
             a list of sub patches, each patch is same dtype as x
-            
+
         """
         diff_h = self.patch_size[0] - self.step_size[0]
         padt = diff_h // 2
@@ -224,5 +224,5 @@ def parse_arguments():
 
 if __name__ == "__main__":
     cfg = parse_arguments()
-    
+
     main(cfg)

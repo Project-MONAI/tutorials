@@ -76,7 +76,7 @@ def prepare_data(data_dir, phase):
 
 def get_loaders(cfg, train_transforms, val_transforms):
     multi_gpu = True if torch.cuda.device_count() > 1 else False
-    
+
     train_data = prepare_data(cfg["root"], "Train")
     valid_data = prepare_data(cfg["root"], "Test")
     if multi_gpu:

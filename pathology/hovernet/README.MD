@@ -32,7 +32,7 @@ python ./prepare_patches.py -h
 
 # Prepare patches from images
 python ./prepare_patches.py \
-    --root   `data_root` 
+    --root   `data_root`
 ```
 
 #### [HoVerNet Training](./training.py)

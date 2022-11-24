@@ -65,7 +65,7 @@ The code block would generate multiple algorithm bundles as follows. The folder 
 
 ### Algorithm Templates
 
-The Python class **BundleGen** utilize [the default algorithm templates](https://github.com/Project-MONAI/research-contributions/tree/main/auto3dseg) implicitly. The default algorithms are based on four established works (DiNTS, SegResNet, SegResNet2D, SwinUNETR). They supports both 3D CT and MR image segmentation. In the template, some items are empty or null, and they will be filled together with dataset information. The part of configuration file "hyper_parameters.yaml" is shown below. In the configuration, the items (like "bundle_root", "data_file_base_dir", "patch_size") will be filled up automatically with any user interaction.
+The Python class **BundleGen** utilizes [the default algorithm templates](https://github.com/Project-MONAI/research-contributions/tree/main/auto3dseg) implicitly. The default algorithms are based on four established works (DiNTS, SegResNet, SegResNet2D, and SwinUNETR). They support both 3D CT and MR image segmentation. In the template, some items are empty or null, and they will be filled together with dataset information. The part of the configuration file "hyper_parameters.yaml" is shown below. In the configuration, the items (like "bundle_root", "data_file_base_dir", and "patch_size") will be filled up automatically with any user interaction.
 
 ```
 bundle_root: null
@@ -97,7 +97,7 @@ training:
 ...
 ```
 
-The actual template filling is done using the "fill_template_config" function in the "Algo" class of the script "scripts/algo.py". The "algo.py" of different algorithms are located inside their bundle templates.
+The actual template filling is done using the "fill_template_config" function in the "Algo" class of the script "scripts/algo.py". The "algo.py" of different algorithms is located inside their bundle templates.
 
 ```python
 class DintsAlgo(BundleAlgo):

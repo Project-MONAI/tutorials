@@ -47,7 +47,7 @@ python3 luna16_prepare_env_files.py
 python3 luna16_prepare_images.py -c ./config/config_train_luna16_16g.json
 ```
 The resampled images will be with Nifti format.
-We also provide [resampled Nifti images](https://drive.google.com/drive/folders/1JozrufA1VIZWJIc5A1EMV3J4CNCYovKK?usp=share_link) to download. 
+We also provide [resampled Nifti images](https://drive.google.com/drive/folders/1JozrufA1VIZWJIc5A1EMV3J4CNCYovKK?usp=share_link) to download.
 
 If you downloaded DICOM data, please resample the images by running
 ```bash

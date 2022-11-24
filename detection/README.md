@@ -34,7 +34,7 @@ In these files, the values of "box" are the ground truth boxes in world coordina
 ### 3. Run the example
 #### [3.1 Prepare Your Data](./luna16_prepare_images.py)
 We provide [resampled Nifti images](https://drive.google.com/drive/folders/1JozrufA1VIZWJIc5A1EMV3J4CNCYovKK?usp=share_link) for users to download (recommended).
-If you do this, please skip Sec. 3.1 and go directly to [Sec. 3.2](#3.2-3d-detection-training).
+If you do this, please skip Sec. 3.1 and go directly to Sec. 3.2.
 
 Alternatively, users can download the original data and resample them with the following steps. Users can either download 1) mhd/raw data from [LUNA16](https://luna16.grand-challenge.org/Home/) or its [copy](https://drive.google.com/drive/folders/1-enN4eNEnKmjltevKg3W2V-Aj0nriQWE?usp=share_link), or 2) DICOM data from [LIDC-IDRI](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=1966254) with [NBIA Data Retriever](https://wiki.cancerimagingarchive.net/display/NBIA/Downloading+TCIA+Images).
 

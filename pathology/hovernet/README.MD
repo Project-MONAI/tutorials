@@ -12,12 +12,8 @@ Simon Graham et al., HoVer-Net: Simultaneous Segmentation and Classification of 
 ### 1. Data
 
 CoNSeP datasets which are used in the examples can be downloaded from https://warwick.ac.uk/fac/cross_fac/tia/data/hovernet/.
-- First download CoNSeP dataset.
-- Then prepare patches from images from https://github.com/vqdang/hover_net/blob/master/extract_patches.py
-    - modify the  `save_root` to point to a directory to save the prepared patches
-    - modify the  `dataset_info` to specify where the dataset you downloaded
-    - run extract_patches.py to extract patches from each image
-    - run prepare_dataset.py to decollate images, instance maps and type maps in channel dim
+- First download CoNSeP dataset to `data_root`.
+- Run prepare_patches.py to prepare patches from images.
 
 ### 2. Questions and bugs
 
@@ -27,6 +23,18 @@ CoNSeP datasets which are used in the examples can be downloaded from https://wa
 
 
 ### 3. List of notebooks and examples
+#### [Prepare Your Data](./prepare_patches.py)
+This example is used to prepare patches from tiles referring to the implementation from https://github.com/vqdang/hover_net/blob/master/extract_patches.py. Prepared patches will be saved in `data_root`/Prepared.
+
+```bash
+# Run to know all possible options
+python ./prepare_patches.py -h
+
+# Prepare patches from images
+python ./prepare_patches.py \
+    --root   `data_root` 
+```
+
 #### [HoVerNet Training](./training.py)
 This example uses MONAI workflow to train a HoVerNet model on prepared CoNSeP dataset.
 Since HoVerNet is training via a two-stage approach. First initialised the model with pre-trained weights on the [ImageNet dataset](https://ieeexplore.ieee.org/document/5206848), trained only the decoders for the first 50 epochs, and then fine-tuned all layers for another 50 epochs. We need to specify `--stage` during training.

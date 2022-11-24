@@ -58,26 +58,13 @@ def create_log_dir(cfg):
 
 
 def prepare_data(data_dir, phase):
-    data_dir = os.path.join(data_dir, phase)
-
-    files = sorted(
-        glob.glob(os.path.join(data_dir, "*/*.npy")))
-
-    logging.info(f'{phase} total data {len(files)}')
-    # decollate images, instance maps and type maps in channel dim
-    for file in files:
-        data = np.load(file)
-        np.save(file.replace('.npy', '_image.npy'), data[..., :3].transpose(2, 0, 1))
-        np.save(file.replace('.npy', '_inst_map.npy'), data[..., 3][None])
-        np.save(file.replace('.npy', '_type_map.npy'), data[..., 4][None])
-
     # prepare datalist
     images = sorted(
-        glob.glob(os.path.join(data_dir, "*/*image.npy")))
+        glob.glob(os.path.join(data_dir, f"{phase}/*image.npy")))
     inst_maps = sorted(
-        glob.glob(os.path.join(data_dir, "*/*inst_map.npy")))
+        glob.glob(os.path.join(data_dir, f"{phase}/*inst_map.npy")))
     type_maps = sorted(
-        glob.glob(os.path.join(data_dir, "*/*type_map.npy")))
+        glob.glob(os.path.join(data_dir, f"{phase}/*type_map.npy")))
 
     data_dicts = [
         {"image": _image, "label_inst": _inst_map, "label_type": _type_map}
@@ -89,9 +76,9 @@ def prepare_data(data_dir, phase):
 
 def get_loaders(cfg, train_transforms, val_transforms):
     multi_gpu = True if torch.cuda.device_count() > 1 else False
-
-    train_data = prepare_data(cfg["root"], "train")
-    valid_data = prepare_data(cfg["root"], "valid")
+    
+    train_data = prepare_data(cfg["root"], "Train")
+    valid_data = prepare_data(cfg["root"], "Test")
     if multi_gpu:
         train_data = partition_dataset(
             data=train_data,
@@ -343,7 +330,7 @@ def main():
     parser.add_argument(
         "--root",
         type=str,
-        default="/workspace/Data/CoNSeP/Prepared/consep",
+        default="/workspace/Data/CoNSeP/Prepared",
         help="root data dir",
     )
     parser.add_argument("--logdir", type=str, default="./logs/", dest="logdir", help="log directory")

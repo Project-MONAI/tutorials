@@ -12,4 +12,4 @@ The HPOGen class has a `run_algo()` function, which will be used by the third-pa
 
 ### Usage
 The tutorial on how to use NNIGen is [here](../notebooks/hpo_nni.ipynb) and the tutorial for OptunaGen is [here](../notebooks/hpo_optuna.ipynb). The list of HPO algorithms in NNI and Optuna can be found on [the NNI GitHub page](https://github.com/microsoft/nni) and [Optuna documentation](https://optuna.readthedocs.io/en/stable/reference/samplers/index.html).
-For demonstration purposes, both of our tutorials use a Grid Search HPO algorithm to optimize the learning rate in training. Users can be easily modified to random search and bayesian based methods for more hyperparameters.
+For demonstration purposes, both of our tutorials use a grid search HPO algorithm to optimize the learning rate in training. Users can be easily modified to random search and bayesian based methods for more hyperparameters.

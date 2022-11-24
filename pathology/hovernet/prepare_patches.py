@@ -162,7 +162,7 @@ def main(cfg):
         file_list = glob.glob(os.path.join(ann_dir, f"*mat"))
         file_list.sort()  # ensure same ordering across platform
 
-        out_dir = f"{cfg['root']}/Prepared-test/{phase}"
+        out_dir = f"{cfg['root']}/Prepared/{phase}"
         if os.path.isdir(out_dir):
             shutil.rmtree(out_dir)
         os.makedirs(out_dir)

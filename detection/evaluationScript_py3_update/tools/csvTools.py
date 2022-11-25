@@ -24,7 +24,7 @@ def tryFloat(value):
         value = float(value)
     except:
         value = value
-    
+
     return value
 
 def getColumn(lines, columnid, elementType=''):
@@ -34,7 +34,7 @@ def getColumn(lines, columnid, elementType=''):
             value = line[columnid]
         except:
             continue
-            
+
         if elementType == 'float':
             value = tryFloat(value)
 

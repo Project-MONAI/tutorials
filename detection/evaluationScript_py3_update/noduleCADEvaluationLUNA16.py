@@ -39,17 +39,17 @@ def generateBootstrapSet(scanToCandidatesDict, FROCImList):
     Generates bootstrapped version of set
     '''
     imageLen = FROCImList.shape[0]
-    
+
     # get a random list of images using sampling with replacement
     rand_index_im   = np.random.randint(imageLen, size=imageLen)
     FROCImList_rand = FROCImList[rand_index_im]
-    
+
     # get a new list of candidates
     candidatesExists = False
     for im in FROCImList_rand:
         if im not in scanToCandidatesDict:
             continue
-        
+
         if not candidatesExists:
             candidates = np.copy(scanToCandidatesDict[im])
             candidatesExists = True
@@ -62,9 +62,9 @@ def compute_mean_ci(interp_sens, confidence = 0.95):
     sens_mean = np.zeros((interp_sens.shape[1]),dtype = 'float32')
     sens_lb   = np.zeros((interp_sens.shape[1]),dtype = 'float32')
     sens_up   = np.zeros((interp_sens.shape[1]),dtype = 'float32')
-    
+
     Pz = (1.0-confidence)/2.0
-        
+
     for i in range(interp_sens.shape[1]):
         # get sorted vector
         vec = interp_sens[:,i]
@@ -79,14 +79,14 @@ def compute_mean_ci(interp_sens, confidence = 0.95):
 def computeFROC_bootstrap(FROCGTList,FROCProbList,FPDivisorList,FROCImList,excludeList,numberOfBootstrapSamples=1000, confidence = 0.95):
 
     set1 = np.concatenate(([FROCGTList], [FROCProbList], [excludeList]), axis=0)
-    
+
     fps_lists = []
     sens_lists = []
     thresholds_lists = []
-    
+
     FPDivisorList_np = np.asarray(FPDivisorList)
     FROCImList_np = np.asarray(FROCImList)
-    
+
     # Make a dict with all candidates of all scans
     scanToCandidatesDict = {}
     for i in range(len(FPDivisorList_np)):
@@ -103,19 +103,19 @@ def computeFROC_bootstrap(FROCGTList,FROCProbList,FPDivisorList,FROCImList,exclu
         # Generate a bootstrapped set
         btpsamp = generateBootstrapSet(scanToCandidatesDict,FROCImList_np)
         fps, sens, thresholds = computeFROC(btpsamp[0,:],btpsamp[1,:],len(FROCImList_np),btpsamp[2,:])
-    
+
         fps_lists.append(fps)
         sens_lists.append(sens)
         thresholds_lists.append(thresholds)
 
     # compute statistic
     all_fps = np.linspace(FROC_minX, FROC_maxX, num=10000)
-    
+
     # Then interpolate all FROC curves at this points
     interp_sens = np.zeros((numberOfBootstrapSamples,len(all_fps)), dtype = 'float32')
     for i in range(numberOfBootstrapSamples):
         interp_sens[i,:] = np.interp(all_fps, fps_lists[i], sens_lists[i])
-    
+
     # compute mean and CI
     sens_mean,sens_lb,sens_up = compute_mean_ci(interp_sens, confidence = confidence)
 
@@ -129,7 +129,7 @@ def computeFROC(FROCGTList, FROCProbList, totalNumberOfImages, excludeList):
         if excludeList[i] == False:
             FROCGTList_local.append(FROCGTList[i])
             FROCProbList_local.append(FROCProbList[i])
-    
+
     numberOfDetectedLesions = sum(FROCGTList_local)
     totalNumberOfLesions = sum(FROCGTList)
     totalNumberOfCandidates = len(FROCProbList_local)
@@ -163,17 +163,17 @@ def evaluateCAD(seriesUIDs, results_filename, outputDir, allNodules, CADSystemNa
     results = csvTools.readCSV(results_filename)
 
     allCandsCAD = {}
-    
+
     for seriesuid in seriesUIDs:
-        
+
         # collect candidates from result file
         nodules = {}
         header = results[0]
-        
+
         i = 0
         for result in results[1:]:
             nodule_seriesuid = result[header.index(seriesuid_label)]
-            
+
             if seriesuid == nodule_seriesuid:
                 nodule = getNodule(result, header)
                 nodule.candidateID = i
@@ -200,13 +200,13 @@ def evaluateCAD(seriesUIDs, results_filename, outputDir, allNodules, CADSystemNa
                         nrNodules2 += 1
 
                 nodules = nodules2
-        
+
         print('adding candidates: ' + seriesuid)
         allCandsCAD[seriesuid] = nodules
-    
+
     # open output files
     nodNoCandFile = open(os.path.join(outputDir, "nodulesWithoutCandidate_%s.txt" % CADSystemName), 'w')
-    
+
     # --- iterate over all cases (seriesUIDs) and determine how
     # often a nodule annotation is not covered by a candidate
 
@@ -347,25 +347,25 @@ def evaluateCAD(seriesUIDs, results_filename, outputDir, allNodules, CADSystemNa
 
     # compute FROC
     fps, sens, thresholds = computeFROC(FROCGTList,FROCProbList,len(seriesUIDs),excludeList)
-    
+
     if performBootstrapping:
         fps_bs_itp,sens_bs_mean,sens_bs_lb,sens_bs_up = computeFROC_bootstrap(FROCGTList,FROCProbList,FPDivisorList,seriesUIDs,excludeList,
                                                                   numberOfBootstrapSamples=numberOfBootstrapSamples, confidence = confidence)
-        
+
     # Write FROC curve
     with open(os.path.join(outputDir, "froc_%s.txt" % CADSystemName), 'w') as f:
         for i in range(len(sens)):
             f.write("%.9f,%.9f,%.9f\n" % (fps[i], sens[i], thresholds[i]))
-    
+
     # Write FROC vectors to disk as well
     with open(os.path.join(outputDir, "froc_gt_prob_vectors_%s.csv" % CADSystemName), 'w') as f:
         for i in range(len(FROCGTList)):
             f.write("%d,%.9f\n" % (FROCGTList[i], FROCProbList[i]))
 
     fps_itp = np.linspace(FROC_minX, FROC_maxX, num=10001)
-    
+
     sens_itp = np.interp(fps_itp, fps, sens)
-    
+
     if performBootstrapping:
         # Write mean, lower, and upper bound curves to disk
         with open(os.path.join(outputDir, "froc_%s_bootstrapping.csv" % CADSystemName), 'w') as f:
@@ -398,11 +398,11 @@ def evaluateCAD(seriesUIDs, results_filename, outputDir, allNodules, CADSystemNa
         plt.ylabel('Sensitivity')
         plt.legend(loc='lower right')
         plt.title('FROC performance - %s' % (CADSystemName))
-        
+
         if bLogPlot:
             plt.xscale('log', base=2)
             ax.xaxis.set_major_formatter(FixedFormatter([0.125,0.25,0.5,1,2,4,8]))
-        
+
         # set your ticks manually
         ax.xaxis.set_ticks([0.125,0.25,0.5,1,2,4,8])
         ax.yaxis.set_ticks(np.arange(0, 1.1, 0.1))
@@ -412,77 +412,77 @@ def evaluateCAD(seriesUIDs, results_filename, outputDir, allNodules, CADSystemNa
         plt.savefig(os.path.join(outputDir, "froc_%s.png" % CADSystemName), bbox_inches=0, dpi=300)
 
     return (fps, sens, thresholds, fps_bs_itp, sens_bs_mean, sens_bs_lb, sens_bs_up)
-    
+
 def getNodule(annotation, header, state = ""):
     nodule = NoduleFinding()
     nodule.coordX = annotation[header.index(coordX_label)]
     nodule.coordY = annotation[header.index(coordY_label)]
     nodule.coordZ = annotation[header.index(coordZ_label)]
-    
+
     if diameter_mm_label in header:
         nodule.diameter_mm = annotation[header.index(diameter_mm_label)]
-    
+
     if CADProbability_label in header:
         nodule.CADprobability = annotation[header.index(CADProbability_label)]
-    
+
     if not state == "":
         nodule.state = state
 
     return nodule
-    
+
 def collectNoduleAnnotations(annotations, annotations_excluded, seriesUIDs):
     allNodules = {}
     noduleCount = 0
     noduleCountTotal = 0
-    
+
     for seriesuid in seriesUIDs:
         print('adding nodule annotations: ' + seriesuid)
-        
+
         nodules = []
         numberOfIncludedNodules = 0
-        
+
         # add included findings
         header = annotations[0]
         for annotation in annotations[1:]:
             nodule_seriesuid = annotation[header.index(seriesuid_label)]
-            
+
             if seriesuid == nodule_seriesuid:
                 nodule = getNodule(annotation, header, state = "Included")
                 nodules.append(nodule)
                 numberOfIncludedNodules += 1
-        
+
         # add excluded findings
         header = annotations_excluded[0]
         for annotation in annotations_excluded[1:]:
             nodule_seriesuid = annotation[header.index(seriesuid_label)]
-            
+
             if seriesuid == nodule_seriesuid:
                 nodule = getNodule(annotation, header, state = "Excluded")
                 nodules.append(nodule)
-            
+
         allNodules[seriesuid] = nodules
         noduleCount      += numberOfIncludedNodules
         noduleCountTotal += len(nodules)
-    
+
     print('Total number of included nodule annotations: ' + str(noduleCount))
     print('Total number of nodule annotations: ' + str(noduleCountTotal))
     return allNodules
-    
-    
+
+
 def collect(annotations_filename,annotations_excluded_filename,seriesuids_filename):
     annotations          = csvTools.readCSV(annotations_filename)
     annotations_excluded = csvTools.readCSV(annotations_excluded_filename)
     seriesUIDs_csv = csvTools.readCSV(seriesuids_filename)
-    
+
     seriesUIDs = []
     for seriesUID in seriesUIDs_csv:
         seriesUIDs.append(seriesUID[0])
 
     allNodules = collectNoduleAnnotations(annotations, annotations_excluded, seriesUIDs)
-    
+
     return (allNodules, seriesUIDs)
-    
-    
+
+
 def noduleCADEvaluation(annotations_filename,annotations_excluded_filename,seriesuids_filename,results_filename,outputDir):
     '''
     function to load annotations and evaluate a CAD algorithm
@@ -492,11 +492,11 @@ def noduleCADEvaluation(annotations_filename,annotations_excluded_filename,serie
     @param results_filename: list of CAD marks with probabilities
     @param outputDir: output directory
     '''
-    
+
     print(annotations_filename)
-    
+
     (allNodules, seriesUIDs) = collect(annotations_filename, annotations_excluded_filename, seriesuids_filename)
-    
+
     evaluateCAD(seriesUIDs, results_filename, outputDir, allNodules,
                 os.path.splitext(os.path.basename(results_filename))[0],
                 maxNumberOfCADMarks=100, performBootstrapping=bPerformBootstrapping,

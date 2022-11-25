@@ -107,7 +107,7 @@ def val_epoch(model, loader, epoch, args, max_tiles=None):
 
             data = batch_data["image"].as_subclass(torch.Tensor).cuda(args.rank)
             target = batch_data["label"].as_subclass(torch.Tensor).cuda(args.rank)
-            
+
             with autocast(enabled=args.amp):
 
                 if max_tiles is not None and data.shape[1] > max_tiles:
@@ -495,7 +495,7 @@ def parse_args():
     parser.add_argument("--weight_decay", default=0, type=float, help="optimizer weight decay")
     parser.add_argument("--amp", action="store_true", help="use AMP, recommended")
     parser.add_argument("--val_every", "--val_interval",
-        default=1, type=int, 
+        default=1, type=int,
         help="run validation after this number of epochs, default 1 to run every epoch",
     )
     parser.add_argument("--workers", default=2, type=int, help="number of workers for data loading")

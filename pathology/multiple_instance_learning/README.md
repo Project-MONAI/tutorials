@@ -27,8 +27,7 @@ The script is tested with:
 Please install the required dependencies
 
 ```bash
-pip install tifffile
-pip install imagecodecs
+pip install cucim gdown
 ```
 
 For more information please check out [the installation guide](https://docs.monai.io/en/latest/installation.html).

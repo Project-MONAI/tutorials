@@ -4,7 +4,7 @@
 
 <div align="center"> <img src="../figures/algorithm_generation.png" width="600"/> </div>
 
-The module of algorithm generation is to create self-contained algorithm folders for further model training, inference, and validation with various neural netwrok architecture and training recipes. This module takes input configuration ".yaml" files (shown below), dataset summaries (e.g. "datastats.yaml") from our provided data analysis tools, and algorithm templates. And it outputs different algorithm folders under cross-validation. In the default design, the generated algorithm folders follow the designs of [MONAI bundle](https://docs.monai.io/en/latest/mb_specification.html). User can run model training, inference, and validation inside those self-contained folders.
+The module of algorithm generation is to create self-contained algorithm folders for further model training, inference, and validation with various neural network architectures and training recipes. This module takes input configuration ".yaml" files (shown below), dataset summaries (e.g. "data_stats.yaml") from our provided data analysis tools, and algorithm templates. And it outputs different algorithm folders under cross-validation. In the default design, the generated algorithm folders follow the designs of [MONAI bundle](https://docs.monai.io/en/latest/mb_specification.html). Users can run model training, inference, and validation inside those self-contained folders.
 
 ```
 modality: CT
@@ -21,10 +21,10 @@ The default algorithms are based on three different networks, [DiNTS](https://op
 | **Algorithm** | **DiNTS**  | **2D SegResNet**  | **SegResNet**  | **SwinUNETR**  |
 | ------------ | ------------ | ------------ | ------------ | ------------ |
 | **Network** | Densely-connected lattice-based network | U-shape network architecture with 2D residual blocks | U-shape network architecture with 3D residual blocks | U-shape network architecture with Swin-Transformer based encoder |
-| **Training Recipes** | Model Input: <br /> - 96 x 96 x 96 for traing <br /> - 96 x 96 x 96 for inference <br /> AMP: True <br /> Optimizer: SGD <br /> Initial learning Rate: 0.2 <br /> Loss: DiceFocalLoss | Model Input: <br /> - 320 x 320 for traing <br /> - 320 x 320 for inference <br /> AMP: True <br /> Optimizer: SGD <br /> Initial learning Rate: 0.2 <br /> Loss: DiceFocalLoss | Model Input: <br /> - 224 x 224 x 144 for traing <br /> - 224 x 224 x 144 for inference <br /> AMP: True <br /> Optimizer: AdamW <br /> Initial learning Rate: 0.0002 <br /> Loss: DiceCELoss | Model Input: <br /> - 96 x 96 x 96 for traing <br /> - 96 x 96 x 96 for inference <br /> AMP: True <br /> Optimizer: AdamW <br /> Initial learning Rate: 0.0001 <br /> Loss: DiceCELoss |
+| **Training Recipes** | Model Input: <br /> - 96 x 96 x 96 for training <br /> - 96 x 96 x 96 for inference <br /> AMP: True <br /> Optimizer: SGD <br /> Initial learning Rate: 0.2 <br /> Loss: DiceFocalLoss | Model Input: <br /> - 320 x 320 for training <br /> - 320 x 320 for inference <br /> AMP: True <br /> Optimizer: SGD <br /> Initial learning Rate: 0.2 <br /> Loss: DiceFocalLoss | Model Input: <br /> - 224 x 224 x 144 for training <br /> - 224 x 224 x 144 for inference <br /> AMP: True <br /> Optimizer: AdamW <br /> Initial learning Rate: 0.0002 <br /> Loss: DiceCELoss | Model Input: <br /> - 96 x 96 x 96 for training <br /> - 96 x 96 x 96 for inference <br /> AMP: True <br /> Optimizer: AdamW <br /> Initial learning Rate: 0.0001 <br /> Loss: DiceCELoss |
 | **Transforms**  |  - Intensity Normalization <br /> - Random ROI cropping <br /> - Random rotation <br /> - Random zoom <br /> - Random Gaussian smoothing <br /> - Random intensity scaling <br /> - Random intensity shifting <br /> - Random Gaussian noising <br /> - Random flipping | - Intensity Normalization <br /> - Random ROI cropping <br /> - Random rotation <br /> - Random zoom <br /> - Random Gaussian smoothing <br /> - Random intensity scaling <br /> - Random intensity shifting <br /> - Random Gaussian noising <br /> - Random flipping | - Intensity Normalization <br /> - Random ROI cropping <br /> - Random affine transformation <br /> - Random Gaussian smoothing <br /> - Random intensity scaling <br /> - Random intensity shifting <br /> - Random Gaussian noising <br /> - Random flipping | - Intensity Normalization <br /> - Random ROI cropping <br /> - Random rotation <br /> - Random intensity shifting <br /> - Random flipping |
 
-For model inference, we use a sliding-window scheme to generate probability maps for output classes/channels through a softmax/sigmoid layer. The overlap for sliding window inference more than 25\% of the window size. The probability map is re-sampled back to its original spacing through each class channel. Next, a segmentation mask is generated using the argmax or thresholding operation on the channel dimension (with or without model ensemble) and saved with the original affine matrix.
+For model inference, we use a sliding-window scheme to generate probability maps for output classes/channels through a softmax/sigmoid layer. The overlap for sliding window inference is more than 25\% of the window size. The probability map is re-sampled back to its original spacing through each class channel. Next, a segmentation mask is generated using the `argmax` or thresholding operation on the channel dimension (with or without model ensemble) and saved with the original affine matrix.
 
 ### Python Command
 
@@ -32,10 +32,11 @@ The follow Python script shows how to generate algorithm bundles using Python cl
 
 ```python
 ## algorithm generation
+import os
 from monai.apps.auto3dseg import BundleGen
 
 work_dir = "./work_dir"
-data_output_yaml = os.path.join(work_dir, "datastats.yaml")
+data_output_yaml = os.path.join(work_dir, "data_stats.yaml")
 data_src_cfg = "./task.yaml"
 
 bundle_generator = BundleGen(
@@ -64,7 +65,7 @@ The code block would generate multiple algorithm bundles as follows. The folder 
 
 ### Algorithm Templates
 
-The Python class **BundleGen** utilize [the default algorithm templates](https://github.com/Project-MONAI/research-contributions/tree/main/auto3dseg) implicitly. The default algorithms are based on four established works (DiNTS, SegResNet, SegResNet2D, SwinUNETR). They supports both 3D CT and MR image segmentation. In the template, some items are empty or null, and they will be filled together with dataset information. The part of configuration file "hyper_parameters.yaml" is shown below. In the configuration, the items (like "bundle_root", "data_file_base_dir", "patch_size") will be filled up automatically with any user interaction.
+The Python class **BundleGen** utilizes [the default algorithm templates](https://github.com/Project-MONAI/research-contributions/tree/main/auto3dseg) implicitly. The default algorithms are based on four established works (DiNTS, SegResNet, SegResNet2D, and SwinUNETR). They support both 3D CT and MR image segmentation. In the template, some items are empty or null, and they will be filled together with dataset information. The part of the configuration file "hyper_parameters.yaml" is shown below. In the configuration, the items (like "bundle_root", "data_file_base_dir", and "patch_size") will be filled up automatically with any user interaction.
 
 ```
 bundle_root: null
@@ -96,7 +97,7 @@ training:
 ...
 ```
 
-The actual template filling is done using the "fill_template_config" function in the "Algo" class of the script "scripts/algo.py". The "algo.py" of different algorithms are located inside their bundle templates.
+The actual template filling is done using the "fill_template_config" function in the "Algo" class of the script "scripts/algo.py". The "algo.py" of different algorithms is located inside their bundle templates.
 
 ```python
 class DintsAlgo(BundleAlgo):

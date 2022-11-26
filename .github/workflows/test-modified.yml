@@ -37,5 +37,5 @@ jobs:
         python -m pip install -r requirements.txt; python -m pip list
         python -c "import monai; monai.config.print_debug_info()"
         export CUDA_VISIBLE_DEVICES=0
-        git diff --name-only origin/main | while read line; do if [[ $line == *.ipynb ]]; then ./runner.sh -p "-and -wholename './${line}'"; fi; done;
+        git diff --name-only origin/main | while read line; do if [[ $line == *.ipynb ]]; then ./runner.sh -p " -and -wholename './${line}'"; fi; done;
           # [[ $line == *.ipynb ]] && ./runner.sh --file "$line"

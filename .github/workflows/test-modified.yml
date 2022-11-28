@@ -1,4 +1,4 @@
-name: build
+name: premerge-notebooks
 
 on:
   # quick tests of modified notebooks for every pull request
@@ -25,7 +25,10 @@ jobs:
       run: |
         which python
         nvidia-smi
+        rm -rf ../../MONAI/MONAI
         python -m pip install --upgrade pip wheel
+        pip uninstall -y monai
+        pip uninstall -y monai
         BUILD_MONAI=0 python -m pip install git+https://github.com/Project-MONAI/MONAI#egg=MONAI
         python -m pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/main/requirements-dev.txt
     - uses: actions/checkout@v3

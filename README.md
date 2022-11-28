@@ -166,10 +166,13 @@ Reference implementation used in MICCAI 2022 [ACR-NVIDIA-NCI Breast Density FL c
 
 **Digital Pathology**
 #### [Whole Slide Tumor Detection](./pathology/tumor_detection)
-The example show how to train and evaluate a tumor detection model (based on patch classification) on whole-slide histopathology images.
+The example shows how to train and evaluate a tumor detection model (based on patch classification) on whole-slide histopathology images.
 
 #### [Profiling Whole Slide Tumor Detection](./pathology/tumor_detection)
-The example show how to use MONAI NVTX transforms to tag and profile pre- and post-processing transforms in the digital pathology whole slide tumor detection pipeline.
+The example shows how to use MONAI NVTX transforms to tag and profile pre- and post-processing transforms in the digital pathology whole slide tumor detection pipeline.
+
+#### [Multiple Instance Learning WSI classification](./pathology/multiple_instance_learning)
+An example of Multiple Instance Learning (MIL) classification from Whole Slide Images (WSI) of prostate histopathology.
 
 #### [NuClick:Interactive Annotation for Pathology](./pathology/nuclick)
 The notebook demonstrates examples of training and inference pipelines with interactive annotation for pathology, NuClick is used for delineating nuclei, cells and a squiggle for outlining glands.

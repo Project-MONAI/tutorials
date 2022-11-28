@@ -187,12 +187,6 @@ def train(cfg):
     else:
         optimizer = SGD(model.parameters(), lr=cfg["lr"], momentum=0.9)
 
-    # AMP scaler
-    if cfg["amp"]:
-        cfg["amp"] = True if monai.utils.get_torch_version_tuple() >= (1, 6) else False
-    else:
-        cfg["amp"] = False
-
     scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=cfg["n_epochs"])
 
     # --------------------------------------------

@@ -4,7 +4,7 @@ In **Auto3DSeg**, the data analyzer automatically analyzes given medical image d
 
 ### Usage
 
-The ussage of data analyzer is can be found [here](../notebooks/data_analyzer.ipynb)
+The usage of data analyzer can be found [here](../notebooks/data_analyzer.ipynb)
 
 ### Customization
 

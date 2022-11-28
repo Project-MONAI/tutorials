@@ -72,7 +72,6 @@ failfast=false
 pattern="-and -name '*' -and ! -wholename '*federated_learning*'\
  -and ! -wholename '*transchex_openi*'\
  -and ! -wholename '*unetr_*'\
- -and ! -wholename '*profiling_camelyon*'\
  -and ! -wholename '*profiling_train_base_nvtx*'\
  -and ! -wholename '*benchmark_global_mutual_information*'\
  -and ! -wholename '*spleen_segmentation_3d_visualization_basic*'\

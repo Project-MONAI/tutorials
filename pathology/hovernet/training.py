@@ -187,7 +187,7 @@ def run(cfg):
                 translate_range=((6), (6)),
                 padding_mode="zeros",
                 mode=("nearest"),
-                    ),
+            ),
             CenterSpatialCropd(
                 keys="image",
                 roi_size=cfg["patch_size"],

@@ -5,14 +5,14 @@ import glob
 import shutil
 import pathlib
 
-import cv2
 import numpy as np
 import scipy.io as sio
+from PIL import Image
 from argparse import ArgumentParser
 
 
 def load_img(path):
-    return cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
+    return np.array(Image.open(path).convert("RGB"))
 
 
 def load_ann(path):
@@ -90,12 +90,12 @@ class PatchExtractor():
         w_flag, w_last = extract_infos(im_w, self.patch_size[1], self.step_size[1])
 
         sub_patches = []
-        #### Deal with valid block
+        # Deal with valid block
         for row in range(0, h_last, self.step_size[0]):
             for col in range(0, w_last, self.step_size[1]):
                 win = self.__get_patch(x, (row, col))
                 sub_patches.append(win)
-        #### Deal with edge case
+        # Deal with edge case
         if h_flag:
             row = im_h - self.patch_size[0]
             for col in range(0, w_last, self.step_size[1]):
@@ -190,9 +190,9 @@ def main(cfg):
             )
 
             for idx, patch in enumerate(sub_patches):
-                image_patch = patch[..., :3].transpose(2, 0, 1) # make channel first
-                inst_map_patch = patch[..., 3][None] # add channel dim
-                type_map_patch = patch[..., 4][None] # add channel dim
+                image_patch = patch[..., :3].transpose(2, 0, 1)  # make channel first
+                inst_map_patch = patch[..., 3][None]  # add channel dim
+                type_map_patch = patch[..., 4][None]  # add channel dim
                 np.save("{0}/{1}_{2:03d}_image.npy".format(out_dir, base_name, idx), image_patch)
                 np.save("{0}/{1}_{2:03d}_inst_map.npy".format(out_dir, base_name, idx), inst_map_patch)
                 np.save("{0}/{1}_{2:03d}_type_map.npy".format(out_dir, base_name, idx), type_map_patch)
@@ -202,6 +202,7 @@ def main(cfg):
 
             pbarx.update()
         pbarx.close()
+
 
 def parse_arguments():
     parser = ArgumentParser(description="Extract patches from the original images")
@@ -219,6 +220,7 @@ def parse_arguments():
     config_dict = vars(args)
 
     return config_dict
+
 
 if __name__ == "__main__":
     cfg = parse_arguments()

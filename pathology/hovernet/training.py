@@ -51,9 +51,8 @@ def create_log_dir(cfg):
     )
     log_dir = os.path.join(cfg["logdir"], run_folder_name)
     print(f"Logs and model are saved at '{log_dir}'.")
-    time.sleep(2)
     if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
+        os.makedirs(log_dir, exist_ok=True)
     return log_dir
 
 
@@ -151,8 +150,9 @@ def create_model(cfg, device):
     return model
 
 
-def run(cfg):
-    log_dir = create_log_dir(cfg)
+def run(log_dir, cfg):
+    set_determinism(seed=cfg["seed"])
+
     if cfg["mode"].lower() == "original":
         cfg["patch_size"] = [270, 270]
         cfg["out_size"] = [80, 80]
@@ -260,7 +260,8 @@ def run(cfg):
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=25)
     post_process_np = Compose([
         Activationsd(keys=HoVerNetBranch.NP.value, softmax=True),
-        Lambdad(keys=HoVerNetBranch.NP.value, func=lambda x: x[1: 2, ...] > 0.5)])
+        AsDiscreted(keys=HoVerNetBranch.NP.value, argmax=True),
+    ])
     post_process = Lambdad(keys="pred", func=post_process_np)
 
     # --------------------------------------------
@@ -354,10 +355,10 @@ def main():
     args = parser.parse_args()
     cfg = vars(args)
     print(cfg)
-    set_determinism(seed=0)
 
     logging.basicConfig(level=logging.INFO)
-    run(cfg)
+    log_dir = create_log_dir(cfg)
+    run(log_dir, cfg)
 
 
 if __name__ == "__main__":

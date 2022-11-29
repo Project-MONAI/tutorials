@@ -15,7 +15,7 @@ msd_task = "Task05_Prostate"
 resource = "https://msd-for-monai.s3-us-west-2.amazonaws.com/" + msd_task + ".tar"
 compressed_file = os.path.join(root, msd_task + ".tar")
 if os.path.exists(root):
-    download_and_extract(resource, compressed_file, args.root)
+    download_and_extract(resource, compressed_file, root)
 ```
 
 **Step 1.** Provide the following data list (a ".json" file) for a new task and the data root. The typical data list is shown as follows.

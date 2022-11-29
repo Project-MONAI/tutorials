@@ -177,8 +177,7 @@ def train(args):
         optimizer=opt,
         loss_function=loss,
         inferer=SimpleInferer(),
-        # if no FP16 support in GPU or PyTorch version < 1.6, will not enable AMP evaluation
-        amp=True if monai.utils.get_torch_version_tuple() >= (1, 6) else False,
+        amp=True,
         postprocessing=train_post_transforms,
         key_train_metric={"train_acc": Accuracy(output_transform=from_engine(["pred", "label"]), device=device)},
         train_handlers=train_handlers,

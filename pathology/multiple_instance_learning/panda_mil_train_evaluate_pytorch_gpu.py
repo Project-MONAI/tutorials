@@ -48,7 +48,8 @@ def train_epoch(model, loader, optimizer, scaler, epoch, args):
 
     for idx, batch_data in enumerate(loader):
 
-        data, target = batch_data["image"].cuda(args.rank), batch_data["label"].cuda(args.rank)
+        data = batch_data["image"].as_subclass(torch.Tensor).cuda(args.rank)
+        target = batch_data["label"].as_subclass(torch.Tensor).cuda(args.rank)
 
         optimizer.zero_grad(set_to_none=True)
 
@@ -56,13 +57,9 @@ def train_epoch(model, loader, optimizer, scaler, epoch, args):
             logits = model(data)
             loss = criterion(logits, target)
 
-        if args.amp:
-            scaler.scale(loss).backward()
-            scaler.step(optimizer)
-            scaler.update()
-        else:
-            loss.backward()
-            optimizer.step()
+        scaler.scale(loss).backward()
+        scaler.step(optimizer)
+        scaler.update()
 
         acc = (logits.sigmoid().sum(1).detach().round() == target.sum(1).round()).float().mean()
 
@@ -108,7 +105,8 @@ def val_epoch(model, loader, epoch, args, max_tiles=None):
 
         for idx, batch_data in enumerate(loader):
 
-            data, target = batch_data["image"].cuda(args.rank), batch_data["label"].cuda(args.rank)
+            data = batch_data["image"].as_subclass(torch.Tensor).cuda(args.rank)
+            target = batch_data["label"].as_subclass(torch.Tensor).cuda(args.rank)
 
             with autocast(enabled=args.amp):
 
@@ -122,7 +120,7 @@ def val_epoch(model, loader, epoch, args, max_tiles=None):
                     logits2 = []
 
                     for i in range(int(np.ceil(data.shape[1] / float(max_tiles)))):
-                        data_slice = data[:, i * max_tiles : (i + 1) * max_tiles]
+                        data_slice = data[:, i * max_tiles: (i + 1) * max_tiles]
                         logits_slice = model(data_slice, no_head=True)
                         logits.append(logits_slice)
 
@@ -329,7 +327,7 @@ def main_worker(gpu, args):
         shuffle=(train_sampler is None),
         num_workers=args.workers,
         pin_memory=True,
-        multiprocessing_context="spawn",
+        multiprocessing_context="spawn" if args.workers > 0 else None,
         sampler=train_sampler,
         collate_fn=list_data_collate,
     )
@@ -339,7 +337,7 @@ def main_worker(gpu, args):
         shuffle=False,
         num_workers=args.workers,
         pin_memory=True,
-        multiprocessing_context="spawn",
+        multiprocessing_context="spawn" if args.workers > 0 else None,
         sampler=val_sampler,
         collate_fn=list_data_collate,
     )
@@ -399,13 +397,11 @@ def main_worker(gpu, args):
     else:
         writer = None
 
-    ###RUN TRAINING
+    #RUN TRAINING
     n_epochs = args.epochs
     val_acc_max = 0.0
 
-    scaler = None
-    if args.amp:  # new native amp
-        scaler = GradScaler()
+    scaler = GradScaler(enabled=args.amp)
 
     for epoch in range(start_epoch, n_epochs):
 
@@ -429,9 +425,6 @@ def main_worker(gpu, args):
         if args.rank == 0 and writer is not None:
             writer.add_scalar("train_loss", train_loss, epoch)
             writer.add_scalar("train_acc", train_acc, epoch)
-
-        if args.distributed:
-            torch.distributed.barrier()
 
         b_new_best = False
         val_acc = 0
@@ -494,21 +487,21 @@ def parse_args():
 
     parser.add_argument("--logdir", default=None, help="path to log directory to store Tensorboard logs")
 
-    parser.add_argument("--epochs", default=50, type=int, help="number of training epochs")
+    parser.add_argument("--epochs", "--max_epochs", default=50, type=int, help="number of training epochs")
     parser.add_argument("--batch_size", default=4, type=int, help="batch size, the number of WSI images per gpu")
     parser.add_argument("--optim_lr", default=3e-5, type=float, help="initial learning rate")
 
     parser.add_argument("--weight_decay", default=0, type=float, help="optimizer weight decay")
     parser.add_argument("--amp", action="store_true", help="use AMP, recommended")
-    parser.add_argument(
-        "--val_every",
+    parser.add_argument("--val_every",
+        "--val_interval",
         default=1,
         type=int,
         help="run validation after this number of epochs, default 1 to run every epoch",
     )
     parser.add_argument("--workers", default=2, type=int, help="number of workers for data loading")
 
-    ###for multigpu
+    #for multigpu
     parser.add_argument("--distributed", action="store_true", help="use multigpu training, recommended")
     parser.add_argument("--world_size", default=1, type=int, help="number of nodes for distributed training")
     parser.add_argument("--rank", default=0, type=int, help="node rank for distributed training")
@@ -519,7 +512,7 @@ def parse_args():
 
     parser.add_argument(
         "--quick", action="store_true", help="use a small subset of data for debugging"
-    )  # for debugging
+    )
 
     args = parser.parse_args()
 
@@ -529,7 +522,6 @@ def parse_args():
     print("-----------------")
 
     return args
-
 
 if __name__ == "__main__":
 

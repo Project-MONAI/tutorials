@@ -1,4 +1,4 @@
-name: build
+name: premerge-notebooks
 
 on:
   # quick tests of modified notebooks for every pull request
@@ -25,7 +25,12 @@ jobs:
       run: |
         which python
         nvidia-smi
+        rm -rf ../../MONAI/MONAI
         python -m pip install --upgrade pip wheel
+        pip uninstall -y monai
+        pip uninstall -y monai
+        pip uninstall -y monai-weekly
+        pip uninstall -y monai-weekly # make sure there's no existing installation
         BUILD_MONAI=0 python -m pip install git+https://github.com/Project-MONAI/MONAI#egg=MONAI
         python -m pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/main/requirements-dev.txt
     - uses: actions/checkout@v3
@@ -37,5 +42,5 @@ jobs:
         python -m pip install -r requirements.txt; python -m pip list
         python -c "import monai; monai.config.print_debug_info()"
         export CUDA_VISIBLE_DEVICES=0
-        git diff --name-only origin/main | while read line; do if [[ $line == *.ipynb ]]; then ./runner.sh -p "-and -wholename './${line}'"; fi; done;
+        git diff --name-only origin/main | while read line; do if [[ $line == *.ipynb ]]; then ./runner.sh -p " -and -wholename './${line}'"; fi; done;
           # [[ $line == *.ipynb ]] && ./runner.sh --file "$line"

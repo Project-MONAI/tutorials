@@ -43,7 +43,8 @@ in a cell will verify this has worked and show you what kind of hardware you hav
 
 #### Data
 
-Some notebooks will require additional data. They can be downloaded by running the [runexamples.sh](./runexamples.sh) script.
+Some notebooks will require additional data.
+Each user is responsible for checking the content of datasets and the applicable licenses and determining if suitable for the intended use.
 
 ### 2. Questions and bugs
 
@@ -165,10 +166,13 @@ Reference implementation used in MICCAI 2022 [ACR-NVIDIA-NCI Breast Density FL c
 
 **Digital Pathology**
 #### [Whole Slide Tumor Detection](./pathology/tumor_detection)
-The example show how to train and evaluate a tumor detection model (based on patch classification) on whole-slide histopathology images.
+The example shows how to train and evaluate a tumor detection model (based on patch classification) on whole-slide histopathology images.
 
 #### [Profiling Whole Slide Tumor Detection](./pathology/tumor_detection)
-The example show how to use MONAI NVTX transforms to tag and profile pre- and post-processing transforms in the digital pathology whole slide tumor detection pipeline.
+The example shows how to use MONAI NVTX transforms to tag and profile pre- and post-processing transforms in the digital pathology whole slide tumor detection pipeline.
+
+#### [Multiple Instance Learning WSI classification](./pathology/multiple_instance_learning)
+An example of Multiple Instance Learning (MIL) classification from Whole Slide Images (WSI) of prostate histopathology.
 
 #### [NuClick:Interactive Annotation for Pathology](./pathology/nuclick)
 The notebook demonstrates examples of training and inference pipelines with interactive annotation for pathology, NuClick is used for delineating nuclei, cells and a squiggle for outlining glands.
@@ -210,6 +214,8 @@ Tutorial to show the pipeline of fine tuning an endoscopic inbody classification
 **modules**
 #### [bundle](./bundle)
 Get started tutorial and concrete training / inference examples for MONAI bundle features.
+#### [competitions](./competitions)
+MONAI based solutions of competitions in healthcare imaging.
 #### [engines](./modules/engines)
 Training and evaluation examples of 3D segmentation based on UNet3D and synthetic dataset with MONAI workflows, which contains engines, event-handlers, and post-transforms. And GAN training and evaluation example for a medical image generative adversarial network. Easy run training script uses `GanTrainer` to train a 2D CT scan reconstruction network. Evaluation script generates random samples from a trained network.
 

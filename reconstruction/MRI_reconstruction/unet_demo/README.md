@@ -31,11 +31,13 @@ This folder contains code to train and validate a U-Net for accelerated MRI reco
 
 # Dataset
 
-The experiments are performed on the [fastMRI](https://fastmri.org/dataset) dataset. Users should request access to the dataset
+The experiments are performed on the [fastMRI](https://fastmri.org/dataset) brain multi-coil dataset (AXT2 modality). Users should request access to the dataset
 from the [owner's website](https://fastmri.org/dataset). Remember to use the `$PATH` where you downloaded the data in `train.py`
 or `inference.ipynb` accordingly.
 
 For our experiments we created a subset of the fastMRI dataset which contains a `500/179/133` split for `train/val/test`. Please download [fastmri_data_split.json](https://github.com/Project-MONAI/MONAI-extra-test-data/releases/download/0.8.1/fastmri_data_split.json) and put it here under `./data`.
+
+**Note.** The dataset files that need to be downloaded from [fastMRI](https://fastmri.org/dataset) are `brain_multicoil_train.tar.gz` (~1228.8 GB) and `brain_multicoil_val.tar.gz` (~350.9 GB).
 
 # Model checkpoint
 

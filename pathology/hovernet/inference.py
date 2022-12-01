@@ -9,23 +9,18 @@ import torch.distributed as dist
 
 from monai.apps.pathology.inferers import SlidingWindowHoVerNetInferer
 from monai.apps.pathology.transforms import (
-    GenerateDistanceMapd,
-    GenerateInstanceBorderd,
-    GenerateWatershedMarkersd,
-    GenerateWatershedMaskd,
-    HoVerNetNuclearTypePostProcessingd,
-    Watershedd,
+    HoVerNetInstanceMapPostProcessingd,
+    HoVerNetTypeMapPostProcessingd,
 )
 from monai.data import DataLoader, Dataset, PILReader, partition_dataset
 from monai.engines import SupervisedEvaluator
 from monai.networks.nets import HoVerNet
 from monai.transforms import (
     CastToTyped,
+    CenterSpatialCropd,
     Compose,
     EnsureChannelFirstd,
-    FillHoles,
     FromMetaTensord,
-    GaussianSmooth,
     LoadImaged,
     FlattenSubKeysd,
     SaveImaged,
@@ -64,10 +59,11 @@ def run(cfg):
     # Preprocessing transforms
     pre_transforms = Compose(
         [
-            LoadImaged(keys=["image"], reader=PILReader, converter=lambda x: x.convert("RGB")),
-            EnsureChannelFirstd(keys=["image"]),
-            CastToTyped(keys=["image"], dtype=torch.float32),
-            ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
+            LoadImaged(keys="image", reader=PILReader, converter=lambda x: x.convert("RGB")),
+            EnsureChannelFirstd(keys="image"),
+            CenterSpatialCropd(keys="image", roi_size=(80, 80)),
+            CastToTyped(keys="image", dtype=torch.float32),
+            ScaleIntensityRanged(keys="image", a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
         ]
     )
     # Postprocessing transforms
@@ -78,30 +74,26 @@ def run(cfg):
                 sub_keys=[HoVerNetBranch.NC.value, HoVerNetBranch.NP.value, HoVerNetBranch.HV.value],
                 delete_keys=True,
             ),
-            GenerateWatershedMaskd(keys=HoVerNetBranch.NP.value, softmax=True),
-            GenerateInstanceBorderd(keys="mask", hover_map_key=HoVerNetBranch.HV.value, kernel_size=3),
-            GenerateDistanceMapd(keys="mask", border_key="border", smooth_fn=GaussianSmooth()),
-            GenerateWatershedMarkersd(
-                keys="mask",
-                border_key="border",
-                threshold=0.7,
-                radius=2,
-                postprocess_fn=FillHoles(),
-            ),
-            Watershedd(keys="dist", mask_key="mask", markers_key="markers"),
-            HoVerNetNuclearTypePostProcessingd(
-                type_pred_key=HoVerNetBranch.NC.value, instance_pred_key="dist", output_classes=5
-            ),
-            FromMetaTensord(keys=["image", "pred_binary"]),
+            HoVerNetInstanceMapPostProcessingd(sobel_kernel_size=3, marker_threshold=0.7, marker_radius=2),
+            HoVerNetTypeMapPostProcessingd(),
+            FromMetaTensord(keys=["image"]),
             SaveImaged(
-                keys="pred_binary",
+                keys="instance_map",
                 meta_keys="image_meta_dict",
-                output_ext="png",
+                output_ext="tiff",
                 output_dir=output_dir,
-                output_postfix="pred",
+                output_postfix="instance_map",
                 output_dtype="uint8",
                 separate_folder=False,
-                scale=255,
+            ),
+            SaveImaged(
+                keys="type_map",
+                meta_keys="image_meta_dict",
+                output_ext="tiff",
+                output_dir=output_dir,
+                output_postfix="type_map",
+                output_dtype="uint8",
+                separate_folder=False,
             ),
         ]
     )
@@ -143,7 +135,7 @@ def run(cfg):
     model = HoVerNet(
         mode=cfg["mode"],
         in_channels=3,
-        out_classes=5,
+        out_classes=cfg["out_classes"],
         act=("relu", {"inplace": True}),
         norm="batch",
     ).to(device)
@@ -188,10 +180,22 @@ def main():
     logging.basicConfig(level=logging.INFO)
 
     parser = ArgumentParser(description="Tumor detection on whole slide pathology images.")
-    parser.add_argument("--root", type=str, default="./CoNSeP/Test/Images", help="image root dir")
+    parser.add_argument(
+        "--root",
+        type=str,
+        default="/Users/bhashemian/workspace/project-monai/tutorials/pathology/hovernet/CoNSeP/Test/Images",
+        help="image root dir",
+    )
     parser.add_argument("--output", type=str, default="./logs/", dest="output", help="log directory")
-    parser.add_argument("--ckpt", type=str, default="./model_CoNSeP_new.pth", help="Path to the pytorch checkpoint")
+    parser.add_argument(
+        "--ckpt",
+        type=str,
+        default="/Users/bhashemian/workspace/project-monai/tutorials/pathology/hovernet/model_CoNSeP_new.pth",
+        help="Path to the pytorch checkpoint",
+    )
     parser.add_argument("--mode", type=str, default="original", help="HoVerNet mode (original/fast)")
+
+    parser.add_argument("--out-classes", type=int, default=5, help="number of output classes")
     parser.add_argument("--bs", type=int, default=1, dest="batch_size", help="batch size")
     parser.add_argument("--swbs", type=int, default=8, dest="sw_batch_size", help="sliding window batch size")
     parser.add_argument("--no-amp", action="store_false", dest="use_amp", help="deactivate use of amp")

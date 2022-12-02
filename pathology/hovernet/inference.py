@@ -10,7 +10,7 @@ import torch.distributed as dist
 from monai.apps.pathology.inferers import SlidingWindowHoVerNetInferer
 from monai.apps.pathology.transforms import (
     HoVerNetInstanceMapPostProcessingd,
-    HoVerNetTypeMapPostProcessingd,
+    HoVerNetNuclearTypePostProcessingd,
 )
 from monai.data import DataLoader, Dataset, PILReader, partition_dataset
 from monai.engines import SupervisedEvaluator
@@ -75,7 +75,7 @@ def run(cfg):
                 delete_keys=True,
             ),
             HoVerNetInstanceMapPostProcessingd(sobel_kernel_size=3, marker_threshold=0.7, marker_radius=2),
-            HoVerNetTypeMapPostProcessingd(),
+            HoVerNetNuclearTypePostProcessingd(),
             FromMetaTensord(keys=["image"]),
             SaveImaged(
                 keys="instance_map",

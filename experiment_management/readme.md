@@ -6,3 +6,4 @@ This directory shows how to do experiment management in monai.
 2. spleen_segmentation_aim.ipynb: an example about how to deploy aim experiment management in pytorch code.
 3. spleen_segmentation_mlflow.ipynb: an example about how to deploy mlflow experiment management in pytorch code.
 4. workflow_itegrate_mlflow.ipynb: an example about how to deploy mlflow experiment management in monai workflow with 1~2 lines.
+5. use_mlflow_in_monai.ipynb: show how to enable MLFlow in MONAI workflow.

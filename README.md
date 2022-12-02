@@ -151,7 +151,7 @@ An example of experiment management with [Aim](https://aimstack.io/aim-monai-tut
 #### [MLFlow](./experiment_management/spleen_segmentation_mlflow.ipynb)
 An example of experiment management with [MLFlow](https://www.mlflow.org/docs/latest/tracking.html), using 3D spleen segmentation as an example.
 #### [MLFlow with MONAI workflow](./experiment_management/use_mlflow_in_monai.ipynb)
-An example shows how to enable and custom MLFlow in MONAI workflow based process like MONAI bundle and MONAI engine. 
+An example shows how to enable and custom MLFlow in MONAI workflow based process like MONAI bundle and MONAI engine.
 
 **Federated Learning**
 #### [NVFlare](./federated_learning/nvflare)

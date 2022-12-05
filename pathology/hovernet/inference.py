@@ -80,7 +80,7 @@ def run(cfg):
             SaveImaged(
                 keys="instance_map",
                 meta_keys="image_meta_dict",
-                output_ext="tiff",
+                output_ext="png",
                 output_dir=output_dir,
                 output_postfix="instance_map",
                 output_dtype="uint8",
@@ -89,7 +89,7 @@ def run(cfg):
             SaveImaged(
                 keys="type_map",
                 meta_keys="image_meta_dict",
-                output_ext="tiff",
+                output_ext="png",
                 output_dir=output_dir,
                 output_postfix="type_map",
                 output_dtype="uint8",

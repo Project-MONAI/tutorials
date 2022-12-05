@@ -61,7 +61,6 @@ def run(cfg):
         [
             LoadImaged(keys="image", reader=PILReader, converter=lambda x: x.convert("RGB")),
             EnsureChannelFirstd(keys="image"),
-            CenterSpatialCropd(keys="image", roi_size=(80, 80)),
             CastToTyped(keys="image", dtype=torch.float32),
             ScaleIntensityRanged(keys="image", a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
         ]
@@ -136,8 +135,6 @@ def run(cfg):
         mode=cfg["mode"],
         in_channels=3,
         out_classes=cfg["out_classes"],
-        act=("relu", {"inplace": True}),
-        norm="batch",
     ).to(device)
     model.load_state_dict(torch.load(cfg["ckpt"], map_location=device))
     model.eval()

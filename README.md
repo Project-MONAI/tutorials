@@ -174,7 +174,7 @@ The example shows how to use MONAI NVTX transforms to tag and profile pre- and p
 ##### [Multiple Instance Learning WSI classification](./pathology/multiple_instance_learning)
 An example of Multiple Instance Learning (MIL) classification from Whole Slide Images (WSI) of prostate histopathology.
 
-##### [NuClick Annotation for Pathology](./pathology/nuclick#nuclick-interaction-model)
+##### [NuClick Annotation](./pathology/nuclick#nuclick-interaction-model)
 The notebook demonstrates examples of training and inference pipelines with interactive annotation for pathology, NuClick is used for delineating nuclei, cells and a squiggle for outlining glands.
 
 ##### [Nuclei Classification](./pathology/nuclick#nuclei-classification-model)

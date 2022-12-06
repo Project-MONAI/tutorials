@@ -27,7 +27,3 @@ This notebook guides to train a classification model for certain nuclei types.
 
 #### [Inference](./nuclei_classification_infer.ipynb)
 This notebook helps to infer classification model for a given Nulei.
-
-#### NuClick + Nuclei Classification Model (Infer Pipeline)
-#### [NuClick+Nuclei Inference Pipeline](./nuclick_nuclei_inference.ipynb)
-This notebook shows how you can pipelien NuClick and Nuclei classification model to segment + classify nuclei cells over user clicks.

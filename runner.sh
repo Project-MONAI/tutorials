@@ -76,8 +76,6 @@ pattern="-and -name '*' -and ! -wholename '*federated_learning*'\
  -and ! -wholename '*profiling_train_base_nvtx*'\
  -and ! -wholename '*benchmark_global_mutual_information*'\
  -and ! -wholename '*spleen_segmentation_3d_visualization_basic*'\
- -and ! -wholename '*nuclick_infer*'\
- -and ! -wholename '*nuclick_training_notebook*'\
  -and ! -wholename '*full_gpu_inference_pipeline*'\
  -and ! -wholename '*generate_random_permutations*'\
  -and ! -wholename '*transforms_update_meta_data*'\

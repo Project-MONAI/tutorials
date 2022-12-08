@@ -57,7 +57,7 @@ If you didn't use the default value in data preparation, set ``--root `DATA_ROOT
 # Run to get all possible arguments
 python ./training.py -h
 
-# Train a HoVerNet model on single-gpu(replace with your own ckpt path)
+# Train a HoVerNet model on single-GPU or CPU-only (replace with your own ckpt path)
 export CUDA_VISIBLE_DEVICES=0; python training.py \
                                 --stage 0 \
                                 --ep 50 \
@@ -70,18 +70,9 @@ export CUDA_VISIBLE_DEVICES=0; python training.py \
                                 --log-dir ./logs \
                                 --ckpt logs/stage0/model.pt
 
-# Train a HoVerNet model on multi-gpu (NVIDIA)(replace with your own ckpt path)
-torchrun --nnodes=1 --nproc_per_node=2 training.py \
-                                        --stage 0
-                                        --ep 50 \
-                                        --bs 16 \
-                                        --log-dir ./logs
-torchrun --nnodes=1 --nproc_per_node=2 training.py \
-                                        --stage 1 \
-                                        --ep 50 \
-                                        --bs 16 \
-                                        --log-dir ./logs \
-                                        --ckpt logs/stage0/model.pt
+# Train a HoVerNet model on multi-GPU with default arguments
+torchrun --nnodes=1 --nproc_per_node=2 training.py
+torchrun --nnodes=1 --nproc_per_node=2 training.py --stage 1
 ```
 
 #### [HoVerNet Validation](./evaluation.py)
@@ -93,10 +84,13 @@ With their metrics on original mode. We reproduce the results with Dice: 0.82762
 # Run to get all possible arguments
 python ./evaluation.py -h
 
-# Evaluate a HoVerNet model
-python ./evaluation.py
+# Evaluate a HoVerNet model on single-GPU or CPU-only
+python ./evaluation.py \
     --root `save_root` \
-    --ckpt logs/stage0/checkpoint_epoch=50.pt
+    --ckpt logs/stage0/model.pt
+
+# Evaluate a HoVerNet model on multi-GPU with default arguments
+torchrun --nnodes=1 --nproc_per_node=2 evaluation.py
 ```
 
 #### [HoVerNet Inference](./inference.py)
@@ -111,10 +105,13 @@ be modified to save any output of interest.
 # Run to get all possible arguments
 python ./inference.py -h
 
-# Run HoVerNet inference
-python ./inference.py
-    --root `save_root` \
-    --ckpt logs/stage0/checkpoint_epoch=50.pt
+# Run HoVerNet inference on single-GPU or CPU-only
+python ./inference.py \
+        --root `save_root` \
+        --ckpt logs/stage0/model.pt
+
+# Run HoVerNet inference on multi-GPU with default arguments
+torchrun --nnodes=1 --nproc_per_node=2 ./inference.py
 ```
 
 ## Disclaimer

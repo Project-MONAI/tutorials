@@ -29,9 +29,7 @@ from monai.utils import HoVerNetBranch, first
 
 
 def create_output_dir(cfg):
-    timestamp = time.strftime("%y%m%d-%H%M%S")
-    run_folder_name = f"inference_hovernet_ps{cfg['patch_size']}_{timestamp}"
-    output_dir = os.path.join(cfg["output"], run_folder_name)
+    output_dir = cfg["output"]
     print(f"Outputs are saved at '{output_dir}'.")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)

@@ -45,32 +45,28 @@ from skimage import measure
 
 
 def create_log_dir(cfg):
-    timestamp = time.strftime("%y%m%d-%H%M")
-    run_folder_name = (
-        f"{timestamp}_hovernet_bs{cfg['batch_size']}_ep{cfg['n_epochs']}_lr{cfg['lr']}_seed{cfg['seed']}_stage{cfg['stage']}"
-    )
-    log_dir = os.path.join(cfg["logdir"], run_folder_name)
-    print(f"Logs and model are saved at '{log_dir}'.")
+    log_dir = cfg["log_dir"]
+    if cfg["stage"] == 0:
+        log_dir = os.path.join(log_dir, "stage0")
+    print(f"Logs and models are saved at '{log_dir}'.")
     if not os.path.exists(log_dir):
         os.makedirs(log_dir, exist_ok=True)
     return log_dir
 
 
 def prepare_data(data_dir, phase):
-    # prepare datalist
-    images = sorted(
-        glob.glob(os.path.join(data_dir, f"{phase}/*image.npy")))
-    inst_maps = sorted(
-        glob.glob(os.path.join(data_dir, f"{phase}/*inst_map.npy")))
-    type_maps = sorted(
-        glob.glob(os.path.join(data_dir, f"{phase}/*type_map.npy")))
+    """prepare data list"""
 
-    data_dicts = [
+    data_dir = os.path.join(data_dir, phase)
+    images = sorted(glob.glob(os.path.join(data_dir, "*image.npy")))
+    inst_maps = sorted(glob.glob(os.path.join(data_dir, "*inst_map.npy")))
+    type_maps = sorted(glob.glob(os.path.join(data_dir, "*type_map.npy")))
+
+    data_list = [
         {"image": _image, "label_inst": _inst_map, "label_type": _type_map}
         for _image, _inst_map, _type_map in zip(images, inst_maps, type_maps)
     ]
-
-    return data_dicts
+    return data_list
 
 
 def get_loaders(cfg, train_transforms, val_transforms):
@@ -104,13 +100,10 @@ def get_loaders(cfg, train_transforms, val_transforms):
         batch_size=cfg["batch_size"],
         num_workers=cfg["num_workers"],
         shuffle=True,
-        pin_memory=torch.cuda.is_available()
+        pin_memory=torch.cuda.is_available(),
     )
     val_loader = DataLoader(
-        valid_ds,
-        batch_size=cfg["batch_size"],
-        num_workers=cfg["num_workers"],
-        pin_memory=torch.cuda.is_available()
+        valid_ds, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"], pin_memory=torch.cuda.is_available()
     )
 
     return train_loader, val_loader
@@ -144,7 +137,7 @@ def create_model(cfg, device):
             pretrained_url=None,
             freeze_encoder=False,
         ).to(device)
-        model.load_state_dict(torch.load(cfg["ckpt_path"])['net'])
+        model.load_state_dict(torch.load(cfg["ckpt"])["net"])
         print(f'stage{cfg["stage"]}, success load weight!')
 
     return model
@@ -172,7 +165,6 @@ def run(log_dir, cfg):
     # Data Loading and Preprocessing
     # --------------------------------------------------------------------------
     # __________________________________________________________________________
-    # __________________________________________________________________________
     # Build MONAI preprocessing
     train_transforms = Compose(
         [
@@ -194,11 +186,13 @@ def run(log_dir, cfg):
             ),
             RandFlipd(keys=["image", "label_inst", "label_type"], prob=0.5, spatial_axis=0),
             RandFlipd(keys=["image", "label_inst", "label_type"], prob=0.5, spatial_axis=1),
-            OneOf(transforms=[
-                RandGaussianSmoothd(keys=["image"], sigma_x=(0.1, 1.1), sigma_y=(0.1, 1.1), prob=1.0),
-                MedianSmoothd(keys=["image"], radius=1),
-                RandGaussianNoised(keys=["image"], prob=1.0, std=0.05)
-            ]),
+            OneOf(
+                transforms=[
+                    RandGaussianSmoothd(keys=["image"], sigma_x=(0.1, 1.1), sigma_y=(0.1, 1.1), prob=1.0),
+                    MedianSmoothd(keys=["image"], radius=1),
+                    RandGaussianNoised(keys=["image"], prob=1.0, std=0.05),
+                ]
+            ),
             CastToTyped(keys="image", dtype=np.uint8),
             TorchVisiond(
                 keys=["image"],
@@ -206,7 +200,7 @@ def run(log_dir, cfg):
                 brightness=(229 / 255.0, 281 / 255.0),
                 contrast=(0.95, 1.10),
                 saturation=(0.8, 1.2),
-                hue=(-0.04, 0.04)
+                hue=(-0.04, 0.04),
             ),
             AsDiscreted(keys=["label_type"], to_onehot=[5]),
             ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
@@ -258,10 +252,12 @@ def run(log_dir, cfg):
     loss_function = HoVerNetLoss(lambda_hv_mse=1.0)
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=cfg["lr"], weight_decay=1e-5)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=25)
-    post_process_np = Compose([
-        Activationsd(keys=HoVerNetBranch.NP.value, softmax=True),
-        AsDiscreted(keys=HoVerNetBranch.NP.value, argmax=True),
-    ])
+    post_process_np = Compose(
+        [
+            Activationsd(keys=HoVerNetBranch.NP.value, softmax=True),
+            AsDiscreted(keys=HoVerNetBranch.NP.value, argmax=True),
+        ]
+    )
     post_process = Lambdad(keys="pred", func=post_process_np)
 
     # --------------------------------------------
@@ -282,10 +278,15 @@ def run(log_dir, cfg):
     evaluator = SupervisedEvaluator(
         device=device,
         val_data_loader=val_loader,
-        prepare_batch=PrepareBatchHoVerNet(extra_keys=['label_type', 'hover_label_inst']),
+        prepare_batch=PrepareBatchHoVerNet(extra_keys=["label_type", "hover_label_inst"]),
         network=model,
         postprocessing=post_process,
-        key_val_metric={"val_dice": MeanDice(include_background=False, output_transform=from_engine_hovernet(keys=["pred", "label"], nested_key=HoVerNetBranch.NP.value))},
+        key_val_metric={
+            "val_dice": MeanDice(
+                include_background=False,
+                output_transform=from_engine_hovernet(keys=["pred", "label"], nested_key=HoVerNetBranch.NP.value),
+            )
+        },
         val_handlers=val_handlers,
         amp=cfg["amp"],
     )
@@ -298,6 +299,8 @@ def run(log_dir, cfg):
             save_dir=log_dir,
             save_dict={"net": model, "opt": optimizer},
             save_interval=cfg["save_interval"],
+            save_final=True,
+            final_filename="model.pt",
             epoch_level=True,
         ),
         StatsHandler(tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
@@ -311,12 +314,17 @@ def run(log_dir, cfg):
         device=device,
         max_epochs=cfg["n_epochs"],
         train_data_loader=train_loader,
-        prepare_batch=PrepareBatchHoVerNet(extra_keys=['label_type', 'hover_label_inst']),
+        prepare_batch=PrepareBatchHoVerNet(extra_keys=["label_type", "hover_label_inst"]),
         network=model,
         optimizer=optimizer,
         loss_function=loss_function,
         postprocessing=post_process,
-        key_train_metric={"train_dice": MeanDice(include_background=False, output_transform=from_engine_hovernet(keys=["pred", "label"], nested_key=HoVerNetBranch.NP.value))},
+        key_train_metric={
+            "train_dice": MeanDice(
+                include_background=False,
+                output_transform=from_engine_hovernet(keys=["pred", "label"], nested_key=HoVerNetBranch.NP.value),
+            )
+        },
         train_handlers=train_handlers,
         amp=cfg["amp"],
     )
@@ -331,18 +339,18 @@ def main():
     parser.add_argument(
         "--root",
         type=str,
-        default="/workspace/Data/CoNSeP/Prepared",
+        default="/workspace/Data/Pathology/CoNSeP/Prepared",
         help="root data dir",
     )
-    parser.add_argument("--logdir", type=str, default="./logs/", dest="logdir", help="log directory")
+    parser.add_argument("--log-dir", type=str, default="./logs/", help="log directory")
     parser.add_argument("-s", "--seed", type=int, default=24)
 
     parser.add_argument("--bs", type=int, default=16, dest="batch_size", help="batch size")
-    parser.add_argument("--ep", type=int, default=3, dest="n_epochs", help="number of epochs")
+    parser.add_argument("--ep", type=int, default=50, dest="n_epochs", help="number of epochs")
     parser.add_argument("--lr", type=float, default=1e-4, dest="lr", help="initial learning rate")
     parser.add_argument("--step", type=int, default=25, dest="step_size", help="period of learning rate decay")
     parser.add_argument("-f", "--val_freq", type=int, default=1, help="validation frequence")
-    parser.add_argument("--stage", type=int, default=0, dest="stage", help="training stage")
+    parser.add_argument("--stage", type=int, default=0, help="training stage")
     parser.add_argument("--no-amp", action="store_false", dest="amp", help="deactivate amp")
     parser.add_argument("--classes", type=int, default=5, dest="out_classes", help="output classes")
     parser.add_argument("--mode", type=str, default="original", help="choose either `original` or `fast`")
@@ -350,10 +358,12 @@ def main():
     parser.add_argument("--save_interval", type=int, default=10)
     parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")
     parser.add_argument("--no-gpu", action="store_false", dest="use_gpu", help="deactivate use of gpu")
-    parser.add_argument("--ckpt", type=str, dest="ckpt_path", help="checkpoint path")
+    parser.add_argument("--ckpt", type=str, dest="ckpt", help="model checkpoint path")
 
     args = parser.parse_args()
     cfg = vars(args)
+    if cfg["stage"] == 1 and not cfg["ckpt"] and cfg["log_dir"]:
+        cfg["ckpt"] = os.path.join(cfg["log_dir"], "stage0", "model.pt")
     print(cfg)
 
     logging.basicConfig(level=logging.INFO)

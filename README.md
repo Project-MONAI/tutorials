@@ -177,12 +177,16 @@ An example of Multiple Instance Learning (MIL) classification from Whole Slide I
 ##### [NuClick Annotation](./pathology/nuclick#nuclick-interaction-model)
 The notebook demonstrates examples of training and inference pipelines with interactive annotation for pathology, NuClick is used for delineating nuclei, cells and a squiggle for outlining glands.
 
+#### [HoVerNet:Nuclear segmentation and classification task](./pathology/hovernet)
+This tutorial demonstrates how to construct a training workflow of [HoVerNet](https://www.sciencedirect.com/science/article/abs/pii/S1361841519301045) on nuclear segmentation and classification task using the CoNSep dataset.
+
 ##### [Nuclei Classification](./pathology/nuclick#nuclei-classification-model)
 The notebook demonstrates examples of training and inference pipelines with interactive annotation for pathology, NuClick is used for delineating nuclei, cells and a squiggle for outlining glands.
 
 #### <ins>**Acceleration**</ins>
 ##### [fast_model_training_guide](./acceleration/fast_model_training_guide.md)
 The document introduces details of how to profile the training pipeline, how to analyze the dataset and select suitable algorithms, and how to optimize GPU utilization in single GPU, multi-GPUs or even multi-nodes.
+
 ##### [distributed_training](./acceleration/distributed_training)
 The examples show how to execute distributed training and evaluation based on 3 different frameworks:
 - PyTorch native `DistributedDataParallel` module with `torch.distributed.launch`.

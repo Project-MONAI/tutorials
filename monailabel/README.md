@@ -16,14 +16,14 @@ Each tutorial provides MONAI Label plugin installation steps associated with the
 
 - **Radiology App**:
   - Viewer: 3D Slicer | Datastore: Local | Task: Segmentation
-    - [MONAILabel: HelloWorld_radiology_3dslicer](monailabel_HelloWorld_radiology_3dslicer.ipynb): Spleen segmentation with 3D Slicer setups.
+    - [MONAILabel: HelloWorld](monailabel_HelloWorld_radiology_3dslicer.ipynb): Spleen segmentation with 3D Slicer setups.
 - **MONAIBUNDLE App**:
   - Viewer: 3D Slicer | Datastore: Local | Task: Segmentation
-    - [MONAILabel: pancreas_tumor_segmentation_3DSlicer](monailabel_pancreas_tumor_segmentation_3DSlicer.ipynb): Pancreas and tumor segmentation with CT scans in 3D Slicer.
-    - [MONAILabel: monaibundle_3dslicer_multiorgan_seg](monailabel_monaibundle_3dslicer_multiorgan_seg.ipynb): Multi-organ segmentation with CT scans in 3D Slicer.
+    - [MONAILabel: Pancreas Tumor Segmentation with 3D Slicer](monailabel_pancreas_tumor_segmentation_3DSlicer.ipynb): Pancreas and tumor segmentation with CT scans in 3D Slicer.
+    - [MONAILabel: Multi-organ Segmentation with 3D Slicer](monailabel_monaibundle_3dslicer_multiorgan_seg.ipynb): Multi-organ segmentation with CT scans in 3D Slicer.
 - **Pathology App**:
   - Viewer: QuPath | Datastore: Local | Task: Segmentation
-    - [MONAILabel: pathology_nuclei_segmentation_QuPath](monailabel_pathology_nuclei_segmentation_QuPath.ipynb) Nuclei segmentation with QuPath setup and Nuclick models.
+    - [MONAILabel: Nuclei Segmentation with QuPath](monailabel_pathology_nuclei_segmentation_QuPath.ipynb) Nuclei segmentation with QuPath setup and Nuclick models.
 - **Endoscopy App**:
   - Viewer: CVAT | Datastore: Local | Task: Segmentation
-    - [MONAILabel: endoscopy_cvat_tooltracking](monailabel_endoscopy_cvat_tooltracking.ipynb): Surgical tool segmentation with CVAT/Nuclio setup.
+    - [MONAILabel: Tooltracking with CVAT](monailabel_endoscopy_cvat_tooltracking.ipynb): Surgical tool segmentation with CVAT/Nuclio setup.

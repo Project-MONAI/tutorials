@@ -46,9 +46,7 @@ from skimage import measure
 
 def create_log_dir(cfg):
     timestamp = time.strftime("%y%m%d-%H%M")
-    run_folder_name = (
-        f"{timestamp}_hovernet_bs{cfg['batch_size']}_ep{cfg['n_epochs']}_lr{cfg['lr']}_seed{cfg['seed']}_stage{cfg['stage']}"
-    )
+    run_folder_name = f"{timestamp}_hovernet_bs{cfg['batch_size']}_ep{cfg['n_epochs']}_lr{cfg['lr']}_seed{cfg['seed']}_stage{cfg['stage']}"
     log_dir = os.path.join(cfg["logdir"], run_folder_name)
     print(f"Logs and model are saved at '{log_dir}'.")
     if not os.path.exists(log_dir):
@@ -58,12 +56,9 @@ def create_log_dir(cfg):
 
 def prepare_data(data_dir, phase):
     # prepare datalist
-    images = sorted(
-        glob.glob(os.path.join(data_dir, f"{phase}/*image.npy")))
-    inst_maps = sorted(
-        glob.glob(os.path.join(data_dir, f"{phase}/*inst_map.npy")))
-    type_maps = sorted(
-        glob.glob(os.path.join(data_dir, f"{phase}/*type_map.npy")))
+    images = sorted(glob.glob(os.path.join(data_dir, f"{phase}/*image.npy")))
+    inst_maps = sorted(glob.glob(os.path.join(data_dir, f"{phase}/*inst_map.npy")))
+    type_maps = sorted(glob.glob(os.path.join(data_dir, f"{phase}/*type_map.npy")))
 
     data_dicts = [
         {"image": _image, "label_inst": _inst_map, "label_type": _type_map}
@@ -104,13 +99,10 @@ def get_loaders(cfg, train_transforms, val_transforms):
         batch_size=cfg["batch_size"],
         num_workers=cfg["num_workers"],
         shuffle=True,
-        pin_memory=torch.cuda.is_available()
+        pin_memory=torch.cuda.is_available(),
     )
     val_loader = DataLoader(
-        valid_ds,
-        batch_size=cfg["batch_size"],
-        num_workers=cfg["num_workers"],
-        pin_memory=torch.cuda.is_available()
+        valid_ds, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"], pin_memory=torch.cuda.is_available()
     )
 
     return train_loader, val_loader
@@ -144,7 +136,7 @@ def create_model(cfg, device):
             pretrained_url=None,
             freeze_encoder=False,
         ).to(device)
-        model.load_state_dict(torch.load(cfg["ckpt_path"])['net'])
+        model.load_state_dict(torch.load(cfg["ckpt_path"])["net"])
         print(f'stage{cfg["stage"]}, success load weight!')
 
     return model
@@ -194,11 +186,13 @@ def run(log_dir, cfg):
             ),
             RandFlipd(keys=["image", "label_inst", "label_type"], prob=0.5, spatial_axis=0),
             RandFlipd(keys=["image", "label_inst", "label_type"], prob=0.5, spatial_axis=1),
-            OneOf(transforms=[
-                RandGaussianSmoothd(keys=["image"], sigma_x=(0.1, 1.1), sigma_y=(0.1, 1.1), prob=1.0),
-                MedianSmoothd(keys=["image"], radius=1),
-                RandGaussianNoised(keys=["image"], prob=1.0, std=0.05)
-            ]),
+            OneOf(
+                transforms=[
+                    RandGaussianSmoothd(keys=["image"], sigma_x=(0.1, 1.1), sigma_y=(0.1, 1.1), prob=1.0),
+                    MedianSmoothd(keys=["image"], radius=1),
+                    RandGaussianNoised(keys=["image"], prob=1.0, std=0.05),
+                ]
+            ),
             CastToTyped(keys="image", dtype=np.uint8),
             TorchVisiond(
                 keys=["image"],
@@ -206,7 +200,7 @@ def run(log_dir, cfg):
                 brightness=(229 / 255.0, 281 / 255.0),
                 contrast=(0.95, 1.10),
                 saturation=(0.8, 1.2),
-                hue=(-0.04, 0.04)
+                hue=(-0.04, 0.04),
             ),
             AsDiscreted(keys=["label_type"], to_onehot=[5]),
             ScaleIntensityRanged(keys=["image"], a_min=0.0, a_max=255.0, b_min=0.0, b_max=1.0, clip=True),
@@ -258,10 +252,12 @@ def run(log_dir, cfg):
     loss_function = HoVerNetLoss(lambda_hv_mse=1.0)
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=cfg["lr"], weight_decay=1e-5)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=25)
-    post_process_np = Compose([
-        Activationsd(keys=HoVerNetBranch.NP.value, softmax=True),
-        AsDiscreted(keys=HoVerNetBranch.NP.value, argmax=True),
-    ])
+    post_process_np = Compose(
+        [
+            Activationsd(keys=HoVerNetBranch.NP.value, softmax=True),
+            AsDiscreted(keys=HoVerNetBranch.NP.value, argmax=True),
+        ]
+    )
     post_process = Lambdad(keys="pred", func=post_process_np)
 
     # --------------------------------------------
@@ -282,10 +278,15 @@ def run(log_dir, cfg):
     evaluator = SupervisedEvaluator(
         device=device,
         val_data_loader=val_loader,
-        prepare_batch=PrepareBatchHoVerNet(extra_keys=['label_type', 'hover_label_inst']),
+        prepare_batch=PrepareBatchHoVerNet(extra_keys=["label_type", "hover_label_inst"]),
         network=model,
         postprocessing=post_process,
-        key_val_metric={"val_dice": MeanDice(include_background=False, output_transform=from_engine_hovernet(keys=["pred", "label"], nested_key=HoVerNetBranch.NP.value))},
+        key_val_metric={
+            "val_dice": MeanDice(
+                include_background=False,
+                output_transform=from_engine_hovernet(keys=["pred", "label"], nested_key=HoVerNetBranch.NP.value),
+            )
+        },
         val_handlers=val_handlers,
         amp=cfg["amp"],
     )
@@ -311,12 +312,17 @@ def run(log_dir, cfg):
         device=device,
         max_epochs=cfg["n_epochs"],
         train_data_loader=train_loader,
-        prepare_batch=PrepareBatchHoVerNet(extra_keys=['label_type', 'hover_label_inst']),
+        prepare_batch=PrepareBatchHoVerNet(extra_keys=["label_type", "hover_label_inst"]),
         network=model,
         optimizer=optimizer,
         loss_function=loss_function,
         postprocessing=post_process,
-        key_train_metric={"train_dice": MeanDice(include_background=False, output_transform=from_engine_hovernet(keys=["pred", "label"], nested_key=HoVerNetBranch.NP.value))},
+        key_train_metric={
+            "train_dice": MeanDice(
+                include_background=False,
+                output_transform=from_engine_hovernet(keys=["pred", "label"], nested_key=HoVerNetBranch.NP.value),
+            )
+        },
         train_handlers=train_handlers,
         amp=cfg["amp"],
     )
@@ -331,7 +337,7 @@ def main():
     parser.add_argument(
         "--root",
         type=str,
-        default="/workspace/Data/CoNSeP/Prepared",
+        default="/workspace/Data/Pathology/CoNSeP/Prepared",
         help="root data dir",
     )
     parser.add_argument("--logdir", type=str, default="./logs/", dest="logdir", help="log directory")

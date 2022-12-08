@@ -180,18 +180,17 @@ def main():
     parser.add_argument(
         "--root",
         type=str,
-        default="/Users/bhashemian/workspace/project-monai/tutorials/pathology/hovernet/CoNSeP/Test/Images",
-        help="image root dir",
+        default="/workspace/Data/Pathology/CoNSeP/Test/Images",
+        help="Images root dir",
     )
     parser.add_argument("--output", type=str, default="./logs/", dest="output", help="log directory")
     parser.add_argument(
         "--ckpt",
         type=str,
-        default="/Users/bhashemian/workspace/project-monai/tutorials/pathology/hovernet/model_CoNSeP_new.pth",
+        default="./logs/stage0/checkpoint_epoch=50.pt",
         help="Path to the pytorch checkpoint",
     )
     parser.add_argument("--mode", type=str, default="original", help="HoVerNet mode (original/fast)")
-
     parser.add_argument("--out-classes", type=int, default=5, help="number of output classes")
     parser.add_argument("--bs", type=int, default=1, dest="batch_size", help="batch size")
     parser.add_argument("--swbs", type=int, default=8, dest="sw_batch_size", help="sliding window batch size")

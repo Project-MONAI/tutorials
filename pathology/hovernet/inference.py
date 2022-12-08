@@ -154,7 +154,6 @@ def run(cfg):
         padding_mode="constant",
         cval=0,
         sw_device=device,
-        device=device,
         progress=True,
         extra_input_padding=((cfg["patch_size"] - cfg["out_size"]) // 2,) * 4,
     )

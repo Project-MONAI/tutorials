@@ -45,10 +45,10 @@ from skimage import measure
 
 
 def create_log_dir(cfg):
-    timestamp = time.strftime("%y%m%d-%H%M")
-    run_folder_name = f"{timestamp}_hovernet_bs{cfg['batch_size']}_ep{cfg['n_epochs']}_lr{cfg['lr']}_seed{cfg['seed']}_stage{cfg['stage']}"
-    log_dir = os.path.join(cfg["logdir"], run_folder_name)
-    print(f"Logs and model are saved at '{log_dir}'.")
+    log_dir = cfg["log_dir"]
+    if cfg["stage"] == 0:
+        log_dir = os.path.join(log_dir, "stage0")
+    print(f"Logs and models are saved at '{log_dir}'.")
     if not os.path.exists(log_dir):
         os.makedirs(log_dir, exist_ok=True)
     return log_dir
@@ -163,7 +163,6 @@ def run(log_dir, cfg):
     # --------------------------------------------------------------------------
     # Data Loading and Preprocessing
     # --------------------------------------------------------------------------
-    # __________________________________________________________________________
     # __________________________________________________________________________
     # Build MONAI preprocessing
     train_transforms = Compose(
@@ -299,6 +298,8 @@ def run(log_dir, cfg):
             save_dir=log_dir,
             save_dict={"net": model, "opt": optimizer},
             save_interval=cfg["save_interval"],
+            save_final=True,
+            final_filename="model.pt",
             epoch_level=True,
         ),
         StatsHandler(tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
@@ -340,15 +341,15 @@ def main():
         default="/workspace/Data/Pathology/CoNSeP/Prepared",
         help="root data dir",
     )
-    parser.add_argument("--logdir", type=str, default="./logs/", dest="logdir", help="log directory")
+    parser.add_argument("--log-dir", type=str, default="./logs/", help="log directory")
     parser.add_argument("-s", "--seed", type=int, default=24)
 
     parser.add_argument("--bs", type=int, default=16, dest="batch_size", help="batch size")
-    parser.add_argument("--ep", type=int, default=3, dest="n_epochs", help="number of epochs")
+    parser.add_argument("--ep", type=int, default=50, dest="n_epochs", help="number of epochs")
     parser.add_argument("--lr", type=float, default=1e-4, dest="lr", help="initial learning rate")
     parser.add_argument("--step", type=int, default=25, dest="step_size", help="period of learning rate decay")
     parser.add_argument("-f", "--val_freq", type=int, default=1, help="validation frequence")
-    parser.add_argument("--stage", type=int, default=0, dest="stage", help="training stage")
+    parser.add_argument("--stage", type=int, default=0, help="training stage")
     parser.add_argument("--no-amp", action="store_false", dest="amp", help="deactivate amp")
     parser.add_argument("--classes", type=int, default=5, dest="out_classes", help="output classes")
     parser.add_argument("--mode", type=str, default="original", help="choose either `original` or `fast`")
@@ -356,10 +357,12 @@ def main():
     parser.add_argument("--save_interval", type=int, default=10)
     parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")
     parser.add_argument("--no-gpu", action="store_false", dest="use_gpu", help="deactivate use of gpu")
-    parser.add_argument("--ckpt", type=str, dest="ckpt_path", help="checkpoint path")
+    parser.add_argument("--ckpt", type=str, dest="ckpt_path", help="model checkpoint path")
 
     args = parser.parse_args()
     cfg = vars(args)
+    if cfg["stage"] == 1 and not cfg["ckpt_path"] and cfg["log_dir"]:
+        cfg["ckpt_path"] = os.path.join(cfg["log_dir"], "stage0", "model.pt")
     print(cfg)
 
     logging.basicConfig(level=logging.INFO)

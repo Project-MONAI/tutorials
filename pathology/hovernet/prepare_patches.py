@@ -1,14 +1,14 @@
-import os
-import math
-import tqdm
 import glob
-import shutil
+import math
+import os
 import pathlib
+import shutil
+from argparse import ArgumentParser
 
 import numpy as np
 import scipy.io as sio
+import tqdm
 from PIL import Image
-from argparse import ArgumentParser
 
 
 def load_img(path):
@@ -30,7 +30,7 @@ def load_ann(path):
     return ann
 
 
-class PatchExtractor():
+class PatchExtractor:
     """Extractor to generate patches with or without padding.
     Turn on debug mode to see how it is done.
 
@@ -42,9 +42,9 @@ class PatchExtractor():
         a list of sub patches, each patch has dtype same as x
 
     Examples:
-        >>> xtractor = PatchExtractor((450, 450), (120, 120))
+        >>> extractor = PatchExtractor((450, 450), (120, 120))
         >>> img = np.full([1200, 1200, 3], 255, np.uint8)
-        >>> patches = xtractor.extract(img, 'mirror')
+        >>> patches = extractor.extract(img, 'mirror')
 
     """
 
@@ -166,9 +166,7 @@ def main(cfg):
         os.makedirs(out_dir)
 
         pbar_format = "Process File: |{bar}| {n_fmt}/{total_fmt}[{elapsed}<{remaining},{rate_fmt}]"
-        pbarx = tqdm.tqdm(
-            total=len(file_list), bar_format=pbar_format, ascii=True, position=0
-        )
+        pbarx = tqdm.tqdm(total=len(file_list), bar_format=pbar_format, ascii=True, position=0)
 
         for file_path in file_list:
             base_name = pathlib.Path(file_path).stem
@@ -210,12 +208,12 @@ def parse_arguments():
     parser.add_argument(
         "--root",
         type=str,
-        default="/home/yunliu/Workspace/Data/CoNSeP",
+        default="/workspace/Data/Pathology/CoNSeP",
         help="root path to image folder containing training/test",
     )
     parser.add_argument("--type", type=str, default="mirror", dest="extract_type", help="Choose 'mirror' or 'valid'")
-    parser.add_argument("--ps", nargs='+', type=int, default=[540, 540], dest="patch_size", help="patch size")
-    parser.add_argument("--ss", nargs='+', type=int, default=[164, 164], dest="step_size", help="patch size")
+    parser.add_argument("--ps", nargs="+", type=int, default=[540, 540], dest="patch_size", help="patch size")
+    parser.add_argument("--ss", nargs="+", type=int, default=[164, 164], dest="step_size", help="patch size")
     args = parser.parse_args()
     config_dict = vars(args)
 

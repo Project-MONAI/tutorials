@@ -17,7 +17,6 @@ from monai.engines import SupervisedEvaluator
 from monai.networks.nets import HoVerNet
 from monai.transforms import (
     CastToTyped,
-    CenterSpatialCropd,
     Compose,
     EnsureChannelFirstd,
     FromMetaTensord,

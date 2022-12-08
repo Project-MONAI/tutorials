@@ -55,17 +55,18 @@ def create_log_dir(cfg):
 
 
 def prepare_data(data_dir, phase):
-    # prepare datalist
-    images = sorted(glob.glob(os.path.join(data_dir, f"{phase}/*image.npy")))
-    inst_maps = sorted(glob.glob(os.path.join(data_dir, f"{phase}/*inst_map.npy")))
-    type_maps = sorted(glob.glob(os.path.join(data_dir, f"{phase}/*type_map.npy")))
+    """prepare data list"""
 
-    data_dicts = [
+    data_dir = os.path.join(data_dir, phase)
+    images = sorted(glob.glob(os.path.join(data_dir, "*image.npy")))
+    inst_maps = sorted(glob.glob(os.path.join(data_dir, "*inst_map.npy")))
+    type_maps = sorted(glob.glob(os.path.join(data_dir, "*type_map.npy")))
+
+    data_list = [
         {"image": _image, "label_inst": _inst_map, "label_type": _type_map}
         for _image, _inst_map, _type_map in zip(images, inst_maps, type_maps)
     ]
-
-    return data_dicts
+    return data_list
 
 
 def get_loaders(cfg, train_transforms, val_transforms):
@@ -136,7 +137,7 @@ def create_model(cfg, device):
             pretrained_url=None,
             freeze_encoder=False,
         ).to(device)
-        model.load_state_dict(torch.load(cfg["ckpt_path"])["net"])
+        model.load_state_dict(torch.load(cfg["ckpt"])["net"])
         print(f'stage{cfg["stage"]}, success load weight!')
 
     return model
@@ -357,12 +358,12 @@ def main():
     parser.add_argument("--save_interval", type=int, default=10)
     parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")
     parser.add_argument("--no-gpu", action="store_false", dest="use_gpu", help="deactivate use of gpu")
-    parser.add_argument("--ckpt", type=str, dest="ckpt_path", help="model checkpoint path")
+    parser.add_argument("--ckpt", type=str, dest="ckpt", help="model checkpoint path")
 
     args = parser.parse_args()
     cfg = vars(args)
-    if cfg["stage"] == 1 and not cfg["ckpt_path"] and cfg["log_dir"]:
-        cfg["ckpt_path"] = os.path.join(cfg["log_dir"], "stage0", "model.pt")
+    if cfg["stage"] == 1 and not cfg["ckpt"] and cfg["log_dir"]:
+        cfg["ckpt"] = os.path.join(cfg["log_dir"], "stage0", "model.pt")
     print(cfg)
 
     logging.basicConfig(level=logging.INFO)

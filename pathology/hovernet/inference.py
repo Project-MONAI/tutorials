@@ -30,7 +30,7 @@ from monai.utils import HoVerNetBranch, first
 
 def create_output_dir(cfg):
     timestamp = time.strftime("%y%m%d-%H%M%S")
-    run_folder_name = f"{timestamp}_inference_hovernet_ps{cfg['patch_size']}"
+    run_folder_name = f"inference_hovernet_ps{cfg['patch_size']}_{timestamp}"
     output_dir = os.path.join(cfg["output"], run_folder_name)
     print(f"Outputs are saved at '{output_dir}'.")
     if not os.path.exists(output_dir):
@@ -135,7 +135,7 @@ def run(cfg):
         in_channels=3,
         out_classes=cfg["out_classes"],
     ).to(device)
-    model.load_state_dict(torch.load(cfg["ckpt"], map_location=device))
+    model.load_state_dict(torch.load(cfg["ckpt"], map_location=device)["net"])
     model.eval()
     if multi_gpu:
         model = torch.nn.parallel.DistributedDataParallel(
@@ -181,11 +181,11 @@ def main():
         default="/workspace/Data/Pathology/CoNSeP/Test/Images",
         help="Images root dir",
     )
-    parser.add_argument("--output", type=str, default="./logs/", dest="output", help="log directory")
+    parser.add_argument("--output", type=str, default="./eval/", dest="output", help="log directory")
     parser.add_argument(
         "--ckpt",
         type=str,
-        default="./logs/stage0/checkpoint_epoch=50.pt",
+        default="./logs/model.pt",
         help="Path to the pytorch checkpoint",
     )
     parser.add_argument("--mode", type=str, default="original", help="HoVerNet mode (original/fast)")

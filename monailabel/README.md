@@ -6,6 +6,12 @@ This folder contains end-to-end tutorials of MONAI Label applications. Sample ap
 
 These tutorials demonstrate step-by-step installations and operations of MONAI Label server, client viewers, or datastore platforms.
 
+These notebooks can be downloaded and used for demonstration on local machines. Each one includes detailed installation steps for viewers, datastore, and MONAI Label server setup.
+
+Each tutorial is associated with a sample dataset for non-commercial use. APIs are provided for users to download datasets directly.
+
+Each tutorial provides MONAI Label plugin installation steps associated with the viewer.
+
 ## Content
 
 - Radiology App:

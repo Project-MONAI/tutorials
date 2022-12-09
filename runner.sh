@@ -49,6 +49,11 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" preprocess_to_build
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" preprocess_detect_scene_and_split_fold.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" preprocess_extract_images_from_video.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" profiling_camelyon_pipeline.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_HelloWorld_radiology_3dslicer.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_monaibundle_3dslicer_multiorgan_seg.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_pancreas_tumor_segmentation_3DSlicer.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_endoscopy_cvat_tooltracking.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_pathology_nuclei_segmentation_QuPath.ipynb)
 
 # output formatting
 separator=""

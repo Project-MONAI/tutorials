@@ -150,6 +150,8 @@ This is example walks through using a Triton Server and Python client using MONA
 An example of experiment management with [Aim](https://aimstack.io/aim-monai-tutorial/), using 3D spleen segmentation as an example.
 ##### [MLFlow](./experiment_management/spleen_segmentation_mlflow.ipynb)
 An example of experiment management with [MLFlow](https://www.mlflow.org/docs/latest/tracking.html), using 3D spleen segmentation as an example.
+##### [MONAI bundle integrates MLFlow](./experiment_management/bundle_integrate_mlflow.ipynb)
+An example shows how to easily enable and customize the MLFlow for experiment management in MONAI bundle.
 
 #### <ins>**Federated Learning**</ins>
 ##### [NVFlare](./federated_learning/nvflare)

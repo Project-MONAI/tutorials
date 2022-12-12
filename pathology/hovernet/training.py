@@ -11,6 +11,7 @@ from monai.networks.nets import HoVerNet
 from monai.engines import SupervisedEvaluator, SupervisedTrainer
 from monai.transforms import (
     LoadImaged,
+    EnsureChannelFirstd,
     TorchVisiond,
     Lambdad,
     Activationsd,
@@ -137,7 +138,7 @@ def create_model(cfg, device):
             pretrained_url=None,
             freeze_encoder=False,
         ).to(device)
-        model.load_state_dict(torch.load(cfg["ckpt"])["net"])
+        model.load_state_dict(torch.load(cfg["ckpt"])["model"])
         print(f'stage{cfg["stage"]}, success load weight!')
 
     return model
@@ -169,6 +170,7 @@ def run(log_dir, cfg):
     train_transforms = Compose(
         [
             LoadImaged(keys=["image", "label_inst", "label_type"], image_only=True),
+            EnsureChannelFirstd(keys=["image", "label_inst", "label_type"], channel_dim=-1),
             Lambdad(keys="label_inst", func=lambda x: measure.label(x)),
             RandAffined(
                 keys=["image", "label_inst", "label_type"],
@@ -218,6 +220,7 @@ def run(log_dir, cfg):
     val_transforms = Compose(
         [
             LoadImaged(keys=["image", "label_inst", "label_type"], image_only=True),
+            EnsureChannelFirstd(keys=["image", "label_inst", "label_type"], channel_dim=-1),
             Lambdad(keys="label_inst", func=lambda x: measure.label(x)),
             CastToTyped(keys=["image", "label_inst"], dtype=torch.int),
             CenterSpatialCropd(
@@ -267,7 +270,7 @@ def run(log_dir, cfg):
     val_handlers = [
         CheckpointSaver(
             save_dir=log_dir,
-            save_dict={"net": model},
+            save_dict={"model": model},
             save_key_metric=True,
         ),
         StatsHandler(output_transform=lambda x: None),
@@ -297,7 +300,7 @@ def run(log_dir, cfg):
         ValidationHandler(validator=evaluator, interval=cfg["val_freq"], epoch_level=True),
         CheckpointSaver(
             save_dir=log_dir,
-            save_dict={"net": model, "opt": optimizer},
+            save_dict={"model": model, "opt": optimizer},
             save_interval=cfg["save_interval"],
             save_final=True,
             final_filename="model.pt",
@@ -353,7 +356,7 @@ def main():
     parser.add_argument("--stage", type=int, default=0, help="training stage")
     parser.add_argument("--no-amp", action="store_false", dest="amp", help="deactivate amp")
     parser.add_argument("--classes", type=int, default=5, dest="out_classes", help="output classes")
-    parser.add_argument("--mode", type=str, default="original", help="choose either `original` or `fast`")
+    parser.add_argument("--mode", type=str, default="fast", help="choose either `original` or `fast`")
 
     parser.add_argument("--save_interval", type=int, default=10)
     parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")

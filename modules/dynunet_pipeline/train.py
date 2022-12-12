@@ -2,17 +2,12 @@ import logging
 import os
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 
+import ignite.distributed as idist
 import torch
 import torch.distributed as dist
 from monai.config import print_config
-from monai.handlers import (
-    CheckpointSaver,
-    LrScheduleHandler,
-    MeanDice,
-    StatsHandler,
-    ValidationHandler,
-    from_engine,
-)
+from monai.handlers import (CheckpointSaver, LrScheduleHandler, MeanDice,
+                            StatsHandler, ValidationHandler, from_engine)
 from monai.inferers import SimpleInferer, SlidingWindowInferer
 from monai.losses import DiceCELoss
 from monai.utils import set_determinism
@@ -91,6 +86,8 @@ def validation(args):
                     "mean dice for label {} is {}".format(i + 1, results[:, i].mean())
                 )
 
+    dist.destroy_process_group()
+
 
 def train(args):
     # load hyper parameters
@@ -151,12 +148,16 @@ def train(args):
         optimizer, lr_lambda=lambda epoch: (1 - epoch / max_epochs) ** 0.9
     )
     # produce evaluator
-    val_handlers = [
-        StatsHandler(output_transform=lambda x: None),
-        CheckpointSaver(
-            save_dir=val_output_dir, save_dict={"net": net}, save_key_metric=True
-        ),
-    ]
+    val_handlers = (
+        [
+            StatsHandler(output_transform=lambda x: None),
+            CheckpointSaver(
+                save_dir=val_output_dir, save_dict={"net": net}, save_key_metric=True
+            ),
+        ]
+        if idist.get_rank() == 0
+        else None
+    )
 
     evaluator = DynUNetEvaluator(
         device=device,
@@ -183,16 +184,18 @@ def train(args):
 
     # produce trainer
     loss = DiceCELoss(to_onehot_y=True, softmax=True, batch=batch_dice)
-    train_handlers = []
+    train_handlers = [
+        ValidationHandler(validator=evaluator, interval=interval, epoch_level=True)
+    ]
     if lr_decay_flag:
         train_handlers += [LrScheduleHandler(lr_scheduler=scheduler, print_lr=True)]
-
-    train_handlers += [
-        ValidationHandler(validator=evaluator, interval=interval, epoch_level=True),
-        StatsHandler(
-            tag_name="train_loss", output_transform=from_engine(["loss"], first=True)
-        ),
-    ]
+    if idist.get_rank() == 0:
+        train_handlers += [
+            StatsHandler(
+                tag_name="train_loss",
+                output_transform=from_engine(["loss"], first=True),
+            )
+        ]
 
     trainer = DynUNetTrainer(
         device=device,
@@ -212,27 +215,8 @@ def train(args):
         evaluator.logger.setLevel(logging.WARNING)
         trainer.logger.setLevel(logging.WARNING)
 
-    logger = logging.getLogger()
-
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
-
-    # Setup file handler
-    fhandler = logging.FileHandler(log_filename)
-    fhandler.setLevel(logging.INFO)
-    fhandler.setFormatter(formatter)
-
-    logger.addHandler(fhandler)
-
-    chandler = logging.StreamHandler()
-    chandler.setLevel(logging.INFO)
-    chandler.setFormatter(formatter)
-    logger.addHandler(chandler)
-
-    logger.setLevel(logging.INFO)
-
     trainer.run()
+    dist.destroy_process_group()
 
 
 if __name__ == "__main__":

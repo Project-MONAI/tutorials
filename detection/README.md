@@ -15,7 +15,7 @@ MONAI detection implementation is based on the following papers:
 
 ### 1. Data
 
-The dataset we are experimenting in this example is LUNA16 (https://luna16.grand-challenge.org/Home/), which is based on [LIDC/IDRI database](https://wiki.cancerimagingarchive.net/display/Public/LIDC-IDRI) [1,2,3].
+The dataset we are experimenting in this example is LUNA16 (https://luna16.grand-challenge.org/Home/), which is based on [LIDC/IDRI database](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=1966254) [1,2,3].
 
 LUNA16 is a public dataset of CT lung nodule detection. Using raw CT scans, the goal is to identify locations of possible nodules, and to assign a probability for being a nodule to each location.
 
@@ -33,18 +33,35 @@ In these files, the values of "box" are the ground truth boxes in world coordina
 
 ### 3. Run the example
 #### [3.1 Prepare Your Data](./luna16_prepare_images.py)
+We provide [resampled Nifti images](https://drive.google.com/drive/folders/1JozrufA1VIZWJIc5A1EMV3J4CNCYovKK?usp=share_link) for users to download (recommended).
+If you do this, please open [luna16_prepare_env_files.py](luna16_prepare_env_files.py), change the value of "raw_data_base_dir" and "resampled_data_base_dir" to the directory where you store the downloaded images, and the value of "downloaded_datasplit_dir" to where you downloaded the data split json files.
+
+Then run the following command and go directly to Sec. 3.2.
+```bash
+python3 luna16_prepare_env_files.py
+```
+
+Alternatively, you can download the original data and resample them by yourself with the following steps. Users can either download 1) mhd/raw data from [LUNA16](https://luna16.grand-challenge.org/Home/) or its [copy](https://drive.google.com/drive/folders/1-enN4eNEnKmjltevKg3W2V-Aj0nriQWE?usp=share_link), or 2) DICOM data from [LIDC-IDRI](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=1966254) with [NBIA Data Retriever](https://wiki.cancerimagingarchive.net/display/NBIA/Downloading+TCIA+Images).
 
 The raw CT images in LUNA16 have various of voxel sizes. The first step is to resample them to the same voxel size, which is defined in the value of "spacing" in [./config/config_train_luna16_16g.json](./config/config_train_luna16_16g.json).
 
-Then, please open [luna16_prepare_env_files.py](luna16_prepare_env_files.py), change the value of "raw_data_base_dir" to the directory where you store the downloaded images, the value of "downloaded_datasplit_dir" to where you downloaded the data split json files, and the value of "resampled_data_base_dir" to the target directory where you will save the resampled images.
+Then, please open [luna16_prepare_env_files.py](luna16_prepare_env_files.py), change the value of "raw_data_base_dir" to the directory where you store the downloaded images, the value of "downloaded_datasplit_dir" to where you downloaded the data split json files, and the value of "resampled_data_base_dir" to the target directory where you will save the resampled images. If you are using DICOM data, please also provide path to "dicom_meta_data_csv" which can be found in the downloaded folder from LIDC-IDRI.
 
-Finally, resample the images by running
+If you downloaded mhd/raw data, please resample the images by running
 ```bash
 python3 luna16_prepare_env_files.py
 python3 luna16_prepare_images.py -c ./config/config_train_luna16_16g.json
 ```
 
-The original images are with mhd/raw format, the resampled images will be with Nifti format.
+If you downloaded DICOM data, please resample the images by running
+```bash
+python3 luna16_prepare_env_files.py
+python3 luna16_prepare_images_dicom.py -c ./config/config_train_luna16_16g.json
+```
+Note that for DICOM data, the data split json files are based on data downloaded with [NBIA Data Retriever](https://wiki.cancerimagingarchive.net/display/NBIA/Downloading+TCIA+Images).
+
+The resampled images will be with Nifti format.
+
 
 #### [3.2 3D Detection Training](./luna16_training.py)
 
@@ -88,7 +105,10 @@ python3 luna16_testing.py \
 
 #### [3.4 LUNA16 Detection Evaluation](./run_luna16_offical_eval.sh)
 Please download the official LUNA16 evaluation scripts from https://luna16.grand-challenge.org/Evaluation/,
-and save it as ./evaluation_luna16
+and save it as ./evaluation_luna16. Note that the official LUNA16 evaluation scripts are based on python2.
+
+To run it with python3, please 1) copy the files in ./evaluationScript_py3_update to replace the files in downloaded scripts in ./evaluation_luna16; 2) then run the following command to convert python2 code to python3 code: `python -m pip install future; futurize --stage1 -w evaluation_luna16/noduleCADEvaluationLUNA16.py; futurize --stage2 -w evaluation_luna16/noduleCADEvaluationLUNA16.py`;
+3) In ./evaluation_luna16/noduleCADEvaluationLUNA16.py, replace `plt.xscale('log', basex=2)` with `plt.xscale('log', base=2)`.
 
 ./evaluation_luna16/noduleCADEvaluationLUNA16.py will be the main python script to generate evaluation scores.
 

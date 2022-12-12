@@ -382,7 +382,6 @@ def main(cfg):
         optimizer = SGD(model.parameters(), lr=cfg["lr"], momentum=0.9)
 
     # AMP scaler
-    cfg["amp"] = cfg["amp"] and monai.utils.get_torch_version_tuple() >= (1, 6)
     if cfg["amp"] is True:
         scaler = GradScaler()
     else:

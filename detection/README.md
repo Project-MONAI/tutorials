@@ -32,7 +32,7 @@ In these files, the values of "box" are the ground truth boxes in world coordina
 - For bugs relating to the running of a tutorial, please create an issue in [this repository](https://github.com/Project-MONAI/Tutorials/issues).
 
 ### 3. Run the example
-#### [3.0 Setup environment]
+#### 3.0 Setup environment
 ```bash
 pip install -r requirements.txt
 ```

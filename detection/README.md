@@ -32,6 +32,11 @@ In these files, the values of "box" are the ground truth boxes in world coordina
 - For bugs relating to the running of a tutorial, please create an issue in [this repository](https://github.com/Project-MONAI/Tutorials/issues).
 
 ### 3. Run the example
+#### 3.0 Setup environment
+```bash
+pip install -r requirements.txt
+```
+
 #### [3.1 Prepare Your Data](./luna16_prepare_images.py)
 We provide [resampled Nifti images](https://drive.google.com/drive/folders/1JozrufA1VIZWJIc5A1EMV3J4CNCYovKK?usp=share_link) for users to download (recommended).
 If you do this, please open [luna16_prepare_env_files.py](luna16_prepare_env_files.py), change the value of "raw_data_base_dir" and "resampled_data_base_dir" to the directory where you store the downloaded images, and the value of "downloaded_datasplit_dir" to where you downloaded the data split json files.
@@ -60,7 +65,7 @@ python3 luna16_prepare_images_dicom.py -c ./config/config_train_luna16_16g.json
 ```
 Note that for DICOM data, the data split json files are based on data downloaded with [NBIA Data Retriever](https://wiki.cancerimagingarchive.net/display/NBIA/Downloading+TCIA+Images).
 
-The resampled images will be with Nifti format.
+The resampled images will be with Nifti format. The number of resampled images will be less than the original images, this is because LUNA16 annotation includes only nodules >= 3 mm accepted by at least 3 out of 4 radiologists, and excluded the images without such nodules.
 
 
 #### [3.2 3D Detection Training](./luna16_training.py)

@@ -186,7 +186,7 @@ def main():
         default="./logs/model.pt",
         help="Path to the pytorch checkpoint",
     )
-    parser.add_argument("--mode", type=str, default="original", help="HoVerNet mode (original/fast)")
+    parser.add_argument("--mode", type=str, default="fast", help="HoVerNet mode (original/fast)")
     parser.add_argument("--out-classes", type=int, default=5, help="number of output classes")
     parser.add_argument("--bs", type=int, default=1, dest="batch_size", help="batch size")
     parser.add_argument("--swbs", type=int, default=8, dest="sw_batch_size", help="sliding window batch size")

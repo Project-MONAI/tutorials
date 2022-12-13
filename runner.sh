@@ -81,7 +81,7 @@ pattern="-and -name '*' -and ! -wholename '*federated_learning*'\
  -and ! -wholename '*transforms_update_meta_data*'\
  -and ! -wholename '*video_seg*'\
  -and ! -wholename '*tcia_dataset*'\
- -and ! -wholename '*hovernet_training_torch*'\
+ -and ! -wholename '*hovernet_torch*'\
  -and ! -wholename '*preprocess_detect_scene_and_split_fold*'\
  -and ! -wholename '*preprocess_to_build_detection_dataset*'\
  -and ! -wholename '*preprocess_extract_images_from_video*'\

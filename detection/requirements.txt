@@ -1,6 +1,4 @@
 monai-weekly[nibabel]
-torch>=1.8
-numpy>=1.17
 itk>=5.2; python_version < "3.10"
 tensorboard
 torchvision

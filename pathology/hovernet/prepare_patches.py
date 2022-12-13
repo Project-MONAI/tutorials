@@ -18,7 +18,7 @@ def load_img(path):
 def load_ann(path):
     """
     This function is specific to CoNSeP dataset.
-    if own dataset is used, then below may need to be modified
+    If using other datasets, the code below may need to be modified.
     """
     # assumes that ann is HxW
     ann_inst = sio.loadmat(path)["inst_map"]

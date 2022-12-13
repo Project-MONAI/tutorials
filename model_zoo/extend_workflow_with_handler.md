@@ -71,7 +71,7 @@ class TimerHandler:
         self.start_time = 0
         self.epoch_start_time = 0
         self.iteration_start_time = 0
-         
+
     def attach(self, engine: Engine) -> None:
             engine.add_event_handler(Events.STARTED, self.started)
             engine.add_event_handler(Events.EPOCH_STARTED, self.epoch_started)

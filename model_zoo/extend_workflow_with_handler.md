@@ -8,8 +8,9 @@ The MONAI workflow is compatible with pytorch-ignite `Engine` and `Event-Handler
 
 So we can easily extend new features to the workflow by defining a new independent event handler and attaching to the workflow engine.
 
+### Supported events
 Here is all the supported `Event` in MONAI:
-| Module | Event name | Description |
+| Class | Event name | Description |
 | --- | --- | --- |
 | ignite.engine.Events | STARTED | triggered when engine's run is started |
 | ignite.engine.Events | EPOCH_STARTED | triggered when the epoch is started |
@@ -32,10 +33,11 @@ Here is all the supported `Event` in MONAI:
 | ignite.engine.Events | COMPLETED | triggered when engine's run is completed |
 
 For more information about the `Event` of pytorch-ignite, please refer to:
-https://pytorch.org/ignite/generated/ignite.engine.events.Events.html
+https://pytorch.org/ignite/generated/ignite.engine.events.Events.html.
 
 Users can also register their own customized `Event` to the workflow engine.
 
+### Develop event handler
 A typical handler must contain the `attach()` function and several callback functions to handle the attached events.
 For example, here we define a dummy handler to do some logic when iteration started and completed for every 5 iterations:
 ```py
@@ -53,6 +55,41 @@ class DummyHandler:
     def iteration_completed(self, engine: Engine) -> None:
         pass
 ```
+
+### Get context information of workflow and extend features or debug
+Within the handler callback functions, it's easy to get the property objects of `engine` to execute more logic,
+like: `engine.network`, `engine.optimizer`, etc. And all the context information are recorded as properties in the `engine.state`:
+| Property | Description |
+| --- | --- |
+| rank | index of current rank in distributed data parallel |
+| iteration | index of current iteration |
+| epoch | index of current epoch |
+| max_epochs | max epoch number to execute |
+| epoch_length | iteration number to execute in 1 epoch |
+| output | output data of current iteration |
+| batch | input data of current iteration |
+| metrics | metrics values of current epoch |
+| metric_details | details data during metrics computation of current epoch |
+| dataloader | dataloader to generate the input data of every iteration |
+| device | target device to put the input data |
+| key_metric_name | name of the key metric to compare and select the best model |
+| best_metric | value of the best metric results |
+| best_metric_epoch | epoch index of the best metric value |
+
+Users can also register their own customized properties to the `engine.state`.
+
+To extend features or debug the workflow, we can leverage these information.
+For example, here we try to print the `learning rate` value and `current epoch` index within an event callback function:
+```py
+def epoch_completed(self, engine: Engine) -> None:
+    print(f"Current epoch: {engine.state.epoch}")
+    print(f"Learning rate: {engine.optimizer.state_dict()['param_groups'][0]['lr']}")
+```
+
+And to extract expected data from the `engine.state.output`, we usually define a `output_transform` callable argument in the handler,
+like the existing [StatsHandler](https://docs.monai.io/en/stable/handlers.html#monai.handlers.StatsHandler), [TensorBoardStatsHandler](https://docs.monai.io/en/stable/handlers.html#monai.handlers.TensorBoardStatsHandler), etc.
+MONAI contains a convenient utility `monai.handlers.from_engine` to support most of the typical `output_transform` callables.
+For more details, please refer to: https://docs.monai.io/en/stable/handlers.html#monai.handlers.utils.from_engine.
 
 ## Download example MONAI bundle from model-zoo
 ```

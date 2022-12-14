@@ -44,8 +44,8 @@ from ignite.engine import Engine, Events
 
 class DummyHandler:
     def attach(self, engine: Engine) -> None:
-            engine.add_event_handler(Events.ITERATION_STARTED(every=5), self.iteration_started)
-            engine.add_event_handler(Events.ITERATION_COMPLETED(every=5), self.iteration_completed)
+        engine.add_event_handler(Events.ITERATION_STARTED(every=5), self.iteration_started)
+        engine.add_event_handler(Events.ITERATION_COMPLETED(every=5), self.iteration_completed)
 
     def iteration_started(self, engine: Engine) -> None:
         pass
@@ -73,12 +73,12 @@ class TimerHandler:
         self.iteration_start_time = 0
 
     def attach(self, engine: Engine) -> None:
-            engine.add_event_handler(Events.STARTED, self.started)
-            engine.add_event_handler(Events.EPOCH_STARTED, self.epoch_started)
-            engine.add_event_handler(Events.ITERATION_STARTED, self.iteration_started)
-            engine.add_event_handler(Events.ITERATION_COMPLETED, self.iteration_completed)
-            engine.add_event_handler(Events.EPOCH_COMPLETED, self.epoch_completed)
-            engine.add_event_handler(Events.COMPLETED, self.completed)
+        engine.add_event_handler(Events.STARTED, self.started)
+        engine.add_event_handler(Events.EPOCH_STARTED, self.epoch_started)
+        engine.add_event_handler(Events.ITERATION_STARTED, self.iteration_started)
+        engine.add_event_handler(Events.ITERATION_COMPLETED, self.iteration_completed)
+        engine.add_event_handler(Events.EPOCH_COMPLETED, self.epoch_completed)
+        engine.add_event_handler(Events.COMPLETED, self.completed)
 
     def started(self, engine: Engine) -> None:
         self.start_time = time()

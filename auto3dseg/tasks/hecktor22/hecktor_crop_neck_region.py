@@ -8,7 +8,7 @@ from monai.transforms import CropForegroundd
 
 class HecktorCropNeckRegion(CropForegroundd):
     '''
-        A simple pre-processing transform to approximately crop the head and neck region based on a PET image. 
+        A simple pre-processing transform to approximately crop the head and neck region based on a PET image.
         This transform relies on several assumptions of patient orientation with a head location on the top,
         and is specific for Hecktor22 dataset, and should not be used for an arbitrary PET image pre-processing.
     '''
@@ -31,7 +31,7 @@ class HecktorCropNeckRegion(CropForegroundd):
             box_size = (box_size / np.array(im_pet.pixdim)).astype(int) #compensate for resolution
 
         box_start, box_end = self.extract_roi(im_pet = im_pet, box_size=box_size)
-        
+
         if 'label' in d and 'label' in self.keys:
             # if label mask is available, let's check if the cropped region includes all foreground
             before_sum = d['label'].sum().item()
@@ -67,6 +67,6 @@ class HecktorCropNeckRegion(CropForegroundd):
         xmax[:2] = center[:2] + box_size[:2]//2
 
         xmax[2] = xmax[2] + crop_len
-        xmin[2] = max(0, xmax[2] - box_size[2]) 
- 
+        xmin[2] = max(0, xmax[2] - box_size[2])
+
         return xmin.astype(int), xmax.astype(int)

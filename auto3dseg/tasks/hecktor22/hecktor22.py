@@ -7,11 +7,9 @@ from monai.apps.auto3dseg import AutoRunner
 runner = AutoRunner(input='input.yaml', algos = 'segresnet', work_dir= './work_dir', ensemble=False)
 
 ## optionally, we can use just 1-fold (for a quick training of a single model, instead of training 5 folds)
-# runner.set_num_fold(1) 
+# runner.set_num_fold(1)
 
-## optionally, we can define the path to the dataset here, instead of the one in input.yaml 
-#runner.set_training_params({"dataroot" : '/data/hecktor22'}) 
+## optionally, we can define the path to the dataset here, instead of the one in input.yaml
+#runner.set_training_params({"dataroot" : '/data/hecktor22'})
 
 runner.run()
-
-

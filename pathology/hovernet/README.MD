@@ -1,15 +1,10 @@
 # HoVerNet Examples
 
-This folder contains ignite version examples to run train and validate a HoVerNet model.
+This folder contains ignite version examples to run train and validate a HoVerNet [1] model.
 It also has torch version notebooks to run training and evaluation.
 <p align="center">
   <img src="https://ars.els-cdn.com/content/image/1-s2.0-S1361841519301045-fx1_lrg.jpg" alt="HoVerNet scheme")
 </p>
-
-implementation based on:
-
-Simon Graham, Quoc Dang Vu, Shan E Ahmed Raza, Ayesha Azam, Yee Wah Tsang, Jin Tae Kwak, Nasir Rajpoot, Hover-Net: Simultaneous segmentation and classification of nuclei in multi-tissue histology images, Medical Image Analysis, 2019
-https://doi.org/10.1016/j.media.2019.101563
 
 ### 1. Data
 
@@ -121,3 +116,7 @@ torchrun --nnodes=1 --nproc_per_node=2 ./inference.py
 ## Disclaimer
 
 This is an example, not to be used for diagnostic purposes.
+
+## Reference
+[1] Simon Graham, Quoc Dang Vu, Shan E Ahmed Raza, Ayesha Azam, Yee Wah Tsang, Jin Tae Kwak, Nasir Rajpoot, Hover-Net: Simultaneous segmentation and classification of nuclei in multi-tissue histology images, Medical Image Analysis, 2019
+https://doi.org/10.1016/j.media.2019.101563

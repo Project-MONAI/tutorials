@@ -16,6 +16,10 @@ def load_img(path):
 
 
 def load_ann(path):
+    """
+    This function is specific to CoNSeP dataset.
+    If using other datasets, the code below may need to be modified.
+    """
     # assumes that ann is HxW
     ann_inst = sio.loadmat(path)["inst_map"]
     ann_type = sio.loadmat(path)["type_map"]
@@ -146,18 +150,16 @@ class PatchExtractor:
         elif patch_type == "mirror":
             return self.__extract_mirror(x)
         else:
-            assert False, "Unknown Patch Type [%s]" % patch_type
-        return
+            raise ValueError(f"Unknown Patch Type {patch_type}")
 
 
 def main(cfg):
     xtractor = PatchExtractor(cfg["patch_size"], cfg["step_size"])
-
-    for phase in ["Train", "Test"]:
+    for phase in cfg["phase"]:
         img_dir = os.path.join(cfg["root"], f"{phase}/Images")
         ann_dir = os.path.join(cfg["root"], f"{phase}/Labels")
 
-        file_list = glob.glob(os.path.join(ann_dir, f"*mat"))
+        file_list = glob.glob(os.path.join(ann_dir, f"*{cfg['label_suffix']}"))
         file_list.sort()  # ensure same ordering across platform
 
         out_dir = f"{cfg['root']}/Prepared/{phase}"
@@ -171,26 +173,20 @@ def main(cfg):
         for file_path in file_list:
             base_name = pathlib.Path(file_path).stem
 
-            img = load_img(f"{img_dir}/{base_name}.png")
-            ann = load_ann(f"{ann_dir}/{base_name}.mat")
+            img = load_img(f"{img_dir}/{base_name}.{cfg['image_suffix']}")
+            ann = load_ann(f"{ann_dir}/{base_name}.{cfg['label_suffix']}")
 
             # *
             img = np.concatenate([img, ann], axis=-1)
             sub_patches = xtractor.extract(img, cfg["extract_type"])
 
             pbar_format = "Extracting  : |{bar}| {n_fmt}/{total_fmt}[{elapsed}<{remaining},{rate_fmt}]"
-            pbar = tqdm.tqdm(
-                total=len(sub_patches),
-                leave=False,
-                bar_format=pbar_format,
-                ascii=True,
-                position=1,
-            )
+            pbar = tqdm.tqdm(total=len(sub_patches), leave=False, bar_format=pbar_format, ascii=True, position=1)
 
             for idx, patch in enumerate(sub_patches):
-                image_patch = patch[..., :3].transpose(2, 0, 1)  # make channel first
-                inst_map_patch = patch[..., 3][None]  # add channel dim
-                type_map_patch = patch[..., 4][None]  # add channel dim
+                image_patch = patch[..., :3]
+                inst_map_patch = patch[..., 3:4]
+                type_map_patch = patch[..., 4:5]
                 np.save("{0}/{1}_{2:03d}_image.npy".format(out_dir, base_name, idx), image_patch)
                 np.save("{0}/{1}_{2:03d}_inst_map.npy".format(out_dir, base_name, idx), inst_map_patch)
                 np.save("{0}/{1}_{2:03d}_type_map.npy".format(out_dir, base_name, idx), type_map_patch)
@@ -211,7 +207,17 @@ def parse_arguments():
         default="/workspace/Data/Pathology/CoNSeP",
         help="root path to image folder containing training/test",
     )
+    parser.add_argument(
+        "--phase",
+        nargs="+",
+        type=str,
+        default=["Train", "Test"],
+        dest="phase",
+        help="Phases of data need to be extracted",
+    )
     parser.add_argument("--type", type=str, default="mirror", dest="extract_type", help="Choose 'mirror' or 'valid'")
+    parser.add_argument("--is", type=str, default="png", dest="image_suffix", help="image file name suffix")
+    parser.add_argument("--ls", type=str, default="mat", dest="label_suffix", help="label file name suffix")
     parser.add_argument("--ps", nargs="+", type=int, default=[540, 540], dest="patch_size", help="patch size")
     parser.add_argument("--ss", nargs="+", type=int, default=[164, 164], dest="step_size", help="patch size")
     args = parser.parse_args()

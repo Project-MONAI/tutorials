@@ -70,22 +70,22 @@ def run(cfg):
                 sub_keys=[HoVerNetBranch.NC.value, HoVerNetBranch.NP.value, HoVerNetBranch.HV.value],
                 delete_keys=True,
             ),
-            HoVerNetInstanceMapPostProcessingd(sobel_kernel_size=3, marker_threshold=0.7, marker_radius=2),
+            HoVerNetInstanceMapPostProcessingd(sobel_kernel_size=21, marker_threshold=0.4, marker_radius=2),
             HoVerNetNuclearTypePostProcessingd(),
             FromMetaTensord(keys=["image"]),
             SaveImaged(
                 keys="instance_map",
                 meta_keys="image_meta_dict",
-                output_ext="png",
+                output_ext=".nii.gz",
                 output_dir=output_dir,
                 output_postfix="instance_map",
-                output_dtype="uint8",
+                output_dtype="uint32",
                 separate_folder=False,
             ),
             SaveImaged(
                 keys="type_map",
                 meta_keys="image_meta_dict",
-                output_ext="png",
+                output_ext=".nii.gz",
                 output_dir=output_dir,
                 output_postfix="type_map",
                 output_dtype="uint8",
@@ -133,7 +133,7 @@ def run(cfg):
         in_channels=3,
         out_classes=cfg["out_classes"],
     ).to(device)
-    model.load_state_dict(torch.load(cfg["ckpt"], map_location=device)["net"])
+    model.load_state_dict(torch.load(cfg["ckpt"], map_location=device)["model"])
     model.eval()
     if multi_gpu:
         model = torch.nn.parallel.DistributedDataParallel(
@@ -186,7 +186,7 @@ def main():
         default="./logs/model.pt",
         help="Path to the pytorch checkpoint",
     )
-    parser.add_argument("--mode", type=str, default="original", help="HoVerNet mode (original/fast)")
+    parser.add_argument("--mode", type=str, default="fast", help="HoVerNet mode (original/fast)")
     parser.add_argument("--out-classes", type=int, default=5, help="number of output classes")
     parser.add_argument("--bs", type=int, default=1, dest="batch_size", help="batch size")
     parser.add_argument("--swbs", type=int, default=8, dest="sw_batch_size", help="sliding window batch size")

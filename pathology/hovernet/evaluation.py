@@ -139,7 +139,7 @@ def main():
     parser.add_argument("--bs", type=int, default=16, dest="batch_size", help="batch size")
     parser.add_argument("--no-amp", action="store_false", dest="amp", help="deactivate amp")
     parser.add_argument("--classes", type=int, default=5, dest="out_classes", help="output classes")
-    parser.add_argument("--mode", type=str, default="original", help="choose either `original` or `fast`")
+    parser.add_argument("--mode", type=str, default="fast", help="choose either `original` or `fast`")
 
     parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")
     parser.add_argument("--use_gpu", type=bool, default=True, dest="use_gpu", help="whether to use gpu")

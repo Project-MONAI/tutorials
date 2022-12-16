@@ -1,13 +1,10 @@
 # HoVerNet Examples
 
-This folder contains ignite version examples to run train and validate a HoVerNet model.
+This folder contains ignite version examples to run train and validate a HoVerNet [1] model.
 It also has torch version notebooks to run training and evaluation.
 <p align="center">
   <img src="https://ars.els-cdn.com/content/image/1-s2.0-S1361841519301045-fx1_lrg.jpg" alt="HoVerNet scheme")
 </p>
-implementation based on:
-
-Simon Graham et al., HoVer-Net: Simultaneous Segmentation and Classification of Nuclei in Multi-Tissue Histology Images.' Medical Image Analysis, (2019). <https://arxiv.org/abs/1812.06499>
 
 ### 1. Data
 
@@ -47,6 +44,8 @@ python ./prepare_patches.py \
 This example uses MONAI workflow to train a HoVerNet model on prepared CoNSeP dataset.
 Since HoVerNet is training via a two-stage approach. First initialized the model with pre-trained weights on the [ImageNet dataset](https://ieeexplore.ieee.org/document/5206848), trained only the decoders for the first 50 epochs, and then fine-tuned all layers for another 50 epochs. We need to specify `--stage` during training.
 
+There are two training modes in total. If "original" mode is specified, it uses [270, 270] and [80, 80] for `patch_size` and `out_size` respectively. If "fast" mode is specified, it uses [256, 256] and [164, 164] for `patch_size` and `out_size` respectively. The results we show below are based on the "fast" model.
+
 Each user is responsible for checking the content of models/datasets and the applicable licenses and determining if suitable for the intended use.
 The license for the pre-trained model used in examples is different than MONAI license. Please check the source where these weights are obtained from:
 <https://github.com/vqdang/hover_net#data-format>
@@ -78,7 +77,7 @@ torchrun --nnodes=1 --nproc_per_node=2 training.py --stage 1
 #### [HoVerNet Validation](./evaluation.py)
 
 This example uses MONAI workflow to evaluate the trained HoVerNet model on prepared test data from CoNSeP dataset.
-With their metrics on original mode. We reproduce the results with Dice: 0.82762; PQ: 0.48976; F1d: 0.73592.
+Using this training pipeline in the "fast" mode, we have achieved the following metrics: Dice: 0.8329, PQ: 0.4977 and F1d: 0.7421.
 
 ```bash
 # Run to get all possible arguments
@@ -117,3 +116,7 @@ torchrun --nnodes=1 --nproc_per_node=2 ./inference.py
 ## Disclaimer
 
 This is an example, not to be used for diagnostic purposes.
+
+## Reference
+[1] Simon Graham, Quoc Dang Vu, Shan E Ahmed Raza, Ayesha Azam, Yee Wah Tsang, Jin Tae Kwak, Nasir Rajpoot, Hover-Net: Simultaneous segmentation and classification of nuclei in multi-tissue histology images, Medical Image Analysis, 2019
+https://doi.org/10.1016/j.media.2019.101563

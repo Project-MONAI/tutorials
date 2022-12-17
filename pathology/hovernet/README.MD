@@ -3,7 +3,7 @@
 This folder contains ignite version examples to run train and validate a HoVerNet [1] model.
 It also has torch version notebooks to run training and evaluation.
 <p align="center">
-  <img src="https://ars.els-cdn.com/content/image/1-s2.0-S1361841519301045-fx1_lrg.jpg" alt="HoVerNet scheme")
+  <img src="../../figures/hovernet_pipeline.png" alt="HoVerNet scheme")
 </p>
 
 ### 1. Data

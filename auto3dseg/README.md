@@ -40,13 +40,13 @@
 
 We have demonstrated preliminary results of public datasets are described in the [tasks](tasks) folder.
 
-- [HECKTOR22](tasks/hecktor22)
-- [INSTANCE22](tasks/instance22)
-- [Beyond the Cranial Vault (BTCV) Abdomen Dataset](tasks/btcv)
+- [HECKTOR22](tasks/hecktor22/README.md)
+- [INSTANCE22](tasks/instance22/README.md)
+- [Beyond the Cranial Vault (BTCV) Abdomen Dataset](tasks/btcv/README.md)
 - Medical Segmentation Decathlon (MSD) Dataset
-        - [Task04 Task04_Hippocampus](tasks/msd/Task04_Hippocampus)
-	- [Task05 Prostate](tasks/msd/Task05_Prostate)
-	- [Task09 Spleen](tasks/msd/Task09_Spleen)
+        - [Task04 Task04_Hippocampus](tasks/msd/Task04_Hippocampus/README.md)
+	- [Task05 Prostate](tasks/msd/Task05_Prostate/README.md)
+	- [Task09 Spleen](tasks/msd/Task09_Spleen/README.md)
 
 ## A Two-Minute "Hello-World" Example
 

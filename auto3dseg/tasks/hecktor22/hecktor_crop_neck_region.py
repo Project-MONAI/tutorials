@@ -47,14 +47,13 @@ class HecktorCropNeckRegion(CropForegroundd):
         for key, m in self.key_iterator(d, self.mode):
             self.push_transform(d, key, extra_info={"box_start": box_start, "box_end": box_end})
             d[key] = self.cropper.crop_pad(img=d[key], box_start=box_start, box_end=box_end, mode=m)
-            # print('cropped shape', d[key].shape)
 
         return d
 
     def extract_roi(self, im_pet, box_size):
 
         crop_len = int(0.75*im_pet.shape[2])
-        im = im_pet[...,crop_len:] #crop
+        im = im_pet[...,crop_len:] 
 
         mask = ((im - im.mean())/ im.std()) > 1
         comp_idx = torch.argwhere(mask)

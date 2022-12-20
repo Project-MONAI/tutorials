@@ -15,7 +15,7 @@ The task is to segment 3D Head and Neck (H&N) tumors and lymph nodes classes fro
 
 ## Auto3DSeg
 
-The HECKTOR22 tutorial is only supported for **SegResNet** algo, and it was primarily tested on 8 gpu NVIDIA V100 16GB machine.
+The HECKTOR22 tutorial is only supported for **SegResNet** algo (since currently it is the only algo with support of multi-resolution input images, such as CT and PET).
 Auto3DSeg runs a full workflow including data analysis, and multi-fold training. Please download the dataset into /data/hecktor22 folder first.
 
 
@@ -37,7 +37,7 @@ python hecktor22.py
 
 ## Validation performance: NVIDIA DGX-1 (8x V100 16G)
 
-The complete command of **Auto3DSeg** can be found [here](../../README.md#reference-python-apis-for-auto3dseg). And the validation results can be obtained by running the training script with MONAI 1.1.0 on NVIDIA DGX-1 with (8x V100 16GB) GPUs. The results below are in terms of **Aggregated Dice**, which was used as the key metric in the challenge [1,2]. The values of the Aggregated Dice slightly differ from a conventional average Dice (which is used by Auto3DSeg by default for all tasks).
+The validation results can be obtained by running the training script with MONAI 1.1.0 on NVIDIA DGX-1 with (8x V100 16GB) GPUs. The results below are in terms of **Aggregated Dice**, which was used as the key metric in the challenge [1,2]. The values of the Aggregated Dice slightly differ from a conventional average Dice (which is used by Auto3DSeg by default for all tasks).
 
 
 | | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Avg |
@@ -47,7 +47,7 @@ The complete command of **Auto3DSeg** can be found [here](../../README.md#refere
 
 ## Data
 
-The HECKTOR22 challenge dataset [2,3] can be downloaded from [here](https://hecktor.grand-challenge.org). Each user is responsible for checking the content of the datasets and the applicable licenses and determining if suitable for the intended use. The license for the HECKTOR22 dataset is different than MONAI license.
+The HECKTOR22 challenge dataset [2,3] can be downloaded from [here](https://hecktor.grand-challenge.org) after the registration. Each user is responsible for checking the content of the datasets and the applicable licenses and determining if suitable for the intended use. The license for the HECKTOR22 dataset is different than MONAI license.
 
 ## References
 [1] Andriy Myronenko, Md Mahfuzur Rahman Siddiquee, Dong Yang, Yufan He and Daguang Xu: "Automated head and neck tumor segmentation from 3D PET/CT". In MICCAI (2022). https://arxiv.org/abs/2209.10809

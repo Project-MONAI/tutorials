@@ -53,7 +53,7 @@ class HecktorCropNeckRegion(CropForegroundd):
     def extract_roi(self, im_pet, box_size):
 
         crop_len = int(0.75*im_pet.shape[2])
-        im = im_pet[...,crop_len:] 
+        im = im_pet[...,crop_len:]
 
         mask = ((im - im.mean())/ im.std()) > 1
         comp_idx = torch.argwhere(mask)

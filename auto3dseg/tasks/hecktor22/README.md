@@ -1,8 +1,8 @@
 
-# HECKTOR22 
+# HECKTOR22
 
 
-The HECKTOR22 dataset is from MICCAI 2022 challenge **[HEad and NeCK TumOR Segmentation and Outcome Prediction (HECKTOR22)](https://hecktor.grand-challenge.org)**. The solution described here won the 1st place in the HECKTOR22 challenge [(NVAUTO team)](https://hecktor.grand-challenge.org/final-leaderboard/): 
+The HECKTOR22 dataset is from MICCAI 2022 challenge **[HEad and NeCK TumOR Segmentation and Outcome Prediction (HECKTOR22)](https://hecktor.grand-challenge.org)**. The solution described here won the 1st place in the HECKTOR22 challenge [(NVAUTO team)](https://hecktor.grand-challenge.org/final-leaderboard/):
 
 Andriy Myronenko, Md Mahfuzur Rahman Siddiquee, Dong Yang, Yufan He and Daguang Xu: "Automated head and neck tumor segmentation from 3D PET/CT". In MICCAI (2022). [arXiv](https://arxiv.org/abs/2209.10809)
 
@@ -10,16 +10,16 @@ Andriy Myronenko, Md Mahfuzur Rahman Siddiquee, Dong Yang, Yufan He and Daguang 
 
 ## Task overview
 
-The task is to segment 3D Head and Neck (H&N) tumors and lymph nodes classes from a pair of 3D CT and PET images.  The ground truth labels are provided for 524 cases with average 3D CT size of 512x512x200 voxels at 0.98x0.98x3 mm average resolution, and with average 3D PET size of 200x200x200 voxels at 4x4x4 mm. The CT and PET images where rigidly aligned to a common origin, but remain at different sizes and resolutions. 
+The task is to segment 3D Head and Neck (H&N) tumors and lymph nodes classes from a pair of 3D CT and PET images.  The ground truth labels are provided for 524 cases with average 3D CT size of 512x512x200 voxels at 0.98x0.98x3 mm average resolution, and with average 3D PET size of 200x200x200 voxels at 4x4x4 mm. The CT and PET images where rigidly aligned to a common origin, but remain at different sizes and resolutions.
 
 
 ## Auto3DSeg
 
 The HECKTOR22 tutorial is only supported for **SegResNet** algo, and it was primarily tested on 8 gpu NVIDIA V100 16GB machine.
-Auto3DSeg runs a full workflow including data analysis, and multi-fold training. Please download the dataset into /data/hecktor22 folder first. 
+Auto3DSeg runs a full workflow including data analysis, and multi-fold training. Please download the dataset into /data/hecktor22 folder first.
 
 
-### Running based on the input config 
+### Running based on the input config
 
 The Auto3DSeg can be run using a config **input.yaml**
 
@@ -47,7 +47,7 @@ The complete command of **Auto3DSeg** can be found [here](../../README.md#refere
 
 ## Data
 
-The HECKTOR22 challenge dataset [2,3] can be downloaded from [here](https://hecktor.grand-challenge.org). Each user is responsible for checking the content of the datasets and the applicable licenses and determining if suitable for the intended use. The license for the HECKTOR22 dataset is different than MONAI license. 
+The HECKTOR22 challenge dataset [2,3] can be downloaded from [here](https://hecktor.grand-challenge.org). Each user is responsible for checking the content of the datasets and the applicable licenses and determining if suitable for the intended use. The license for the HECKTOR22 dataset is different than MONAI license.
 
 ## References
 [1] Andriy Myronenko, Md Mahfuzur Rahman Siddiquee, Dong Yang, Yufan He and Daguang Xu: "Automated head and neck tumor segmentation from 3D PET/CT". In MICCAI (2022). https://arxiv.org/abs/2209.10809

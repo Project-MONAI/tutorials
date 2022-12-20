@@ -32,14 +32,15 @@
 ## Auto3DSeg Leaderboard Performance
 
 - **Auto3DSeg** won 1st place in MICCAI 2022 challenge **[HECKTOR 2022: Head and neck tumor segmentation and outcome prediction in PET/CT images](https://hecktor.grand-challenge.org/)**
-  - 1st place GTVp and GTVn segmentation (Task 1)
-- **Auto3DSeg** won 2nd place in MICCAI 2022 challenge **[INSTANCE22: The 2022 Intracranial Hemorrhage Segmentation Challenge on Non-Contrast head CT (NCCT)](https://instance.grand-challenge.org/)**
-  - 1st place in terms of Dice score
-- **Auto3DSeg** won a top-3 place in MICCAI 2022 challenge **[ISLES'22: Ischemic Stroke Lesion Segmentation Challenge](https://isles22.grand-challenge.org/)**
-  - The final results will announced at MICCAI 2022
+  - 1st place  (segmentation task)
+- **Auto3DSeg** got 2nd place in MICCAI 2022 challenge **[INSTANCE22: The 2022 Intracranial Hemorrhage Segmentation Challenge on Non-Contrast head CT (NCCT)](https://instance.grand-challenge.org/)**
+  - 1st rank in terms of Dice score
+- **Auto3DSeg** got 2nd place in MICCAI 2022 challenge **[ISLES'22: Ischemic Stroke Lesion Segmentation Challenge](https://isles22.grand-challenge.org/)**
+  - 1st rank in terms of Dice score
 
 We have demonstrated preliminary results of public datasets are described in the [tasks](tasks) folder.
 
+- [HECKTOR22](tasks/hecktor22)
 - [INSTANCE22](tasks/instance22)
 - [Beyond the Cranial Vault (BTCV) Abdomen Dataset](tasks/btcv)
 - Medical Segmentation Decathlon (MSD) Dataset

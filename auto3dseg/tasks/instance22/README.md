@@ -1,6 +1,6 @@
 # INSTANCE22 Dataset
 
-This repository provides a benmarking guide and recipe to train the template algorithms, validation performance, and is tested and maintained by NVIDIA.
+This repository provides a benchmarking guide and recipe to train the template algorithms, validation performance, and is tested and maintained by NVIDIA.
 
 ## Task Overview
 

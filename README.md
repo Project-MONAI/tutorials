@@ -211,7 +211,7 @@ Demonstrates the use of the `ThreadBuffer` class used to generate data batches d
 Illustrate reading NIfTI files and test speed of different transforms on different devices.
 
 #### <ins>**Model Zoo**</ins>
-##### [easy_integrate_bundle](./model_zoo/easy_integrate_bundle.py)
+##### [easy_integrate_bundle](./model_zoo/app_integrate_bundle)
 This tutorial shows a straightforward ensemble application to instruct users on how to integrate existing bundles in their own projects. By simply changing the data path and the path where the bundle is located, training and ensemble inference can be performed.
 
 #### <ins>**Computer Assisted Intervention**</ins>
@@ -235,15 +235,15 @@ This notebook demonstrates the transformations on volumetric images.
 Tutorial that demonstrates how monai `SlidingWindowInferer` can be used when a 3D volume input needs to be provided slice-by-slice to a 2D model and finally, aggregated into a 3D volume.
 ##### [autoencoder_mednist](./modules/autoencoder_mednist.ipynb)
 This tutorial uses the MedNIST hand CT scan dataset to demonstrate MONAI's autoencoder class. The autoencoder is used with an identity encode/decode (i.e., what you put in is what you should get back), as well as demonstrating its usage for de-blurring and de-noising.
-##### [batch_output_transform](./modules/batch_output_transform.py)
+##### [batch_output_transform](./modules/batch_output_transform.ipynb)
 Tutorial to explain and show how to set `batch_transform` and `output_transform` of handlers to work with MONAI engines.
 ##### [compute_metric](./modules/compute_metric.py)
 Example shows how to compute metrics from saved predictions and labels with PyTorch multi-processing support.
 ##### [csv_datasets](./modules/csv_datasets.ipynb)
 Tutorial shows the usage of `CSVDataset` and `CSVIterableDataset`, load multiple CSV files and execute postprocessing logic.
-##### [decollate_batch](./modules/decollate_batch.py)
+##### [decollate_batch](./modules/decollate_batch.ipynb)
 Tutorial shows how to decollate batch data to simplify post processing transforms and execute more flexible following operations.
-##### [image_dataset](./modules/image_dataset.py)
+##### [image_dataset](./modules/image_dataset.ipynb)
 Notebook introduces basic usages of `monai.data.ImageDataset` module.
 ##### [dynunet_tutorial](./modules/dynunet_pipeline)
 This tutorial shows how to train 3D segmentation tasks on all the 10 decathlon datasets with the reimplementation of dynUNet in MONAI.
@@ -256,7 +256,7 @@ This notebook demonstrates the use of invertible transforms, and then leveraging
 This notebook demonstrates how to select or filter out expected network layers and set customized learning rate values.
 ##### [learning rate finder](./modules/learning_rate.ipynb)
 This notebook demonstrates how to use `LearningRateFinder` API to tune the learning rate values for the network.
-##### [load_medical_imagesl](./modules/load_medical_images.ipynb)
+##### [load_medical_images](./modules/load_medical_images.ipynb)
 This notebook introduces how to easily load different formats of medical images in MONAI and execute many additional operations.
 ##### [mednist_GAN_tutorial](./modules/mednist_GAN_tutorial.ipynb)
 This notebook illustrates the use of MONAI for training a network to generate images from a random input tensor.
@@ -279,7 +279,6 @@ This notebook shows how to quickly set up training workflow based on `MedNISTDat
 This notebook shows how to load the TCIA data with CSVDataset from CSV file and extract information for TCIA data to fetch DICOM images based on REST API.
 ##### [transforms_demo_2d](./modules/transforms_demo_2d.ipynb)
 This notebook demonstrates the image transformations on histology images using
-##### [the GlaS Contest dataset](https://warwick.ac.uk/fac/sci/dcs/research/tia/glascontest/download/)
 ##### [UNet_input_size_constrains](./modules/UNet_input_size_constrains.ipynb)
 This tutorial shows how to determine a reasonable spatial size of the input data for MONAI UNet, which not only supports residual units, but also can use more hyperparameters (like `strides`, `kernel_size` and `up_kernel_size`) than the basic UNet implementation.
 ##### [TorchIO, MONAI, PyTorch Lightning](./modules/TorchIO_MONAI_PyTorch_Lightning.ipynb)

@@ -1,0 +1,23 @@
+# HECKTOR22 Auto3dseg minimal user input
+
+modality: CT                        # primary modality
+dataroot: /data/hecktor22           # dataset location
+datalist: hecktor22_folds.json      # a list of filenames
+class_names: [tumor, lymph_node]    # names for tensorboard
+extra_modalities: {image2 : pet}    # a second modality
+
+
+# settings below are optional, but will accelerate the training speed
+# compared to fully automated settings. Here, we add a custom transform to
+# pre-crop an approximate head and neck region to reduce image size to 200x200x310mm
+custom_data_transforms:
+  - key: after_resample_transforms
+    path: '.'
+    transform: {_target_: hecktor_crop_neck_region.HecktorCropNeckRegion}
+
+# indicate the new avg image size (to correctly determine amount of caching required)
+image_size: [200, 200, 310]
+
+# update the random crop size (for training) to be slightly smaller, since the automatically
+# determined size was based on the whole image
+roi_size: [192, 192, 192]

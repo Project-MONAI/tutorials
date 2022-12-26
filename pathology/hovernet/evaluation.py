@@ -8,7 +8,9 @@ from monai.networks.nets import HoVerNet
 from monai.engines import SupervisedEvaluator
 from monai.transforms import (
     LoadImaged,
+    EnsureChannelFirstd,
     Lambdad,
+    AsDiscreted,
     Activationsd,
     Compose,
     CastToTyped,
@@ -54,6 +56,7 @@ def run(cfg):
     val_transforms = Compose(
         [
             LoadImaged(keys=["image", "label_inst", "label_type"], image_only=True),
+            EnsureChannelFirstd(keys=["image", "label_inst", "label_type"], channel_dim=-1),
             Lambdad(keys="label_inst", func=lambda x: measure.label(x)),
             CastToTyped(keys=["image", "label_inst"], dtype=torch.int),
             CenterSpatialCropd(
@@ -92,14 +95,14 @@ def run(cfg):
     post_process_np = Compose(
         [
             Activationsd(keys=HoVerNetBranch.NP.value, softmax=True),
-            Lambdad(keys=HoVerNetBranch.NP.value, func=lambda x: x[1:2, ...] > 0.5),
+            AsDiscreted(keys=HoVerNetBranch.NP.value, argmax=True),
         ]
     )
     post_process = Lambdad(keys="pred", func=post_process_np)
 
     # Evaluator
     val_handlers = [
-        CheckpointLoader(load_path=cfg["ckpt"], load_dict={"net": model}),
+        CheckpointLoader(load_path=cfg["ckpt"], load_dict={"model": model}),
         StatsHandler(output_transform=lambda x: None),
     ]
     evaluator = SupervisedEvaluator(

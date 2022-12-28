@@ -205,7 +205,7 @@ It was created to improve the readability and consistency of Python code, and to
 
 The guidelines cover a wide range of topics, including naming conventions, indentation, white space, and comments.
 They also include recommendations for how to structure and format your code, as well as how to write comments and documentation.
- 
+
 PEP8 style is required for all Python code in `.py` script files and the cell blocks in Jupyter notebooks for the MONAI tutorial.
 Here is a set of common mistakes that lead to check failures:
 - A blank line at end of the cell

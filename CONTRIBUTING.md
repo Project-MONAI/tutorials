@@ -195,6 +195,10 @@ To verify the tutorial notebook locally, you can `pip install papermill` and the
 
 The command uses a regex pattern from the argument `-p` or `--pattern` to search for files to run checks.
 In this case, we use `-wholename` to specify the only notebook file we would like to check.
+The path must begin with `./`, for example: 
+```
+./runner.sh -p "-and -wholename './2d_classification/mednist_tutorial.ipynb'"
+```
 
 The `runner.sh` includes three kinds of checks: PEP 8 Style, notebook execution, and format requirement.
 
@@ -213,6 +217,12 @@ Here is a set of common mistakes that lead to check failures:
 - Module import is not in the `Setup import` cell
 - Import an unused module or create an unused variable
 It needs to note that `--autofix` needs a few additional packages to help you fix some of the issues automatically, and most others need your manual correction.
+
+To run the PEP 8 tests locally, you can use this argument `--no-run` to run the scan only:
+
+```
+./runner.sh -p "-and -wholename '<full path to your .ipynb file>'" --no-run
+```
 
 ### Notebook execution
 

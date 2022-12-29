@@ -195,7 +195,7 @@ To verify the tutorial notebook locally, you can `pip install papermill` and the
 
 The command uses a regex pattern from the argument `-p` or `--pattern` to search for files to run checks.
 In this case, we use `-wholename` to specify the only notebook file we would like to check.
-The path must begin with `./`, for example: 
+The path must begin with `./`, for example:
 ```
 ./runner.sh -p "-and -wholename './2d_classification/mednist_tutorial.ipynb'"
 ```

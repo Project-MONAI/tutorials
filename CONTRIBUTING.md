@@ -236,6 +236,12 @@ The testing system will search for `max_epoch` in the notebook, and set to value
 
 On the other hand, if the training is not part of your tutorial, please update the exclusion list of `doesnt_contain_max_epochs` in [runner.sh](runner.sh)
 
+Finally, if your tutorial is not suitable for automated testing, please exclude the notebook by updating the `pattern` in `runner.sh`.
+You can append another line in the `pattern`:
+```
+ -and ! -wholename '*<tutorial folder name>*'"
+```
+
 ### Format requirements
 
 The CI/CD will check the following formats, in addition to PEP 8:

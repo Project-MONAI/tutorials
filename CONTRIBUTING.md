@@ -7,11 +7,11 @@
   - [Create a notebook](#create-a-notebook)
   - [Commit new changes](#commit-new-changes)
   - [Open a pull request](#open-a-pull-request)
-  - [Common recommendations from the review](#common-recommendations-from-the-review)
-- [CI test passing guide](#ci-test-passing-guide)
+  - [Common recommendations for the review](#common-recommendations-for-the-review)
+- [CI/CD test passing guide](#cicd-test-passing-guide)
   - [PEP 8 Style](#pep-8-style)
   - [Notebook execution](#notebook-execution)
-  - [Other format requirements](#other-format-requirements)
+  - [Format requirements](#format-requirements)
 - [Benchmarking result report](#benchmarking-result-report)
 
 ## Introduction
@@ -165,13 +165,13 @@ By making a contribution to this project, I certify that:
 ### Open a pull request
 
 Once the changes are ready, push your local branch to the remote, e.g. `git push --set-upstream origin <your new branch name>`, and [open a pull request](https://github.com/Project-MONAI/tutorials/pulls).
-When the pull request is opened, the MONAI repository has a set of GitHub actions that will run linters and check on the changes.
+When the pull request is opened, the MONAI repository has a set of GitHub actions that will run checks on the changes.
 
 Please check more details in the [guidelines](#ci-test-passing-guide) on how to pass the tests](#ci-test-passing-guide).
 
 In addition, the team will perform diligent code reviews following this [set of guidelines](#strong-recommendations) to reduce the amount of work for users to run the tutorials.
 
-### Common recommendations from the review
+### Common recommendations for the review
 
 Here are some recommendations to make your pull requests faster to review:
 - Note dataset availability. The contributor needs to provide info on how to access the dataset and make a note about the dataset's licensing info. For example, some datasets may be used for non-commercial purposes only. If the dataset can be directly downloaded from a public source on the internet, please consider using the folder specified by `MONAI_DATA_DIRECTORY` to store the dataset files as the [example notebook](.github/contributing_templates/notebook/example_feature.ipynb) shows.
@@ -184,7 +184,7 @@ Here are some recommendations to make your pull requests faster to review:
   - Avoid linking folders (folder links do not work well in Jupyter notebooks)
   - For graphs, it is recommended to download them and add them to the repo in the ./figure folder under the root directory
 
-## CI test passing guide
+## CI/CD test passing guide
 
 The testing system uses `papermill` to run the notebooks.
 To verify the tutorial notebook locally, you can `pip install papermill` and then issue the following command with the full path to the notebook file.
@@ -216,6 +216,24 @@ It needs to note that `--autofix` needs a few additional packages to help you fi
 
 ### Notebook execution
 
-### Other format requirements
+The CI/CD in the pull request process does not execute a Jupyter notebook.
+But the MONAI tutorial has scheduled scans to check if all notebooks can be executed regularly.
+
+The notebook must be in a self-contained state, e.g. setting up the Python environment, downloading the dataset, performing the analysis, and preferably, cleaning up the intermediate files generated from the execution.
+
+To speed up the testing of a notebook with neural network training, please define a variable `max_epochs` in one cell of the training code.
+The testing system will search for `max_epoch` in the notebook, and set to value to `1` for faster notebook testing.
+
+On the other hand, if the training is not part of your tutorial, please update the exclusion list of `doesnt_contain_max_epochs` in [runner.sh](runner.sh)
+
+### Format requirements
+
+The CI/CD will check the following formats, in addition to PEP 8:
+- [Licensing information](#add-license)
+- [Environment and imports](#create-a-notebook)
+- [Output text length](#common-recommendations-for-the-review)
 
 ## Benchmarking result report
+
+To standardize all result reporting, the MONAI team recommends contributors use A100 as the standard device for benchmarking in all notebooks.
+If contributors have difficulties getting the computation resources, please contact our team for support.

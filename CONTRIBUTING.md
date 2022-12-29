@@ -19,7 +19,9 @@
 Thanks for considering a contribution to the MONAI Tutorials Repository and reading the Contributing Guidelines.
 
 The following is a set of guidelines for contributing tutorials to Project MONAI.
-The guidelines are based on the discussions in #1119
+If you have any questions about the guideline, please communicate with us and we are happy to discuss with you.
+MONAI is an open-source project and relies on the community to grow and shine.
+We want to use the guideline to help the growth of the project, instead of restricting the depth and breadth of your contribution.
 Please feel free to propose changes to this document in a pull request(PR).
 
 ## The contribution process
@@ -50,7 +52,7 @@ To hold your work in a new location, you can choose to create a new subfolder un
 
 The folder should have a `README.md` file with descriptive information for others to start using your code or tutorial notebooks.
 
-Finally, the MONAI tutorial has a [README file](README.md) to communicate the important information and provide an overview of the tutorials and examples. For new tutorials, please add a new entry to the [List](README.md#4-list-of-notebooks-and-examples) of notebooks and examples](README.md#4-list-of-notebooks-and-examples).
+Finally, the MONAI tutorial has a [README file](README.md) to communicate the important information and provide an overview of the tutorials and examples. For new tutorials, please add a new entry to the [List](README.md#4-list-of-notebooks-and-examples) of notebooks and [examples](README.md#4-list-of-notebooks-and-examples).
 
 ### Add license
 
@@ -101,7 +103,7 @@ Writing a notebook is easy and flexible, but we require all tutorial notebooks t
     print_config()
     ```
 
-The tutorial provides [useful templates](.github/contributing_templates/notebook/README.md) for contributors to start with.
+Following this guideline, we prepare some [templates](.github/contributing_templates/notebook/README.md) for contributors to start with.
 
 ### Commit new changes
 
@@ -167,7 +169,7 @@ By making a contribution to this project, I certify that:
 Once the changes are ready, push your local branch to the remote, e.g. `git push --set-upstream origin <your new branch name>`, and [open a pull request](https://github.com/Project-MONAI/tutorials/pulls).
 When the pull request is opened, the MONAI repository has a set of GitHub actions that will run checks on the changes.
 
-Please check more details in the [guidelines](#ci-test-passing-guide) on how to pass the tests](#ci-test-passing-guide).
+Please check more details in the [guidelines](#ci-test-passing-guide) on [how to pass the tests](#cicd-test-passing-guide).
 
 In addition, the team will perform diligent code reviews following this [set of guidelines](#strong-recommendations) to reduce the amount of work for users to run the tutorials.
 
@@ -234,9 +236,9 @@ The notebook must be in a self-contained state, e.g. setting up the Python envir
 To speed up the testing of a notebook with neural network training, please define a variable `max_epochs` in one cell of the training code.
 The testing system will search for `max_epoch` in the notebook, and set to value to `1` for faster notebook testing.
 
-On the other hand, if the training is not part of your tutorial, please update the exclusion list of `doesnt_contain_max_epochs` in [runner.sh](runner.sh)
+On the other hand, if the training is not part of your tutorial, please update the exclusion list of `doesnt_contain_max_epochs` in the [runner.sh](runner.sh)
 
-Finally, if your tutorial is not suitable for automated testing, please exclude the notebook by updating the `pattern` in `runner.sh`.
+Finally, if your tutorial is not suitable for automated testing, please exclude the notebook by updating the `pattern` in the `runner.sh`.
 You can append another line in the `pattern`:
 ```
  -and ! -wholename '*<tutorial folder name>*'"

@@ -19,9 +19,10 @@
 Thanks for considering a contribution to the MONAI Tutorials Repository and reading the Contributing Guidelines.
 
 The following is a set of guidelines for contributing tutorials to Project MONAI.
-If you have any questions about the guideline, please communicate with us and we are happy to discuss with you.
-MONAI is an open-source project and relies on the community to grow and shine.
-We want to use the guideline to help the growth of the project, instead of restricting the depth and breadth of your contribution.
+We want to use the guideline to support the growth of the project, instead of restricting the depth and breadth of your contribution.
+If you have any questions about the guideline, please communicate with us and we are happy to discuss them with you.
+MONAI is an open-source project and its success relies on the entire community.
+
 Please feel free to propose changes to this document in a pull request(PR).
 
 ## The contribution process

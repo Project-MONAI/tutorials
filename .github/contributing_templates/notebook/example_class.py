@@ -21,7 +21,7 @@ class ExampleImageGenerator():
     def __init__(self, num_image=40, image_size=(128, 128)):
         self.num_image = num_image
         self.image_size = image_size
-    
+
     def generate(self, tempdir):
         for i in range(self.num_image):
             im, seg = create_test_image_2d(
@@ -29,7 +29,7 @@ class ExampleImageGenerator():
             )
             Image.fromarray((im * 255).astype("uint8")).save(os.path.join(tempdir, f"img{i:d}.png"))
             Image.fromarray((seg * 255).astype("uint8")).save(os.path.join(tempdir, f"seg{i:d}.png"))
-        
+
         images = sorted(glob(os.path.join(tempdir, "img*.png")))
         segs = sorted(glob(os.path.join(tempdir, "seg*.png")))
         return (images, seg)

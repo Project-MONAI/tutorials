@@ -1,6 +1,16 @@
+# Copyright (c) MONAI Consortium
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import logging
 import os
-import time
 from argparse import ArgumentParser
 from glob import glob
 
@@ -70,22 +80,22 @@ def run(cfg):
                 sub_keys=[HoVerNetBranch.NC.value, HoVerNetBranch.NP.value, HoVerNetBranch.HV.value],
                 delete_keys=True,
             ),
-            HoVerNetInstanceMapPostProcessingd(sobel_kernel_size=3, marker_threshold=0.7, marker_radius=2),
+            HoVerNetInstanceMapPostProcessingd(sobel_kernel_size=21, marker_threshold=0.4, marker_radius=2),
             HoVerNetNuclearTypePostProcessingd(),
             FromMetaTensord(keys=["image"]),
             SaveImaged(
                 keys="instance_map",
                 meta_keys="image_meta_dict",
-                output_ext="png",
+                output_ext=".nii.gz",
                 output_dir=output_dir,
                 output_postfix="instance_map",
-                output_dtype="uint8",
+                output_dtype="uint32",
                 separate_folder=False,
             ),
             SaveImaged(
                 keys="type_map",
                 meta_keys="image_meta_dict",
-                output_ext="png",
+                output_ext=".nii.gz",
                 output_dir=output_dir,
                 output_postfix="type_map",
                 output_dtype="uint8",
@@ -133,7 +143,7 @@ def run(cfg):
         in_channels=3,
         out_classes=cfg["out_classes"],
     ).to(device)
-    model.load_state_dict(torch.load(cfg["ckpt"], map_location=device)["net"])
+    model.load_state_dict(torch.load(cfg["ckpt"], map_location=device)["model"])
     model.eval()
     if multi_gpu:
         model = torch.nn.parallel.DistributedDataParallel(
@@ -176,7 +186,7 @@ def main():
     parser.add_argument(
         "--root",
         type=str,
-        default="/workspace/Data/Pathology/CoNSeP/Test/Images",
+        default="/workspace/Data/CoNSeP/Test/Images",
         help="Images root dir",
     )
     parser.add_argument("--output", type=str, default="./eval/", dest="output", help="log directory")
@@ -186,7 +196,7 @@ def main():
         default="./logs/model.pt",
         help="Path to the pytorch checkpoint",
     )
-    parser.add_argument("--mode", type=str, default="original", help="HoVerNet mode (original/fast)")
+    parser.add_argument("--mode", type=str, default="fast", help="HoVerNet mode (original/fast)")
     parser.add_argument("--out-classes", type=int, default=5, help="number of output classes")
     parser.add_argument("--bs", type=int, default=1, dest="batch_size", help="batch size")
     parser.add_argument("--swbs", type=int, default=8, dest="sw_batch_size", help="sliding window batch size")

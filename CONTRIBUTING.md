@@ -16,10 +16,10 @@
 
 ## Introduction
 
-Thanks for considering a contribution to the MONAI Tutorials Repository and reading the Contributing Guidelines.
+Thank you for considering a contribution to the MONAI Tutorials Repository and reading the Contributing Guidelines.
 
 The following is a set of guidelines for contributing tutorials to Project MONAI.
-We want to use the guideline to support the growth of the project, instead of restricting the depth and breadth of your contribution.
+We want the guidelines to support the growth of the project, instead of restricting the depth and breadth of your contribution.
 If you have any questions about the guideline, please communicate with us and we are happy to discuss them with you.
 MONAI is an open-source project and its success relies on the entire community.
 
@@ -30,7 +30,7 @@ Please feel free to propose changes to this document in a pull request(PR).
 ### Raise an issue
 
 We encourage you to [raise an issue](https://github.com/Project-MONAI/tutorials/issues/new/choose) about your needs for MONAI tutorials.
-The idea may generate echo in the community and interest other contributors as well.
+Conversations help better define the feature and allow other contributors in the community to provide feedback.
 
 ### Create a fork
 
@@ -190,7 +190,7 @@ Here are some recommendations to make your pull requests faster to review:
 ## CI/CD test passing guide
 
 The testing system uses `papermill` to run the notebooks.
-To verify the tutorial notebook locally, you can `pip install papermill` and then issue the following command with the full path to the notebook file.
+To verify the tutorial notebook locally, you can `pip install jupytext flake8 papermill` and then issue the following command with the full path to the notebook file.
 
 ```
 ./runner.sh -p "-and -wholename '<full path to your .ipynb file>'"

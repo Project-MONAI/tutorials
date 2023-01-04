@@ -91,7 +91,13 @@ pattern="-and -name '*' -and ! -wholename '*federated_learning*'\
  -and ! -wholename '*preprocess_to_build_detection_dataset*'\
  -and ! -wholename '*preprocess_extract_images_from_video*'\
  -and ! -wholename '*transfer_mmar*'\
- -and ! -wholename '*MRI_reconstruction*'"
+ -and ! -wholename '*MRI_reconstruction*'\
+ -and ! -wholename '*monailabel_HelloWorld_radiology_3dslicer*'\
+ -and ! -wholename '*monailabel_monaibundle_3dslicer_multiorgan_seg*'\
+ -and ! -wholename '*monailabel_pancreas_tumor_segmentation_3DSlicer*'\
+ -and ! -wholename '*monailabel_endoscopy_cvat_tooltracking*'\
+ -and ! -wholename '*monailabel_pathology_nuclei_segmentation_QuPath*'"
+
 kernelspec="python3"
 
 function print_usage {

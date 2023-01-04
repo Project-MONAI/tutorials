@@ -308,7 +308,7 @@ for file in "${files[@]}"; do
 	if [ $doRun = true ]; then
 
 		skipRun=false
-		
+
 		for skip_pattern in "${skip_run_papermill[@]}"; do
 			echo "$skip_pattern"
 			if [[  $file =~ $skip_pattern ]]; then

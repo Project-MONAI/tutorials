@@ -49,6 +49,11 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" preprocess_to_build
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" preprocess_detect_scene_and_split_fold.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" preprocess_extract_images_from_video.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" profiling_camelyon_pipeline.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_HelloWorld_radiology_3dslicer.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_monaibundle_3dslicer_multiorgan_seg.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_pancreas_tumor_segmentation_3DSlicer.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_endoscopy_cvat_tooltracking.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_pathology_nuclei_segmentation_QuPath.ipynb)
 
 # Execution of the notebook in these folders / with the filename cannot be automated
 skip_run_papermill=()
@@ -69,6 +74,11 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*preprocess_to_build_detection_d
 skip_run_papermill=("${skip_run_papermill[@]}" .*preprocess_extract_images_from_video*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*transfer_mmar*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*MRI_reconstruction*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_HelloWorld_radiology_3dslicer*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_monaibundle_3dslicer_multiorgan_seg*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_pancreas_tumor_segmentation_3DSlicer*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_endoscopy_cvat_tooltracking*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_pathology_nuclei_segmentation_QuPath*)
 
 # output formatting
 separator=""

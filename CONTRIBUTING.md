@@ -193,10 +193,11 @@ The testing system uses `papermill` to run the notebooks.
 To verify the tutorial notebook locally, you can `pip install jupytext flake8 papermill` and then issue the following command with the full path to the notebook file.
 
 ```
-./runner.sh -p "-and -wholename '<full path to your .ipynb file>'"
+./runner.sh -t <path to your .ipynb file>
 ```
 
-The command uses a regex pattern from the argument `-p` or `--pattern` to search for files to run checks.
+NOTE: the argument `-t` provides a short to provide a filename as a pattern to find files in the tutorial.
+It is equivalent to using a regex pattern in the argument `-p` or `--pattern` to search for files to run checks.
 In this case, we use `-wholename` to specify the only notebook file we would like to check.
 The path must begin with `./`, for example:
 ```
@@ -224,7 +225,7 @@ It needs to note that `--autofix` needs a few additional packages to help you fi
 To run the PEP 8 tests locally, you can use this argument `--no-run` to run the scan only:
 
 ```
-./runner.sh -p "-and -wholename '<full path to your .ipynb file>'" --no-run
+./runner.sh -t <path to your .ipynb file> --no-run
 ```
 
 ### Notebook execution

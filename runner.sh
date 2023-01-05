@@ -50,6 +50,26 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" preprocess_detect_s
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" preprocess_extract_images_from_video.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" profiling_camelyon_pipeline.ipynb)
 
+# Execution of the notebook in these folders / with the filename cannot be automated
+skip_run_papermill=()
+skip_run_papermill=("${skip_run_papermill[@]}" .*federated_learning*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*transchex_openi*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*unetr_*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*profiling_train_base_nvtx*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*benchmark_global_mutual_information*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*spleen_segmentation_3d_visualization_basic*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*full_gpu_inference_pipeline*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*generate_random_permutations*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*transforms_update_meta_data*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*video_seg*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*tcia_dataset*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*hovernet_torch*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*preprocess_detect_scene_and_split_fold*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*preprocess_to_build_detection_dataset*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*preprocess_extract_images_from_video*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*transfer_mmar*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*MRI_reconstruction*)
+
 # output formatting
 separator=""
 blue=""
@@ -70,23 +90,8 @@ doChecks=true
 doRun=true
 autofix=false
 failfast=false
-pattern="-and -name '*' -and ! -wholename '*federated_learning*'\
- -and ! -wholename '*transchex_openi*'\
- -and ! -wholename '*unetr_*'\
- -and ! -wholename '*profiling_train_base_nvtx*'\
- -and ! -wholename '*benchmark_global_mutual_information*'\
- -and ! -wholename '*spleen_segmentation_3d_visualization_basic*'\
- -and ! -wholename '*full_gpu_inference_pipeline*'\
- -and ! -wholename '*generate_random_permutations*'\
- -and ! -wholename '*transforms_update_meta_data*'\
- -and ! -wholename '*video_seg*'\
- -and ! -wholename '*tcia_dataset*'\
- -and ! -wholename '*hovernet_torch*'\
- -and ! -wholename '*preprocess_detect_scene_and_split_fold*'\
- -and ! -wholename '*preprocess_to_build_detection_dataset*'\
- -and ! -wholename '*preprocess_extract_images_from_video*'\
- -and ! -wholename '*transfer_mmar*'\
- -and ! -wholename '*MRI_reconstruction*'"
+pattern=""
+
 kernelspec="python3"
 
 function print_usage {
@@ -301,6 +306,22 @@ for file in "${files[@]}"; do
 	#                                                                      #
 	########################################################################
 	if [ $doRun = true ]; then
+
+		skipRun=false
+
+		for skip_pattern in "${skip_run_papermill[@]}"; do
+			echo "$skip_pattern"
+			if [[  $file =~ $skip_pattern ]]; then
+				echo "Skip Pattern Match"
+				skipRun=true
+				break
+			fi
+		done
+
+		if [ $skipRun = true ]; then
+			echo "Skipping"
+			break
+		fi
 
 		echo Running notebook...
 		notebook=$(cat "$filename")

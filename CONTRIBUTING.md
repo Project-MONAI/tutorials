@@ -23,7 +23,7 @@ We want the guidelines to support the growth of the project, instead of restrict
 If you have any questions about the guideline, please communicate with us and we are happy to discuss them with you.
 MONAI is an open-source project and its success relies on the entire community.
 
-Please feel free to propose changes to this document in a pull request(PR).
+Please feel free to propose changes to this document in a pull request (PR).
 
 ## The contribution process
 
@@ -83,7 +83,7 @@ Jupyter Notebook is the preferred way of writing a new MONAI tutorial because we
 Writing a notebook is easy and flexible, but we require all tutorial notebooks to start with the following three sections:
 
 - Title of the notebook with [licensing information](#add-license) in one markdown cell
-- A markdown cell with `## Setup environment` and a code cell that executes `pip install` shell commands with the exclamation mark`!`` to install all the packages necessary for your tutorial.
+- A markdown cell with `## Setup environment` and a code cell that executes `pip install` shell commands with the exclamation mark `!` to install all the packages necessary for your tutorial.
 
     For example, we install [MONAI with extra dependencies](https://docs.monai.io/en/stable/installation.html#installing-the-recommended-dependencies) and `matplotlib` to set up the environment for the [mednist_tutorial](./2d_classification/mednist_tutorial.ipynb):
 

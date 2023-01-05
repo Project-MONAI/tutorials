@@ -187,6 +187,9 @@ Here are some recommendations to make your pull requests faster to review:
   - Avoid linking folders (folder links do not work well in Jupyter notebooks)
   - For graphs, it is recommended to download them and add them to the repo in the ./figure folder under the root directory
 
+If your tutorial includes network training pipelines, we encourage implementations to scale the training on multiple GPUs.
+For example, if you are using `torchrun` for multi-GPU training, please feel free to include the Python scripts in your tutorial.
+
 ## CI/CD test passing guide
 
 The testing system uses `papermill` to run the notebooks.
@@ -196,13 +199,15 @@ To verify the tutorial notebook locally, you can `pip install jupytext flake8 pa
 ./runner.sh -t <path to your .ipynb file>
 ```
 
-NOTE: the argument `-t` provides a short to provide a filename as a pattern to find files in the tutorial.
+NOTE: the argument after `-t` provides a filename for the `runner.sh` to locate a single notebook in the tutorial to run tests on.
 It is equivalent to using a regex pattern in the argument `-p` or `--pattern` to search for files to run checks.
-In this case, we use `-wholename` to specify the only notebook file we would like to check.
+In this case, we can also use `-wholename` to specify the only notebook file we would like to check.
 The path must begin with `./`, for example:
 ```
 ./runner.sh -p "-and -wholename './2d_classification/mednist_tutorial.ipynb'"
 ```
+
+If you have multiple notebooks to test, please consider designing a regex pattern to locate all the notebook files and use `-p`.
 
 The `runner.sh` includes three kinds of checks: PEP 8 Style, notebook execution, and format requirement.
 
@@ -240,11 +245,15 @@ The testing system will search for `max_epoch` in the notebook, and set to value
 
 On the other hand, if the training is not part of your tutorial, please update the exclusion list of `doesnt_contain_max_epochs` in the [runner.sh](runner.sh)
 
-Finally, if your tutorial is not suitable for automated testing, please exclude the notebook by updating the `pattern` in the `runner.sh`.
-You can append another line in the `pattern`:
+Finally, if your tutorial is not suitable for automated testing, please exclude the notebook by updating the `skip_run_papermill` in the [runner.sh](runner.sh).
+You can append another line in the `skip_run_papermill`:
 ```
- -and ! -wholename '*<tutorial folder name>*'"
+skip_run_papermill=("${skip_run_papermill[@]}" .*<name of your notebook>*)
 ```
+
+If `runner.sh` is modified in your PR, the file permission of `runner.sh` could be set incorrectly in some cases.
+Please ensure the file permission is set to `-rwxrwxr-x` so that our test system can load the script.
+For more information about how to change file permission in git version control, this [StackOverflow page](https://stackoverflow.com/questions/10516201/updating-and-committing-only-a-files-permissions-using-git-version-control) could be helpful.
 
 ### Format requirements
 

@@ -240,10 +240,22 @@ But the MONAI tutorial has scheduled scans to check if all notebooks can be exec
 
 The notebook must be in a self-contained state, e.g. setting up the Python environment, downloading the dataset, performing the analysis, and preferably, cleaning up the intermediate files generated from the execution.
 
-To speed up the testing of a notebook with neural network training, please define a variable `max_epochs` in one cell of the training code.
-The testing system will search for `max_epoch` in the notebook, and set to value to `1` for faster notebook testing.
+During integration testing, we run these notebooks.
+To save time, we modify variables to avoid unnecessary `for` loop iterations.
+For example, the testing system will search for `max_epoch` in the notebook, and set to value to `1` for faster notebook testing.
 
-On the other hand, if the training is not part of your tutorial, please update the exclusion list of `doesnt_contain_max_epochs` in the [runner.sh](runner.sh)
+Hence, during training please use the variables:
+- `max_epochs` for the number of training epochs
+- `val_interval` for the validation interval
+
+On the other hand, if the training is not part of your tutorial, or doesn't use the idea of epochs, please update the exclusion list of `doesnt_contain_max_epochs` in the [runner.sh](runner.sh).
+This lets the runner know that it's not a problem if it doesn't find `max_epochs`.
+
+If you have any other variables that would benefit from setting them to `1` during testing, add them to `strings_to_replace` in `runner.sh`.
+These variables have been added to the list by other contributors:
+- `disc_train_interval` for GAN discriminator training inteval
+- `disc_train_steps` for GAN discriminator training steps
+- `num_batches_for_histogram`
 
 Finally, if your tutorial is not suitable for automated testing, please exclude the notebook by updating the `skip_run_papermill` in the [runner.sh](runner.sh).
 You can append another line in the `skip_run_papermill`:

@@ -339,7 +339,7 @@ for file in "${files[@]}"; do
 
 		if [ $skipRun = true ]; then
 			echo "Skipping"
-			break
+			continue
 		fi
 
 		echo Running notebook...

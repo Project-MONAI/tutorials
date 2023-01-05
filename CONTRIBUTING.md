@@ -170,9 +170,9 @@ By making a contribution to this project, I certify that:
 Once the changes are ready, push your local branch to the remote, e.g. `git push --set-upstream origin <your new branch name>`, and [open a pull request](https://github.com/Project-MONAI/tutorials/pulls).
 When the pull request is opened, the MONAI repository has a set of GitHub actions that will run checks on the changes.
 
-Please check more details in the [guidelines](#ci-test-passing-guide) on [how to pass the tests](#cicd-test-passing-guide).
+Please check more [details in the guidelines](#ci-test-passing-guide) for how to pass the tests.
 
-In addition, the team will perform diligent code reviews following this [set of guidelines](#strong-recommendations) to reduce the amount of work for users to run the tutorials.
+In addition, the team will perform diligent code reviews following this [set of guidelines](#common-recommendations-for-the-review) to reduce the amount of work for users to run the tutorials.
 
 ### Common recommendations for the review
 
@@ -185,7 +185,7 @@ Here are some recommendations to make your pull requests faster to review:
 - Be aware of the Hyperlink usage in the notebook:
   - Avoid linking MONAI tutorial resources in the repo using web links (instead, use relative file paths)
   - Avoid linking folders (folder links do not work well in Jupyter notebooks)
-  - For graphs, it is recommended to download them and add them to the repo in the ./figure folder under the root directory
+  - For graphs, it is recommended to download them and add them to the repo in the `./figure` folder under the root directory
 
 If your tutorial includes network training pipelines, we encourage implementations to scale the training on multiple GPUs.
 For example, if you are using `torchrun` for multi-GPU training, please feel free to include the Python scripts in your tutorial.

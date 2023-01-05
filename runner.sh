@@ -54,6 +54,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_monaibun
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_pancreas_tumor_segmentation_3DSlicer.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_endoscopy_cvat_tooltracking.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_pathology_nuclei_segmentation_QuPath.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" example_feature.ipynb)
 
 # Execution of the notebook in these folders / with the filename cannot be automated
 skip_run_papermill=()
@@ -118,12 +119,15 @@ function print_usage {
     echo "    -f, --failfast    : stop on first error"
     echo "    -p, --pattern     : pattern of files to be run (added to \`find . -type f -name *.ipynb -and ! -wholename *.ipynb_checkpoints*\`)"
     echo "    -h, --help        : show this help message and exit"
+	echo "    -t, --test		: shortcut to run a single notebook using pattern `-and -wholename`"
     echo "    -v, --version     : show MONAI and system version information and exit"
     echo ""
     echo "Examples:"
     echo "./runner.sh                             # run full tests (${green}recommended before making pull requests${noColor})."
     echo "./runner.sh --no-run                    # don't run the notebooks."
     echo "./runner.sh --no-checks                 # don't run code checks."
+	echo "./runner.sh -t 2d_classification/mednist_tutorial.ipynb"
+	echo "                                        # test if notebook mednist_tutorial.ipynb runs properly in test."
     echo "./runner.sh --pattern \"-and \( -name '*read*' -or -name '*load*' \) -and ! -wholename '*acceleration*'\""
     echo "                                        # check filenames containing \"read\" or \"load\", but not if the"
     echo "                                          whole path contains \"deepgrow\"."
@@ -172,6 +176,11 @@ do
             print_usage
             exit 0
         ;;
+		-t|--test)
+			pattern+="-and -wholename ./$2"
+			echo $pattern
+			shift
+		;;
         -v|--version)
             print_version
             exit 1

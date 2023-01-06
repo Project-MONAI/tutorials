@@ -37,4 +37,4 @@ jobs:
         python -m pip install -r requirements.txt
     - name: PEP8 check
       run: |
-        $(pwd)/runner.sh --no-run --no-check --copyright
+        $(pwd)/runner.sh --no-run --no-checks --copyright

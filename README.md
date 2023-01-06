@@ -135,7 +135,7 @@ inference on a pretrained DeepEdit model.
 
 #### <ins>**Deployment**</ins>
 ##### [BentoML](./deployment/bentoml)
-This is a simple example of training and deploying a MONAI network with [BentoML](https://www.bentoml.ai/) as a web server, either locally using the BentoML respository or as a containerized service.
+This is a simple example of training and deploying a MONAI network with [BentoML](https://www.bentoml.ai/) as a web server, either locally using the BentoML repository or as a containerized service.
 ##### [Ray](./deployment/ray)
 This uses the previous notebook's trained network to demonstrate deployment a web server using [Ray](https://docs.ray.io/en/master/serve/index.html#rayserve).
 ##### [Triton](./deployment/Triton/)
@@ -290,4 +290,4 @@ This tutorial demonstrates a transfer learning pipeline from a pretrained model 
 This tutorial shows several visualization approaches for 3D image during transform augmentation.
 
 #### [Auto3DSeg](./auto3dseg/)
-This folder shows how to run the comprehensive Auto3Dseg pipeline with minimal inputs and customize the Auto3Dseg modules to meet different user requirements.
+This folder shows how to run the comprehensive Auto3DSeg pipeline with minimal inputs and customize the Auto3Dseg modules to meet different user requirements.

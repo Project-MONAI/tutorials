@@ -12,7 +12,7 @@ jobs:
   #   - docker-20-03-py3-pip- (shared)
   #   - ubuntu py37 pip-
   #   - os-latest-pip- (shared)
-  pep8:
+  copyright:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -35,6 +35,6 @@ jobs:
         python -m pip install --upgrade pip wheel
         python -m pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/dev/requirements-dev.txt
         python -m pip install -r requirements.txt
-    - name: PEP8 check
+    - name: Copyright check
       run: |
         $(pwd)/runner.sh --no-run --no-checks --copyright

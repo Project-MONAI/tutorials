@@ -55,7 +55,6 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_pancreas
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_endoscopy_cvat_tooltracking.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_pathology_nuclei_segmentation_QuPath.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_radiology_spleen_segmentation_OHIF.ipynb)
-
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" example_feature.ipynb)
 
 # Execution of the notebook in these folders / with the filename cannot be automated

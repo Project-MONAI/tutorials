@@ -267,7 +267,7 @@ then
         fi
     done <<< "$(find "$(pwd)" -type f \
         -and -name "*.py" -or -name "*.sh" -or -name "*.cpp" -or -name "*.cu" -or -name "*.h")"
-	
+
 	while read -r fname; do
         copyright_all=$((copyright_all + 1))
         if [[ $(verify_notebook_has_key_in_cell "$fname" "$license" 0 "markdown" ) != true ]]; then

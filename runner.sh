@@ -119,19 +119,19 @@ function print_usage {
     echo "    --no-run          : don't run notebooks"
     echo "    --no-checks       : don't run code checks"
     echo "    --autofix         : autofix where possible"
-	echo "    --copyright       : check whether every source code and notebook has a copyright header"
+    echo "    --copyright       : check whether every source code and notebook has a copyright header"
     echo "    -f, --failfast    : stop on first error"
     echo "    -p, --pattern     : pattern of files to be run (added to \`find . -type f -name *.ipynb -and ! -wholename *.ipynb_checkpoints*\`)"
     echo "    -h, --help        : show this help message and exit"
-	echo "    -t, --test		: shortcut to run a single notebook using pattern `-and -wholename`"
+    echo "    -t, --test        : shortcut to run a single notebook using pattern `-and -wholename`"
     echo "    -v, --version     : show MONAI and system version information and exit"
     echo ""
     echo "Examples:"
     echo "./runner.sh                             # run full tests (${green}recommended before making pull requests${noColor})."
     echo "./runner.sh --no-run                    # don't run the notebooks."
     echo "./runner.sh --no-checks                 # don't run code checks."
-	echo "./runner.sh -t 2d_classification/mednist_tutorial.ipynb"
-	echo "                                        # test if notebook mednist_tutorial.ipynb runs properly in test."
+    echo "./runner.sh -t 2d_classification/mednist_tutorial.ipynb"
+    echo "                                        # test if notebook mednist_tutorial.ipynb runs properly in test."
     echo "./runner.sh --pattern \"-and \( -name '*read*' -or -name '*load*' \) -and ! -wholename '*acceleration*'\""
     echo "                                        # check filenames containing \"read\" or \"load\", but not if the"
     echo "                                          whole path contains \"deepgrow\"."
@@ -165,9 +165,9 @@ do
         --autofix)
             autofix=true
         ;;
-		--copyright)
-			doCopyright=true
-		;;
+        --copyright)
+            doCopyright=true
+        ;;
         -f|--failfast)
             failfast=true
         ;;
@@ -184,11 +184,11 @@ do
             print_usage
             exit 0
         ;;
-		-t|--test)
-			pattern+="-and -wholename ./$2"
-			echo $pattern
-			shift
-		;;
+        -t|--test)
+            pattern+="-and -wholename ./$2"
+            echo $pattern
+            shift
+        ;;
         -v|--version)
             print_version
             exit 1
@@ -254,11 +254,11 @@ END
 
 if [ $doCopyright = true ]
 then
-	check_installed nbformat
+    check_installed nbformat
     # check copyright headers
     copyright_bad=0
     copyright_all=0
-	license="http://www.apache.org/licenses/LICENSE-2.0"
+    license="http://www.apache.org/licenses/LICENSE-2.0"
     while read -r fname; do
         copyright_all=$((copyright_all + 1))
         if ! grep "$license" "$fname" > /dev/null; then
@@ -268,7 +268,7 @@ then
     done <<< "$(find "$(pwd)" -type f \
         -and -name "*.py" -or -name "*.sh" -or -name "*.cpp" -or -name "*.cu" -or -name "*.h")"
 
-	while read -r fname; do
+    while read -r fname; do
         copyright_all=$((copyright_all + 1))
         if [[ $(verify_notebook_has_key_in_cell "$fname" "$license" 0 "markdown" ) != true ]]; then
             print_error_msg "Missing the license header the first markdown cell of file: $fname"

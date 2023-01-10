@@ -102,6 +102,7 @@ fi
 doChecks=true
 doCopyright=false
 doRun=true
+doStandardize=false
 autofix=false
 failfast=false
 pattern=""
@@ -122,6 +123,7 @@ function print_usage {
     echo "    --no-checks       : don't run code checks"
     echo "    --autofix         : autofix where possible"
     echo "    --copyright       : check whether every source code and notebook has a copyright header"
+    echo "    --standards       : check guidelines standards such as ## setup environment cell blocks"
     echo "    -f, --failfast    : stop on first error"
     echo "    -p, --pattern     : pattern of files to be run (added to \`find . -type f -name *.ipynb -and ! -wholename *.ipynb_checkpoints*\`)"
     echo "    -h, --help        : show this help message and exit"
@@ -185,6 +187,9 @@ do
         -h|--help)
             print_usage
             exit 0
+        ;;
+        --standards)
+            doStandardize=true
         ;;
         -t|--test)
             pattern+="-and -wholename ./$2"
@@ -289,6 +294,30 @@ then
     fi
 fi
 
+if [ $doStandardize = true ]
+then
+    # check guideline requirements on standard cells
+    unstandardized=0
+    standards_all=0
+    environment_title="(## Setup environment|## 1. Prepare MONAI Label)"
+    while read -r fname; do
+        standards_all=$((standards_all + 1))
+        if [[ $(verify_notebook_has_key_in_cell "$fname" "$environment_title" 1 "markdown" ) != true ]]; then
+            print_error_msg "Missing the \"## Setup environment\" in the second markdown cell of file: $fname"
+            unstandardized=$((unstandardized + 1))
+        fi
+    done <<< "$(find "$(pwd)" -type f -name "*.ipynb" -and ! -wholename "*.ipynb_checkpoints*")"
+    if [[ ${unstandardized} -eq 0 ]];
+
+    then
+        echo "${green}Notebook check ($copyright_all).${noColor}"
+    else
+        echo "Please put \"## Setup environment\" to the file ($unstandardized of $standards_all files)."
+        echo "  See also: https://github.com/Project-MONAI/tutorials/blob/main/CONTRIBUTING.md#create-a-notebook"
+        echo ""
+        exit 1
+    fi
+fi
 
 base_path="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 cd "${base_path}"
@@ -390,7 +419,6 @@ for file in "${files[@]}"; do
 		skipRun=false
 
 		for skip_pattern in "${skip_run_papermill[@]}"; do
-			echo "$skip_pattern"
 			if [[  $file =~ $skip_pattern ]]; then
 				echo "Skip Pattern Match"
 				skipRun=true

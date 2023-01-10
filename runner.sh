@@ -54,6 +54,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_monaibun
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_pancreas_tumor_segmentation_3DSlicer.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_endoscopy_cvat_tooltracking.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_pathology_nuclei_segmentation_QuPath.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_radiology_spleen_segmentation_OHIF.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" example_feature.ipynb)
 
 # Execution of the notebook in these folders / with the filename cannot be automated
@@ -80,6 +81,7 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_monaibundle_3dslicer
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_pancreas_tumor_segmentation_3DSlicer*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_endoscopy_cvat_tooltracking*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_pathology_nuclei_segmentation_QuPath*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_radiology_spleen_segmentation_OHIF*)
 
 # output formatting
 separator=""

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2020 MONAI Consortium
+# Copyright (c) MONAI Consortium
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -100,12 +100,15 @@ then
 fi
 
 doChecks=true
+doCopyright=false
 doRun=true
 autofix=false
 failfast=false
 pattern=""
 
 kernelspec="python3"
+
+PY_EXE=${MONAI_PY_EXE:-$(which python)}
 
 function print_usage {
     echo "runner.sh [--no-run] [--no-checks] [--autofix] [-f/--failfast] [-p/--pattern <find pattern>] [-h/--help]"
@@ -118,18 +121,19 @@ function print_usage {
     echo "    --no-run          : don't run notebooks"
     echo "    --no-checks       : don't run code checks"
     echo "    --autofix         : autofix where possible"
+    echo "    --copyright       : check whether every source code and notebook has a copyright header"
     echo "    -f, --failfast    : stop on first error"
     echo "    -p, --pattern     : pattern of files to be run (added to \`find . -type f -name *.ipynb -and ! -wholename *.ipynb_checkpoints*\`)"
     echo "    -h, --help        : show this help message and exit"
-	echo "    -t, --test		: shortcut to run a single notebook using pattern `-and -wholename`"
+    echo "    -t, --test        : shortcut to run a single notebook using pattern `-and -wholename`"
     echo "    -v, --version     : show MONAI and system version information and exit"
     echo ""
     echo "Examples:"
     echo "./runner.sh                             # run full tests (${green}recommended before making pull requests${noColor})."
     echo "./runner.sh --no-run                    # don't run the notebooks."
     echo "./runner.sh --no-checks                 # don't run code checks."
-	echo "./runner.sh -t 2d_classification/mednist_tutorial.ipynb"
-	echo "                                        # test if notebook mednist_tutorial.ipynb runs properly in test."
+    echo "./runner.sh -t 2d_classification/mednist_tutorial.ipynb"
+    echo "                                        # test if notebook mednist_tutorial.ipynb runs properly in test."
     echo "./runner.sh --pattern \"-and \( -name '*read*' -or -name '*load*' \) -and ! -wholename '*acceleration*'\""
     echo "                                        # check filenames containing \"read\" or \"load\", but not if the"
     echo "                                          whole path contains \"deepgrow\"."
@@ -138,6 +142,7 @@ function print_usage {
     echo "${separator}For bug reports, questions, and discussions, please file an issue at:"
     echo "    https://github.com/Project-MONAI/MONAI/issues/new/choose"
     echo ""
+    echo "To choose an alternative python executable, set the environmental variable, \"MONAI_PY_EXE\"."
 }
 
 function print_style_fail_msg() {
@@ -162,6 +167,9 @@ do
         --autofix)
             autofix=true
         ;;
+        --copyright)
+            doCopyright=true
+        ;;
         -f|--failfast)
             failfast=true
         ;;
@@ -178,11 +186,11 @@ do
             print_usage
             exit 0
         ;;
-		-t|--test)
-			pattern+="-and -wholename ./$2"
-			echo $pattern
-			shift
-		;;
+        -t|--test)
+            pattern+="-and -wholename ./$2"
+            echo $pattern
+            shift
+        ;;
         -v|--version)
             print_version
             exit 1
@@ -229,6 +237,58 @@ if [ $doChecks = true ]; then
 	fi
 fi
 
+function verify_notebook_has_key_in_cell() {
+    fname=$1
+    key=$2
+    cell=$3
+    celltype=$4
+    ${PY_EXE} - << END
+import nbformat
+import re
+
+with open("$fname", "r") as f:
+    contents = nbformat.reads(f.read(), as_version=4)
+    cell = contents.cells[int("$cell")]
+    result = "true" if cell.cell_type == "$celltype" and re.search("$key", cell.source) else "false"
+print(result)
+END
+}
+
+if [ $doCopyright = true ]
+then
+    check_installed nbformat
+    # check copyright headers
+    copyright_bad=0
+    copyright_all=0
+    license="http://www.apache.org/licenses/LICENSE-2.0"
+    while read -r fname; do
+        copyright_all=$((copyright_all + 1))
+        if ! grep "$license" "$fname" > /dev/null; then
+            print_error_msg "Missing the license header in file: $fname"
+            copyright_bad=$((copyright_bad + 1))
+        fi
+    done <<< "$(find "$(pwd)" -type f \
+        -and -name "*.py" -or -name "*.sh" -or -name "*.cpp" -or -name "*.cu" -or -name "*.h")"
+
+    while read -r fname; do
+        copyright_all=$((copyright_all + 1))
+        if [[ $(verify_notebook_has_key_in_cell "$fname" "$license" 0 "markdown" ) != true ]]; then
+            print_error_msg "Missing the license header the first markdown cell of file: $fname"
+            copyright_bad=$((copyright_bad + 1))
+        fi
+    done <<< "$(find "$(pwd)" -type f -name "*.ipynb" -and ! -wholename "*.ipynb_checkpoints*")"
+
+    if [[ ${copyright_bad} -eq 0 ]];
+    then
+        echo "${green}Source code copyright headers checked ($copyright_all).${noColor}"
+    else
+        echo "Please add the licensing header to the file ($copyright_bad of $copyright_all files)."
+        echo "  See also: https://github.com/Project-MONAI/tutorials/blob/main/CONTRIBUTING.md#add-license"
+        echo ""
+        exit 1
+    fi
+fi
+
 
 base_path="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 cd "${base_path}"
@@ -246,14 +306,13 @@ function replace_text {
 	[ ! -z "$after"  ] && echo After: && echo "$after"
 }
 
-# Get notebooks (pattern is "-and -name '*' -and ! -wholename '*federated_learning*'"
-# unless user specifies otherwise)
+# Get notebooks (pattern is an empty string unless the user specifies otherwise)
 files=($(echo $pattern | xargs find . -type f -name "*.ipynb" -and ! -wholename "*.ipynb_checkpoints*"))
 if [[ $files == "" ]]; then
 	print_error_msg "No files match pattern"
 	exit 0
 fi
-echo "Files to be tested:"
+echo "Notebook files to be tested:"
 for i in "${files[@]}"; do echo $i; done
 
 # Keep track of number of passed tests. Use a trap to print results on exit

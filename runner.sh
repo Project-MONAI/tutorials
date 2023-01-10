@@ -102,7 +102,7 @@ fi
 doChecks=true
 doCopyright=false
 doRun=true
-doStandardize=false
+doStandardizeCells=false
 autofix=false
 failfast=false
 pattern=""
@@ -122,8 +122,8 @@ function print_usage {
     echo "    --no-run          : don't run notebooks"
     echo "    --no-checks       : don't run code checks"
     echo "    --autofix         : autofix where possible"
+    echo "    --cell-standard   : check guidelines standards such as ## setup environment cell blocks"
     echo "    --copyright       : check whether every source code and notebook has a copyright header"
-    echo "    --standards       : check guidelines standards such as ## setup environment cell blocks"
     echo "    -f, --failfast    : stop on first error"
     echo "    -p, --pattern     : pattern of files to be run (added to \`find . -type f -name *.ipynb -and ! -wholename *.ipynb_checkpoints*\`)"
     echo "    -h, --help        : show this help message and exit"
@@ -140,6 +140,10 @@ function print_usage {
     echo "                                        # check filenames containing \"read\" or \"load\", but not if the"
     echo "                                          whole path contains \"deepgrow\"."
     echo "./runner.sh --kernelspec \"kernel\"       # Set the kernelspec value used to run notebooks, default is \"python3\"."
+    echo "./runner.sh --no-checks --no-run --copyright
+    echo "                                        # test if all notebooks and scripts have the copyright header"
+    echo "./runner.sh --no-checks --no-run --cell-standard
+    echo "                                        # test if all notebooks follow the cell standards in contributing guidelines"
     echo ""
     echo "${separator}For bug reports, questions, and discussions, please file an issue at:"
     echo "    https://github.com/Project-MONAI/MONAI/issues/new/choose"
@@ -169,6 +173,9 @@ do
         --autofix)
             autofix=true
         ;;
+        --cell-standard)
+            doStandardizeCells=true
+        ;;
         --copyright)
             doCopyright=true
         ;;
@@ -187,9 +194,6 @@ do
         -h|--help)
             print_usage
             exit 0
-        ;;
-        --standards)
-            doStandardize=true
         ;;
         -t|--test)
             pattern+="-and -wholename ./$2"
@@ -294,7 +298,7 @@ then
     fi
 fi
 
-if [ $doStandardize = true ]
+if [ $doStandardizeCells = true ]
 then
     # check guideline requirements on standard cells
     unstandardized=0

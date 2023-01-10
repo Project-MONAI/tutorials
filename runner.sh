@@ -21,6 +21,7 @@ set -e
 ########################################################################
 # These files don't loop across epochs
 doesnt_contain_max_epochs=()
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" msd_datalist_generator.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" load_medical_images.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" integrate_3rd_party_transforms.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" transform_speed.ipynb)

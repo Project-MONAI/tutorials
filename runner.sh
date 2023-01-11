@@ -320,13 +320,13 @@ then
             fi
         fi
 
-		# the third cell should be code and contain "pip install"
-		if [[ $(${NB_TEST} verify -f "$fname" -i $code_ind -k "pip install" --type code) != true ]]; then
+        # the third cell should be code and contain "pip install"
+        if [[ $(${NB_TEST} verify -f "$fname" -i $code_ind -k "pip install" --type code) != true ]]; then
             print_error_msg "Missing the shell command \"pip install -q\" in the first code cell of file: $fname"
             standardized=false
         fi
 
-		# if import is used, then it should have the Setup import(s) markdown
+        # if import is used, then it should have the Setup import(s) markdown
         if [[ $(${NB_TEST} verify -f "$fname" -k "(^import|[\n\r]import|^from|[\n\r]from)" --type code) == true ]]
         then
             if [[ $(${NB_TEST} verify -f "$fname" -i $((code_ind + 1)) -k "Setup import") != true ]]; then

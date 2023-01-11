@@ -293,7 +293,7 @@ def main_worker(gpu, args):
             RandFlipd(keys=["image"], spatial_axis=0, prob=0.5),
             RandFlipd(keys=["image"], spatial_axis=1, prob=0.5),
             RandRotate90d(keys=["image"], prob=0.5),
-            ScaleIntensityRanged(keys=["image"], a_min=np.float32(255), a_max=np.float32(0)),
+            ScaleIntensityRanged(keys=["image"], a_min=np.float32(0), a_max=np.float32(255)),
             ToTensord(keys=["image", "label"]),
         ]
     )
@@ -310,7 +310,7 @@ def main_worker(gpu, args):
                 constant_values=255,
             ),
             SplitDimd(keys=["image"], dim=0, keepdim=False, list_output=True),
-            ScaleIntensityRanged(keys=["image"], a_min=np.float32(255), a_max=np.float32(0)),
+            ScaleIntensityRanged(keys=["image"], a_min=np.float32(0), a_max=np.float32(255)),
             ToTensord(keys=["image", "label"]),
         ]
     )

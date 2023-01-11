@@ -60,7 +60,7 @@ Finally, the MONAI tutorial has a [README file](README.md) to communicate the im
 All source code and notebook files should include copyright information at the top of the file.
 
 NOTE: for Jupyter Notebook `.ipynb` files, the copyright information should appear at the top of the first markdown cell.
-There are extra two spaces at the end of each line to ensure no line auto-wrap in the markdown rendering in the display.
+There are *two extra spaces* at the end of each line to ensure no line auto-wrap in the markdown rendering in the display, e.g. the first line of the copyright should be `"Copyright (c) MONAI Consortium  \n"` instead of `"Copyright (c) MONAI Consortium\n"` in the raw string format.
 
 ```markdown
 Copyright (c) MONAI Consortium

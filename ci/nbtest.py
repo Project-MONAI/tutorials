@@ -40,7 +40,7 @@ def define_parser(parser):
 def count_matches(filename, start, end, keyword, cell_type="markdown", field="source"):
     """Count the number of keyword matches from start index to end index"""
     occurrences = []
-    
+
     with open(filename, "r") as f:
         notebook = nbformat.reads(f.read(), as_version=4)
         cells = notebook.cells[start:end]
@@ -53,12 +53,12 @@ def count_matches(filename, start, end, keyword, cell_type="markdown", field="so
                 #  treat backslashes as literal characters
                 keyword_rawstring = repr(keyword)[1:-1]  # remove the single quotes before/after the word
                 occurrences.append(len(re.findall(keyword_rawstring, str(cell[field]))))  # value can be list of dict
-    
+
     return occurrences
 
 def print_verification_bool(*args, **kwargs):
     """Print true/false for whether target cells match the keyword and the cell_type to interface with bash"""
-    
+
     result = "true" if sum(count_matches(*args, **kwargs)) else "false"
     print(result)
 
@@ -71,7 +71,7 @@ def main():
     parser = argparse.ArgumentParser()
     # Create a "subparsers" object to hold the subcommands
     subparsers = parser.add_subparsers(title="subcommands", dest="subcommand")
-    
+
     # Create a parser for the "verify" subcommand
     parser_verify = subparsers.add_parser("verify")
     define_parser(parser_verify)

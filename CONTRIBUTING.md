@@ -59,22 +59,38 @@ Finally, the MONAI tutorial has a [README file](README.md) to communicate the im
 
 All source code and notebook files should include copyright information at the top of the file.
 
-NOTE: for Jupyter Notebook `.ipynb` files, the copyright information should appear at the top of the first markdown cell.
-There are extra two spaces at the end of each line to ensure no line auto-wrap in the markdown rendering in the display.
+NOTE: For script files (python, shell commands, and etc), please use the following header
 
-```markdown
-Copyright (c) MONAI Consortium
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-    http://www.apache.org/licenses/LICENSE-2.0
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
+```python
+# Copyright (c) MONAI Consortium
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 ```
+
+NOTE: For Jupyter notebook `.ipynb` files, the copyright information should appear at the top of the first markdown cell.
+There are *two extra spaces* at the end of each line to ensure no line auto-wrap in the markdown rendering in the display, e.g. the first line of the copyright should be `"Copyright (c) MONAI Consortium  \n"` instead of `"Copyright (c) MONAI Consortium\n"` in the raw string format.
+Indentation in markdown is represented by consecutive 4 non-breaking space entities `&nbsp;`  in the line.
+
+Please copy the following header with formats and paste it in the first markdown cell of a Jupyter notebook:
+<pre>
+Copyright (c) MONAI Consortium  <space>
+Licensed under the Apache License, Version 2.0 (the "License");  <space>
+you may not use this file except in compliance with the License.  <space>
+You may obtain a copy of the License at  <space>
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;http://www.apache.org/licenses/LICENSE-2.0  <space>
+Unless required by applicable law or agreed to in writing, software  <space>
+distributed under the License is distributed on an "AS IS" BASIS,  <space>
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  <space>
+See the License for the specific language governing permissions and  <space>
+limitations under the License.
+</pre>
 
 ### Create a notebook
 

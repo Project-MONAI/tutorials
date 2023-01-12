@@ -103,6 +103,7 @@ fi
 doChecks=true
 doCopyright=false
 doRun=true
+doStandardizeCells=false
 autofix=false
 failfast=false
 pattern=""
@@ -110,6 +111,8 @@ pattern=""
 kernelspec="python3"
 
 PY_EXE=${MONAI_PY_EXE:-$(which python)}
+NB_TEST="$PY_EXE ci/nbtest.py"
+NB_OUTPUT_LINE_CAP=100
 
 function print_usage {
     echo "runner.sh [--no-run] [--no-checks] [--autofix] [-f/--failfast] [-p/--pattern <find pattern>] [-h/--help]"
@@ -122,6 +125,7 @@ function print_usage {
     echo "    --no-run          : don't run notebooks"
     echo "    --no-checks       : don't run code checks"
     echo "    --autofix         : autofix where possible"
+    echo "    --cell-standard   : check guidelines standards such as ## setup environment cell blocks"
     echo "    --copyright       : check whether every source code and notebook has a copyright header"
     echo "    -f, --failfast    : stop on first error"
     echo "    -p, --pattern     : pattern of files to be run (added to \`find . -type f -name *.ipynb -and ! -wholename *.ipynb_checkpoints*\`)"
@@ -139,6 +143,10 @@ function print_usage {
     echo "                                        # check filenames containing \"read\" or \"load\", but not if the"
     echo "                                          whole path contains \"deepgrow\"."
     echo "./runner.sh --kernelspec \"kernel\"       # Set the kernelspec value used to run notebooks, default is \"python3\"."
+    echo "./runner.sh --no-checks --no-run --copyright
+    echo "                                        # test if all notebooks and scripts have the copyright header"
+    echo "./runner.sh --no-checks --no-run --cell-standard
+    echo "                                        # test if all notebooks follow the cell standards in contributing guidelines"
     echo ""
     echo "${separator}For bug reports, questions, and discussions, please file an issue at:"
     echo "    https://github.com/Project-MONAI/MONAI/issues/new/choose"
@@ -167,6 +175,9 @@ do
         ;;
         --autofix)
             autofix=true
+        ;;
+        --cell-standard)
+            doStandardizeCells=true
         ;;
         --copyright)
             doCopyright=true
@@ -238,23 +249,6 @@ if [ $doChecks = true ]; then
     fi
 fi
 
-function verify_notebook_has_key_in_cell() {
-    fname=$1
-    key=$2
-    cell=$3
-    celltype=$4
-    ${PY_EXE} - << END
-import nbformat
-import re
-
-with open("$fname", "r") as f:
-    contents = nbformat.reads(f.read(), as_version=4)
-    cell = contents.cells[int("$cell")]
-    result = "true" if cell.cell_type == "$celltype" and re.search("$key", cell.source) else "false"
-print(result)
-END
-}
-
 if [ $doCopyright = true ]
 then
     check_installed nbformat
@@ -273,7 +267,7 @@ then
 
     while read -r fname; do
         copyright_all=$((copyright_all + 1))
-        if [[ $(verify_notebook_has_key_in_cell "$fname" "$license" 0 "markdown" ) != true ]]; then
+        if [[ $(${NB_TEST} verify -f "$fname" -i 0 -k "$license") != true ]]; then
             print_error_msg "Missing the license header the first markdown cell of file: $fname"
             copyright_bad=$((copyright_bad + 1))
         fi
@@ -290,6 +284,89 @@ then
     fi
 fi
 
+if [ $doStandardizeCells = true ]
+then
+    # check guideline requirements on standard cells
+    standards_all=0
+    standards_bad=0
+    while read -r fname; do
+        standards_all=$((standards_all + 1))
+        standardized=true
+
+        code_ind=0
+        IFS=' ' read -r -a code_cell_counts <<< $(${NB_TEST} count -f "$fname" --type code)
+
+        for element in ${code_cell_counts[@]} ; do
+            if [[ $element != 0 ]]; then
+                break
+            fi
+            code_ind=$((code_ind + 1))
+        done
+
+        # there should be at least one code cell
+        if [[ $code_ind == ${#code_cell_counts[@]} ]]; then
+            print_error_msg "Missing code cells in the file: $fname"
+            standardized=false
+        fi
+
+        if [[ $code_ind == 0 ]]; then
+            print_error_msg "Missing necessary markdown (e.g. copyright header) in the file: $fname"
+            print_error_msg "Missing the \"Setup environment\" before the first code cell of file: $fname"
+            standardized=false
+        else
+            # the second cell should be in markdown and contain "Setup environment"
+            if [[ $(${NB_TEST} verify -f "$fname" -i $((code_ind - 1)) -k "Setup [eE]nvironment") != true ]]; then
+                print_error_msg "\"Setup environment\" is missing or not right before the first code cell of file: $fname"
+                standardized=false
+            fi
+        fi
+
+        # the third cell should be code and contain "pip install"
+        if [[ $(${NB_TEST} verify -f "$fname" -i $code_ind -k "pip install" --type code) != true ]]; then
+            print_error_msg "Missing the shell command \"pip install -q\" in the first code cell of file: $fname"
+            standardized=false
+        fi
+
+        # if import is used, then it should have the Setup import(s) markdown
+        if [[ $(${NB_TEST} verify -f "$fname" -k "(^import|[\n\r]import|^from|[\n\r]from)" --type code) == true ]]
+        then
+            if [[ $(${NB_TEST} verify -f "$fname" -i $((code_ind + 1)) -k "Setup import") != true ]]; then
+                print_error_msg "Missing the \"Setup imports\" after the first code cell of file: $fname"
+                standardized=false
+            fi
+
+            if [[ $(${NB_TEST} verify -f "$fname" -i $((code_ind + 2)) -k "print_config()" --type code) != true ]]; then
+                print_error_msg "print_config() cannot be found after the \"Setup imports\" markdown cell in file: $fname"
+                standardized=false
+            fi
+        fi
+
+        # the number of lines in text outputs should be under the limit
+        ind=0
+        IFS=' ' read -r -a output_line_counts <<< $(${NB_TEST} count -f "$fname" -k "\n" --type code --field outputs)
+        for element in ${output_line_counts[@]}; do
+            if [[ $element -ge $NB_OUTPUT_LINE_CAP ]]; then
+                standardized=false
+                print_error_msg "Output text in cell #$ind has more than $NB_OUTPUT_LINE_CAP lines in file: $fname"
+                break
+            fi
+            ind=$((ind + 1))
+        done
+
+        if [[ $standardized == false ]]; then
+            standards_bad=$((standards_bad + 1))
+        fi
+    done <<< "$(find "$(pwd)" -type f -name "*.ipynb" -and ! -wholename "*.ipynb_checkpoints*")"
+
+    if [[ ${standards_bad} -eq 0 ]]; then
+        echo "${green}Notebook check ($standards_all).${noColor}"
+    else
+        echo "Please fix the notebook formats in ($standards_bad of $standards_all files)."
+        echo "  See also: https://github.com/Project-MONAI/tutorials/blob/main/CONTRIBUTING.md#create-a-notebook"
+        echo ""
+        exit 1
+    fi
+fi
 
 base_path="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 cd "${base_path}"
@@ -391,7 +468,6 @@ for file in "${files[@]}"; do
         skipRun=false
 
         for skip_pattern in "${skip_run_papermill[@]}"; do
-            echo "$skip_pattern"
             if [[  $file =~ $skip_pattern ]]; then
                 echo "Skip Pattern Match"
                 skipRun=true

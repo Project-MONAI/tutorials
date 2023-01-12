@@ -44,7 +44,7 @@ We have demonstrated preliminary results of public datasets are described in the
 - [INSTANCE22](tasks/instance22/README.md)
 - [Beyond the Cranial Vault (BTCV) Abdomen Dataset](tasks/btcv/README.md)
 - Medical Segmentation Decathlon (MSD) Dataset
-        - [Task04 Task04_Hippocampus](tasks/msd/Task04_Hippocampus/README.md)
+	- [Task04 Task04_Hippocampus](tasks/msd/Task04_Hippocampus/README.md)
 	- [Task05 Prostate](tasks/msd/Task05_Prostate/README.md)
 	- [Task09 Spleen](tasks/msd/Task09_Spleen/README.md)
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2020 MONAI Consortium
+# Copyright (c) MONAI Consortium
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -55,6 +55,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_monaibun
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_pancreas_tumor_segmentation_3DSlicer.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_endoscopy_cvat_tooltracking.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_pathology_nuclei_segmentation_QuPath.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_radiology_spleen_segmentation_OHIF.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" example_feature.ipynb)
 
 # Execution of the notebook in these folders / with the filename cannot be automated
@@ -81,6 +82,7 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_monaibundle_3dslicer
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_pancreas_tumor_segmentation_3DSlicer*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_endoscopy_cvat_tooltracking*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_pathology_nuclei_segmentation_QuPath*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_radiology_spleen_segmentation_OHIF*)
 
 # output formatting
 separator=""
@@ -99,12 +101,15 @@ then
 fi
 
 doChecks=true
+doCopyright=false
 doRun=true
 autofix=false
 failfast=false
 pattern=""
 
 kernelspec="python3"
+
+PY_EXE=${MONAI_PY_EXE:-$(which python)}
 
 function print_usage {
     echo "runner.sh [--no-run] [--no-checks] [--autofix] [-f/--failfast] [-p/--pattern <find pattern>] [-h/--help]"
@@ -117,18 +122,19 @@ function print_usage {
     echo "    --no-run          : don't run notebooks"
     echo "    --no-checks       : don't run code checks"
     echo "    --autofix         : autofix where possible"
+    echo "    --copyright       : check whether every source code and notebook has a copyright header"
     echo "    -f, --failfast    : stop on first error"
     echo "    -p, --pattern     : pattern of files to be run (added to \`find . -type f -name *.ipynb -and ! -wholename *.ipynb_checkpoints*\`)"
     echo "    -h, --help        : show this help message and exit"
-	echo "    -t, --test		: shortcut to run a single notebook using pattern `-and -wholename`"
+    echo "    -t, --test        : shortcut to run a single notebook using pattern \`-and -wholename\`"
     echo "    -v, --version     : show MONAI and system version information and exit"
     echo ""
     echo "Examples:"
     echo "./runner.sh                             # run full tests (${green}recommended before making pull requests${noColor})."
     echo "./runner.sh --no-run                    # don't run the notebooks."
     echo "./runner.sh --no-checks                 # don't run code checks."
-	echo "./runner.sh -t 2d_classification/mednist_tutorial.ipynb"
-	echo "                                        # test if notebook mednist_tutorial.ipynb runs properly in test."
+    echo "./runner.sh -t 2d_classification/mednist_tutorial.ipynb"
+    echo "                                        # test if notebook mednist_tutorial.ipynb runs properly in test."
     echo "./runner.sh --pattern \"-and \( -name '*read*' -or -name '*load*' \) -and ! -wholename '*acceleration*'\""
     echo "                                        # check filenames containing \"read\" or \"load\", but not if the"
     echo "                                          whole path contains \"deepgrow\"."
@@ -137,6 +143,7 @@ function print_usage {
     echo "${separator}For bug reports, questions, and discussions, please file an issue at:"
     echo "    https://github.com/Project-MONAI/MONAI/issues/new/choose"
     echo ""
+    echo "To choose an alternative python executable, set the environmental variable, \"MONAI_PY_EXE\"."
 }
 
 function print_style_fail_msg() {
@@ -161,6 +168,9 @@ do
         --autofix)
             autofix=true
         ;;
+        --copyright)
+            doCopyright=true
+        ;;
         -f|--failfast)
             failfast=true
         ;;
@@ -177,11 +187,11 @@ do
             print_usage
             exit 0
         ;;
-		-t|--test)
-			pattern+="-and -wholename ./$2"
-			echo $pattern
-			shift
-		;;
+        -t|--test)
+            pattern+="-and -wholename ./$2"
+            echo $pattern
+            shift
+        ;;
         -v|--version)
             print_version
             exit 1
@@ -197,35 +207,87 @@ done
 
 # if failfast, exit returning code. else increment number of failed tests and continue
 function test_fail {
-	print_style_fail_msg
-	if [ $failfast = true ]; then
-		exit $1
-	fi
-	current_test_successful=1
+    print_style_fail_msg
+    if [ $failfast = true ]; then
+        exit $1
+    fi
+    current_test_successful=1
 }
 
 function check_installed {
-	set +e
-	command -v $1 &>/dev/null
-	set -e
-	success=$?
-	if [ ${success} -ne 0 ]; then
-		print_error_msg "Missing package: $1 (try pip install -r requirements.txt)"
-		exit $success
-	fi
+    set +e
+    command -v $1 &>/dev/null
+    success=$?
+    set -e
+    if [ ${success} -ne 0 ]; then
+        print_error_msg "Missing package: $1 (trying pip install -r requirements.txt)"
+        ${PY_EXE} -m pip install -r requirements.txt
+    fi
 }
 
 # check that packages are installed
 if [ $doRun = true ]; then
-	check_installed papermill
+    check_installed papermill
 fi
 if [ $doChecks = true ]; then
-	check_installed jupytext
-	check_installed flake8
-	if [ $autofix = true ]; then
-		check_installed autopep8
-		check_installed autoflake
-	fi
+    check_installed jupytext
+    check_installed flake8
+    if [ $autofix = true ]; then
+        check_installed autopep8
+        check_installed autoflake
+    fi
+fi
+
+function verify_notebook_has_key_in_cell() {
+    fname=$1
+    key=$2
+    cell=$3
+    celltype=$4
+    ${PY_EXE} - << END
+import nbformat
+import re
+
+with open("$fname", "r") as f:
+    contents = nbformat.reads(f.read(), as_version=4)
+    cell = contents.cells[int("$cell")]
+    result = "true" if cell.cell_type == "$celltype" and re.search("$key", cell.source) else "false"
+print(result)
+END
+}
+
+if [ $doCopyright = true ]
+then
+    check_installed nbformat
+    # check copyright headers
+    copyright_bad=0
+    copyright_all=0
+    license="http://www.apache.org/licenses/LICENSE-2.0"
+    while read -r fname; do
+        copyright_all=$((copyright_all + 1))
+        if ! grep "$license" "$fname" > /dev/null; then
+            print_error_msg "Missing the license header in file: $fname"
+            copyright_bad=$((copyright_bad + 1))
+        fi
+    done <<< "$(find "$(pwd)" -type f \
+        -and -name "*.py" -or -name "*.sh" -or -name "*.cpp" -or -name "*.cu" -or -name "*.h")"
+
+    while read -r fname; do
+        copyright_all=$((copyright_all + 1))
+        if [[ $(verify_notebook_has_key_in_cell "$fname" "$license" 0 "markdown" ) != true ]]; then
+            print_error_msg "Missing the license header the first markdown cell of file: $fname"
+            copyright_bad=$((copyright_bad + 1))
+        fi
+    done <<< "$(find "$(pwd)" -type f -name "*.ipynb" -and ! -wholename "*.ipynb_checkpoints*")"
+
+    if [[ ${copyright_bad} -eq 0 ]];
+    then
+        echo "${green}Source code copyright headers checked ($copyright_all).${noColor}"
+    else
+        echo "Please add the licensing header to the file ($copyright_bad of $copyright_all files)."
+        echo "  See also: https://github.com/Project-MONAI/tutorials/blob/main/CONTRIBUTING.md#add-license"
+        echo ""
+        exit 1
+    fi
 fi
 
 
@@ -233,26 +295,25 @@ base_path="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 cd "${base_path}"
 
 function replace_text {
-	oldString="${s}\s*=\s*[0-9]\+"
-	newString="${s} = 1"
+    oldString="${s}\s*=\s*[0-9]\+"
+    newString="${s} = 1"
 
-	before=$(echo "$notebook" | grep "$oldString")
-	[ ! -z "$before" ] && echo Before: && echo "$before"
+    before=$(echo "$notebook" | grep "$oldString")
+    [ ! -z "$before" ] && echo Before: && echo "$before"
 
-	notebook=$(echo "$notebook" | sed "s/$oldString/$newString/g")
+    notebook=$(echo "$notebook" | sed "s/$oldString/$newString/g")
 
-	after=$(echo "$notebook" | grep "$newString")
-	[ ! -z "$after"  ] && echo After: && echo "$after"
+    after=$(echo "$notebook" | grep "$newString")
+    [ ! -z "$after"  ] && echo After: && echo "$after"
 }
 
-# Get notebooks (pattern is "-and -name '*' -and ! -wholename '*federated_learning*'"
-# unless user specifies otherwise)
+# Get notebooks (pattern is an empty string unless the user specifies otherwise)
 files=($(echo $pattern | xargs find . -type f -name "*.ipynb" -and ! -wholename "*.ipynb_checkpoints*"))
 if [[ $files == "" ]]; then
-	print_error_msg "No files match pattern"
-	exit 0
+    print_error_msg "No files match pattern"
+    exit 0
 fi
-echo "Files to be tested:"
+echo "Notebook files to be tested:"
 for i in "${files[@]}"; do echo $i; done
 
 # Keep track of number of passed tests. Use a trap to print results on exit
@@ -260,14 +321,14 @@ num_successful_tests=0
 num_tested=0
 # on finish
 function finish {
-  	if [[ ${num_successful_tests} -eq ${num_tested} ]]; then
-		echo -e "\n\n\n${green}Testing finished. All ${num_tested} executed tests passed!${noColor}"
-	else
-		echo -e "\n\n\n${red}Testing finished. ${num_successful_tests} of ${num_tested} executed tests passed!${noColor}"
-	fi
-	# notification
-	echo -e "\a"
-	exit $((num_tested - num_successful_tests))
+    if [[ ${num_successful_tests} -eq ${num_tested} ]]; then
+        echo -e "\n\n\n${green}Testing finished. All ${num_tested} executed tests passed!${noColor}"
+    else
+        echo -e "\n\n\n${red}Testing finished. ${num_successful_tests} of ${num_tested} executed tests passed!${noColor}"
+    fi
+    # notification
+    echo -e "\a"
+    exit $((num_tested - num_successful_tests))
 }
 trap finish EXIT
 
@@ -280,102 +341,102 @@ set +e
 #                                                                      #
 ########################################################################
 for file in "${files[@]}"; do
-	current_test_successful=0
+    current_test_successful=0
 
-	echo "${separator}${blue}Running $file${noColor}"
+    echo "${separator}${blue}Running $file${noColor}"
 
-	# Get to file's folder and get file contents
-	path="$(dirname "${file}")"
-	filename="$(basename "${file}")"
-	cd ${base_path}/${path}
+    # Get to file's folder and get file contents
+    path="$(dirname "${file}")"
+    filename="$(basename "${file}")"
+    cd ${base_path}/${path}
 
-	########################################################################
-	#                                                                      #
-	#  code checks                                                         #
-	#                                                                      #
-	########################################################################
-	if [ $doChecks = true ]; then
+    ########################################################################
+    #                                                                      #
+    #  code checks                                                         #
+    #                                                                      #
+    ########################################################################
+    if [ $doChecks = true ]; then
 
-		if [ $autofix = true ]; then
-			echo Applying autofixes...
-			jupytext "$filename" --opt custom_cell_magics="writefile" \
-				--pipe "autoflake --in-place --remove-unused-variables --imports numpy,monai,matplotlib,torch,ignite {}" \
-				--pipe "autopep8 - --ignore W291 --max-line-length 120" \
-				--pipe "sed 's/ = list()/ = []/'"
-		fi
+        if [ $autofix = true ]; then
+            echo Applying autofixes...
+            jupytext "$filename" --opt custom_cell_magics="writefile" \
+                --pipe "autoflake --in-place --remove-unused-variables --imports numpy,monai,matplotlib,torch,ignite {}" \
+                --pipe "autopep8 - --ignore W291 --max-line-length 120" \
+                --pipe "sed 's/ = list()/ = []/'"
+        fi
 
-		# to check flake8, convert to python script, don't check
-		# magic cells, and don't check line length for comment
-		# lines (as this includes markdown), and then run flake8
-		echo Checking PEP8 compliance...
-		jupytext "$filename" --opt custom_cell_magics="writefile" -w --to script -o - | \
-			sed 's/\(^\s*\)%/\1pass  # %/' | \
-			sed 's/\(^#.*\)$/\1  # noqa: E501/' | \
-			flake8 - --show-source --max-line-length 120
-		success=$?
-		if [ ${success} -ne 0 ]
-	    then
-	    	print_error_msg "Try running with autofixes: ${green}--autofix${noColor}"
-	        test_fail ${success}
-	    fi
-	fi
+        # to check flake8, convert to python script, don't check
+        # magic cells, and don't check line length for comment
+        # lines (as this includes markdown), and then run flake8
+        echo Checking PEP8 compliance...
+        jupytext "$filename" --opt custom_cell_magics="writefile" -w --to script -o - | \
+            sed 's/\(^\s*\)%/\1pass  # %/' | \
+            sed 's/\(^#.*\)$/\1  # noqa: E501/' | \
+            flake8 - --show-source --max-line-length 120
+        success=$?
+        if [ ${success} -ne 0 ]
+        then
+            print_error_msg "Try running with autofixes: ${green}--autofix${noColor}"
+            test_fail ${success}
+        fi
+    fi
 
-	########################################################################
-	#                                                                      #
-	#  run notebooks with papermill                                        #
-	#                                                                      #
-	########################################################################
-	if [ $doRun = true ]; then
+    ########################################################################
+    #                                                                      #
+    #  run notebooks with papermill                                        #
+    #                                                                      #
+    ########################################################################
+    if [ $doRun = true ]; then
 
-		skipRun=false
+        skipRun=false
 
-		for skip_pattern in "${skip_run_papermill[@]}"; do
-			echo "$skip_pattern"
-			if [[  $file =~ $skip_pattern ]]; then
-				echo "Skip Pattern Match"
-				skipRun=true
-				break
-			fi
-		done
+        for skip_pattern in "${skip_run_papermill[@]}"; do
+            echo "$skip_pattern"
+            if [[  $file =~ $skip_pattern ]]; then
+                echo "Skip Pattern Match"
+                skipRun=true
+                break
+            fi
+        done
 
-		if [ $skipRun = true ]; then
-			echo "Skipping"
-			continue
-		fi
+        if [ $skipRun = true ]; then
+            echo "Skipping"
+            continue
+        fi
 
-		echo Running notebook...
-		notebook=$(cat "$filename")
+        echo Running notebook...
+        notebook=$(cat "$filename")
 
-		# if compulsory keyword, max_epochs, missing...
-		if [[ ! "$notebook" =~ "max_epochs" ]]; then
-			# and notebook isn't in list of those expected to not have that keyword...
-			should_contain_max_epochs=true
-			for e in "${doesnt_contain_max_epochs[@]}"; do
-				[[ "$e" == "$filename" ]] && should_contain_max_epochs=false && break
-			done
-			# then error
-			if [[ $should_contain_max_epochs == true ]]; then
-				print_error_msg "Couldn't find the keyword \"max_epochs\", and the notebook wasn't on the list of expected exemptions (\"doesnt_contain_max_epochs\")."
-				test_fail 1
-			fi
-		fi
+        # if compulsory keyword, max_epochs, missing...
+        if [[ ! "$notebook" =~ "max_epochs" ]]; then
+            # and notebook isn't in list of those expected to not have that keyword...
+            should_contain_max_epochs=true
+            for e in "${doesnt_contain_max_epochs[@]}"; do
+                [[ "$e" == "$filename" ]] && should_contain_max_epochs=false && break
+            done
+            # then error
+            if [[ $should_contain_max_epochs == true ]]; then
+                print_error_msg "Couldn't find the keyword \"max_epochs\", and the notebook wasn't on the list of expected exemptions (\"doesnt_contain_max_epochs\")."
+                test_fail 1
+            fi
+        fi
 
-		# Set some variables to 1 to speed up proceedings
-		strings_to_replace=(max_epochs val_interval disc_train_interval disc_train_steps num_batches_for_histogram)
-		for s in "${strings_to_replace[@]}"; do
-			replace_text
-		done
+        # Set some variables to 1 to speed up proceedings
+        strings_to_replace=(max_epochs val_interval disc_train_interval disc_train_steps num_batches_for_histogram)
+        for s in "${strings_to_replace[@]}"; do
+            replace_text
+        done
 
-		python -c 'import monai; monai.config.print_config()'
-		time out=$(echo "$notebook" | papermill --progress-bar -k "$kernelspec")
-		success=$?
-	    if [[ ${success} -ne 0 || "$out" =~ "\"status\": \"failed\"" ]]; then
-	        test_fail ${success}
-	    fi
-	fi
+        python -c 'import monai; monai.config.print_config()'
+        time out=$(echo "$notebook" | papermill --progress-bar -k "$kernelspec")
+        success=$?
+        if [[ ${success} -ne 0 || "$out" =~ "\"status\": \"failed\"" ]]; then
+            test_fail ${success}
+        fi
+    fi
 
-	num_tested=$((num_tested + 1))
-	if [[ ${current_test_successful} -eq 0 ]]; then
-		num_successful_tests=$((num_successful_tests + 1))
-	fi
+    num_tested=$((num_tested + 1))
+    if [[ ${current_test_successful} -eq 0 ]]; then
+        num_successful_tests=$((num_successful_tests + 1))
+    fi
 done

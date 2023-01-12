@@ -1,3 +1,14 @@
+# Copyright (c) MONAI Consortium
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import argparse
 import collections.abc
 import os
@@ -293,7 +304,7 @@ def main_worker(gpu, args):
             RandFlipd(keys=["image"], spatial_axis=0, prob=0.5),
             RandFlipd(keys=["image"], spatial_axis=1, prob=0.5),
             RandRotate90d(keys=["image"], prob=0.5),
-            ScaleIntensityRanged(keys=["image"], a_min=np.float32(255), a_max=np.float32(0)),
+            ScaleIntensityRanged(keys=["image"], a_min=np.float32(0), a_max=np.float32(255)),
             ToTensord(keys=["image", "label"]),
         ]
     )
@@ -310,7 +321,7 @@ def main_worker(gpu, args):
                 constant_values=255,
             ),
             SplitDimd(keys=["image"], dim=0, keepdim=False, list_output=True),
-            ScaleIntensityRanged(keys=["image"], a_min=np.float32(255), a_max=np.float32(0)),
+            ScaleIntensityRanged(keys=["image"], a_min=np.float32(0), a_max=np.float32(255)),
             ToTensord(keys=["image", "label"]),
         ]
     )

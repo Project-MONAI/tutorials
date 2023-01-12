@@ -76,7 +76,7 @@ NOTE: For script files (python, shell commands, and etc), please use the followi
 
 NOTE: For Jupyter notebook `.ipynb` files, the copyright information should appear at the top of the first markdown cell.
 There are *two extra spaces* at the end of each line to ensure no line auto-wrap in the markdown rendering in the display, e.g. the first line of the copyright should be `"Copyright (c) MONAI Consortium  \n"` instead of `"Copyright (c) MONAI Consortium\n"` in the raw string format.
-Indentation is represented by consecutive 4 `&nbsp;` in the line.
+Indentation in markdown is represented by consecutive 4 non-breaking space entities `&nbsp;`  in the line.
 
 Please copy the following header with formats and paste it in the first markdown cell of a Jupyter notebook:
 <pre>

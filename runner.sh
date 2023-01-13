@@ -174,6 +174,7 @@ do
         ;;
         --verbose)
             papermill_opt=" --log-output --log-level DEBUG "
+        ;;
         --no-checks)
             doChecks=false
         ;;

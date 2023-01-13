@@ -83,7 +83,7 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_pancreas_tumor_segme
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_endoscopy_cvat_tooltracking*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_pathology_nuclei_segmentation_QuPath*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_radiology_spleen_segmentation_OHIF*)
-skip_run_papermill=("${skip_run_papermill[@]}" .*transform_visualization.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1155
+skip_run_papermill=("${skip_run_papermill[@]}" .*transform_visualization*)  # https://github.com/Project-MONAI/tutorials/issues/1155
 
 # output formatting
 separator=""

@@ -7,8 +7,8 @@ The implementation is based on:
 
 Andriy Myronenko, Ziyue Xu, Dong Yang, Holger Roth, Daguang Xu: "Accounting for Dependencies in Deep Learning Based Multiple Instance Learning for Whole Slide Imaging". In MICCAI (2021). [arXiv](https://arxiv.org/abs/2111.01556)
 
-![mil_patches](./mil_patches.jpg)
-![mil_network](./mil_network.jpg)
+![mil_patches](../../figures/mil_patches.jpg)
+![mil_network](../../figures/mil_network.jpg)
 
 ## Requirements
 
@@ -108,12 +108,12 @@ python -u panda_mil_train_evaluate_pytorch_gpu.py
 
 Expected train and validation loss curves
 
-![mil_train_loss](./mil_train_loss.png)
-![mil_val_loss](./mil_val_loss.png)
+![mil_train_loss](../../figures/mil_train_loss.png)
+![mil_val_loss](../../figures/mil_val_loss.png)
 
 Expected validation QWK metric
 
-![mil_val_qwk](./mil_val_qwk.png)
+![mil_val_qwk](../../figures/mil_val_qwk.png)
 
 ## Questions and bugs
 

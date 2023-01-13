@@ -107,6 +107,7 @@ doStandardizeCells=false
 autofix=false
 failfast=false
 pattern=""
+papermill_opt=""
 
 kernelspec="python3"
 
@@ -116,7 +117,7 @@ NB_OUTPUT_LINE_CAP=100
 
 function print_usage {
     echo "runner.sh [--no-run] [--no-checks] [--autofix] [-f/--failfast] [-p/--pattern <find pattern>] [-h/--help]"
-    echo            "[-v/--version]"
+    echo            "[-v/--version] [--verbose]"
     echo ""
     echo "MONAI tutorials testing utilities. When running the notebooks, we first search for variables, such as"
     echo "\"max_epochs\" and set them to 1 to reduce testing time."
@@ -132,6 +133,7 @@ function print_usage {
     echo "    -h, --help        : show this help message and exit"
     echo "    -t, --test        : shortcut to run a single notebook using pattern \`-and -wholename\`"
     echo "    -v, --version     : show MONAI and system version information and exit"
+    echo "    --verbose         : show papermill logs when testing the noteboobks"
     echo ""
     echo "Examples:"
     echo "./runner.sh                             # run full tests (${green}recommended before making pull requests${noColor})."
@@ -170,6 +172,8 @@ do
         --no-run)
             doRun=false
         ;;
+        --verbose)
+            papermill_opt=" --log-output --log-level DEBUG "
         --no-checks)
             doChecks=false
         ;;
@@ -504,7 +508,7 @@ for file in "${files[@]}"; do
         done
 
         python -c 'import monai; monai.config.print_config()'
-        time out=$(echo "$notebook" | papermill --progress-bar -k "$kernelspec")
+        time out=$(echo "$notebook" | papermill "$papermill_opt" --progress-bar -k "$kernelspec")
         success=$?
         if [[ ${success} -ne 0 || "$out" =~ "\"status\": \"failed\"" ]]; then
             test_fail ${success}

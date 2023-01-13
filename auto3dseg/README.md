@@ -44,7 +44,7 @@ We have demonstrated preliminary results of public datasets are described in the
 - [INSTANCE22](tasks/instance22/README.md)
 - [Beyond the Cranial Vault (BTCV) Abdomen Dataset](tasks/btcv/README.md)
 - Medical Segmentation Decathlon (MSD) Dataset
-        - [Task04 Task04_Hippocampus](tasks/msd/Task04_Hippocampus/README.md)
+	- [Task04 Task04_Hippocampus](tasks/msd/Task04_Hippocampus/README.md)
 	- [Task05 Prostate](tasks/msd/Task05_Prostate/README.md)
 	- [Task09 Spleen](tasks/msd/Task09_Spleen/README.md)
 
@@ -62,7 +62,7 @@ To further demonstrate the capabilities of **Auto3DSeg**, [here](tasks/instance2
 
 ### 1. Run with Minimal Input using ```AutoRunner```
 
-The user needs to provide a data list (".json" file) for the new task and data root. A typical data list is as this [example](tasks/msd/Task05_Prostate/msd_task05_prostate_folds.json). After creating the data list, the user can create a simple "task.yaml" file (shown below) as the minimum input for **Auto3DSeg**.
+The user needs to provide a data list (".json" file) for the new task and data root. A typical data list is as this [example](tasks/msd/Task05_Prostate/msd_task05_prostate_folds.json). A sample datalist for an existing MSD formatted dataset can be created using [this notebook](notebooks/msd_datalist_generator.ipynb). After creating the data list, the user can create a simple "task.yaml" file (shown below) as the minimum input for **Auto3DSeg**.
 
 ```
 modality: CT

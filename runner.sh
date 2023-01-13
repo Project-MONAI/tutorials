@@ -83,6 +83,7 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_pancreas_tumor_segme
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_endoscopy_cvat_tooltracking*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_pathology_nuclei_segmentation_QuPath*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_radiology_spleen_segmentation_OHIF*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*transform_visualization*)  # https://github.com/Project-MONAI/tutorials/issues/1155
 
 # output formatting
 separator=""
@@ -107,6 +108,7 @@ doStandardizeCells=false
 autofix=false
 failfast=false
 pattern=""
+papermill_opt=""
 
 kernelspec="python3"
 
@@ -116,7 +118,7 @@ NB_OUTPUT_LINE_CAP=100
 
 function print_usage {
     echo "runner.sh [--no-run] [--no-checks] [--autofix] [-f/--failfast] [-p/--pattern <find pattern>] [-h/--help]"
-    echo            "[-v/--version]"
+    echo            "[-v/--version] [--verbose]"
     echo ""
     echo "MONAI tutorials testing utilities. When running the notebooks, we first search for variables, such as"
     echo "\"max_epochs\" and set them to 1 to reduce testing time."
@@ -132,6 +134,7 @@ function print_usage {
     echo "    -h, --help        : show this help message and exit"
     echo "    -t, --test        : shortcut to run a single notebook using pattern \`-and -wholename\`"
     echo "    -v, --version     : show MONAI and system version information and exit"
+    echo "    --verbose         : show papermill logs when testing the noteboobks"
     echo ""
     echo "Examples:"
     echo "./runner.sh                             # run full tests (${green}recommended before making pull requests${noColor})."
@@ -169,6 +172,9 @@ do
     case $key in
         --no-run)
             doRun=false
+        ;;
+        --verbose)
+            papermill_opt=" --log-output --log-level DEBUG "
         ;;
         --no-checks)
             doChecks=false
@@ -504,7 +510,9 @@ for file in "${files[@]}"; do
         done
 
         python -c 'import monai; monai.config.print_config()'
-        time out=$(echo "$notebook" | papermill --progress-bar -k "$kernelspec")
+        cmd=$(echo "papermill ${papermill_opt} --progress-bar -k ${kernelspec}")
+        echo "$cmd"
+        time out=$(echo "$notebook" | eval "$cmd")
         success=$?
         if [[ ${success} -ne 0 || "$out" =~ "\"status\": \"failed\"" ]]; then
             test_fail ${success}

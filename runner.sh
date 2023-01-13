@@ -157,6 +157,13 @@ function print_usage {
     echo "To choose an alternative python executable, set the environmental variable, \"MONAI_PY_EXE\"."
 }
 
+# FIXME: https://github.com/Project-MONAI/MONAI/issues/4354
+protobuf_major_version=$(${PY_EXE} -m pip list | grep '^protobuf ' | tr -s ' ' | cut -d' ' -f2 | cut -d'.' -f1)
+if [ "$protobuf_major_version" -ge "4" ]
+then
+    export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+fi
+
 function print_style_fail_msg() {
     echo "${red}Check failed!${noColor}"
 }

@@ -4,7 +4,7 @@ We provide four default algorithms (DiNTS, 2D/3D SegResNet, SwinUNETR) as baseli
 
 ### Bundle Structure
 
-The basic folder structure of algorithm bundles is shown as follows. The current bundle design follows an hybrid programming fashion with both configurations and native PyTorch scripts. Thus, **scripts** and **configs** folders are created inside bundle. The **scripts** folder contains several PyTorch scripts, which describes logics of model training, inference, validation in fine details. And the **configs** provides configurations (including hyper-parameters, network, loss function, optimizer, data augmentation, etc.) for different operations. The abstract ".yaml" files allow users to quickly modify the algorithm to try different configuration recipes.
+The basic folder structure of algorithm bundles is shown as follows. The current bundle design follows a hybrid programming fashion with both configurations and native PyTorch scripts. Thus, **scripts** and **configs** folders are created inside the bundle. The **scripts** folder contains several PyTorch scripts, which describe the logic of model training, inference, and validation in fine detail. And the **configs** provides configurations (including hyper-parameters, network, loss function, optimizer, data augmentation, etc.) for different operations. The abstract ".yaml" files allow users to quickly modify the algorithm to try different configuration recipes.
 
 ```
 algorithm_x
@@ -27,7 +27,7 @@ algorithm_x
         └── validate.py
 ```
 
-In order to run model training of several bundle algorithms in parallel, users can manually utilize the following bash commands inside bundle folder to launch model training within different computing environments (via [Python Fire library](https://github.com/google/python-fire)). After model training is accomplished, the model ensemble can be further conducted with existing bundle algorithms. All commands (including model training, inference, and validation) are described in **README.md** file of each bundle.
+In order to run model training of several bundle algorithms in parallel, users can manually utilize the following bash commands inside the bundle folder to launch model training within different computing environments (via [Python Fire library](https://github.com/google/python-fire)). After model training is accomplished, the model ensemble can be further conducted with existing bundle algorithms. All commands (including model training, inference, and validation) are described in the **README.md** file of each bundle.
 
 ```bash
 ## single-gpu training
@@ -37,7 +37,7 @@ python -m scripts.train run --config_file "['configs/hyper_parameters.json','con
 torchrun --nnodes=1 --nproc_per_node=8 -m scripts.train run --config_file "['configs/hyper_parameters.json','configs/network.yaml','configs/transforms_train.json','configs/transforms_validate.json']"
 ```
 
-After the model is trained, all related output files are saved in the **models** folder, including model checkpoint **best_metric_model.pt** (with best validation accuracy), and training history files. Among all training history files, **Events** folders contain event files for learning curve visualization via [TensorBoard](https://www.tensorflow.org/tensorboard). The file **accuracy_history.csv** lists details about the model training progress, including training loss, validation accuracy, number of training steps, and training time cost. It can be used as an alternative of TensorBoard events. The file **progress.yaml** records the best validation accuracy and when it was reached.
+After the model is trained, all related output files are saved in the **models** folder, including model checkpoint **best_metric_model.pt** (with best validation accuracy), and training history files. Among all training history files, **Events** folders contain event files for learning curve visualization via [TensorBoard](https://www.tensorflow.org/tensorboard). The file **accuracy_history.csv** lists details about the model training progress, including training loss, validation accuracy, number of training steps, and training time cost. It can be used as an alternative to TensorBoard events. The file **progress.yaml** records the best validation accuracy and when it was reached.
 
 ### A Quick Way to Try Different Hyper-Parameters
 

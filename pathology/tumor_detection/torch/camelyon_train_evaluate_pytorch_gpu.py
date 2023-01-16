@@ -16,7 +16,6 @@ import time
 from argparse import ArgumentParser
 from shutil import copyfile
 
-import monai
 import numpy as np
 from monai.data import CSVDataset, DataLoader, PatchWSIDataset
 from monai.networks.nets import TorchVisionFCModel

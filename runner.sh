@@ -517,7 +517,7 @@ for file in "${files[@]}"; do
         then
             export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
         else
-            export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=
+            unset PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
         fi
 
         cmd=$(echo "papermill ${papermill_opt} --progress-bar -k ${kernelspec}")

@@ -38,9 +38,9 @@ for algo in ensemble.get_algo_ensemble():
 
 ### Customization
 
-**Auto3DSeg** also provides the API for users to use their own customized ensemble algorithm as shown in this [notebook](../notebooks/ensemble_byoc.ipynb).
+**Auto3DSeg** also provides the API for users to use their customized ensemble algorithm as shown in this [notebook](../notebooks/ensemble_byoc.ipynb).
 
-### Essential Component for General Algorithm/Mdoel Ensemble
+### Essential Component for General Algorithm/Model Ensemble
 
 The essential component for the model ensemble is the "infer()" function in the "InferClass" class of the script "scripts/infer.py". After class initialization of the "InferClass", "infer()" takes image file names as input, and outputs multi-channel probability maps. And the "infer.py" of different algorithms is located inside their bundle templates. In general, the ensemble module would work for any algorithm as long as the "infer()" function is provided with the proper setup.
 

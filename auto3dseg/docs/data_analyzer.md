@@ -1,18 +1,18 @@
 ## Data Analyzer
 
-In **Auto3DSeg**, the data analyzer automatically analyzes given medical image dataset and reports the statistics of image intensity, shape, spacing, etc.
+In **Auto3DSeg**, the data analyzer automatically analyzes a given medical image dataset and reports the statistics of image intensity, shape, spacing, etc.
 
 ### Usage
 
-The usage of data analyzer can be found [here](../notebooks/data_analyzer.ipynb)
+The usage of the data analyzer can be found [here](../notebooks/data_analyzer.ipynb)
 
 ### Customization
 
-**Auto3DSeg** also provides the API for users to use their own customized data analyzing function as shown in this [notebook](../notebooks/data_analyzer_byoc.ipynb).
+**Auto3DSeg** also provides the API for users to use their customized data analyzing function as shown in this [notebook](../notebooks/data_analyzer_byoc.ipynb).
 
 ### Output
 
-"datastats.yaml" is a summary of the dataset from the data analyzer. The summary report includes information such as data size, spacing, intensity distribution, etc., for a better understanding of the dataset. An example "datastats.yaml" is shown as follows.
+The `datastats.yaml` is a summary of the dataset from the data analyzer. The summary report includes information such as data size, spacing, intensity distribution, etc., for a better understanding of the dataset. An example "datastats.yaml" is shown as follows.
 
 ```
 ...

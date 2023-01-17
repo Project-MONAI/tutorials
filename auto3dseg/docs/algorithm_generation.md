@@ -4,7 +4,7 @@
 
 <div align="center"> <img src="../figures/algorithm_generation.png" width="600"/> </div>
 
-The module of algorithm generation is to create self-contained algorithm folders for further model training, inference, and validation with various neural network architectures and training recipes. This module takes input configuration ".yaml" files (shown below), dataset summaries (e.g. "data_stats.yaml") from our provided data analysis tools, and algorithm templates. And it outputs different algorithm folders under cross-validation. In the default design, the generated algorithm folders follow the designs of [MONAI bundle](https://docs.monai.io/en/latest/mb_specification.html). Users can run model training, inference, and validation inside those self-contained folders.
+The module of algorithm generation is to create self-contained algorithm folders for further model training, inference, and validation with various neural network architectures and training recipes. This module takes input configuration ".yaml" files (shown below), dataset summaries (e.g. "data_stats.yaml") from our provided data analysis tools, and algorithm templates. And it outputs different algorithm folders under cross-validation. In the default design, the generated algorithm folders follow the designs of the [MONAI bundle](https://docs.monai.io/en/latest/mb_specification.html). Users can run model training, inference, and validation inside those self-contained folders.
 
 ```
 modality: CT
@@ -12,7 +12,7 @@ datalist: "./task.json"
 dataroot: "/workspace/data/task"
 ```
 
-The input configuration files and dataset summaries are critical for algorithm generation. For example, the data modality is important for intensity normalization strategies, average image shape determines image region-of-interest (ROI) cropping, and input/output channels decide first/last layers of network.
+The input configuration files and dataset summaries are critical for algorithm generation. For example, the data modality is important for intensity normalization strategies, average image shape determines image region-of-interest (ROI) cropping, and input/output channels decide the first/last layers of the network.
 
 ### Algorithms
 
@@ -28,7 +28,7 @@ For model inference, we use a sliding-window scheme to generate probability maps
 
 ### Python Command
 
-The follow Python script shows how to generate algorithm bundles using Python class **BundleGen**.
+The following Python script shows how to generate algorithm bundles using the Python class **BundleGen**.
 
 ```python
 ## algorithm generation
@@ -48,7 +48,7 @@ bundle_generator = BundleGen(
 bundle_generator.generate(work_dir, num_fold=5)
 ```
 
-The code block would generate multiple algorithm bundles as follows. The folder name suffix indictes the ```i```th fold of ```N```-fold cross-validation.
+The code block would generate multiple algorithm bundles as follows. The folder name suffix indicates the ```i```th fold of ```N```-fold cross-validation.
 
 ```
 ./workdir/

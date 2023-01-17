@@ -1,10 +1,10 @@
 ## Run with Minimal Input
 
-To get initial impressions of **Auto3DSeg**, user can try this [two-minute example](../notebooks/auto3dseg_hello_world.ipynb). The example covers the entire pipeline from start to finish, and can be done in two minutes using a single GPU (GPU RAM >= 8GB).
+To get initial impressions of **Auto3DSeg**, users can try this [two-minute example](../notebooks/auto3dseg_hello_world.ipynb). The example covers the entire pipeline from start to finish and can be done in two minutes using a single GPU (GPU RAM >= 8GB).
 
 Here are detailed steps to quickly launch **Auto3DSeg** for general medical image segmentation.
 
-**Step 0.** Download public data or prepare internal data in a custom data root. For data from [Medical Segmentation Decathlon](http://medicaldecathlon.com/) (MSD), user can use the following Python script to download it.
+**Step 0.** Download public data or prepare internal data in a custom data root. For data from [Medical Segmentation Decathlon](http://medicaldecathlon.com/) (MSD), users can use the following Python script to download it.
 
 ```python
 import os
@@ -62,7 +62,7 @@ if os.path.exists(root):
 }
 ```
 
-**Step 2.** Prepare "task.yaml" with necessary information as follows.
+**Step 2.** Prepare "task.yaml" with the necessary information as follows.
 
 ```
 modality: CT
@@ -70,7 +70,7 @@ datalist: "./task.json"
 dataroot: "/workspace/data/task"
 ```
 
-**Step 3.** Run the follow bash command to start the pipeline without any further intervetion.
+**Step 3.** Run the following bash command to start the pipeline without any further intervention.
 
 ```bash
 python -m monai.apps.auto3dseg AutoRunner run --input='./task.yaml'
@@ -128,7 +128,7 @@ When the pipeline finishes, all output files will be saved in the directory "./w
 
 Several important components are generated along the way.
 
-1."datastats.yaml" is a summary of the dataset from the [data analyzer](../docs/data_analyzer.md). The summary report includes information such as data size, spacing, intensity distribution, etc., for a better understanding of the dataset. An example "datastats.yaml" is shown as follows.
+1. "datastats.yaml" is a summary of the dataset from the [data analyzer](../docs/data_analyzer.md). The summary report includes information such as data size, spacing, intensity distribution, etc., for a better understanding of the dataset. An example "datastats.yaml" is shown as follows.
 
 ```
 ...
@@ -158,10 +158,10 @@ stats_summary:
 ...
 ```
 
-2."algorithm_templates" are the [algorithm templates](../docs/algorithm_generation.md#algorithm-templates) that used to generate actual algorithm bundle folders with information from data statistics.
+2."algorithm_templates" are the [algorithm templates](../docs/algorithm_generation.md#algorithm-templates) used to generate actual algorithm bundle folders with information from data statistics.
 
-3."dints_x", "segresnet_x", "segresnet2d_x", "swinunetr_x" are automically generated 5-fold MONAI bundle based on [established networks and well-tuned training recipes](../docs/algorithm_generation.md#algorithms). They are self-contained folder, which can be used for model training, inference, validation via executing commands in the README document of each bundle folder. More information can be referred via this [link](https://docs.monai.io/en/latest/mb_specification.html). And "model_foldx" is where checkpoints after training are saved together with training history and tensorboard event files.
+3."dints_x", "segresnet_x", "segresnet2d_x", and "swinunetr_x" are automatically generated 5-fold MONAI bundle based on [established networks and well-tuned training recipes](../docs/algorithm_generation.md#algorithms). They are self-contained folders, which can be used for model training, inference, and validation via executing commands in the README document of each bundle folder. More information can be referred to via this [link](https://docs.monai.io/en/latest/mb_specification.html)](https://docs.monai.io/en/latest/mb_specification.html). And "model_foldx" is where checkpoints after training are saved together with training history and tensorboard event files.
 
-Note: if user would like to run model training paralelly with more computing resource, user can stop the pipeline after bundle folders are generated and executed model training via commands in the README document of each bundle folder.
+Note: if users would like to run model training parallel with more computing resources, they can stop the pipeline after bundle folders are generated and executed model training via commands in the README document of each bundle folder.
 
-4."predictions_testing" are the predictions for the test data (with "test" key in the data list) from model ensemble. By default, We select the best model/algorithm from each fold for ensemble.
+4."predictions_testing" are the predictions for the test data (with the "testing" key in the data list) from the model ensemble. By default, We select the best model/algorithm from each fold for the ensemble.

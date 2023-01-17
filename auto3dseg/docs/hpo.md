@@ -8,7 +8,7 @@ HPO packages like Microsoft Neural Network Intelligence [NNI](https://nni.readth
 The basic workflow is shown in
 <div align="center"> <img src="../figures/hpo_workflow0.png" width="800"/> </div>
 <div align="center"> <img src="../figures/hpo_workflow1.png" width="800"/> </div>
-The HPOGen class has a `run_algo()` function, which will be used by the third-party HPO packages. `run_algo()` has three steps: hyperparameter sampling (by calling functions provided by 3rd party packages), generates monai bundle folders, and performs training. The validation accuracy will be returned to the third-party package package.
+The HPOGen class has a `run_algo()` function, which will be used by the third-party HPO packages. `run_algo()` has three steps: hyperparameter sampling (by calling functions provided by 3rd party packages), generates monai bundle folders and performs training. The validation accuracy will be returned to the third-party package.
 
 ### Usage
 The tutorial on how to use NNIGen is [here](../notebooks/hpo_nni.ipynb) and the tutorial for OptunaGen is [here](../notebooks/hpo_optuna.ipynb). The list of HPO algorithms in NNI and Optuna can be found on [the NNI GitHub page](https://github.com/microsoft/nni) and [Optuna documentation](https://optuna.readthedocs.io/en/stable/reference/samplers/index.html).
@@ -65,7 +65,7 @@ override_param = {
 }
 ```
 
-Finally, to override HPO paramater for all algorithms, users can merge all parameters in one dictionary, as long as the parameters are not contracting with each other.
+Finally, to override the HPO parameter for all algorithms, users can merge all parameters in one dictionary, as long as the parameters are not contracting with each other.
 
 > Note: the algorithm will skip the parameter if its config files do not contain the key.
 > For example, SegResNet will ignore `num_iterations`

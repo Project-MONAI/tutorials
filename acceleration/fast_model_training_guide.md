@@ -21,7 +21,7 @@ To provide an overview of the fast training techniques in practice, this documen
   * [Execute transforms on GPU](#2-execute-transforms-on-gpu)
   * [Adapt `cuCIM` to execute GPU transforms](#3-adapt-cucim-to-execute-gpu-transforms)
   * [Cache IO and transforms data to GPU](#4-cache-io-and-transforms-data-to-gpu)
-* [Leveraging multi-GPU](#leveraging-multi-gpu)
+* [Leveraging multi-GPU distributed training](#leveraging-multi-gpu-distributed-training)
   * Demonstration of multi-GPU training for performance improvement.
 * [Leveraging multi-node distributed training](#leveraging-multi-node-distributed-training)
   * Demonstration of distributed multi-node training for performance improvement.
@@ -182,7 +182,8 @@ MONAI provides a multi-thread `CacheDataset` and `LMDBDataset` to accelerate the
 ### 2. Cache intermediate outcomes into persistent storage
 
 `PersistentDataset` is similar to `CacheDataset`, where the caches are persisted to disk storage or LMDB for rapid retrieval across experimental runs (as is the case when tuning hyperparameters), or when the entire size of the dataset exceeds available memory. `PersistentDataset` could achieve similar performance when comparing to `CacheDataset` in [Datasets experiment](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/dataset_type_performance.ipynb).
-![cachedataset speed](../figures/datasets_speed.png) with an SSD storage.
+
+![cachedataset speed](../figures/datasets_speed.png)
 
 ### 3. SmartCache mechanism for large datasets
 
@@ -208,7 +209,14 @@ a `ThreadDataLoader` example is available at [Spleen fast training tutorial](htt
 
 ## Algorithmic improvement
 
-In most deep learning applications, algorithmic improvement has been witnessed to be effective for boosting training efficiency and performance (for example, from AlexNet to ResNet). The improvement may come from a novel loss function, or a sophisticated optimizer, or a different learning rate scheduler, or the combination of all previous items. For our demo applications of 3D medical image segmentation, we would like to further speed up training from the algorithmic perspective. The default loss function is soft Dice loss. And we changed it to `DiceCELoss` from MONAI to further improve the model convergence. Because the `DiceCELoss` combines both Dice loss and multi-class cross-entropy loss (which is suitable for the softmax formulation), and balance the importance of global and pixel-wise accuracies. The segmentation quality can be largely improved. The following figure shows the great improvement on model convergence after we change Dice loss to `DiceCELoss`, with or without enabling automated mixed precision (AMP).
+In most deep learning applications, algorithmic improvement has been witnessed to be effective in boosting training efficiency and performance (for example, from AlexNet to ResNet).
+The improvement may come from a novel loss function, a sophisticated optimizer, a different learning rate scheduler, or a combination of all previous items.
+For our demo applications of 3D medical image segmentation, we would like to further speed up training from the algorithmic perspective.
+The default loss function is soft Dice loss.
+And we changed it to `DiceCELoss` from MONAI to further improve the model convergence,
+because the `DiceCELoss` combines both Dice loss and multi-class cross-entropy loss (which is suitable for the softmax formulation) and balances the importance of global and pixel-wise accuracies.
+The segmentation quality can be largely improved.
+The following figure shows the great improvement in model convergence after we change the Dice loss to `DiceCELoss`, with or without enabling AMP.
 
 ![diceceloss](../figures/diceceloss.png)
 
@@ -225,8 +233,11 @@ In 2017, NVIDIA researchers developed a methodology for mixed-precision training
 
 For the PyTorch 1.6 release, developers at NVIDIA and Facebook moved mixed precision functionality into PyTorch core as the AMP package, `torch.cuda.amp`.
 
-MONAI workflows can easily set `amp=True/False` in `SupervisedTrainer` or `SupervisedEvaluator` during training or evaluation to enable/disable AMP. And we tried to compare the training speed of spleen segmentation task if AMP ON/OFF on NVIDIA V100 GPU with CUDA 11, obtained some benchmark results:
-![amp v100 results](../figures/amp_training_v100.png)
+MONAI workflows can easily set `amp=True/False` in `SupervisedTrainer` or `SupervisedEvaluator` during training or evaluation to enable/disable AMP.
+We tried to compare the training speed of the spleen segmentation task if AMP ON/OFF on NVIDIA A100 GPU with CUDA 11 and obtained some benchmark results:
+
+![amp a100 results](../figures/amp_training_a100.png)
+
 AMP tutorial is available at [AMP tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/automatic_mixed_precision.ipynb).
 
 ### 2. Execute transforms on GPU
@@ -274,28 +285,26 @@ dataset = CacheDataset(..., transform=train_trans)
 Here we convert to PyTorch `Tensor` with `EnsureTyped` transform and move data to GPU with `ToDeviced` transform. `CacheDataset` caches the transform results until `ToDeviced`, so it is in GPU memory. Then in every epoch, the program fetches cached data from GPU memory and only execute the random transform `RandCropByPosNegLabeld` on GPU directly.
 GPU caching example is available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/fast_training_tutorial.ipynb).
 
-## Leveraging multi-GPU
+## Leveraging multi-GPU distributed training
 
-When we have fully utilized a single GPU during training, a natural optimization idea is to partition the dataset and execute model training in parallel on multiple GPUs.
+When we have fully utilized a single GPU during training, a straightforward optimization idea is to partition the dataset and execute model training in parallel on multiple GPUs.
 
 Additionally, with more GPU devices, we can achieve more benefits:
 - Some training algorithms can converge faster with a larger batch size and the training progress is more stable.
-- If caching data in GPU memory, every GPU only needs to cache a partition, so we can use larger cache rate to cache more data in total to accelerate training.
+- If caching data in GPU memory, every GPU only needs to cache a partition, so we can use a larger cache rate to cache more data in total to accelerate training. Caching data to GPU can largely reduce CPU-based operations during model training. It can greatly improve the model training efficiency.
 
 For example, during the training of brain tumor segmentation task, with 8 GPUs, we can cache all the data in GPU memory directly and execute the following transforms on GPU device, so it's more than `10x` faster than single GPU training. More details are available at [BraTS distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/distributed_training/brats_training_ddp.py).
 
 ## Leveraging multi-node distributed training
 
-Distributed data parallelism (DDP) is an important feature of PyTorch to connect multiple GPU devices in multiple nodes to train or evaluate models, it can continuously improve the training speed when we fully leveraged multiple GPUs on a single node.
+Distributed data parallelism (DDP) is an important feature of PyTorch to connect multiple GPU devices in multiple nodes to train or evaluate models. It can further improve the training speed when we fully leveraged multiple GPUs on multiple nodes.
 
-The distributed data parallel APIs of MONAI are compatible with the native PyTorch distributed module, pytorch-ignite distributed module, Horovod, XLA, and the SLURM platform. MONAI provides rich demos for reference: train/evaluate with `PyTorch DDP`, train/evaluate with `Horovod`, train/evaluate with `Ignite DDP`, partition dataset and train with `SmartCacheDataset`, as well as a real-world training example based on Decathlon challenge Task01 - Brain Tumor segmentation.
+The distributed data parallel APIs of MONAI are compatible with the native PyTorch distributed module, PyTorch-ignite distributed module, Horovod, XLA, and the SLURM platform. Here we provide [a real-world training example](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/distributed_training/brats_training_ddp.py) based on [Decathlon challenge](http://medicaldecathlon.com/) Task01 - Brain Tumor segmentation using the module `torch.distributed.launch`.
 
 For more details about the PyTorch distributed training setup, please refer to: https://pytorch.org/docs/stable/distributed.html.
 
 And if using [SLURM](https://developer.nvidia.com/slurm) workload manager, please refer to [SLURM + Singularity MONAI example](https://github.com/UFResearchComputing/MultiNode_MONAI_example).
 
-We obtained U-Net performance benchmarks of Brain tumor segmentation task for reference (based on CUDA 11, NVIDIA V100 GPUs):
-![distributed training results](../figures/distributed_training.png)
 More details are available at [BraTS distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/distributed_training/brats_training_ddp.py).
 
 ## Examples
@@ -305,13 +314,13 @@ With all the above strategies, in this section, we introduce how to apply them t
 ### 1. Spleen segmentation
 
 - Select the algorithms based on the experiments.
-  As a binary segmentation task, we replaced the baseline `Dice` loss with a `DiceCE` loss, it can help improve the convergence. And we tried to analyze the training curve and tuned different parameters of the network and tested several numerical optimizers, finally replaced the baseline `Adam` optimizer with `SGD`. To achieve the target metric (`mean Dice = 0.94` of the `foreground` channel only) it reduces the number of training epochs from 280 to 60.
+  As a binary segmentation task, we replaced the baseline `Dice` loss with a `DiceCE` loss, it can help improve the convergence. And we tried to analyze the training curve and tuned different parameters of the network and tested several numerical optimizers, finally replaced the baseline `Adam` optimizer with `SGD`. To achieve the target metric (`mean Dice = 0.94` of the `foreground` channel only) it reduces the number of training epochs from 165 to 95.
 - Optimize GPU utilization.
   1. With `AMP`, the training speed is significantly improved and can achieve almost the same validation metric as without `AMP`.
-  2. The deterministic transform results of all the spleen dataset is around 8 GB, which can be cached in a V100 GPU memory. So, we cached all the data in GPU memory and executed the following transforms in GPU directly.
+  2. The deterministic transform results of all the spleen dataset is around 8 GB, which can be cached in a A100 GPU memory. So, we cached all the data in GPU memory and executed the following transforms in GPU directly.
 - Replace `DataLoader` with `ThreadDataLoader`. As all the data are cached in GPU, the computation of randomized transforms is on GPU and light-weighted, `ThreadDataLoader` help avoid the IPC cost of multi-processing in `DataLoader` and increase the GPU utilization.
 
-In summary, with a V100 GPU and the target validation `mean dice = 0.94` of the `forground` channel only,  it's more than `100x` speedup compared with the Pytorch regular implementation when achieving the same metric (validation accuracies). And every epoch is `20x` faster than regular training.
+In summary, with a A100 GPU and the target validation `mean dice = 0.94` of the `forground` channel only, it's more than `150x` speedup compared with the Pytorch regular implementation when achieving the same metric (validation accuracies). And every epoch is `50x` faster than regular training.
 ![spleen fast training](../figures/fast_training.png)
 
 More details are available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/fast_training_tutorial.ipynb).
@@ -328,9 +337,10 @@ More details are available at [Spleen fast training tutorial](https://github.com
   1. Single GPU cannot cache all the data in memory, so we split the dataset into eight parts and cache the deterministic transforms result in eight GPUs to avoid duplicated deterministic transforms and `CPU->GPU sync` in every epoch.
   2. We executed all the random augmentations in GPU directly with the `ThreadDataLoader`. The GPU utilization of all the eight GPUs was always almost `100%` during training:
   ![brats gpu utilization](../figures/brats_gpu_utilization.png)
-  3. As we already fully leveraged the GPUs, we continuously optimize the training with multiple nodes (32 V100 GPUs in four nodes). The GPU utilization of all the 32 GPUs was always `97%` during training.
+  3. As we already fully leveraged the GPUs, we continuously optimize the training with multiple nodes (32 A100 GPUs in four nodes). The GPU utilization of all the 32 GPUs was always `97%` during training.
 
-In summary, combining the optimization strategies, the training time of eight V100 GPUs to achieve the target validation metric was around 40 minutes, which is more than `13x` faster than the baseline with a single GPU. And the training time of 32 V100 GPUs was around `13` minutes, which is `40x` faster than the baseline:
+In summary, combining the optimization strategies, the training time of eight A100 GPUs to achieve the target validation metric was around 40 minutes, which is more than `11x` faster than the baseline with a single GPU. Using four 8-GPU nodes can speed up model processing by `30x` the baseline performance. Our results are achieved based on TensorFloat-32 (TF32) precision format as the default setting in the docker image.
+
 ![brats benchmark](../figures/brats_benchmark.png)
 
 More details are available at [BraTS distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/distributed_training/brats_training_ddp.py).

@@ -182,7 +182,8 @@ MONAI provides a multi-thread `CacheDataset` and `LMDBDataset` to accelerate the
 ### 2. Cache intermediate outcomes into persistent storage
 
 `PersistentDataset` is similar to `CacheDataset`, where the caches are persisted to disk storage or LMDB for rapid retrieval across experimental runs (as is the case when tuning hyperparameters), or when the entire size of the dataset exceeds available memory. `PersistentDataset` could achieve similar performance when comparing to `CacheDataset` in [Datasets experiment](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/dataset_type_performance.ipynb).
-![cachedataset speed](../figures/datasets_speed.png) with an SSD storage.
+
+![cachedataset speed](../figures/datasets_speed.png)
 
 ### 3. SmartCache mechanism for large datasets
 
@@ -208,7 +209,14 @@ a `ThreadDataLoader` example is available at [Spleen fast training tutorial](htt
 
 ## Algorithmic improvement
 
-In most deep learning applications, algorithmic improvement has been witnessed to be effective for boosting training efficiency and performance (for example, from AlexNet to ResNet). The improvement may come from a novel loss function, or a sophisticated optimizer, or a different learning rate scheduler, or the combination of all previous items. For our demo applications of 3D medical image segmentation, we would like to further speed up training from the algorithmic perspective. The default loss function is soft Dice loss. And we changed it to `DiceCELoss` from MONAI to further improve the model convergence. Because the `DiceCELoss` combines both Dice loss and multi-class cross-entropy loss (which is suitable for the softmax formulation), and balance the importance of global and pixel-wise accuracies. The segmentation quality can be largely improved. The following figure shows the great improvement on model convergence after we change Dice loss to `DiceCELoss`, with or without enabling automated mixed precision (AMP).
+In most deep learning applications, algorithmic improvement has been witnessed to be effective in boosting training efficiency and performance (for example, from AlexNet to ResNet).
+The improvement may come from a novel loss function, a sophisticated optimizer, a different learning rate scheduler, or a combination of all previous items.
+For our demo applications of 3D medical image segmentation, we would like to further speed up training from the algorithmic perspective.
+The default loss function is soft Dice loss.
+And we changed it to `DiceCELoss` from MONAI to further improve the model convergence,
+because the `DiceCELoss` combines both Dice loss and multi-class cross-entropy loss (which is suitable for the softmax formulation) and balances the importance of global and pixel-wise accuracies.
+The segmentation quality can be largely improved.
+The following figure shows the great improvement in model convergence after we change the Dice loss to `DiceCELoss`, with or without enabling AMP.
 
 ![diceceloss](../figures/diceceloss.png)
 

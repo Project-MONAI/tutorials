@@ -314,13 +314,13 @@ With all the above strategies, in this section, we introduce how to apply them t
 ### 1. Spleen segmentation
 
 - Select the algorithms based on the experiments.
-  As a binary segmentation task, we replaced the baseline `Dice` loss with a `DiceCE` loss, it can help improve the convergence. And we tried to analyze the training curve and tuned different parameters of the network and tested several numerical optimizers, finally replaced the baseline `Adam` optimizer with `SGD`. To achieve the target metric (`mean Dice = 0.94` of the `foreground` channel only) it reduces the number of training epochs from 280 to 60.
+  As a binary segmentation task, we replaced the baseline `Dice` loss with a `DiceCE` loss, it can help improve the convergence. And we tried to analyze the training curve and tuned different parameters of the network and tested several numerical optimizers, finally replaced the baseline `Adam` optimizer with `SGD`. To achieve the target metric (`mean Dice = 0.94` of the `foreground` channel only) it reduces the number of training epochs from 165 to 95.
 - Optimize GPU utilization.
   1. With `AMP`, the training speed is significantly improved and can achieve almost the same validation metric as without `AMP`.
-  2. The deterministic transform results of all the spleen dataset is around 8 GB, which can be cached in a V100 GPU memory. So, we cached all the data in GPU memory and executed the following transforms in GPU directly.
+  2. The deterministic transform results of all the spleen dataset is around 8 GB, which can be cached in a A100 GPU memory. So, we cached all the data in GPU memory and executed the following transforms in GPU directly.
 - Replace `DataLoader` with `ThreadDataLoader`. As all the data are cached in GPU, the computation of randomized transforms is on GPU and light-weighted, `ThreadDataLoader` help avoid the IPC cost of multi-processing in `DataLoader` and increase the GPU utilization.
 
-In summary, with a V100 GPU and the target validation `mean dice = 0.94` of the `forground` channel only,  it's more than `100x` speedup compared with the Pytorch regular implementation when achieving the same metric (validation accuracies). And every epoch is `20x` faster than regular training.
+In summary, with a A100 GPU and the target validation `mean dice = 0.94` of the `forground` channel only, it's more than `150x` speedup compared with the Pytorch regular implementation when achieving the same metric (validation accuracies). And every epoch is `50x` faster than regular training.
 ![spleen fast training](../figures/fast_training.png)
 
 More details are available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/fast_training_tutorial.ipynb).
@@ -337,9 +337,10 @@ More details are available at [Spleen fast training tutorial](https://github.com
   1. Single GPU cannot cache all the data in memory, so we split the dataset into eight parts and cache the deterministic transforms result in eight GPUs to avoid duplicated deterministic transforms and `CPU->GPU sync` in every epoch.
   2. We executed all the random augmentations in GPU directly with the `ThreadDataLoader`. The GPU utilization of all the eight GPUs was always almost `100%` during training:
   ![brats gpu utilization](../figures/brats_gpu_utilization.png)
-  3. As we already fully leveraged the GPUs, we continuously optimize the training with multiple nodes (32 V100 GPUs in four nodes). The GPU utilization of all the 32 GPUs was always `97%` during training.
+  3. As we already fully leveraged the GPUs, we continuously optimize the training with multiple nodes (32 A100 GPUs in four nodes). The GPU utilization of all the 32 GPUs was always `97%` during training.
 
-In summary, combining the optimization strategies, the training time of eight V100 GPUs to achieve the target validation metric was around 40 minutes, which is more than `13x` faster than the baseline with a single GPU. And the training time of 32 V100 GPUs was around `13` minutes, which is `40x` faster than the baseline:
+In summary, combining the optimization strategies, the training time of eight A100 GPUs to achieve the target validation metric was around 40 minutes, which is more than `11x` faster than the baseline with a single GPU. Using four 8-GPU nodes can speed up model processing by `30x` the baseline performance. Our results are achieved based on TensorFloat-32 (TF32) precision format as the default setting in the docker image.
+
 ![brats benchmark](../figures/brats_benchmark.png)
 
 More details are available at [BraTS distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/distributed_training/brats_training_ddp.py).

@@ -21,7 +21,7 @@ To provide an overview of the fast training techniques in practice, this documen
   * [Execute transforms on GPU](#2-execute-transforms-on-gpu)
   * [Adapt `cuCIM` to execute GPU transforms](#3-adapt-cucim-to-execute-gpu-transforms)
   * [Cache IO and transforms data to GPU](#4-cache-io-and-transforms-data-to-gpu)
-* [Leveraging multi-GPU](#leveraging-multi-gpu)
+* [Leveraging multi-GPU distributed training](#leveraging-multi-gpu-distributed-training)
   * Demonstration of multi-GPU training for performance improvement.
 * [Leveraging multi-node distributed training](#leveraging-multi-node-distributed-training)
   * Demonstration of distributed multi-node training for performance improvement.
@@ -233,8 +233,11 @@ In 2017, NVIDIA researchers developed a methodology for mixed-precision training
 
 For the PyTorch 1.6 release, developers at NVIDIA and Facebook moved mixed precision functionality into PyTorch core as the AMP package, `torch.cuda.amp`.
 
-MONAI workflows can easily set `amp=True/False` in `SupervisedTrainer` or `SupervisedEvaluator` during training or evaluation to enable/disable AMP. And we tried to compare the training speed of spleen segmentation task if AMP ON/OFF on NVIDIA V100 GPU with CUDA 11, obtained some benchmark results:
-![amp v100 results](../figures/amp_training_v100.png)
+MONAI workflows can easily set `amp=True/False` in `SupervisedTrainer` or `SupervisedEvaluator` during training or evaluation to enable/disable AMP.
+We tried to compare the training speed of the spleen segmentation task if AMP ON/OFF on NVIDIA A100 GPU with CUDA 11 and obtained some benchmark results:
+
+![amp a100 results](../figures/amp_training_a100.png)
+
 AMP tutorial is available at [AMP tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/automatic_mixed_precision.ipynb).
 
 ### 2. Execute transforms on GPU
@@ -282,28 +285,26 @@ dataset = CacheDataset(..., transform=train_trans)
 Here we convert to PyTorch `Tensor` with `EnsureTyped` transform and move data to GPU with `ToDeviced` transform. `CacheDataset` caches the transform results until `ToDeviced`, so it is in GPU memory. Then in every epoch, the program fetches cached data from GPU memory and only execute the random transform `RandCropByPosNegLabeld` on GPU directly.
 GPU caching example is available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/fast_training_tutorial.ipynb).
 
-## Leveraging multi-GPU
+## Leveraging multi-GPU distributed training
 
-When we have fully utilized a single GPU during training, a natural optimization idea is to partition the dataset and execute model training in parallel on multiple GPUs.
+When we have fully utilized a single GPU during training, a straightforward optimization idea is to partition the dataset and execute model training in parallel on multiple GPUs.
 
 Additionally, with more GPU devices, we can achieve more benefits:
 - Some training algorithms can converge faster with a larger batch size and the training progress is more stable.
-- If caching data in GPU memory, every GPU only needs to cache a partition, so we can use larger cache rate to cache more data in total to accelerate training.
+- If caching data in GPU memory, every GPU only needs to cache a partition, so we can use a larger cache rate to cache more data in total to accelerate training. Caching data to GPU can largely reduce CPU-based operations during model training. It can greatly improve the model training efficiency.
 
 For example, during the training of brain tumor segmentation task, with 8 GPUs, we can cache all the data in GPU memory directly and execute the following transforms on GPU device, so it's more than `10x` faster than single GPU training. More details are available at [BraTS distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/distributed_training/brats_training_ddp.py).
 
 ## Leveraging multi-node distributed training
 
-Distributed data parallelism (DDP) is an important feature of PyTorch to connect multiple GPU devices in multiple nodes to train or evaluate models, it can continuously improve the training speed when we fully leveraged multiple GPUs on a single node.
+Distributed data parallelism (DDP) is an important feature of PyTorch to connect multiple GPU devices in multiple nodes to train or evaluate models. It can further improve the training speed when we fully leveraged multiple GPUs on multiple nodes.
 
-The distributed data parallel APIs of MONAI are compatible with the native PyTorch distributed module, pytorch-ignite distributed module, Horovod, XLA, and the SLURM platform. MONAI provides rich demos for reference: train/evaluate with `PyTorch DDP`, train/evaluate with `Horovod`, train/evaluate with `Ignite DDP`, partition dataset and train with `SmartCacheDataset`, as well as a real-world training example based on Decathlon challenge Task01 - Brain Tumor segmentation.
+The distributed data parallel APIs of MONAI are compatible with the native PyTorch distributed module, PyTorch-ignite distributed module, Horovod, XLA, and the SLURM platform. Here we provide [a real-world training example](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/distributed_training/brats_training_ddp.py) based on [Decathlon challenge](http://medicaldecathlon.com/) Task01 - Brain Tumor segmentation using the module `torch.distributed.launch`.
 
 For more details about the PyTorch distributed training setup, please refer to: https://pytorch.org/docs/stable/distributed.html.
 
 And if using [SLURM](https://developer.nvidia.com/slurm) workload manager, please refer to [SLURM + Singularity MONAI example](https://github.com/UFResearchComputing/MultiNode_MONAI_example).
 
-We obtained U-Net performance benchmarks of Brain tumor segmentation task for reference (based on CUDA 11, NVIDIA V100 GPUs):
-![distributed training results](../figures/distributed_training.png)
 More details are available at [BraTS distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/distributed_training/brats_training_ddp.py).
 
 ## Examples

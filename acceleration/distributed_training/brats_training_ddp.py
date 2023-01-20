@@ -1,4 +1,4 @@
-# Copyright 2020 MONAI Consortium
+# Copyright (c) MONAI Consortium
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -17,7 +17,7 @@ This example is a real-world task based on Decathlon challenge Task01: Brain Tum
 So it's more complicated than other distributed training demo examples.
 
 Under default settings, each single GPU needs to use ~12GB memory for network training. In addition, in order to
-cache the whole dataset, ~100GB GPU memory are necessary. Therefore, at least 5 NVIDIA TESLA V100 (32G) are needed.
+cache the whole dataset, ~100GB GPU memory are necessary. Therefore, at least 2 NVIDIA TESLA A100 (80G) are needed.
 If you do not have enough GPU memory, you can try to decrease the input parameter `cache_rate`.
 
 Main steps to set up the distributed training:
@@ -27,7 +27,7 @@ Main steps to set up the distributed training:
   `--nproc_per_node=NUM_GPUS_PER_NODE`
   `--nnodes=NUM_NODES`
   `--node_rank=INDEX_CURRENT_NODE`
-  `--master_addr="192.168.1.1"`
+  `--master_addr="localhost"`
   `--master_port=1234`
   For more details, refer to https://github.com/pytorch/pytorch/blob/master/torch/distributed/launch.py.
   Alternatively, we can also use `torch.multiprocessing.spawn` to start program, but it that case, need to handle
@@ -45,7 +45,7 @@ Note:
     Example script to execute this program on every node:
     python -m torch.distributed.launch --nproc_per_node=NUM_GPUS_PER_NODE
            --nnodes=NUM_NODES --node_rank=INDEX_CURRENT_NODE
-           --master_addr="192.168.1.1" --master_port=1234
+           --master_addr="localhost" --master_port=1234
            brats_training_ddp.py -d DIR_OF_TESTDATA
 
     This example was tested with [Ubuntu 16.04/20.04], [NCCL 2.6.3].
@@ -395,7 +395,7 @@ def main():
 
 # python -m torch.distributed.launch --nproc_per_node=NUM_GPUS_PER_NODE
 #        --nnodes=NUM_NODES --node_rank=INDEX_CURRENT_NODE
-#        --master_addr="192.168.1.1" --master_port=1234
+#        --master_addr="localhost" --master_port=1234
 #        brats_training_ddp.py -d DIR_OF_TESTDATA
 
 if __name__ == "__main__":

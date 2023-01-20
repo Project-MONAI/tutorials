@@ -352,7 +352,7 @@ then
         fi
 
         # the number of lines in text outputs should be under the limit
-        # other outputs such as html data won't be counted 
+        # other outputs such as html data won't be counted
         ind=0
         IFS=' ' read -r -a text_lines <<< $(${NB_TEST} count -f "$fname" -k "\n" --type code --field outputs -n text)
         for element in ${text_lines[@]}; do

@@ -57,6 +57,8 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_endoscop
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_pathology_nuclei_segmentation_QuPath.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_radiology_spleen_segmentation_OHIF.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" example_feature.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" ssl_train.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" ssl_finetune.ipynb)
 
 # Execution of the notebook in these folders / with the filename cannot be automated
 skip_run_papermill=()
@@ -83,6 +85,8 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_pancreas_tumor_segme
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_endoscopy_cvat_tooltracking*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_pathology_nuclei_segmentation_QuPath*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_radiology_spleen_segmentation_OHIF*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*ssl_train*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*ssl_finetune*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*transform_visualization*)  # https://github.com/Project-MONAI/tutorials/issues/1155
 
 # output formatting

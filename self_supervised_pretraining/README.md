@@ -1,42 +1,37 @@
 # Self-Supervised Pre-training Tutorial
 
-This directory contains two scripts. The first script 'ssl_script_train.py' generates
+This directory contains two Jupyter notebooks. The first is notebook 'ssl_train.ipynb' which generates
 a good set of pre-trained weights using unlabeled data with self-supervised tasks that
-are based on augmentations of different types. The second script 'ssl_finetune_train.py' uses
+are based on augmentations of different types. The second is notebook 'ssl_finetune.ipynb' uses
 the pre-trained weights generated from the first script and performs fine-tuning on a fully supervised
 task.
 
-In case, the user wants to skip the pre-training part, the pre-trained weights can be
-[downloaded from here](https://drive.google.com/file/d/1D7G1FhgZfBhql4djMfiSy0xODVXnLlpd/view?usp=sharing)
-to use for fine-tuning tasks and directly skip to the second part of the tutorial which is using the
-'ssl_finetune_train.py'.
 
 ### Steps to run the tutorial
-1.) Download the two datasets [TCIA-Covid19](https://wiki.cancerimagingarchive.net/display/Public/CT+Images+in+COVID-19)
-& [BTCV](https://www.synapse.org/#!Synapse:syn3193805/wiki/217789) (More detail about them in the Data section)\
-2.) Modify the paths for data_root, json_path & logdir in ssl_script_train.py\
-3.) Run the 'ssl_script_train.py'\
-4.) Modify the paths for data_root, json_path, pre-trained_weights_path from 2.) and
-logdir_path in 'ssl_finetuning_train.py'\
-5.) Run the 'ssl_finetuning_script.py'\
-6.) And that's all folks, use the model to your needs
+1. Download the two datasets [TCIA-Covid19](https://wiki.cancerimagingarchive.net/display/Public/CT+Images+in+COVID-19)
+& [BTCV](https://www.synapse.org/#!Synapse:syn3193805/wiki/217789) (More detail about them in the Data section)
+2. Modify the paths for data_root, json_path & logdir in ssl_train.ipynb
+3. Run the 'ssl_train.ipynb'
+4. Modify the paths for data_root, json_path, pre-trained_weights_path from Step 2 and
+logdir_path in 'ssl_finetune.ipynb'
+5. Run the 'ssl_finetune.ipynb'
+6. And that's all folks, use the model to your needs
 
-### 1.Data
+### 1. Data
 Pre-training Dataset: The TCIA Covid-19 dataset was used for generating the
-[pre-trained weights](https://drive.google.com/file/d/1D7G1FhgZfBhql4djMfiSy0xODVXnLlpd/view?usp=sharing).
-The dataset contains a total of 771 3D CT Volumes. The volumes were split into training and validation sets
+pre-trained weights. The dataset contains a total of 771 3D CT Volumes. The volumes were split into training and validation sets
 of 600 and 171 3D volumes correspondingly. The data is available for download at this
 [link](https://wiki.cancerimagingarchive.net/display/Public/CT+Images+in+COVID-19).
-If this dataset is being used in your work,  please use [1] as reference. A json file is provided
-which contains the training and validation splits that were used for the training. The json file can be found in the
+If this dataset is being used in your work,  please use 1 as a reference. A JSON file is provided
+which contains the training and validation splits that were used for the training. The JSON file can be found in the
 json_files directory of the self-supervised training tutorial.
 
 Fine-tuning Dataset: The dataset from Beyond the Cranial Vault Challenge
 [(BTCV)](https://www.synapse.org/#!Synapse:syn3193805/wiki/217789)
 2015 hosted at MICCAI, was used as a fully supervised fine-tuning task on the pre-trained weights. The dataset
-consists of 30 3D Volumes with annotated labels of up to 13 different organs [2]. There are 3 json files provided in the
-json_files directory for the dataset. They correspond to having different number of training volumes ranging from
-6, 12 and 24. All 3 json files have the same validation split.
+consists of 30 3D Volumes with annotated labels of up to 13 different organs [2]. There are 3 JSON files provided in the
+json_files directory for the dataset. They correspond to having a different number of training volumes ranging from
+6, 12 and 24. All 3 JSON files have the same validation split.
 
 References:
 
@@ -48,15 +43,14 @@ Medical Image Analysis 69 (2021): 101894.
 
 ### 2. Network Architectures
 
-For pre-training a modified version of ViT [1] has been used, it can be referred
+For pre-training a modified version of ViT [1] has been used, it can be referred to
 [here](https://docs.monai.io/en/latest/networks.html#vitautoenc)
-from MONAI. The original ViT was modified by attachment of two 3D Convolutional Transpose Layers to achieve a similar
+from MONAI. The original ViT was modified by the attachment of two 3D Convolutional Transpose Layers to achieve a similar
 reconstruction size as that of the input image. The ViT is the backbone for the UNETR [2] network architecture which
-was used for the fine-tuning fully supervised tasks.
+was used for fine-tuning fully supervised tasks.
 
-The pre-trained backbone of ViT weights were loaded to UNETR and the decoder head still relies on random initialization
-for adaptability of the new downstream task. This flexibility also allows the user to adapt the ViT backbone to their
-own custom created network architectures as well.
+The pre-trained backbone of ViT weights was loaded to UNETR and the decoder head still relies on random initialization
+for adaptability of the new downstream task. This flexibility also allows the user to adapt the ViT backbone to their custom-created network architectures as well.
 
 References:
 
@@ -76,7 +70,7 @@ volume. Two augmented views of the same 3D patch are generated for the contrasti
 the two augmented views closer to each other if the views are generated from the same patch, if not then it tries to
 maximize the disagreement. The CL offers this functionality on a mini-batch.
 
-![image](../figures/SSL_Overview_Figure.png)
+![SSL_overview](../figures/SSL_Overview_Figure.png)
 
 The augmentations mutate the 3D patch in various ways, the primary task of the network is to reconstruct
 the original image. The different augmentations used are classical techniques such as in-painting [1], out-painting [1]
@@ -88,13 +82,12 @@ by the reconstruction loss as a dynamic weight itself.
 The below example image depicts the usage of the augmentation pipeline where two augmented views are drawn of the same
 3D patch:
 
-![image](../figures/SSL_Different_Augviews.png)
+![SSL_augs](../figures/SSL_Different_Augviews.png)
 
 Multiple axial slices of a 96x96x96 patch are shown before the augmentation (Ref Original Patch in the above figure).
-Augmented View 1 & 2 are different augmentations generated via the transforms on the same cubic patch. The objective
-of the SSL network is to reconstruct the original top row image from the first view. The contrastive loss
-is driven by maximizing agreement of the reconstruction based on input of the two augmented views.
-`matshow3d` from `monai.visualize` was used for creating this figure, a tutorial for using can be found [here](https://github.com/Project-MONAI/tutorials/blob/main/modules/transform_visualization.ipynb)
+Augmented Views 1 & 2 are different augmentations generated via the transforms on the same cubic patch. The objective
+of the SSL network is to reconstruct the original top-row image from the first view. The contrastive loss
+is driven by maximizing the agreement of the reconstruction based on the input of the two augmented views.
 
 References:
 
@@ -107,7 +100,7 @@ image analysis 58 (2019): 101539.
 3.) Chen, Ting, et al. "A simple framework for contrastive learning of visual representations." International conference
 on machine learning. PMLR, 2020.
 
-### 4. Experiment Hyper-parameters
+### 4. Experiment with Hyper-parameters
 
 Training Hyper-Parameters for SSL: \
 Epochs: 300 \
@@ -118,8 +111,7 @@ Loss Function: L1
 Contrastive Loss Temperature: 0.005
 
 Training Hyper-parameters for Fine-tuning BTCV task (All settings have been kept consistent with prior
-[UNETR 3D
-Segmentation tutorial](https://github.com/Project-MONAI/tutorials/blob/main/3d_segmentation/unetr_btcv_segmentation_3d.ipynb)): \
+[UNETR 3D Segmentation tutorial](../3d_segmentation/unetr_btcv_segmentation_3d.ipynb): \
 Number of Steps: 30000 \
 Validation Frequency: 100 steps \
 Batch Size: 1 3D Volume (4 samples are drawn per 3D volume) \
@@ -130,7 +122,7 @@ Loss Function: DiceCELoss
 
 ![image](../figures/ssl_pretrain_losses.png)
 
-L1 error reported for training and validation when performing the SSL training. Please note contrastive loss is not
+L1 error reported for training and validation when performing the SSL training. Please note the contrastive loss is not
 L1.
 
 ### 5. Results of the Fine-tuning vs Random Initialization on BTCV

@@ -25,17 +25,24 @@ def define_parser(parser):
         "--type",
         type=str,
         default="markdown",
-        help="the type of target cell (code/markdown). Default is markdown"
+        help="the type of target cell (code/markdown). Default is markdown."
     )
     parser.add_argument(
         "--field",
         type=str,
         default="source",
-        help="the type of target cell (code/markdown). Default is markdown"
+        help="the field to extract in the target cell, such as metadata/source/outputs. Default is source."
+    )
+    parser.add_argument(
+        "-n",
+        "--nestkey",
+        type=str,
+        default=None,
+        help="the nesting key in the field of target. Default is None."
     )
 
 
-def count_matches(filename, start, end, keyword, cell_type="markdown", field="source"):
+def count_matches(filename, start, end, keyword, cell_type="markdown", field="source", nestkey=None):
     """Count the number of keyword matches from start index to end index"""
     occurrences = []
 
@@ -50,7 +57,17 @@ def count_matches(filename, start, end, keyword, cell_type="markdown", field="so
             else:
                 #  treat backslashes as literal characters
                 keyword_rawstring = repr(keyword)[1:-1]  # remove the single quotes before/after the word
-                occurrences.append(len(re.findall(keyword_rawstring, str(cell[field]))))  # value can be list of dict
+
+                if nestkey is None:
+                    content = cell[field]
+                else:
+                    if isinstance(cell[field], dict):
+                        content = cell[field][nestkey]
+                    elif isinstance(cell[field], list):
+                        content = [v for v in cell[field] if isinstance(v, dict) and nestkey in v]
+                    else:
+                        raise ValueError(f"{type(cell[field])} is not dict or list.")
+                occurrences.append(len(re.findall(keyword_rawstring, str(content))))  # value can be list of dict
 
     return occurrences
 
@@ -84,9 +101,9 @@ def main():
         args.end = args.index + 1
 
     if args.subcommand == "verify":
-        print_verification_bool(args.filename, args.start, args.end, args.keyword, args.type, args.field)
+        print_verification_bool(args.filename, args.start, args.end, args.keyword, args.type, args.field, args.nestkey)
     elif args.subcommand == "count":
-        print_count_array(args.filename, args.start, args.end, args.keyword, args.type, args.field)
+        print_count_array(args.filename, args.start, args.end, args.keyword, args.type, args.field, args.nestkey)
     else:
         print("No subcommand provided. Please use -h for help")
 

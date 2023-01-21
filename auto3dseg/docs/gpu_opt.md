@@ -22,7 +22,7 @@ And we allow the user to define the scope of the hyper-parameter optimization pr
 If the key in `gpu_customization_specs` is `universal`, it means that the range settings will apply to all algorithms; if the keys are algorithm names, then the ranges correspond to different algorithms respectively.
 
 As shown in the following code snippet, the user can select the algorithm to use.
-If `algos` is a dictionary, it outlines the algorithm to use. 
+If `algos` is a dictionary, it outlines the algorithm to use.
 If `algos` is a list or a string, defines a subset of names of the algorithms to use, e.g. (`segresnet`, `dints`) out of the full set of algorithm templates provided by templates_path_or_url. Defaults value of `algos` is None which means using all available algorithms.
 
 ```python

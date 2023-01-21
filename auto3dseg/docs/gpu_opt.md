@@ -50,5 +50,6 @@ We take the `DiNTS` algorithm in `MSD Task02_Heart` as an example, and compare t
 And training loss curves and validation accuracy curvers are compared between the training processes with and without GPU opmization.
 After GPU optimization, the batch size is increased from 1 to 8, batch size in sliding-window inference is increased to 14, and validation device is GPU.
 From the following figure, we can see that model converge faster when using GPU optimization, and validation accuracies becomes better on average.
+The improvement is primarily to take advantage of the more GPU capacity available on the A100.
 
 <div align="center"> <img src="../figures/gpu_opt.png" width="360"/> </div>

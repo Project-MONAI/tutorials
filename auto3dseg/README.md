@@ -92,6 +92,13 @@ Each module of **Auto3DSeg** in different steps can be individually used for dif
 - Step 4: [Hyper-parameter optimization](docs/hpo.md)
 - Step 5: [Model ensemble](docs/ensemble.md)
 
+## GPU utilization optimization
+
+Given the variety of GPU devices users have, we provide an automated way to optimize the GPU utilization (e.g., memory usage) of algorithms in Auto3DSeg.
+During algorithm generation, users can enable the optimization option.
+Auto3DSeg can then further automatically tune the hyper-parameters to fully utilize the available GPU capacity.
+Concrete examples can be found [here](docs/gpu_opt.md).
+
 ## FAQ
 
 Please refer to [FAQ](docs/faq.md) for frequently asked questions.

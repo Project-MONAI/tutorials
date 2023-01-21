@@ -16,4 +16,23 @@ The following hyper-paramters in model training configurations are optimized in 
 
 ### Usage
 
+```python
+bundle_generator = BundleGen(
+    algo_path=work_dir,
+    algos="dints",
+    data_stats_filename=datastats_file,
+    data_src_cfg_name=input,
+)
+
+gpu_customization_specs = {
+    "universal": {"num_trials": 20, "range_num_images_per_batch": [1, 20], "range_num_sw_batch_size": [1, 40]}
+}
+bundle_generator.generate(
+    work_dir,
+    num_fold=5,
+    gpu_customization=True,
+    gpu_customization_specs=gpu_customization_specs,
+)
+```
+
 ### Effect

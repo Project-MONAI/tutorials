@@ -59,6 +59,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_radiolog
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" example_feature.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" ssl_train.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" ssl_finetune.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" TCIA_PROSTATEx_Prostate_MRI_Anatomy_Model.ipynb)
 
 # Execution of the notebook in these folders / with the filename cannot be automated
 skip_run_papermill=()

@@ -450,7 +450,7 @@ for file in "${files[@]}"; do
             echo Applying autofixes...
             jupytext "$filename" --opt custom_cell_magics="writefile" \
                 --pipe "autoflake --in-place --remove-unused-variables --imports numpy,monai,matplotlib,torch,ignite {}" \
-                --pipe "autopep8 - --ignore W291 --max-line-length 120" \
+                --pipe "autopep8 - --ignore W291,E203 --max-line-length 120" \
                 --pipe "sed 's/ = list()/ = []/'"
         fi
 

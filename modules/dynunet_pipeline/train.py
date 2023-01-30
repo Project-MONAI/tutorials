@@ -97,7 +97,8 @@ def validation(args):
                     "mean dice for label {} is {}".format(i + 1, results[:, i].mean())
                 )
 
-    dist.destroy_process_group()
+    if multi_gpu_flag:
+        dist.destroy_process_group()
 
 
 def train(args):
@@ -227,7 +228,8 @@ def train(args):
         trainer.logger.setLevel(logging.WARNING)
 
     trainer.run()
-    dist.destroy_process_group()
+    if multi_gpu_flag:
+        dist.destroy_process_group()
 
 
 if __name__ == "__main__":

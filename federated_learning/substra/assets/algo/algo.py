@@ -16,6 +16,7 @@ import monai
 from monai.inferers import sliding_window_inference
 from monai.transforms import Activations, AsDiscrete
 
+
 class MonaiAlgo(tools.algo.Algo):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     loss_function = monai.losses.DiceLoss(sigmoid=True)

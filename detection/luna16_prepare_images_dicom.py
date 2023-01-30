@@ -106,13 +106,7 @@ def main():
         print("-" * 10)
         for batch_data in process_loader:
             for batch_data_i in batch_data:
-                subj_id = meta_dict[
-                    "/".join(
-                        batch_data_i["image_meta_dict"]["filename_or_obj"].split("/")[
-                            -3:
-                        ]
-                    )
-                ]
+                subj_id = meta_dict["/".join(batch_data_i["image_meta_dict"]["filename_or_obj"].split("/")[-3:])]
                 new_path = os.path.join(args.data_base_dir, subj_id)
                 Path(new_path).mkdir(parents=True, exist_ok=True)
                 new_filename = os.path.join(new_path, subj_id + ".nii.gz")

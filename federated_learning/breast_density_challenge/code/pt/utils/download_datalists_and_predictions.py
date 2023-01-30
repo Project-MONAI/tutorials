@@ -12,5 +12,11 @@
 from monai.apps.utils import download_url, download_and_extract
 
 
-download_and_extract(url="https://github.com/Project-MONAI/MONAI-extra-test-data/releases/download/0.8.1/dataset_lists.zip", output_dir="./data")
-download_url(url="https://github.com/Project-MONAI/MONAI-extra-test-data/releases/download/0.8.1/predictions.json", filepath="./result_server_example/predictions.json")
+download_and_extract(
+    url="https://github.com/Project-MONAI/MONAI-extra-test-data/releases/download/0.8.1/dataset_lists.zip",
+    output_dir="./data",
+)
+download_url(
+    url="https://github.com/Project-MONAI/MONAI-extra-test-data/releases/download/0.8.1/predictions.json",
+    filepath="./result_server_example/predictions.json",
+)

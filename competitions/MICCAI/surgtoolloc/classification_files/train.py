@@ -42,16 +42,13 @@ def main(cfg):
     df = pd.read_csv(cfg.train_df)
     sucirr_videos = df[df["suction irrigator"] > 0].clip_name.unique()
     tipup_videos = df[df["tip-up fenestrated grasper"] > 0].clip_name.unique()
-    df_oversample = df[
-        df.clip_name.isin(sucirr_videos) | df.clip_name.isin(tipup_videos)
-    ]
+    df_oversample = df[df.clip_name.isin(sucirr_videos) | df.clip_name.isin(tipup_videos)]
 
     cfg.labels = df.columns.values[4:18]
 
     val_df = df[df["fold"] == cfg.fold]
     train_df = pd.concat(
-        [df[df["fold"] != cfg.fold]]
-        + [df_oversample[df_oversample["fold"] != cfg.fold]] * cfg.oversample_rate
+        [df[df["fold"] != cfg.fold]] + [df_oversample[df_oversample["fold"] != cfg.fold]] * cfg.oversample_rate
     )
 
     train_dataset = SurgDataset(cfg, df=train_df, mode="train")
@@ -61,18 +58,12 @@ def main(cfg):
     val_dataloader = get_val_dataloader(val_dataset, cfg)
 
     # set model
-    model = EfficientNetBN(
-        model_name=cfg.backbone, pretrained=True, num_classes=cfg.num_classes
-    )
+    model = EfficientNetBN(model_name=cfg.backbone, pretrained=True, num_classes=cfg.num_classes)
     model = torch.nn.DataParallel(model)
     model.to(cfg.device)
 
     if cfg.weights is not None:
-        model.load_state_dict(
-            torch.load(os.path.join(f"{cfg.output_dir}/fold{cfg.fold}", cfg.weights))[
-                "model"
-            ]
-        )
+        model.load_state_dict(torch.load(os.path.join(f"{cfg.output_dir}/fold{cfg.fold}", cfg.weights))["model"])
         print(f"weights from: {cfg.weights} are loaded.")
 
     # set optimizer, lr scheduler
@@ -88,12 +79,8 @@ def main(cfg):
     )
     # set loss, metric
     class_num = list(train_df[cfg.labels].sum())
-    class_weights = [
-        train_df.shape[0] / (n * cfg.num_classes) if n > 0 else 1 for n in class_num
-    ]
-    loss_function = torch.nn.BCEWithLogitsLoss(
-        weight=torch.as_tensor(class_weights).to(cfg.device)
-    )
+    class_weights = [train_df.shape[0] / (n * cfg.num_classes) if n > 0 else 1 for n in class_num]
+    loss_function = torch.nn.BCEWithLogitsLoss(weight=torch.as_tensor(class_weights).to(cfg.device))
     metric = ConfusionMatrixMetric(metric_name="F1", reduction="mean_batch")
 
     # set other tools
@@ -185,9 +172,7 @@ def run_train(
             inputs, labels_a, labels_b, lam = mixup_data(inputs, labels)
             with autocast():
                 outputs = model(inputs)
-                loss = lam * loss_function(outputs, labels_a) + (
-                    1 - lam
-                ) * loss_function(outputs, labels_b)
+                loss = lam * loss_function(outputs, labels_a) + (1 - lam) * loss_function(outputs, labels_b)
         else:
             with autocast():
                 outputs = model(inputs)
@@ -235,9 +220,7 @@ if __name__ == "__main__":
 
     arg_parser = argparse.ArgumentParser(description="")
 
-    arg_parser.add_argument(
-        "-c", "--config", type=str, default="cfg_efnb4.yaml", help="config filename"
-    )
+    arg_parser.add_argument("-c", "--config", type=str, default="cfg_efnb4.yaml", help="config filename")
     arg_parser.add_argument("-f", "--fold", type=int, default=0, help="fold")
     arg_parser.add_argument("-s", "--seed", type=int, default=-1, help="seed")
     arg_parser.add_argument("-w", "--weights", default=None, help="the path of weights")

@@ -23,7 +23,15 @@ from monai.data import create_test_image_2d, list_data_collate, decollate_batch,
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.networks.nets import UNet
-from monai.transforms import Activations, EnsureChannelFirstd, AsDiscrete, Compose, LoadImaged, SaveImage, ScaleIntensityd
+from monai.transforms import (
+    Activations,
+    EnsureChannelFirstd,
+    AsDiscrete,
+    Compose,
+    LoadImaged,
+    SaveImage,
+    ScaleIntensityd,
+)
 
 
 def main(tempdir):

@@ -45,18 +45,14 @@ class CustomDataset(Dataset):
         self.df = df.copy()
         self.annotated_df = pd.read_csv(cfg.data_dir + "train_annotations.csv")
         annotated_ids = self.annotated_df["StudyInstanceUID"].unique()
-        self.is_annotated = (
-            self.df["StudyInstanceUID"].isin(annotated_ids).astype(int).values
-        )
+        self.is_annotated = self.df["StudyInstanceUID"].isin(annotated_ids).astype(int).values
         self.study_ids = self.df["StudyInstanceUID"].values
         self.annotated_df = self.annotated_df.groupby("StudyInstanceUID")
         self.label_cols = np.array(cfg.label_cols)
 
         if mode == "train":
             self.annot = pd.read_csv(cfg.data_dir + "train_annotations.csv")
-            self.annot = self.annot[
-                self.annot.StudyInstanceUID.isin(self.df.StudyInstanceUID)
-            ]
+            self.annot = self.annot[self.annot.StudyInstanceUID.isin(self.df.StudyInstanceUID)]
 
         self.labels = self.df[self.label_cols].values
         self.mode = mode
@@ -102,16 +98,10 @@ class CustomDataset(Dataset):
 
         for idx, data in df.iterrows():
 
-            xys = [
-                np.array(ast.literal_eval(data["data"]))
-                .clip(0, np.inf)
-                .astype(np.int32)[:, None, :]
-            ]
+            xys = [np.array(ast.literal_eval(data["data"])).clip(0, np.inf).astype(np.int32)[:, None, :]]
 
             m = np.zeros(img_shape)
-            m = cv2.polylines(
-                m, xys, False, 1, thickness=self.get_thickness(), lineType=cv2.LINE_AA
-            )
+            m = cv2.polylines(m, xys, False, 1, thickness=self.get_thickness(), lineType=cv2.LINE_AA)
 
             if self.cfg.seg_dim > 3:
                 idx = np.where(self.label_cols == data["label"])[0][0]
@@ -125,9 +115,7 @@ class CustomDataset(Dataset):
                 else:
                     continue
 
-            mask[:, :, idx][:, :, None] = np.max(
-                [mask[:, :, idx][:, :, None], m], axis=0
-            )
+            mask[:, :, idx][:, :, None] = np.max([mask[:, :, idx][:, :, None], m], axis=0)
 
         return mask
 

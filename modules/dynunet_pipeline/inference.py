@@ -27,9 +27,7 @@ def inference(args):
     # load hyper parameters
     task_id = args.task_id
     checkpoint = args.checkpoint
-    val_output_dir = "./runs_{}_fold{}_{}/".format(
-        args.task_id, args.fold, args.expr_name
-    )
+    val_output_dir = "./runs_{}_fold{}_{}/".format(args.task_id, args.fold, args.expr_name)
     sw_batch_size = args.sw_batch_size
     infer_output_dir = os.path.join(val_output_dir, task_name[task_id])
     window_mode = args.window_mode
@@ -55,9 +53,7 @@ def inference(args):
     net = net.to(device)
 
     if multi_gpu_flag:
-        net = DistributedDataParallel(
-            module=net, device_ids=[device], find_unused_parameters=True
-        )
+        net = DistributedDataParallel(module=net, device_ids=[device], find_unused_parameters=True)
 
     net.eval()
 
@@ -83,9 +79,7 @@ def inference(args):
 if __name__ == "__main__":
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument("-fold", "--fold", type=int, default=0, help="0-5")
-    parser.add_argument(
-        "-task_id", "--task_id", type=str, default="02", help="task 01 to 10"
-    )
+    parser.add_argument("-task_id", "--task_id", type=str, default="02", help="task 01 to 10")
     parser.add_argument(
         "-root_dir",
         "--root_dir",

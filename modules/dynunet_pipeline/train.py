@@ -17,8 +17,7 @@ import ignite.distributed as idist
 import torch
 import torch.distributed as dist
 from monai.config import print_config
-from monai.handlers import (CheckpointSaver, LrScheduleHandler, MeanDice,
-                            StatsHandler, ValidationHandler, from_engine)
+from monai.handlers import CheckpointSaver, LrScheduleHandler, MeanDice, StatsHandler, ValidationHandler, from_engine
 from monai.inferers import SimpleInferer, SlidingWindowInferer
 from monai.losses import DiceCELoss
 from monai.utils import set_determinism
@@ -93,9 +92,7 @@ def validation(args):
         results = evaluator.state.metric_details["val_mean_dice"]
         if num_classes > 2:
             for i in range(num_classes - 1):
-                print(
-                    "mean dice for label {} is {}".format(i + 1, results[:, i].mean())
-                )
+                print("mean dice for label {} is {}".format(i + 1, results[:, i].mean()))
 
     if multi_gpu_flag:
         dist.destroy_process_group()
@@ -156,16 +153,12 @@ def train(args):
         nesterov=True,
     )
 
-    scheduler = torch.optim.lr_scheduler.LambdaLR(
-        optimizer, lr_lambda=lambda epoch: (1 - epoch / max_epochs) ** 0.9
-    )
+    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: (1 - epoch / max_epochs) ** 0.9)
     # produce evaluator
     val_handlers = (
         [
             StatsHandler(output_transform=lambda x: None),
-            CheckpointSaver(
-                save_dir=val_output_dir, save_dict={"net": net}, save_key_metric=True
-            ),
+            CheckpointSaver(save_dir=val_output_dir, save_dict={"net": net}, save_key_metric=True),
         ]
         if idist.get_rank() == 0
         else None
@@ -196,9 +189,7 @@ def train(args):
 
     # produce trainer
     loss = DiceCELoss(to_onehot_y=True, softmax=True, batch=batch_dice)
-    train_handlers = [
-        ValidationHandler(validator=evaluator, interval=interval, epoch_level=True)
-    ]
+    train_handlers = [ValidationHandler(validator=evaluator, interval=interval, epoch_level=True)]
     if lr_decay_flag:
         train_handlers += [LrScheduleHandler(lr_scheduler=scheduler, print_lr=True)]
     if idist.get_rank() == 0:
@@ -235,9 +226,7 @@ def train(args):
 if __name__ == "__main__":
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument("-fold", "--fold", type=int, default=0, help="0-5")
-    parser.add_argument(
-        "-task_id", "--task_id", type=str, default="04", help="task 01 to 10"
-    )
+    parser.add_argument("-task_id", "--task_id", type=str, default="04", help="task 01 to 10")
     parser.add_argument(
         "-root_dir",
         "--root_dir",
@@ -337,9 +326,7 @@ if __name__ == "__main__":
         default=1000,
         help="number of epochs of training.",
     )
-    parser.add_argument(
-        "-mode", "--mode", type=str, default="train", choices=["train", "val"]
-    )
+    parser.add_argument("-mode", "--mode", type=str, default="train", choices=["train", "val"])
     parser.add_argument(
         "-checkpoint",
         "--checkpoint",
@@ -375,9 +362,7 @@ if __name__ == "__main__":
         default=False,
         help="the batch parameter of DiceCELoss.",
     )
-    parser.add_argument(
-        "-determinism_flag", "--determinism_flag", type=bool, default=False
-    )
+    parser.add_argument("-determinism_flag", "--determinism_flag", type=bool, default=False)
     parser.add_argument(
         "-determinism_seed",
         "--determinism_seed",

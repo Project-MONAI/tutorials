@@ -62,22 +62,16 @@ class UNetDecoder(nn.Module):
         """
         super().__init__()
         if len(encoder_channels) < 2:
-            raise ValueError(
-                "the length of `encoder_channels` should be no less than 2."
-            )
+            raise ValueError("the length of `encoder_channels` should be no less than 2.")
         if len(decoder_channels) != len(encoder_channels) - 1:
-            raise ValueError(
-                "`len(decoder_channels)` should equal to `len(encoder_channels) - 1`."
-            )
+            raise ValueError("`len(decoder_channels)` should equal to `len(encoder_channels) - 1`.")
 
         in_channels = [encoder_channels[-1]] + list(decoder_channels[:-1])
         skip_channels = list(encoder_channels[1:-1][::-1]) + [0]
         halves = [True] * (len(skip_channels) - 1)
         halves.append(False)
         blocks = []
-        for in_chn, skip_chn, out_chn, halve in zip(
-            in_channels, skip_channels, decoder_channels, halves
-        ):
+        for in_chn, skip_chn, out_chn, halve in zip(in_channels, skip_channels, decoder_channels, halves):
             blocks.append(
                 UpCat(
                     spatial_dims=dim,
@@ -163,7 +157,7 @@ class RanzcrNet(nn.Module):
             backbone_out = 704
             encoder_channels = (1, 32, 56, 88, 248, 704)
             model_name = "efficientnet-b8"
-        else: # efficientnet_b7
+        else:  # efficientnet_b7
             backbone_out = 640
             encoder_channels = (1, 32, 48, 80, 224, 640)
             model_name = "efficientnet-b7"
@@ -242,9 +236,7 @@ class RanzcrNet(nn.Module):
 
             x_seg = self.segmentation_head(decoder_out)
 
-            seg_loss = self.bce_seg(
-                x_seg[ia].permute(0, 2, 3, 1), batch["mask"][ia].permute(0, 2, 3, 1)
-            )
+            seg_loss = self.bce_seg(x_seg[ia].permute(0, 2, 3, 1), batch["mask"][ia].permute(0, 2, 3, 1))
 
         else:
             seg_loss = torch.zeros_like(cls_loss)

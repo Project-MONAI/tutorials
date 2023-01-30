@@ -16,7 +16,11 @@ import argparse
 import os
 import time
 
-from nvflare.fuel.hci.client.fl_admin_api_runner import FLAdminAPIRunner, api_command_wrapper, wait_until_clients_greater_than_cb
+from nvflare.fuel.hci.client.fl_admin_api_runner import (
+    FLAdminAPIRunner,
+    api_command_wrapper,
+    wait_until_clients_greater_than_cb,
+)
 from nvflare.fuel.hci.client.fl_admin_api_spec import TargetType
 
 
@@ -27,7 +31,7 @@ def main():
     parser.add_argument("--username", type=str, default="admin@nvflare.com", help="Admin username")
     parser.add_argument("--app", type=str, default="cifar10_fedavg", help="App to be deployed")
     parser.add_argument("--port", type=int, default=8003, help="The admin server port")
-    parser.add_argument("--poc", action='store_true', help="Whether admin uses POC mode.")
+    parser.add_argument("--poc", action="store_true", help="Whether admin uses POC mode.")
     parser.add_argument("--min_clients", type=int, default=8, help="Minimum number of clients.")
     args = parser.parse_args()
 
@@ -61,17 +65,22 @@ def main():
     # Wait for clients to be connected
     print(f"WAITING FOR {args.min_clients} CLIENTS TO CONNECT...")
     api_command_wrapper(
-        runner.api.wait_until_server_status(
-            callback=wait_until_clients_greater_than_cb, min_clients=args.min_clients
-        )
+        runner.api.wait_until_server_status(callback=wait_until_clients_greater_than_cb, min_clients=args.min_clients)
     )
     print("MAKING SURE CLIENTS ARE READY...")
     time.sleep(30)  # make sure clients are ready
 
     # Run Training
     print("RUN TRAINING...")
-    runner.run(run_number, args.app, restart_all_first=False, shutdown_on_error=False, shutdown_at_end=False,
-               timeout=None, min_clients=args.min_clients)
+    runner.run(
+        run_number,
+        args.app,
+        restart_all_first=False,
+        shutdown_on_error=False,
+        shutdown_at_end=False,
+        timeout=None,
+        min_clients=args.min_clients,
+    )
     print("Total training time", time.time() - start)
 
     # Move client logs to server

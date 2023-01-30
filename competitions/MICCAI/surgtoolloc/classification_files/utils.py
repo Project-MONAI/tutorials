@@ -35,9 +35,7 @@ class SurgDataset(Dataset):
         label = row[self.cfg.labels] > 0
         image_path = os.path.join(self.cfg.data_dir, row["frame"])
 
-        return self.transform(
-            {"input": image_path, "label": torch.tensor(label).float()}
-        )
+        return self.transform({"input": image_path, "label": torch.tensor(label).float()})
 
 
 def set_seed(seed):

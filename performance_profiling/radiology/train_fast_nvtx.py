@@ -20,6 +20,7 @@ import time
 import torch
 from torch.optim import Adam
 from torch.utils.tensorboard import SummaryWriter
+
 torch.backends.cudnn.benchmark = True
 
 import nvtx
@@ -53,7 +54,7 @@ from monai.utils.nvtx import Range
 
 # set directories
 random.seed(0)
-root_dir = "/tmp/tmp" + ''.join(random.choice(string.ascii_lowercase) for i in range(16))
+root_dir = "/tmp/tmp" + "".join(random.choice(string.ascii_lowercase) for i in range(16))
 print(f"root dir is: {root_dir}")
 
 resource = "https://msd-for-monai.s3-us-west-2.amazonaws.com/Task09_Spleen.tar"
@@ -68,10 +69,7 @@ out_dir = "./outputs_fast"
 
 train_images = sorted(glob.glob(os.path.join(data_root, "imagesTr", "*.nii.gz")))
 train_labels = sorted(glob.glob(os.path.join(data_root, "labelsTr", "*.nii.gz")))
-data_dicts = [
-    {"image": image_name, "label": label_name}
-    for image_name, label_name in zip(train_images, train_labels)
-]
+data_dicts = [{"image": image_name, "label": label_name} for image_name, label_name in zip(train_images, train_labels)]
 train_files, val_files = data_dicts[:-9], data_dicts[-9:]
 
 set_determinism(seed=0)
@@ -122,7 +120,7 @@ train_transforms = Compose(
                 fg_indices_key="label_fg",
                 bg_indices_key="label_bg",
             )
-        )
+        ),
     ]
 )
 
@@ -146,28 +144,14 @@ val_transforms = Compose(
         ),
         CropForegroundd(keys=["image", "label"], source_key="image"),
         EnsureTyped(keys=["image", "label"]),
-        ToDeviced(keys=["image", "label"], device="cuda:0")
+        ToDeviced(keys=["image", "label"], device="cuda:0"),
     ]
 )
 
-train_ds = CacheDataset(
-    data=train_files,
-    transform=train_transforms,
-    cache_rate=1.0,
-    num_workers=8
-)
-train_loader = ThreadDataLoader(
-    train_ds, num_workers=0, batch_size=8, shuffle=True
-)
-val_ds = CacheDataset(
-    data=val_files,
-    transform=val_transforms,
-    cache_rate=1.0,
-    num_workers=8
-)
-val_loader = ThreadDataLoader(
-    val_ds, num_workers=0, batch_size=1
-)
+train_ds = CacheDataset(data=train_files, transform=train_transforms, cache_rate=1.0, num_workers=8)
+train_loader = ThreadDataLoader(train_ds, num_workers=0, batch_size=8, shuffle=True)
+val_ds = CacheDataset(data=val_files, transform=val_transforms, cache_rate=1.0, num_workers=8)
+val_loader = ThreadDataLoader(val_ds, num_workers=0, batch_size=1)
 
 # standard PyTorch program style: create UNet, DiceLoss and Adam optimizer
 device = torch.device("cuda:0")
@@ -183,18 +167,12 @@ model = UNet(
     num_res_units=2,
     norm=Norm.BATCH,
 ).to(device)
-loss_function = DiceCELoss(
-    to_onehot_y=True, softmax=True, squared_pred=True, batch=True
-)
+loss_function = DiceCELoss(to_onehot_y=True, softmax=True, squared_pred=True, batch=True)
 optimizer = Novograd(model.parameters(), learning_rate * 10)
 scaler = torch.cuda.amp.GradScaler()
-dice_metric = DiceMetric(
-    include_background=True, reduction="mean", get_not_nans=False
-)
+dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
 
-post_pred = Compose(
-    [EnsureType(), AsDiscrete(argmax=True, to_onehot=2)]
-)
+post_pred = Compose([EnsureType(), AsDiscrete(argmax=True, to_onehot=2)])
 post_label = Compose([EnsureType(), AsDiscrete(to_onehot=2)])
 
 best_metric = -1
@@ -272,17 +250,11 @@ with torch.autograd.profiler.emit_nvtx():
 
                     rng_valid_dataload = nvtx.start_range(message="sliding window", color="green")
                     with torch.cuda.amp.autocast():
-                        val_outputs = sliding_window_inference(
-                            val_inputs, roi_size, sw_batch_size, model
-                        )
+                        val_outputs = sliding_window_inference(val_inputs, roi_size, sw_batch_size, model)
                     nvtx.end_range(rng_valid_dataload)
                     rng_valid_dataload = nvtx.start_range(message="decollate batch", color="blue")
-                    val_outputs = [
-                        post_pred(i) for i in decollate_batch(val_outputs)
-                    ]
-                    val_labels = [
-                        post_label(i) for i in decollate_batch(val_labels)
-                    ]
+                    val_outputs = [post_pred(i) for i in decollate_batch(val_outputs)]
+                    val_labels = [post_label(i) for i in decollate_batch(val_labels)]
                     nvtx.end_range(rng_valid_dataload)
                     rng_valid_dataload = nvtx.start_range(message="compute metric", color="yellow")
                     # compute metric for current iteration
@@ -298,9 +270,7 @@ with torch.autograd.profiler.emit_nvtx():
                     best_metrics_epochs_and_time[0].append(best_metric)
                     best_metrics_epochs_and_time[1].append(best_metric_epoch)
                     best_metrics_epochs_and_time[2].append(time.time() - total_start)
-                    torch.save(
-                        model.state_dict(), os.path.join(out_dir, "best_metric_model.pth")
-                    )
+                    torch.save(model.state_dict(), os.path.join(out_dir, "best_metric_model.pth"))
                     print("saved new best metric model")
                 print(
                     f"current epoch: {epoch + 1} "
@@ -310,10 +280,7 @@ with torch.autograd.profiler.emit_nvtx():
                 )
                 writer.add_scalar("val_mean_dice", metric, epoch + 1)
         nvtx.end_range(rng_epoch)
-        print(
-            f"time consuming of epoch {epoch + 1} is:"
-            f" {(time.time() - epoch_start):.4f}"
-        )
+        print(f"time consuming of epoch {epoch + 1} is:" f" {(time.time() - epoch_start):.4f}")
         epoch_times.append(time.time() - epoch_start)
 
 total_time = time.time() - total_start

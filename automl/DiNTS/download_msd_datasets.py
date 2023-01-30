@@ -36,5 +36,6 @@ def main():
     if not os.path.exists(args.root):
         download_and_extract(resource, compressed_file, args.root)
 
+
 if __name__ == "__main__":
     main()

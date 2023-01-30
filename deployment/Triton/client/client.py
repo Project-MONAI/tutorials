@@ -60,14 +60,13 @@ def open_nifti_files(input_path):
     return sorted(glob.glob(os.path.join(input_path, "*.nii*")))
 
 
-
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description='Triton CLI for COVID classification inference from NIFTI data')
+    parser = argparse.ArgumentParser(description="Triton CLI for COVID classification inference from NIFTI data")
     parser.add_argument(
-        'input',
+        "input",
         type=str,
-        help="Path to NIFTI file or directory containing NIFTI files to send for COVID classification"
+        help="Path to NIFTI file or directory containing NIFTI files to send for COVID classification",
     )
     args = parser.parse_args()
 
@@ -86,9 +85,9 @@ if __name__ == "__main__":
         sys.exit(1)
 
     with httpclient.InferenceServerClient("localhost:8000") as client:
-        image_bytes = b''
+        image_bytes = b""
         for nifti_file in nifti_files:
-            with open(nifti_file, 'rb') as f:
+            with open(nifti_file, "rb") as f:
                 image_bytes = f.read()
 
             input0_data = np.array([[image_bytes]], dtype=np.bytes_)
@@ -104,15 +103,19 @@ if __name__ == "__main__":
             ]
 
             inference_start_time = time.time() * 1000
-            response = client.infer(model_name,
-                                    inputs,
-                                    request_id=str(uuid4().hex),
-                                    outputs=outputs,)
+            response = client.infer(
+                model_name,
+                inputs,
+                request_id=str(uuid4().hex),
+                outputs=outputs,
+            )
             inference_time = time.time() * 1000 - inference_start_time
 
             result = response.get_response()
-            print("Classification result for `{}`: {}. (Inference time: {:6.0f} ms)".format(
-                nifti_file,
-                response.as_numpy("OUTPUT0").astype(str)[0],
-                inference_time,
-            ))
+            print(
+                "Classification result for `{}`: {}. (Inference time: {:6.0f} ms)".format(
+                    nifti_file,
+                    response.as_numpy("OUTPUT0").astype(str)[0],
+                    inference_time,
+                )
+            )

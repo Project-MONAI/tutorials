@@ -35,9 +35,7 @@ def preprocess(dicom_root, out_path, ids, images, densities, process_image=True)
         if (i + 1) % 200 == 0:
             print(f"processing {i+1} of {len(ids)}...")
         dir_name = image.split(os.path.sep)[0]
-        img_file = glob.glob(
-            os.path.join(dicom_root, dir_name, "**", "*.dcm"), recursive=True
-        )
+        img_file = glob.glob(os.path.join(dicom_root, dir_name, "**", "*.dcm"), recursive=True)
         assert len(img_file) == 1, f"No unique dicom image found for {dir_name}!"
         save_prefix = os.path.join(out_path, dir_name)
         if process_image:
@@ -107,12 +105,8 @@ def main():
     for label_file in label_files:
         print(f"add {label_file}")
         label_data = pd.read_csv(label_file)
-        unique_images, unique_indices = np.unique(
-            label_data["image file path"], return_index=True
-        )
-        print(
-            f"including {len(unique_images)} unique images of {len(label_data['image file path'])} image entries"
-        )
+        unique_images, unique_indices = np.unique(label_data["image file path"], return_index=True)
+        print(f"including {len(unique_images)} unique images of {len(label_data['image file path'])} image entries")
 
         try:
             breast_densities.extend(label_data["breast_density"][unique_indices])
@@ -147,23 +141,15 @@ def main():
     n_train_challenge = 60_000
     n_val_challenge = 6_500
     n_test_challenge = 40_000
-    test_ratio = n_test_challenge / (
-        n_train_challenge + n_val_challenge + n_test_challenge
-    )
-    val_ratio = n_val_challenge / (
-        n_val_challenge + n_test_challenge
-    )  # test cases will be removed at this point
+    test_ratio = n_test_challenge / (n_train_challenge + n_val_challenge + n_test_challenge)
+    val_ratio = n_val_challenge / (n_val_challenge + n_test_challenge)  # test cases will be removed at this point
 
     # use groups to avoid patient overlaps
     # test split
     n_splits = int(np.ceil(len(image_file_path) / (len(image_file_path) * test_ratio)))
-    print(
-        f"Splitting into {n_splits} folds for test split. (Only the first fold is used.)"
-    )
+    print(f"Splitting into {n_splits} folds for test split. (Only the first fold is used.)")
     group_kfold = GroupKFold(n_splits=n_splits)
-    for train_val_index, test_index in group_kfold.split(
-        image_file_path, breast_densities, groups=patients_ids
-    ):
+    for train_val_index, test_index in group_kfold.split(image_file_path, breast_densities, groups=patients_ids):
         break  # just use first fold
     test_images = image_file_path[test_index]
     test_patients_ids = patients_ids[test_index]
@@ -175,9 +161,7 @@ def main():
     train_val_densities = breast_densities[train_val_index]
 
     n_splits = int(np.ceil(len(image_file_path) / (len(image_file_path) * val_ratio)))
-    print(
-        f"Splitting into {n_splits} folds for train/val splits. (Only the first fold is used.)"
-    )
+    print(f"Splitting into {n_splits} folds for train/val splits. (Only the first fold is used.)")
     group_kfold = GroupKFold(n_splits=n_splits)
     for train_index, val_index in group_kfold.split(
         train_val_images, train_val_densities, groups=train_val_patients_ids
@@ -196,12 +180,8 @@ def main():
     assert (
         len(np.intersect1d(train_patients_ids, val_patients_ids)) == 0
     ), "Overlapping patients in train and validation!"
-    assert (
-        len(np.intersect1d(train_patients_ids, test_patients_ids)) == 0
-    ), "Overlapping patients in train and test!"
-    assert (
-        len(np.intersect1d(val_patients_ids, test_patients_ids)) == 0
-    ), "Overlapping patients in validation and test!"
+    assert len(np.intersect1d(train_patients_ids, test_patients_ids)) == 0, "Overlapping patients in train and test!"
+    assert len(np.intersect1d(val_patients_ids, test_patients_ids)) == 0, "Overlapping patients in validation and test!"
 
     n_total = len(train_images) + len(val_images) + len(test_images)
     print(20 * "-")
@@ -211,8 +191,7 @@ def main():
     print(20 * "-")
     print(f"Total : {n_total}")
     assert n_total == len(image_file_path), (
-        f"mismatch between total split images ({n_total})"
-        f" and length of all images {len(image_file_path)}!"
+        f"mismatch between total split images ({n_total})" f" and length of all images {len(image_file_path)}!"
     )
 
     """ split train/validation dataset for n_clients """
@@ -242,9 +221,7 @@ def main():
             train_densities[_curr_indices],
             process_image=process_image,
         )
-        print(
-            f"Converted {len(train_list)} of {len(train_patients_ids)} training images"
-        )
+        print(f"Converted {len(train_list)} of {len(train_patients_ids)} training images")
         dc_tags.extend(_dc_tags)
         saved_filenames.extend(_saved_filenames)
 
@@ -286,9 +263,7 @@ def main():
         write_datalist(f"{out_dataset_prefix}_{site_name}.json", data_set)
 
     print(50 * "=")
-    print(
-        f"Successfully converted a total {len(saved_filenames)} of {len(image_file_path)} images."
-    )
+    print(f"Successfully converted a total {len(saved_filenames)} of {len(image_file_path)} images.")
 
     # check that there were no duplicated files
     assert len(saved_filenames) == len(

@@ -144,9 +144,7 @@ def main():
 
                 _i += 1
 
-            save_obj(
-                vertices, faces, os.path.join(args.output_dir, box_filename + ".obj")
-            )
+            save_obj(vertices, faces, os.path.join(args.output_dir, box_filename + ".obj"))
 
     return
 

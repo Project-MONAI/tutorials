@@ -134,6 +134,7 @@ def compute(args):
 
 # torchrun --standalone --nnodes=NUM_NODES --nproc_per_node=NUM_GPUS_PER_NODE compute_metric.py -d DIR_OF_OUTPUT
 
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--dir", default="./output", type=str, help="root directory of labels and predictions.")

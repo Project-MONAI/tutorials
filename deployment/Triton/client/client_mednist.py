@@ -54,7 +54,6 @@ from monai.utils.type_conversion import convert_to_numpy
 MEDNIST_CLASSES = ["AbdomenCT", "BreastMRI", "CXR", "ChestCT", "Hand", "HeadCT"]
 
 
-
 model_name = "mednist_class"
 gdrive_path = "https://drive.google.com/uc?id=1HQk4i4vXKUX_aAYR4wcZQKd-qk5Lcm_W"
 mednist_filename = "MedNIST_demo.tar.gz"
@@ -67,11 +66,11 @@ def open_jpeg_files(input_path):
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description='Triton CLI for MedNist classification inference from JPEG data')
+    parser = argparse.ArgumentParser(description="Triton CLI for MedNist classification inference from JPEG data")
     parser.add_argument(
-        'input',
+        "input",
         type=str,
-        help="Path to JPEG file or directory containing JPEG files to send for MedNist classification"
+        help="Path to JPEG file or directory containing JPEG files to send for MedNist classification",
     )
     args = parser.parse_args()
 
@@ -91,9 +90,9 @@ if __name__ == "__main__":
         sys.exit(1)
 
     with httpclient.InferenceServerClient("localhost:8000") as client:
-        image_bytes = b''
+        image_bytes = b""
         for jpeg_file in jpeg_files:
-            with open(jpeg_file, 'rb') as f:
+            with open(jpeg_file, "rb") as f:
                 image_bytes = f.read()
 
             input0_data = np.array([[image_bytes]], dtype=np.bytes_)
@@ -109,15 +108,19 @@ if __name__ == "__main__":
             ]
 
             inference_start_time = time.time() * 1000
-            response = client.infer(model_name,
-                                    inputs,
-                                    request_id=str(uuid4().hex),
-                                    outputs=outputs,)
+            response = client.infer(
+                model_name,
+                inputs,
+                request_id=str(uuid4().hex),
+                outputs=outputs,
+            )
             inference_time = time.time() * 1000 - inference_start_time
 
             result = response.get_response()
-            print("Classification result for `{}`: {}.  (Inference time: {:6.0f} ms)".format(
-                jpeg_file,
-                response.as_numpy("OUTPUT0").astype(str)[0],
-                inference_time,
-            ))
+            print(
+                "Classification result for `{}`: {}.  (Inference time: {:6.0f} ms)".format(
+                    jpeg_file,
+                    response.as_numpy("OUTPUT0").astype(str)[0],
+                    inference_time,
+                )
+            )

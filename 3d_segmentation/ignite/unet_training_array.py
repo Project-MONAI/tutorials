@@ -67,28 +67,18 @@ def main(tempdir):
             RandSpatialCrop((96, 96, 96), random_size=False),
         ]
     )
-    train_segtrans = Compose(
-        [EnsureChannelFirst(), RandSpatialCrop((96, 96, 96), random_size=False)]
-    )
-    val_imtrans = Compose(
-        [ScaleIntensity(), EnsureChannelFirst(), Resize((96, 96, 96))]
-    )
+    train_segtrans = Compose([EnsureChannelFirst(), RandSpatialCrop((96, 96, 96), random_size=False)])
+    val_imtrans = Compose([ScaleIntensity(), EnsureChannelFirst(), Resize((96, 96, 96))])
     val_segtrans = Compose([EnsureChannelFirst(), Resize((96, 96, 96))])
 
     # define image dataset, data loader
-    check_ds = ImageDataset(
-        images, segs, transform=train_imtrans, seg_transform=train_segtrans
-    )
-    check_loader = DataLoader(
-        check_ds, batch_size=10, num_workers=2, pin_memory=torch.cuda.is_available()
-    )
+    check_ds = ImageDataset(images, segs, transform=train_imtrans, seg_transform=train_segtrans)
+    check_loader = DataLoader(check_ds, batch_size=10, num_workers=2, pin_memory=torch.cuda.is_available())
     im, seg = monai.utils.misc.first(check_loader)
     print(im.shape, seg.shape)
 
     # create a training data loader
-    train_ds = ImageDataset(
-        images[:20], segs[:20], transform=train_imtrans, seg_transform=train_segtrans
-    )
+    train_ds = ImageDataset(images[:20], segs[:20], transform=train_imtrans, seg_transform=train_segtrans)
     train_loader = DataLoader(
         train_ds,
         batch_size=5,
@@ -97,12 +87,8 @@ def main(tempdir):
         pin_memory=torch.cuda.is_available(),
     )
     # create a validation data loader
-    val_ds = ImageDataset(
-        images[-20:], segs[-20:], transform=val_imtrans, seg_transform=val_segtrans
-    )
-    val_loader = DataLoader(
-        val_ds, batch_size=5, num_workers=8, pin_memory=torch.cuda.is_available()
-    )
+    val_ds = ImageDataset(images[-20:], segs[-20:], transform=val_imtrans, seg_transform=val_segtrans)
+    val_loader = DataLoader(val_ds, batch_size=5, num_workers=8, pin_memory=torch.cuda.is_available())
 
     # create UNet, DiceLoss and Adam optimizer
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -123,9 +109,7 @@ def main(tempdir):
     trainer = create_supervised_trainer(net, opt, loss, device, False)
 
     # adding checkpoint handler to save models (network params and optimizer stats) during training
-    checkpoint_handler = ModelCheckpoint(
-        "./runs_array/", "net", n_saved=10, require_empty=False
-    )
+    checkpoint_handler = ModelCheckpoint("./runs_array/", "net", n_saved=10, require_empty=False)
     trainer.add_event_handler(
         event_name=Events.EPOCH_COMPLETED,
         handler=checkpoint_handler,
@@ -158,7 +142,10 @@ def main(tempdir):
         val_metrics,
         device,
         True,
-        output_transform=lambda x, y, y_pred: ([post_pred(i) for i in decollate_batch(y_pred)], [post_label(i) for i in decollate_batch(y)]),
+        output_transform=lambda x, y, y_pred: (
+            [post_pred(i) for i in decollate_batch(y_pred)],
+            [post_label(i) for i in decollate_batch(y)],
+        ),
     )
 
     @trainer.on(Events.EPOCH_COMPLETED(every=validation_every_n_epochs))
@@ -166,12 +153,8 @@ def main(tempdir):
         evaluator.run(val_loader)
 
     # add early stopping handler to evaluator
-    early_stopper = EarlyStopping(
-        patience=4, score_function=stopping_fn_from_metric(metric_name), trainer=trainer
-    )
-    evaluator.add_event_handler(
-        event_name=Events.EPOCH_COMPLETED, handler=early_stopper
-    )
+    early_stopper = EarlyStopping(patience=4, score_function=stopping_fn_from_metric(metric_name), trainer=trainer)
+    evaluator.add_event_handler(event_name=Events.EPOCH_COMPLETED, handler=early_stopper)
 
     # add stats event handler to print validation stats via evaluator
     val_stats_handler = StatsHandler(
@@ -195,9 +178,7 @@ def main(tempdir):
         output_transform=lambda output: output[0],
         global_iter_transform=lambda x: trainer.state.epoch,
     )
-    evaluator.add_event_handler(
-        event_name=Events.EPOCH_COMPLETED, handler=val_tensorboard_image_handler
-    )
+    evaluator.add_event_handler(event_name=Events.EPOCH_COMPLETED, handler=val_tensorboard_image_handler)
 
     train_epochs = 30
     state = trainer.run(train_loader, train_epochs)

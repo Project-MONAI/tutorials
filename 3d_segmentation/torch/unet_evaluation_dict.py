@@ -26,7 +26,15 @@ from monai.engines import get_devices_spec
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.networks.nets import UNet
-from monai.transforms import Activations, EnsureChannelFirstd, AsDiscrete, Compose, LoadImaged, SaveImage, ScaleIntensityd
+from monai.transforms import (
+    Activations,
+    EnsureChannelFirstd,
+    AsDiscrete,
+    Compose,
+    LoadImaged,
+    SaveImage,
+    ScaleIntensityd,
+)
 
 
 def main(tempdir):
@@ -63,7 +71,7 @@ def main(tempdir):
     saver = SaveImage(output_dir="./output", output_ext=".nii.gz", output_postfix="seg")
     # try to use all the available GPUs
     devices = [torch.device("cuda" if torch.cuda.is_available() else "cpu")]
-    #devices = get_devices_spec(None)
+    # devices = get_devices_spec(None)
     model = UNet(
         spatial_dims=3,
         in_channels=1,

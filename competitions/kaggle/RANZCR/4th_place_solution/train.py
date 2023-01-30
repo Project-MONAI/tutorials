@@ -69,9 +69,7 @@ def main(cfg):
         train_val_dataset = get_val_dataset(train_df, cfg)
         train_val_dataloader = get_val_dataloader(train_val_dataset, cfg)
 
-    to_device_transform = ToDeviced(
-        keys=("input", "target", "mask", "is_annotated"), device=cfg.device
-    )
+    to_device_transform = ToDeviced(keys=("input", "target", "mask", "is_annotated"), device=cfg.device)
     cfg.to_device_transform = to_device_transform
     # set model
 
@@ -125,9 +123,7 @@ def main(cfg):
 
         if cfg.train_val is True:
             if (epoch + 1) % cfg.eval_train_epochs == 0 or (epoch + 1) == cfg.epochs:
-                train_val_loss = run_eval(
-                    model, train_val_dataloader, cfg, writer, epoch
-                )
+                train_val_loss = run_eval(model, train_val_dataloader, cfg, writer, epoch)
                 print(f"train_val_loss {train_val_loss:.5}")
 
         if val_loss < best_val_loss:
@@ -249,9 +245,7 @@ def run_infer(weights_folder_path, cfg):
     # for local test, please modify the following path into actual path.
     cfg.data_folder = cfg.data_dir + "test/"
 
-    to_device_transform = ToDeviced(
-        keys=("input", "target", "mask", "is_annotated"), device=cfg.device
-    )
+    to_device_transform = ToDeviced(keys=("input", "target", "mask", "is_annotated"), device=cfg.device)
 
     all_path = []
     for path in glob.iglob(os.path.join(weights_folder_path, "*.pth")):
@@ -313,9 +307,7 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--fold", type=int, default=-1, help="fold")
     parser.add_argument("-s", "--seed", type=int, default=-1, help="fold")
     parser.add_argument("-i", "--infer", type=bool, default=None, help="do inference")
-    parser.add_argument(
-        "-p", "--weights_folder_path", default=None, help="the folder path of weights"
-    )
+    parser.add_argument("-p", "--weights_folder_path", default=None, help="the folder path of weights")
 
     parser_args, _ = parser.parse_known_args(sys.argv)
 

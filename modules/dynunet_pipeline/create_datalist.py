@@ -37,9 +37,7 @@ def create_datalist(
         "10": "Task10_Colon",
     }
 
-    dataset_file_path = os.path.join(
-        dataset_input_dir, task_name[task_id], "dataset.json"
-    )
+    dataset_file_path = os.path.join(dataset_input_dir, task_name[task_id], "dataset.json")
 
     with open(dataset_file_path, "r") as f:
         dataset = json.load(f)
@@ -67,9 +65,7 @@ def create_datalist(
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    with open(
-        os.path.join(output_dir, "dataset_task{}.json".format(task_id)), "w"
-    ) as f:
+    with open(os.path.join(output_dir, "dataset_task{}.json".format(task_id)), "w") as f:
         json.dump(dataset_with_folds, f)
         print("data list for {} has been created!".format(task_name[task_id]))
         f.close()
@@ -78,16 +74,10 @@ def create_datalist(
 if __name__ == "__main__":
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument(
-        "-input_dir", "--input_dir", type=str, default="/workspace/data/medical/"
-    )
+    parser.add_argument("-input_dir", "--input_dir", type=str, default="/workspace/data/medical/")
     parser.add_argument("-output_dir", "--output_dir", type=str, default="config/")
-    parser.add_argument(
-        "-task_id", "--task_id", type=str, default="04", help="task 01 to 10"
-    )
-    parser.add_argument(
-        "-num_folds", "--num_folds", type=int, default=5, help="number of folds"
-    )
+    parser.add_argument("-task_id", "--task_id", type=str, default="04", help="task 01 to 10")
+    parser.add_argument("-num_folds", "--num_folds", type=int, default=5, help="number of folds")
     parser.add_argument("-seed", "--seed", type=int, default=12345, help="seed number")
 
     args = parser.parse_args()

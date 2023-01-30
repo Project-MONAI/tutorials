@@ -140,9 +140,7 @@ class MammoLearner(Learner):
         self.best_local_model_file = os.path.join(self.app_root, "best_local_model.pt")
 
         # Select local TensorBoard writer or event-based writer for streaming
-        self.writer = parts.get(
-            self.analytic_sender_id
-        )  # user configured config_fed_client.json for streaming
+        self.writer = parts.get(self.analytic_sender_id)  # user configured config_fed_client.json for streaming
         if not self.writer:  # use local TensorBoard writer only
             self.writer = SummaryWriter(self.app_root)
 
@@ -161,14 +159,10 @@ class MammoLearner(Learner):
             [
                 LoadImaged(keys=["image"]),
                 Transposed(keys=["image"], indices=[2, 0, 1]),  # make channels-first
-                RandRotated(
-                    keys=["image"], range_x=np.pi / 12, prob=0.5, keep_size=True
-                ),
+                RandRotated(keys=["image"], range_x=np.pi / 12, prob=0.5, keep_size=True),
                 RandFlipd(keys=["image"], spatial_axis=0, prob=0.5),
                 RandFlipd(keys=["image"], spatial_axis=1, prob=0.5),
-                RandZoomd(
-                    keys=["image"], min_zoom=0.9, max_zoom=1.1, prob=0.5, keep_size=True
-                ),
+                RandZoomd(keys=["image"], min_zoom=0.9, max_zoom=1.1, prob=0.5, keep_size=True),
                 RandGaussianSmoothd(
                     keys=["image"],
                     sigma_x=(0.5, 1.15),
@@ -212,14 +206,10 @@ class MammoLearner(Learner):
         # Validation set can be created from training set.
         if self.val_frac > 0:
             np.random.seed(0)
-            val_indices = np.random.randint(
-                0, len(train_datalist), size=int(self.val_frac * len(train_datalist))
-            )
+            val_indices = np.random.randint(0, len(train_datalist), size=int(self.val_frac * len(train_datalist)))
             val_datalist = [train_datalist[i] for i in val_indices]
             train_indices = list(set(np.arange(len(train_datalist))) - set(val_indices))
-            train_datalist = [
-                train_datalist[i] for i in train_indices
-            ]  # remove validation entries from training
+            train_datalist = [train_datalist[i] for i in train_indices]  # remove validation entries from training
             assert (len(np.intersect1d(val_indices, train_indices))) == 0
             self.log_info(
                 fl_ctx,
@@ -294,9 +284,7 @@ class MammoLearner(Learner):
         # collect threads, close files here
         pass
 
-    def local_train(
-        self, fl_ctx, train_loader, abort_signal: Signal, val_freq: int = 0
-    ):
+    def local_train(self, fl_ctx, train_loader, abort_signal: Signal, val_freq: int = 0):
         for epoch in range(self.aggregation_epochs):
             if abort_signal.triggered:
                 return
@@ -325,9 +313,7 @@ class MammoLearner(Learner):
                 self.optimizer.step()
                 current_step = epoch_len * self.epoch_global + i
                 avg_loss += loss.item()
-            self.writer.add_scalar(
-                "train_loss", avg_loss / len(train_loader), current_step
-            )
+            self.writer.add_scalar("train_loss", avg_loss / len(train_loader), current_step)
             if val_freq > 0 and epoch % val_freq == 0:
                 acc, kappa = self.local_valid(
                     self.valid_loader,
@@ -349,9 +335,7 @@ class MammoLearner(Learner):
         else:
             torch.save(save_dict, self.local_model_file)
 
-    def train(
-        self, shareable: Shareable, fl_ctx: FLContext, abort_signal: Signal
-    ) -> Shareable:
+    def train(self, shareable: Shareable, fl_ctx: FLContext, abort_signal: Signal) -> Shareable:
         # Check abort signal
         if abort_signal.triggered:
             return make_reply(ReturnCode.TASK_ABORTED)
@@ -359,9 +343,7 @@ class MammoLearner(Learner):
         # get round information
         current_round = shareable.get_header(AppConstants.CURRENT_ROUND)
         total_rounds = shareable.get_header(AppConstants.NUM_ROUNDS)
-        self.log_info(
-            fl_ctx, f"Current/Total Round: {current_round + 1}/{total_rounds}"
-        )
+        self.log_info(fl_ctx, f"Current/Total Round: {current_round + 1}/{total_rounds}")
         self.log_info(fl_ctx, f"Client identity: {fl_ctx.get_identity_name()}")
 
         # update local model weights with received weights
@@ -376,17 +358,11 @@ class MammoLearner(Learner):
                 weights = global_weights[var_name]
                 try:
                     # reshape global weights to compute difference later on
-                    global_weights[var_name] = np.reshape(
-                        weights, local_var_dict[var_name].shape
-                    )
+                    global_weights[var_name] = np.reshape(weights, local_var_dict[var_name].shape)
                     # update the local dict
                     local_var_dict[var_name] = torch.as_tensor(global_weights[var_name])
                 except Exception as e:
-                    raise ValueError(
-                        "Convert weight from {} failed with error: {}".format(
-                            var_name, str(e)
-                        )
-                    )
+                    raise ValueError("Convert weight from {} failed with error: {}".format(var_name, str(e)))
         self.model.load_state_dict(local_var_dict)
 
         # local steps
@@ -405,9 +381,7 @@ class MammoLearner(Learner):
         self.epoch_of_start_time += self.aggregation_epochs
 
         # perform valid after local train
-        acc, kappa = self.local_valid(
-            self.valid_loader, abort_signal, tb_id="val_local_model", fl_ctx=fl_ctx
-        )
+        acc, kappa = self.local_valid(self.valid_loader, abort_signal, tb_id="val_local_model", fl_ctx=fl_ctx)
         if abort_signal.triggered:
             return make_reply(ReturnCode.TASK_ABORTED)
         self.log_info(fl_ctx, f"val_acc_local_model: {acc:.4f}")
@@ -458,9 +432,7 @@ class MammoLearner(Learner):
                 )
                 return make_reply(ReturnCode.EXECUTION_RESULT_ERROR)
         else:
-            raise ValueError(
-                f"Unknown model_type: {model_name}"
-            )  # Raised errors are caught in LearnerExecutor class.
+            raise ValueError(f"Unknown model_type: {model_name}")  # Raised errors are caught in LearnerExecutor class.
 
     def local_valid(
         self,
@@ -485,9 +457,7 @@ class MammoLearner(Learner):
                 outputs = torch.softmax(self.model(inputs), dim=1)
                 probs = outputs.detach().cpu().numpy()
                 # make json serializable
-                for _img_file, _probs in zip(
-                    batch_data["image_meta_dict"]["filename_or_obj"], probs
-                ):
+                for _img_file, _probs in zip(batch_data["image_meta_dict"]["filename_or_obj"], probs):
                     return_probs.append(
                         {
                             "image": os.path.basename(_img_file),
@@ -513,18 +483,14 @@ class MammoLearner(Learner):
                     self.writer.add_scalar(tb_id + "_kappa", kappa, self.epoch_global)
                 return acc, kappa
 
-    def validate(
-        self, shareable: Shareable, fl_ctx: FLContext, abort_signal: Signal
-    ) -> Shareable:
+    def validate(self, shareable: Shareable, fl_ctx: FLContext, abort_signal: Signal) -> Shareable:
         # Check abort signal
         if abort_signal.triggered:
             return make_reply(ReturnCode.TASK_ABORTED)
 
         # get validation information
         self.log_info(fl_ctx, f"Client identity: {fl_ctx.get_identity_name()}")
-        model_owner = shareable.get(ReservedHeaderKey.HEADERS).get(
-            AppConstants.MODEL_OWNER
-        )
+        model_owner = shareable.get(ReservedHeaderKey.HEADERS).get(AppConstants.MODEL_OWNER)
         if model_owner:
             self.log_info(
                 fl_ctx,
@@ -546,21 +512,13 @@ class MammoLearner(Learner):
                 weights = torch.as_tensor(global_weights[var_name], device=self.device)
                 try:
                     # update the local dict
-                    local_var_dict[var_name] = torch.as_tensor(
-                        torch.reshape(weights, local_var_dict[var_name].shape)
-                    )
+                    local_var_dict[var_name] = torch.as_tensor(torch.reshape(weights, local_var_dict[var_name].shape))
                     n_loaded += 1
                 except Exception as e:
-                    raise ValueError(
-                        "Convert weight from {} failed with error: {}".format(
-                            var_name, str(e)
-                        )
-                    )
+                    raise ValueError("Convert weight from {} failed with error: {}".format(var_name, str(e)))
         self.model.load_state_dict(local_var_dict)
         if n_loaded == 0:
-            raise ValueError(
-                f"No weights loaded for validation! Received weight dict is {global_weights}"
-            )
+            raise ValueError(f"No weights loaded for validation! Received weight dict is {global_weights}")
 
         validate_type = shareable.get_header(AppConstants.VALIDATE_TYPE)
         if validate_type == ValidateType.BEFORE_TRAIN_VALIDATE:
@@ -574,9 +532,7 @@ class MammoLearner(Learner):
                 )
                 if abort_signal.triggered:
                     return make_reply(ReturnCode.TASK_ABORTED)
-                self.log_info(
-                    fl_ctx, f"val_acc_global_model ({model_owner}): {global_acc}"
-                )
+                self.log_info(fl_ctx, f"val_acc_global_model ({model_owner}): {global_acc}")
 
                 return DXO(
                     data_kind=DataKind.METRICS,
@@ -588,9 +544,7 @@ class MammoLearner(Learner):
         elif validate_type == ValidateType.MODEL_VALIDATE:
             try:
                 # perform valid
-                train_acc, train_kappa = self.local_valid(
-                    self.train_loader, abort_signal
-                )
+                train_acc, train_kappa = self.local_valid(self.train_loader, abort_signal)
                 if abort_signal.triggered:
                     return make_reply(ReturnCode.TASK_ABORTED)
                 self.log_info(fl_ctx, f"training acc ({model_owner}): {train_acc}")
@@ -598,9 +552,7 @@ class MammoLearner(Learner):
                 val_acc, val_kappa = self.local_valid(self.valid_loader, abort_signal)
 
                 # testing performance
-                test_probs = self.local_valid(
-                    self.test_loader, abort_signal, return_probs_only=True
-                )
+                test_probs = self.local_valid(self.test_loader, abort_signal, return_probs_only=True)
                 if abort_signal.triggered:
                     return make_reply(ReturnCode.TASK_ABORTED)
                 self.log_info(fl_ctx, f"validation acc ({model_owner}): {val_acc}")
@@ -624,6 +576,7 @@ class MammoLearner(Learner):
 
 
 # To test your Learner
+
 
 class MockClientEngine:
     def __init__(self, run_num=0):
@@ -685,9 +638,7 @@ if __name__ == "__main__":
     print("debug kappa", kappa)
 
     print("test valid...")
-    test_probs = learner.local_valid(
-        valid_loader=learner.test_loader, abort_signal=Signal(), return_probs_only=True
-    )
+    test_probs = learner.local_valid(valid_loader=learner.test_loader, abort_signal=Signal(), return_probs_only=True)
     print("test_probs", test_probs)
 
     print("finished testing.")

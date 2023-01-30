@@ -83,9 +83,7 @@ cfg.val_aug = Compose(
             align_corners=False,
         ),
         SpatialPadd(keys=("input", "mask"), spatial_size=(1008, 1008)),
-        CenterSpatialCropd(
-            keys=("input", "mask"), roi_size=(cfg.img_size[0], cfg.img_size[1])
-        ),
+        CenterSpatialCropd(keys=("input", "mask"), roi_size=(cfg.img_size[0], cfg.img_size[1])),
         NormalizeIntensityd(keys="input", nonzero=False),
         Lambdad(keys="input", func=lambda x: x.clip(-20, 20)),
     ]

@@ -42,6 +42,7 @@ import numpy as np
 import os
 import pathlib
 from tempfile import NamedTemporaryFile
+
 # from PIL import Image
 
 import torch
@@ -50,20 +51,22 @@ import torch.backends.cudnn as cudnn
 from monai.apps.utils import download_and_extract
 from monai.inferers.inferer import SimpleInferer
 from monai.transforms import Compose
-from monai.transforms import (Activations,
-                              AddChannel,
-                              AsDiscrete,
-                              CropForeground,
-                              CastToType,
-                              EnsureType,
-                              LoadImage,
-                              Lambda,
-                              ScaleIntensity,
-                              ScaleIntensityRange,
-                              ToNumpy,
-                              ToTensor,
-                              Transform,
-                              Resize)
+from monai.transforms import (
+    Activations,
+    AddChannel,
+    AsDiscrete,
+    CropForeground,
+    CastToType,
+    EnsureType,
+    LoadImage,
+    Lambda,
+    ScaleIntensity,
+    ScaleIntensityRange,
+    ToNumpy,
+    ToTensor,
+    Transform,
+    Resize,
+)
 
 import triton_python_backend_utils as pb_utils
 
@@ -74,6 +77,7 @@ logger = logging.getLogger(__name__)
 gdrive_url = "https://drive.google.com/uc?id=1c6noLV9oR0_mQwrsiQ9TqaaeWFKyw46l"
 model_filename = "MedNIST_model.tar.gz"
 md5_check = "a4fb9d6147599e104b5d8dc1809ed034"
+
 
 class TritonPythonModel:
     """
@@ -93,46 +97,50 @@ class TritonPythonModel:
         tar_save_path = os.path.join(extract_dir, model_filename)
         download_and_extract(gdrive_url, tar_save_path, output_dir=extract_dir, hash_val=md5_check, hash_type="md5")
         # load model configuration
-        self.model_config = json.loads(args['model_config'])
+        self.model_config = json.loads(args["model_config"])
 
         # create inferer engine and load PyTorch model
-        inference_device_kind = args.get('model_instance_kind', None)
+        inference_device_kind = args.get("model_instance_kind", None)
         logger.info(f"Inference device: {inference_device_kind}")
 
-        self.inference_device = torch.device('cpu')
-        if inference_device_kind is None or inference_device_kind == 'CPU':
-            self.inference_device = torch.device('cpu')
-        elif inference_device_kind == 'GPU':
-            inference_device_id = args.get('model_instance_device_id', '0')
+        self.inference_device = torch.device("cpu")
+        if inference_device_kind is None or inference_device_kind == "CPU":
+            self.inference_device = torch.device("cpu")
+        elif inference_device_kind == "GPU":
+            inference_device_id = args.get("model_instance_device_id", "0")
             logger.info(f"Inference device id: {inference_device_id}")
 
             if torch.cuda.is_available():
-                self.inference_device = torch.device(f'cuda:{inference_device_id}')
+                self.inference_device = torch.device(f"cuda:{inference_device_id}")
                 cudnn.enabled = True
             else:
                 logger.error(f"No CUDA device detected. Using device: {inference_device_kind}")
 
         # create pre-transforms for MedNIST
-        self.pre_transforms = Compose([
-            LoadImage(reader="PILReader", image_only=True,dtype=np.float32),
-            ScaleIntensity(),
-            AddChannel(),
-            AddChannel(),
-            ToTensor(),
-            Lambda(func=lambda x: x.to(device=self.inference_device)),
-        ])
+        self.pre_transforms = Compose(
+            [
+                LoadImage(reader="PILReader", image_only=True, dtype=np.float32),
+                ScaleIntensity(),
+                AddChannel(),
+                AddChannel(),
+                ToTensor(),
+                Lambda(func=lambda x: x.to(device=self.inference_device)),
+            ]
+        )
 
         # create post-transforms
-        self.post_transforms = Compose([
-            Lambda(func=lambda x: x.to(device="cpu")),
-        ])
+        self.post_transforms = Compose(
+            [
+                Lambda(func=lambda x: x.to(device="cpu")),
+            ]
+        )
 
         self.inferer = SimpleInferer()
 
         self.model = torch.jit.load(
-           f'{pathlib.Path(os.path.realpath(__file__)).parent}{os.path.sep}model.pt',
-            map_location=self.inference_device)
-
+            f"{pathlib.Path(os.path.realpath(__file__)).parent}{os.path.sep}model.pt",
+            map_location=self.inference_device,
+        )
 
     def execute(self, requests):
         """
@@ -161,7 +169,7 @@ class TritonPythonModel:
 
             transform_output = self.pre_transforms(tmpFile.name)
 
-#
+            #
             with torch.no_grad():
                 inference_output = self.inferer(transform_output, self.model)
 
@@ -170,7 +178,7 @@ class TritonPythonModel:
             class_idx = int(class_)
             class_pred = str(MEDNIST_CLASSES[class_idx])
             class_pred = str(MEDNIST_CLASSES[int(class_)])
-            class_data = np.array([bytes( class_pred, encoding='utf-8')], dtype=np.bytes_)
+            class_data = np.array([bytes(class_pred, encoding="utf-8")], dtype=np.bytes_)
 
             output0_tensor = pb_utils.Tensor(
                 "OUTPUT0",

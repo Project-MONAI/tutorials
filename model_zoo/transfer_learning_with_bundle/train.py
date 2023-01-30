@@ -86,9 +86,7 @@ def main(tempdir, load_pretrained_ckpt=False):
 
     if load_pretrained_ckpt:
         print("Load model from monai model-zoo.")
-        pretrained_model = monai.bundle.load(
-            name="spleen_ct_segmentation", bundle_dir="./", version="0.1.1"
-        )
+        pretrained_model = monai.bundle.load(name="spleen_ct_segmentation", bundle_dir="./", version="0.1.1")
         model.load_state_dict(pretrained_model)
 
     # define transforms for image and segmentation
@@ -188,9 +186,7 @@ def main(tempdir, load_pretrained_ckpt=False):
         step = 0
         for batch_data in train_loader:
             step += 1
-            inputs, labels = batch_data["image"].to(device), batch_data["label"].to(
-                device
-            )
+            inputs, labels = batch_data["image"].to(device), batch_data["label"].to(device)
             optimizer.zero_grad()
             outputs = model(inputs)
             loss = loss_function(outputs, labels)
@@ -211,14 +207,10 @@ def main(tempdir, load_pretrained_ckpt=False):
                 val_labels = None
                 val_outputs = None
                 for val_data in val_loader:
-                    val_images, val_labels = val_data["image"].to(device), val_data[
-                        "label"
-                    ].to(device)
+                    val_images, val_labels = val_data["image"].to(device), val_data["label"].to(device)
                     roi_size = (96, 96, 96)
                     sw_batch_size = 4
-                    val_outputs = sliding_window_inference(
-                        val_images, roi_size, sw_batch_size, model
-                    )
+                    val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
                     val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
                     # compute metric for current iteration
                     dice_metric(y_pred=val_outputs, y=val_labels)
@@ -242,13 +234,9 @@ def main(tempdir, load_pretrained_ckpt=False):
                 # plot the last model output as GIF image in TensorBoard with the corresponding image and label
                 plot_2d_or_3d_image(val_images, epoch + 1, writer, index=0, tag="image")
                 plot_2d_or_3d_image(val_labels, epoch + 1, writer, index=0, tag="label")
-                plot_2d_or_3d_image(
-                    val_outputs, epoch + 1, writer, index=0, tag="output"
-                )
+                plot_2d_or_3d_image(val_outputs, epoch + 1, writer, index=0, tag="output")
 
-    print(
-        f"train completed, best_metric: {best_metric:.4f} at epoch: {best_metric_epoch}"
-    )
+    print(f"train completed, best_metric: {best_metric:.4f} at epoch: {best_metric_epoch}")
     writer.close()
 
 

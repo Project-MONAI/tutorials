@@ -84,9 +84,7 @@ def get_network(network, channels, dimensions):
         else:
             features = (64, 128, 256, 512, 1024, 64)
         logging.info("Using BasicUnet with features: {}".format(features))
-        network = BasicUNet(
-            spatial_dims=dimensions, in_channels=3, out_channels=1, features=features
-        )
+        network = BasicUNet(spatial_dims=dimensions, in_channels=3, out_channels=1, features=features)
     return network
 
 
@@ -94,12 +92,8 @@ def get_pre_transforms(roi_size, model_size, dimensions):
     t = [
         LoadImaged(keys=("image", "label")),
         AddChanneld(keys=("image", "label")),
-        SpatialCropForegroundd(
-            keys=("image", "label"), source_key="label", spatial_size=roi_size
-        ),
-        Resized(
-            keys=("image", "label"), spatial_size=model_size, mode=("area", "nearest")
-        ),
+        SpatialCropForegroundd(keys=("image", "label"), source_key="label", spatial_size=roi_size),
+        Resized(keys=("image", "label"), spatial_size=model_size, mode=("area", "nearest")),
         NormalizeIntensityd(keys="image", subtrahend=208.0, divisor=388.0),
     ]
     if dimensions == 3:
@@ -119,9 +113,7 @@ def get_click_transforms():
         [
             Activationsd(keys="pred", sigmoid=True),
             ToNumpyd(keys=("image", "label", "pred")),
-            FindDiscrepancyRegionsd(
-                label="label", pred="pred", discrepancy="discrepancy"
-            ),
+            FindDiscrepancyRegionsd(label="label", pred="pred", discrepancy="discrepancy"),
             AddRandomGuidanced(
                 guidance="guidance",
                 discrepancy="discrepancy",
@@ -172,16 +164,10 @@ def get_loaders(args, pre_transforms, train=True):
             seed=args.seed,
         )
 
-        train_ds = PersistentDataset(
-            train_datalist, pre_transforms, cache_dir=args.cache_dir
-        )
-        train_loader = DataLoader(
-            train_ds, batch_size=args.batch, shuffle=True, num_workers=16
-        )
+        train_ds = PersistentDataset(train_datalist, pre_transforms, cache_dir=args.cache_dir)
+        train_loader = DataLoader(train_ds, batch_size=args.batch, shuffle=True, num_workers=16)
         logging.info(
-            "{}:: Total Records used for Training is: {}/{}/{}".format(
-                local_rank, len(train_ds), total_l, total_d
-            )
+            "{}:: Total Records used for Training is: {}/{}/{}".format(local_rank, len(train_ds), total_l, total_d)
         )
     else:
         train_loader = None
@@ -190,9 +176,7 @@ def get_loaders(args, pre_transforms, train=True):
     val_ds = PersistentDataset(val_datalist, pre_transforms, cache_dir=args.cache_dir)
     val_loader = DataLoader(val_ds, batch_size=args.batch, num_workers=8)
     logging.info(
-        "{}:: Total Records used for Validation is: {}/{}/{}".format(
-            local_rank, len(val_ds), total_l, total_d
-        )
+        "{}:: Total Records used for Validation is: {}/{}/{}".format(local_rank, len(val_ds), total_l, total_d)
     )
 
     return train_loader, val_loader
@@ -219,16 +203,12 @@ def create_trainer(args):
     # define training components
     network = get_network(args.network, args.channels, args.dimensions).to(device)
     if multi_gpu:
-        network = torch.nn.parallel.DistributedDataParallel(
-            network, device_ids=[local_rank], output_device=local_rank
-        )
+        network = torch.nn.parallel.DistributedDataParallel(network, device_ids=[local_rank], output_device=local_rank)
 
     if args.resume:
         logging.info("{}:: Loading Network...".format(local_rank))
         map_location = {"cuda:0": "cuda:{}".format(local_rank)}
-        network.load_state_dict(
-            torch.load(args.model_filepath, map_location=map_location)
-        )
+        network.load_state_dict(torch.load(args.model_filepath, map_location=map_location))
 
     # define event-handlers for engine
     val_handlers = [
@@ -272,12 +252,8 @@ def create_trainer(args):
 
     train_handlers = [
         LrScheduleHandler(lr_scheduler=lr_scheduler, print_lr=True),
-        ValidationHandler(
-            validator=evaluator, interval=args.val_freq, epoch_level=True
-        ),
-        StatsHandler(
-            tag_name="train_loss", output_transform=from_engine(["loss"], first=True)
-        ),
+        ValidationHandler(validator=evaluator, interval=args.val_freq, epoch_level=True),
+        StatsHandler(tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
         TensorBoardStatsHandler(
             log_dir=args.output,
             tag_name="train_loss",
@@ -330,9 +306,7 @@ def run(args):
         print("")
 
     if args.export:
-        logging.info(
-            "{}:: Loading PT Model from: {}".format(args.local_rank, args.input)
-        )
+        logging.info("{}:: Loading PT Model from: {}".format(args.local_rank, args.input))
         device = torch.device("cuda" if args.use_gpu else "cpu")
         network = get_network(args.network, args.channels, args.dimensions).to(device)
 
@@ -345,9 +319,7 @@ def run(args):
         return
 
     if not os.path.exists(args.output):
-        logging.info(
-            "output path [{}] does not exist. creating it now.".format(args.output)
-        )
+        logging.info("output path [{}] does not exist. creating it now.".format(args.output))
         os.makedirs(args.output, exist_ok=True)
 
     trainer = create_trainer(args)
@@ -359,9 +331,7 @@ def run(args):
     logging.info("Total Training Time {}".format(end_time - start_time))
     if args.local_rank == 0:
         logging.info("{}:: Saving Final PT Model".format(args.local_rank))
-        torch.save(
-            trainer.network.state_dict(), os.path.join(args.output, "model-final.pt")
-        )
+        torch.save(trainer.network.state_dict(), os.path.join(args.output, "model-final.pt"))
 
     if not args.multi_gpu:
         logging.info("{}:: Saving TorchScript Model".format(args.local_rank))

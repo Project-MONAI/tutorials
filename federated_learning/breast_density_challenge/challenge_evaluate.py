@@ -52,9 +52,7 @@ def read_prediction(filename, gt, model_name):
     for site in data.keys():
         for item in data[site][model_name]["test_probs"]:
             # multi-class
-            assert (
-                len(item["probs"]) == 4
-            ), f"Expected four probs but got {len(item['probs'])}: {item['probs']}"
+            assert len(item["probs"]) == 4, f"Expected four probs but got {len(item['probs'])}: {item['probs']}"
             result[site]["pred_probs"].append(item["probs"])
             gt_item = gt[gt["image"] == item["image"]]
             gt_label = gt_item["label"]
@@ -63,9 +61,7 @@ def read_prediction(filename, gt, model_name):
             result[site]["gt_labels"].append(gt_label.item())
 
             # binary (non-dense vs dense)
-            result[site]["pred_probs_bin"].append(
-                np.sum(item["probs"][2::])
-            )  # prob for dense (class 3 and 4).
+            result[site]["pred_probs_bin"].append(np.sum(item["probs"][2::]))  # prob for dense (class 3 and 4).
             if gt_label.item() in [0, 1]:  # non-dense (class 1 and 2)
                 result[site]["gt_labels_bin"].append(0)
             elif gt_label.item() in [2, 3]:  # dense (class 3 and 4)
@@ -80,8 +76,7 @@ def read_prediction(filename, gt, model_name):
             == len(result[site]["patient_ids"])
         )
         assert len(np.unique(result[site]["gt_labels_bin"])) == 2, (
-            f"Expected two kinds of binary labels but got "
-            f"unique labels {np.unique(result[site]['gt_labels_bin'])}"
+            f"Expected two kinds of binary labels but got " f"unique labels {np.unique(result[site]['gt_labels_bin'])}"
         )
     return result
 
@@ -97,29 +92,21 @@ def evaluate(site_result):
     for prob in pred_probs:
         pred_labels.append(np.argmax(prob))
 
-    assert (
-        len(gt_labels) == len(pred_labels) == len(gt_labels_bin) == len(pred_probs_bin)
-    )
+    assert len(gt_labels) == len(pred_labels) == len(gt_labels_bin) == len(pred_probs_bin)
 
     # multi-class metrics
-    linear_kappa = sk_metrics.cohen_kappa_score(
-        gt_labels, pred_labels, weights="linear"
-    )
-    quadratic_kappa = sk_metrics.cohen_kappa_score(
-        gt_labels, pred_labels, weights="quadratic"
-    )
+    linear_kappa = sk_metrics.cohen_kappa_score(gt_labels, pred_labels, weights="linear")
+    quadratic_kappa = sk_metrics.cohen_kappa_score(gt_labels, pred_labels, weights="quadratic")
 
     # per-image distance metrics
     dist = np.abs(np.squeeze(gt_labels) - np.squeeze(pred_labels))
     lin_dist = -dist
-    quad_dist = -(dist ** 2)
+    quad_dist = -(dist**2)
     avg_lin_dist = np.mean(lin_dist)
     avg_quad_dist = np.mean(quad_dist)
 
     # binary metrics
-    fpr, tpr, thresholds = sk_metrics.roc_curve(
-        gt_labels_bin, pred_probs_bin, pos_label=1
-    )
+    fpr, tpr, thresholds = sk_metrics.roc_curve(gt_labels_bin, pred_probs_bin, pos_label=1)
     auc = sk_metrics.auc(fpr, tpr)
 
     metrics = {
@@ -152,9 +139,7 @@ def merge_patients(site_result):
 
     patient_ids = site_result["patient_ids"]
     unique_patients = np.unique(patient_ids)
-    print(
-        f"Merging {len(patient_ids)} predictions from {len(unique_patients)} patients."
-    )
+    print(f"Merging {len(patient_ids)} predictions from {len(unique_patients)} patients.")
 
     for patient in unique_patients:
         idx = np.where(patient_ids == patient)
@@ -163,26 +148,16 @@ def merge_patients(site_result):
         merged_results["counts"].append(np.size(idx))
         # merge labels
         merged_results["gt_labels"].append(np.unique(site_result["gt_labels"][idx]))
-        merged_results["gt_labels_bin"].append(
-            np.unique(site_result["gt_labels_bin"][idx])
-        )
+        merged_results["gt_labels_bin"].append(np.unique(site_result["gt_labels_bin"][idx]))
         # merged labels should be all the same
         assert len(merged_results["gt_labels"][-1]) == 1
         assert len(merged_results["gt_labels_bin"][-1]) == 1
         # average probs
-        merged_results["pred_probs"].append(
-            np.mean(site_result["pred_probs"][idx], axis=0)
-        )
-        merged_results["pred_probs_bin"].append(
-            np.mean(site_result["pred_probs_bin"][idx])
-        )
+        merged_results["pred_probs"].append(np.mean(site_result["pred_probs"][idx], axis=0))
+        merged_results["pred_probs_bin"].append(np.mean(site_result["pred_probs_bin"][idx]))
         assert len(merged_results["pred_probs"][-1]) == 4  # should be still four probs
-        assert isinstance(
-            merged_results["pred_probs_bin"][-1], float
-        )  # should be just one prob
-    print(
-        f"Found patients with these nr of exams: {np.unique(merged_results['counts'])}"
-    )
+        assert isinstance(merged_results["pred_probs_bin"][-1], float)  # should be just one prob
+    print(f"Found patients with these nr of exams: {np.unique(merged_results['counts'])}")
 
     return merged_results
 
@@ -210,10 +185,7 @@ def compute_metrics(args):
         if not overall_pred_result:
             overall_pred_result = pred_result[s]
         else:
-            [
-                overall_pred_result[k].extend(pred_result[s][k])
-                for k in overall_pred_result.keys()
-            ]
+            [overall_pred_result[k].extend(pred_result[s][k]) for k in overall_pred_result.keys()]
         metrics[s] = evaluate(pred_result[s])
     print("===overall===")
     metrics["overall"] = evaluate(overall_pred_result)
@@ -223,15 +195,9 @@ def compute_metrics(args):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--gt1", type=str, default="../../../dmist_files/dataset_site-1.json"
-    )
-    parser.add_argument(
-        "--gt2", type=str, default="../../../dmist_files/dataset_site-2.json"
-    )
-    parser.add_argument(
-        "--gt3", type=str, default="../../../dmist_files/dataset_site-3.json"
-    )
+    parser.add_argument("--gt1", type=str, default="../../../dmist_files/dataset_site-1.json")
+    parser.add_argument("--gt2", type=str, default="../../../dmist_files/dataset_site-2.json")
+    parser.add_argument("--gt3", type=str, default="../../../dmist_files/dataset_site-3.json")
     parser.add_argument(
         "--pred",
         type=str,

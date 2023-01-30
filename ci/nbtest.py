@@ -13,6 +13,7 @@ import argparse
 import nbformat
 import re
 
+
 def define_parser(parser):
     """Define the parser for commands"""
     parser.add_argument("-f", "--filename", type=str, help="a .ipynb jupyter notebook", required=True)
@@ -22,23 +23,16 @@ def define_parser(parser):
     parser.add_argument("-e", "--end", type=int, default=-1, help="the ending index of target cells")
     parser.add_argument("-k", "--keyword", type=str, default="", help="regex keyword to search in the target cell")
     parser.add_argument(
-        "--type",
-        type=str,
-        default="markdown",
-        help="the type of target cell (code/markdown). Default is markdown."
+        "--type", type=str, default="markdown", help="the type of target cell (code/markdown). Default is markdown."
     )
     parser.add_argument(
         "--field",
         type=str,
         default="source",
-        help="the field to extract in the target cell, such as metadata/source/outputs. Default is source."
+        help="the field to extract in the target cell, such as metadata/source/outputs. Default is source.",
     )
     parser.add_argument(
-        "-n",
-        "--nestkey",
-        type=str,
-        default=None,
-        help="the nesting key in the field of target. Default is None."
+        "-n", "--nestkey", type=str, default=None, help="the nesting key in the field of target. Default is None."
     )
 
 
@@ -71,16 +65,19 @@ def count_matches(filename, start, end, keyword, cell_type="markdown", field="so
 
     return occurrences
 
+
 def print_verification_bool(*args, **kwargs):
     """Print true/false for whether target cells match the keyword and the cell_type to interface with bash"""
 
     result = "true" if sum(count_matches(*args, **kwargs)) else "false"
     print(result)
 
+
 def print_count_array(*args, **kwargs):
     """Print number array of the matches to interface with bash"""
 
     print(" ".join(map(str, count_matches(*args, **kwargs))))
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -96,7 +93,7 @@ def main():
 
     args = parser.parse_args()
 
-    if 'index' in args and args.index:
+    if "index" in args and args.index:
         args.start = args.index
         args.end = args.index + 1
 
@@ -106,6 +103,7 @@ def main():
         print_count_array(args.filename, args.start, args.end, args.keyword, args.type, args.field, args.nestkey)
     else:
         print("No subcommand provided. Please use -h for help")
+
 
 if __name__ == "__main__":
     main()

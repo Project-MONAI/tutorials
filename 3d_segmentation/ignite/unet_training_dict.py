@@ -146,14 +146,10 @@ def main(tempdir):
     def prepare_batch(batch, device=None, non_blocking=False):
         return _prepare_batch((batch["img"], batch["seg"]), device, non_blocking)
 
-    trainer = create_supervised_trainer(
-        net, opt, loss, device, False, prepare_batch=prepare_batch
-    )
+    trainer = create_supervised_trainer(net, opt, loss, device, False, prepare_batch=prepare_batch)
 
     # adding checkpoint handler to save models (network params and optimizer stats) during training
-    checkpoint_handler = ModelCheckpoint(
-        "./runs_dict/", "net", n_saved=10, require_empty=False
-    )
+    checkpoint_handler = ModelCheckpoint("./runs_dict/", "net", n_saved=10, require_empty=False)
     trainer.add_event_handler(
         event_name=Events.EPOCH_COMPLETED,
         handler=checkpoint_handler,
@@ -186,7 +182,10 @@ def main(tempdir):
         val_metrics,
         device,
         True,
-        output_transform=lambda x, y, y_pred: ([post_pred(i) for i in decollate_batch(y_pred)], [post_label(i) for i in decollate_batch(y)]),
+        output_transform=lambda x, y, y_pred: (
+            [post_pred(i) for i in decollate_batch(y_pred)],
+            [post_label(i) for i in decollate_batch(y)],
+        ),
         prepare_batch=prepare_batch,
     )
 
@@ -195,12 +194,8 @@ def main(tempdir):
         evaluator.run(val_loader)
 
     # add early stopping handler to evaluator
-    early_stopper = EarlyStopping(
-        patience=4, score_function=stopping_fn_from_metric(metric_name), trainer=trainer
-    )
-    evaluator.add_event_handler(
-        event_name=Events.EPOCH_COMPLETED, handler=early_stopper
-    )
+    early_stopper = EarlyStopping(patience=4, score_function=stopping_fn_from_metric(metric_name), trainer=trainer)
+    evaluator.add_event_handler(event_name=Events.EPOCH_COMPLETED, handler=early_stopper)
 
     # add stats event handler to print validation stats via evaluator
     val_stats_handler = StatsHandler(

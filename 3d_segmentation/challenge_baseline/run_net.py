@@ -267,7 +267,7 @@ def infer(data_folder=".", model_folder="runs", prediction_folder="output"):
     files = glob.glob(os.path.join(prediction_folder, "volume*", "*.nii.gz"))
     for f in files:
         new_name = os.path.basename(f)
-        new_name = new_name[len("volume-covid19-A-0"):]
+        new_name = new_name[len("volume-covid19-A-0") :]
         new_name = new_name[: -len("_ct_seg.nii.gz")] + ".nii.gz"
         to_name = os.path.join(submission_dir, new_name)
         shutil.copy(f, to_name)

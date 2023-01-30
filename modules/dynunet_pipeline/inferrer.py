@@ -77,9 +77,7 @@ class DynUNetInferrer(SupervisedEvaluator):
         self.tta_val = tta_val
         self.num_classes = num_classes
 
-    def _iteration(
-        self, engine: Engine, batchdata: Dict[str, Any]
-    ) -> Dict[str, torch.Tensor]:
+    def _iteration(self, engine: Engine, batchdata: Dict[str, Any]) -> Dict[str, torch.Tensor]:
         """
         callback function for the Supervised Evaluation processing logic of 1 iteration in Ignite Engine.
         Return below item in a dictionary:
@@ -112,9 +110,7 @@ class DynUNetInferrer(SupervisedEvaluator):
             else:
                 for dims in [[2], [3], [4], (2, 3), (2, 4), (3, 4), (2, 3, 4)]:
                     flip_inputs = torch.flip(inputs, dims=dims)
-                    flip_pred = torch.flip(
-                        self.inferer(flip_inputs, self.network).cpu(), dims=dims
-                    )
+                    flip_pred = torch.flip(self.inferer(flip_inputs, self.network).cpu(), dims=dims)
                     flip_pred = nn.functional.softmax(flip_pred, dim=1)
                     del flip_inputs
                     pred += flip_pred
@@ -141,9 +137,7 @@ class DynUNetInferrer(SupervisedEvaluator):
 
         if resample_flag:
             # convert the prediction back to the original (after cropped) shape
-            predictions = recovery_prediction(
-                predictions.numpy(), [self.num_classes, *crop_shape], anisotrophy_flag
-            )
+            predictions = recovery_prediction(predictions.numpy(), [self.num_classes, *crop_shape], anisotrophy_flag)
         else:
             predictions = predictions.numpy()
 
@@ -159,11 +153,7 @@ class DynUNetInferrer(SupervisedEvaluator):
 
         filename = batchdata["image_meta_dict"]["filename_or_obj"][0].split("/")[-1]
 
-        print(
-            "save {} with shape: {}, mean values: {}".format(
-                filename, predictions_org.shape, predictions_org.mean()
-            )
-        )
+        print("save {} with shape: {}, mean values: {}".format(filename, predictions_org.shape, predictions_org.mean()))
         write_nifti(
             data=predictions_org,
             file_name=os.path.join(self.output_dir, filename),

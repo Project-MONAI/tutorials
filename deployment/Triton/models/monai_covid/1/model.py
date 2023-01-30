@@ -47,16 +47,18 @@ import torch.backends.cudnn as cudnn
 from monai.apps.utils import download_and_extract
 from monai.inferers.inferer import SimpleInferer
 from monai.transforms import Compose
-from monai.transforms import (Activations,
-                              AddChannel,
-                              AsDiscrete,
-                              CropForeground,
-                              LoadImage,
-                              Lambda,
-                              ScaleIntensityRange,
-                              ToNumpy,
-                              ToTensor,
-                              Resize)
+from monai.transforms import (
+    Activations,
+    AddChannel,
+    AsDiscrete,
+    CropForeground,
+    LoadImage,
+    Lambda,
+    ScaleIntensityRange,
+    ToNumpy,
+    ToTensor,
+    Resize,
+)
 
 import triton_python_backend_utils as pb_utils
 
@@ -85,50 +87,55 @@ class TritonPythonModel:
         tar_save_path = os.path.join(extract_dir, model_filename)
         download_and_extract(gdrive_url, tar_save_path, output_dir=extract_dir, hash_val=md5_check, hash_type="md5")
         # load model configuration
-        self.model_config = json.loads(args['model_config'])
+        self.model_config = json.loads(args["model_config"])
 
         # create inferer engine and load PyTorch model
-        inference_device_kind = args.get('model_instance_kind', None)
+        inference_device_kind = args.get("model_instance_kind", None)
         logger.info(f"Inference device: {inference_device_kind}")
 
-        self.inference_device = torch.device('cpu')
-        if inference_device_kind is None or inference_device_kind == 'CPU':
-            self.inference_device = torch.device('cpu')
-        elif inference_device_kind == 'GPU':
-            inference_device_id = args.get('model_instance_device_id', '0')
+        self.inference_device = torch.device("cpu")
+        if inference_device_kind is None or inference_device_kind == "CPU":
+            self.inference_device = torch.device("cpu")
+        elif inference_device_kind == "GPU":
+            inference_device_id = args.get("model_instance_device_id", "0")
             logger.info(f"Inference device id: {inference_device_id}")
 
             if torch.cuda.is_available():
-                self.inference_device = torch.device(f'cuda:{inference_device_id}')
+                self.inference_device = torch.device(f"cuda:{inference_device_id}")
                 cudnn.enabled = True
             else:
                 logger.error(f"No CUDA device detected. Using device: {inference_device_kind}")
 
         # create pre-transforms
-        self.pre_transforms = Compose([
-            LoadImage(reader="NibabelReader", image_only=True, dtype=np.float32),
-            AddChannel(),
-            ScaleIntensityRange(a_min=-1000, a_max=500, b_min=0.0, b_max=1.0, clip=True),
-            CropForeground(margin=5),
-            Resize([192, 192, 64], mode="area"),
-            AddChannel(),
-            ToTensor(),
-            Lambda(func=lambda x: x.to(device=self.inference_device)),
-        ])
+        self.pre_transforms = Compose(
+            [
+                LoadImage(reader="NibabelReader", image_only=True, dtype=np.float32),
+                AddChannel(),
+                ScaleIntensityRange(a_min=-1000, a_max=500, b_min=0.0, b_max=1.0, clip=True),
+                CropForeground(margin=5),
+                Resize([192, 192, 64], mode="area"),
+                AddChannel(),
+                ToTensor(),
+                Lambda(func=lambda x: x.to(device=self.inference_device)),
+            ]
+        )
 
         # create post-transforms
-        self.post_transforms = Compose([
-            Lambda(func=lambda x: x.to(device="cpu")),
-            Activations(sigmoid=True),
-            ToNumpy(),
-            AsDiscrete(threshold=True),
-        ])
+        self.post_transforms = Compose(
+            [
+                Lambda(func=lambda x: x.to(device="cpu")),
+                Activations(sigmoid=True),
+                ToNumpy(),
+                AsDiscrete(threshold=True),
+            ]
+        )
 
         self.inferer = SimpleInferer()
 
         self.model = torch.jit.load(
-            f'{pathlib.Path(os.path.realpath(__file__)).parent}{os.path.sep}covid19_model.ts',
-            map_location=self.inference_device)
+            f"{pathlib.Path(os.path.realpath(__file__)).parent}{os.path.sep}covid19_model.ts",
+            map_location=self.inference_device,
+        )
 
     def execute(self, requests):
         """
@@ -160,10 +167,10 @@ class TritonPythonModel:
                 inference_output = self.inferer(transform_output, self.model)
 
             classification_output = self.post_transforms(inference_output)
-            class_data = np.array([bytes("COVID Negative", encoding='utf-8')], dtype=np.bytes_)
+            class_data = np.array([bytes("COVID Negative", encoding="utf-8")], dtype=np.bytes_)
 
             if classification_output[0] > 0:
-                class_data = np.array([bytes("COVID Positive", encoding='utf-8')], dtype=np.bytes_)
+                class_data = np.array([bytes("COVID Positive", encoding="utf-8")], dtype=np.bytes_)
 
             output0_tensor = pb_utils.Tensor(
                 "OUTPUT0",

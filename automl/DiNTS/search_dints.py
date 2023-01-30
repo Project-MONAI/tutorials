@@ -197,7 +197,7 @@ def main():
     learning_rate_arch = 0.001
     learning_rate_milestones = np.array([0.4, 0.8])
     num_images_per_batch = 1
-    num_epochs = 1430 # around 20k iteration
+    num_epochs = 1430  # around 20k iteration
     num_epochs_per_validation = 100
     num_epochs_warmup = 715
     num_folds = int(args.num_folds)
@@ -225,8 +225,8 @@ def main():
         json_data = json.load(f)
 
     split = len(json_data[args.json_key]) // num_folds
-    list_train = json_data[args.json_key][:(split * fold)] + json_data[args.json_key][(split * (fold + 1)):]
-    list_valid = json_data[args.json_key][(split * fold):(split * (fold + 1))]
+    list_train = json_data[args.json_key][: (split * fold)] + json_data[args.json_key][(split * (fold + 1)) :]
+    list_valid = json_data[args.json_key][(split * fold) : (split * (fold + 1))]
 
     # training data
     files = []
@@ -242,12 +242,16 @@ def main():
 
     random.shuffle(train_files)
 
-    train_files_w = train_files[:len(train_files)//2]
-    train_files_w = partition_dataset(data=train_files_w, shuffle=True, num_partitions=world_size, even_divisible=True)[dist.get_rank()]
+    train_files_w = train_files[: len(train_files) // 2]
+    train_files_w = partition_dataset(data=train_files_w, shuffle=True, num_partitions=world_size, even_divisible=True)[
+        dist.get_rank()
+    ]
     print("train_files_w:", len(train_files_w))
 
-    train_files_a = train_files[len(train_files)//2:]
-    train_files_a = partition_dataset(data=train_files_a, shuffle=True, num_partitions=world_size, even_divisible=True)[dist.get_rank()]
+    train_files_a = train_files[len(train_files) // 2 :]
+    train_files_a = partition_dataset(data=train_files_a, shuffle=True, num_partitions=world_size, even_divisible=True)[
+        dist.get_rank()
+    ]
     print("train_files_a:", len(train_files_a))
 
     # validation data
@@ -261,7 +265,9 @@ def main():
 
         files.append({"image": str_img, "label": str_seg})
     val_files = files
-    val_files = partition_dataset(data=val_files, shuffle=False, num_partitions=world_size, even_divisible=False)[dist.get_rank()]
+    val_files = partition_dataset(data=val_files, shuffle=False, num_partitions=world_size, even_divisible=False)[
+        dist.get_rank()
+    ]
     print("val_files:", len(val_files))
 
     # network architecture
@@ -280,24 +286,48 @@ def main():
             CopyItemsd(keys=["label"], times=1, names=["label4crop"]),
             Lambdad(
                 keys=["label4crop"],
-                func=lambda x: np.concatenate(tuple([ndimage.binary_dilation((x==_k).astype(x.dtype), iterations=48).astype(float) for _k in range(output_classes)]), axis=0),
+                func=lambda x: np.concatenate(
+                    tuple(
+                        [
+                            ndimage.binary_dilation((x == _k).astype(x.dtype), iterations=48).astype(float)
+                            for _k in range(output_classes)
+                        ]
+                    ),
+                    axis=0,
+                ),
                 overwrite=True,
             ),
             EnsureTyped(keys=["image", "label"]),
             CastToTyped(keys=["image"], dtype=(torch.float32)),
-            SpatialPadd(keys=["image", "label", "label4crop"], spatial_size=patch_size, mode=["reflect", "constant", "constant"]),
+            SpatialPadd(
+                keys=["image", "label", "label4crop"], spatial_size=patch_size, mode=["reflect", "constant", "constant"]
+            ),
             RandCropByLabelClassesd(
                 keys=["image", "label"],
                 label_key="label4crop",
                 num_classes=output_classes,
-                ratios=[1,] * output_classes,
+                ratios=[
+                    1,
+                ]
+                * output_classes,
                 spatial_size=patch_size,
-                num_samples=num_patches_per_image
+                num_samples=num_patches_per_image,
             ),
             Lambdad(keys=["label4crop"], func=lambda x: 0),
-            RandRotated(keys=["image", "label"], range_x=0.3, range_y=0.3, range_z=0.3, mode=["bilinear", "nearest"], prob=0.2),
-            RandZoomd(keys=["image", "label"], min_zoom=0.8, max_zoom=1.2, mode=["trilinear", "nearest"], align_corners=[True, None], prob=0.16),
-            RandGaussianSmoothd(keys=["image"], sigma_x=(0.5,1.15), sigma_y=(0.5,1.15), sigma_z=(0.5,1.15), prob=0.15),
+            RandRotated(
+                keys=["image", "label"], range_x=0.3, range_y=0.3, range_z=0.3, mode=["bilinear", "nearest"], prob=0.2
+            ),
+            RandZoomd(
+                keys=["image", "label"],
+                min_zoom=0.8,
+                max_zoom=1.2,
+                mode=["trilinear", "nearest"],
+                align_corners=[True, None],
+                prob=0.16,
+            ),
+            RandGaussianSmoothd(
+                keys=["image"], sigma_x=(0.5, 1.15), sigma_y=(0.5, 1.15), sigma_z=(0.5, 1.15), prob=0.15
+            ),
             RandScaleIntensityd(keys=["image"], factors=0.3, prob=0.5),
             RandShiftIntensityd(keys=["image"], offsets=0.1, prob=0.5),
             RandGaussianNoised(keys=["image"], std=0.01, prob=0.15),
@@ -319,7 +349,7 @@ def main():
             ScaleIntensityRanged(keys=["image"], a_min=-87.0, a_max=199.0, b_min=0.0, b_max=1.0, clip=True),
             CastToTyped(keys=["image", "label"], dtype=(np.float32, np.uint8)),
             EnsureTyped(keys=["image", "label"]),
-            ToTensord(keys=["image", "label"])
+            ToTensord(keys=["image", "label"]),
         ]
     )
 
@@ -350,7 +380,7 @@ def main():
     )
 
     model = monai.networks.nets.DiNTS(
-        dints_space = dints_space,
+        dints_space=dints_space,
         in_channels=input_channels,
         num_classes=output_classes,
         use_downsample=True,
@@ -375,9 +405,15 @@ def main():
     )
 
     # optimizer
-    optimizer = torch.optim.SGD(model.weight_parameters(), lr=learning_rate * world_size, momentum=0.9, weight_decay=0.00004)
-    arch_optimizer_a = torch.optim.Adam([dints_space.log_alpha_a], lr=learning_rate_arch * world_size, betas=(0.5, 0.999), weight_decay=0.0)
-    arch_optimizer_c = torch.optim.Adam([dints_space.log_alpha_c], lr=learning_rate_arch * world_size, betas=(0.5, 0.999), weight_decay=0.0)
+    optimizer = torch.optim.SGD(
+        model.weight_parameters(), lr=learning_rate * world_size, momentum=0.9, weight_decay=0.00004
+    )
+    arch_optimizer_a = torch.optim.Adam(
+        [dints_space.log_alpha_a], lr=learning_rate_arch * world_size, betas=(0.5, 0.999), weight_decay=0.0
+    )
+    arch_optimizer_c = torch.optim.Adam(
+        [dints_space.log_alpha_c], lr=learning_rate_arch * world_size, betas=(0.5, 0.999), weight_decay=0.0
+    )
 
     print()
 
@@ -397,6 +433,7 @@ def main():
     # amp
     if amp:
         from torch.cuda.amp import autocast, GradScaler
+
         scaler = GradScaler()
         if dist.get_rank() == 0:
             print("[info] amp enabled")
@@ -419,7 +456,9 @@ def main():
 
     start_time = time.time()
     for epoch in range(num_epochs):
-        decay = 0.5 ** np.sum([(epoch - num_epochs_warmup) / (num_epochs - num_epochs_warmup) > learning_rate_milestones])
+        decay = 0.5 ** np.sum(
+            [(epoch - num_epochs_warmup) / (num_epochs - num_epochs_warmup) > learning_rate_milestones]
+        )
         lr = learning_rate * decay
         for param_group in optimizer.param_groups:
             param_group["lr"] = lr
@@ -499,17 +538,18 @@ def main():
             dints_space.log_alpha_c.requires_grad = True
 
             # linear increase topology and RAM loss
-            entropy_alpha_c = torch.tensor(0.).to(device)
-            entropy_alpha_a = torch.tensor(0.).to(device)
-            ram_cost_full = torch.tensor(0.).to(device)
-            ram_cost_usage = torch.tensor(0.).to(device)
-            ram_cost_loss = torch.tensor(0.).to(device)
-            topology_loss = torch.tensor(0.).to(device)
+            entropy_alpha_c = torch.tensor(0.0).to(device)
+            entropy_alpha_a = torch.tensor(0.0).to(device)
+            ram_cost_full = torch.tensor(0.0).to(device)
+            ram_cost_usage = torch.tensor(0.0).to(device)
+            ram_cost_loss = torch.tensor(0.0).to(device)
+            topology_loss = torch.tensor(0.0).to(device)
 
             probs_a, arch_code_prob_a = dints_space.get_prob_a(child=True)
-            entropy_alpha_a = -((probs_a)*torch.log(probs_a + 1e-5)).mean()
-            entropy_alpha_c = -(F.softmax(dints_space.log_alpha_c, dim=-1) * \
-                F.log_softmax(dints_space.log_alpha_c, dim=-1)).mean()
+            entropy_alpha_a = -((probs_a) * torch.log(probs_a + 1e-5)).mean()
+            entropy_alpha_c = -(
+                F.softmax(dints_space.log_alpha_c, dim=-1) * F.log_softmax(dints_space.log_alpha_c, dim=-1)
+            ).mean()
             topology_loss = dints_space.get_topology_entropy(probs_a)
 
             ram_cost_full = dints_space.get_ram_cost_usage(inputs.shape, full=True)
@@ -529,8 +569,9 @@ def main():
                     else:
                         loss = loss_func(outputs_search, labels_search)
 
-                    loss += combination_weights * ((entropy_alpha_a + entropy_alpha_c) + ram_cost_loss \
-                                                    + 0.001 * topology_loss)
+                    loss += combination_weights * (
+                        (entropy_alpha_a + entropy_alpha_c) + ram_cost_loss + 0.001 * topology_loss
+                    )
 
                 scaler.scale(loss).backward()
                 scaler.step(arch_optimizer_a)
@@ -543,8 +584,9 @@ def main():
                 else:
                     loss = loss_func(outputs_search, labels_search)
 
-                loss += 1.0 * (combination_weights * (entropy_alpha_a + entropy_alpha_c) + ram_cost_loss \
-                                + 0.001 * topology_loss)
+                loss += 1.0 * (
+                    combination_weights * (entropy_alpha_a + entropy_alpha_c) + ram_cost_loss + 0.001 * topology_loss
+                )
 
                 loss.backward()
                 arch_optimizer_a.step()
@@ -555,7 +597,10 @@ def main():
             loss_torch_arch[1] += 1.0
 
             if dist.get_rank() == 0:
-                print("[{0}] ".format(str(datetime.now())[:19]) + f"{step}/{epoch_len}, train_loss_arch: {loss.item():.4f}")
+                print(
+                    "[{0}] ".format(str(datetime.now())[:19])
+                    + f"{step}/{epoch_len}, train_loss_arch: {loss.item():.4f}"
+                )
                 writer.add_scalar("train_loss_arch", loss.item(), epoch_len * epoch + step)
 
         # synchronizes all processes and reduce results
@@ -565,11 +610,15 @@ def main():
         loss_torch_arch = loss_torch_arch.tolist()
         if dist.get_rank() == 0:
             loss_torch_epoch = loss_torch[0] / loss_torch[1]
-            print(f"epoch {epoch + 1} average loss: {loss_torch_epoch:.4f}, best mean dice: {best_metric:.4f} at epoch {best_metric_epoch}")
+            print(
+                f"epoch {epoch + 1} average loss: {loss_torch_epoch:.4f}, best mean dice: {best_metric:.4f} at epoch {best_metric_epoch}"
+            )
 
             if epoch >= num_epochs_warmup:
                 loss_torch_arch_epoch = loss_torch_arch[0] / loss_torch_arch[1]
-                print(f"epoch {epoch + 1} average arch loss: {loss_torch_arch_epoch:.4f}, best mean dice: {best_metric:.4f} at epoch {best_metric_epoch}")
+                print(
+                    f"epoch {epoch + 1} average arch loss: {loss_torch_arch_epoch:.4f}, best mean dice: {best_metric:.4f} at epoch {best_metric_epoch}"
+                )
 
         if (epoch + 1) % val_interval == 0:
             torch.cuda.empty_cache()
@@ -617,11 +666,7 @@ def main():
                     val_labels = post_label(val_labels[0, ...])
                     val_labels = val_labels[None, ...]
 
-                    value = compute_meandice(
-                        y_pred=val_outputs,
-                        y=val_labels,
-                        include_background=False
-                    )
+                    value = compute_meandice(y_pred=val_outputs, y=val_labels, include_background=False)
 
                     print(_index + 1, "/", len(val_loader), value)
 
@@ -691,7 +736,11 @@ def main():
                     current_time = time.time()
                     elapsed_time = (current_time - start_time) / 60.0
                     with open(os.path.join(args.output_root, "accuracy_history.csv"), "a") as f:
-                        f.write("{0:d}\t{1:.5f}\t{2:.5f}\t{3:.5f}\t{4:.1f}\t{5:d}\n".format(epoch + 1, avg_metric, loss_torch_epoch, lr, elapsed_time, idx_iter))
+                        f.write(
+                            "{0:d}\t{1:.5f}\t{2:.5f}\t{3:.5f}\t{4:.1f}\t{5:d}\n".format(
+                                epoch + 1, avg_metric, loss_torch_epoch, lr, elapsed_time, idx_iter
+                            )
+                        )
 
                 dist.barrier()
 

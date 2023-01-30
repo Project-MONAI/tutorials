@@ -131,7 +131,7 @@ def val_epoch(model, loader, epoch, args, max_tiles=None):
                     logits2 = []
 
                     for i in range(int(np.ceil(data.shape[1] / float(max_tiles)))):
-                        data_slice = data[:, i * max_tiles: (i + 1) * max_tiles]
+                        data_slice = data[:, i * max_tiles : (i + 1) * max_tiles]
                         logits_slice = model(data_slice, no_head=True)
                         logits.append(logits_slice)
 
@@ -408,7 +408,7 @@ def main_worker(gpu, args):
     else:
         writer = None
 
-    #RUN TRAINING
+    # RUN TRAINING
     n_epochs = args.epochs
     val_acc_max = 0.0
 
@@ -504,7 +504,8 @@ def parse_args():
 
     parser.add_argument("--weight_decay", default=0, type=float, help="optimizer weight decay")
     parser.add_argument("--amp", action="store_true", help="use AMP, recommended")
-    parser.add_argument("--val_every",
+    parser.add_argument(
+        "--val_every",
         "--val_interval",
         default=1,
         type=int,
@@ -512,7 +513,7 @@ def parse_args():
     )
     parser.add_argument("--workers", default=2, type=int, help="number of workers for data loading")
 
-    #for multigpu
+    # for multigpu
     parser.add_argument("--distributed", action="store_true", help="use multigpu training, recommended")
     parser.add_argument("--world_size", default=1, type=int, help="number of nodes for distributed training")
     parser.add_argument("--rank", default=0, type=int, help="node rank for distributed training")
@@ -521,9 +522,7 @@ def parse_args():
     )
     parser.add_argument("--dist-backend", default="nccl", type=str, help="distributed backend")
 
-    parser.add_argument(
-        "--quick", action="store_true", help="use a small subset of data for debugging"
-    )
+    parser.add_argument("--quick", action="store_true", help="use a small subset of data for debugging")
 
     args = parser.parse_args()
 
@@ -533,6 +532,7 @@ def parse_args():
     print("-----------------")
 
     return args
+
 
 if __name__ == "__main__":
 

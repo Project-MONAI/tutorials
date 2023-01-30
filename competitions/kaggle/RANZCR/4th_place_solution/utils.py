@@ -66,9 +66,11 @@ def get_val_dataloader(val_dataset, cfg):
     print(f"valid: dataset {len(val_dataset)}, dataloader {len(val_dataloader)}")
     return val_dataloader
 
+
 def get_test_dataset(test_df, cfg):
     test_dataset = CustomDataset(test_df, cfg, aug=cfg.test_aug, mode="test")
     return test_dataset
+
 
 def get_test_dataloader(test_dataset, cfg):
 
@@ -79,6 +81,7 @@ def get_test_dataloader(test_dataset, cfg):
         num_workers=cfg.num_workers,
     )
     return test_dataloader
+
 
 def get_optimizer(model, cfg):
 

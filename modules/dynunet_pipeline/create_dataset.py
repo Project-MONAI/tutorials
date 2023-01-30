@@ -12,8 +12,7 @@
 import os
 
 import torch.distributed as dist
-from monai.data import (CacheDataset, DataLoader, load_decathlon_datalist,
-                        load_decathlon_properties, partition_dataset)
+from monai.data import CacheDataset, DataLoader, load_decathlon_datalist, load_decathlon_properties, partition_dataset
 
 from task_params import task_name
 from transforms import get_task_transforms
@@ -48,13 +47,9 @@ def get_data(args, batch_size=1, mode="train"):
         "numTest",
     ]
 
-    datalist = load_decathlon_datalist(
-        os.path.join(datalist_path, datalist_name), True, list_key, dataset_path
-    )
+    datalist = load_decathlon_datalist(os.path.join(datalist_path, datalist_name), True, list_key, dataset_path)
 
-    properties = load_decathlon_properties(
-        os.path.join(datalist_path, datalist_name), property_keys
-    )
+    properties = load_decathlon_properties(os.path.join(datalist_path, datalist_name), property_keys)
     if mode in ["validation", "test"]:
         if multi_gpu_flag:
             datalist = partition_dataset(

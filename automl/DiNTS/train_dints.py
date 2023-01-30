@@ -220,8 +220,8 @@ def main():
         json_data = json.load(f)
 
     split = len(json_data[args.json_key]) // num_folds
-    list_train = json_data[args.json_key][:(split * fold)] + json_data[args.json_key][(split * (fold + 1)):]
-    list_valid = json_data[args.json_key][(split * fold):(split * (fold + 1))]
+    list_train = json_data[args.json_key][: (split * fold)] + json_data[args.json_key][(split * (fold + 1)) :]
+    list_valid = json_data[args.json_key][(split * fold) : (split * (fold + 1))]
 
     # training data
     files = []
@@ -235,7 +235,9 @@ def main():
         files.append({"image": str_img, "label": str_seg})
 
     train_files = files
-    train_files = partition_dataset(data=train_files, shuffle=True, num_partitions=world_size, even_divisible=True)[dist.get_rank()]
+    train_files = partition_dataset(data=train_files, shuffle=True, num_partitions=world_size, even_divisible=True)[
+        dist.get_rank()
+    ]
     print("train_files:", len(train_files))
 
     # validation data
@@ -249,7 +251,9 @@ def main():
 
         files.append({"image": str_img, "label": str_seg})
     val_files = files
-    val_files = partition_dataset(data=val_files, shuffle=False, num_partitions=world_size, even_divisible=False)[dist.get_rank()]
+    val_files = partition_dataset(data=val_files, shuffle=False, num_partitions=world_size, even_divisible=False)[
+        dist.get_rank()
+    ]
     print("val_files:", len(val_files))
 
     # network architecture
@@ -268,24 +272,48 @@ def main():
             CopyItemsd(keys=["label"], times=1, names=["label4crop"]),
             Lambdad(
                 keys=["label4crop"],
-                func=lambda x: np.concatenate(tuple([ndimage.binary_dilation((x==_k).astype(x.dtype), iterations=48).astype(float) for _k in range(output_classes)]), axis=0),
+                func=lambda x: np.concatenate(
+                    tuple(
+                        [
+                            ndimage.binary_dilation((x == _k).astype(x.dtype), iterations=48).astype(float)
+                            for _k in range(output_classes)
+                        ]
+                    ),
+                    axis=0,
+                ),
                 overwrite=True,
             ),
             EnsureTyped(keys=["image", "label"]),
             CastToTyped(keys=["image"], dtype=(torch.float32)),
-            SpatialPadd(keys=["image", "label", "label4crop"], spatial_size=patch_size, mode=["reflect", "constant", "constant"]),
+            SpatialPadd(
+                keys=["image", "label", "label4crop"], spatial_size=patch_size, mode=["reflect", "constant", "constant"]
+            ),
             RandCropByLabelClassesd(
                 keys=["image", "label"],
                 label_key="label4crop",
                 num_classes=output_classes,
-                ratios=[1,] * output_classes,
+                ratios=[
+                    1,
+                ]
+                * output_classes,
                 spatial_size=patch_size,
-                num_samples=num_patches_per_image
+                num_samples=num_patches_per_image,
             ),
             Lambdad(keys=["label4crop"], func=lambda x: 0),
-            RandRotated(keys=["image", "label"], range_x=0.3, range_y=0.3, range_z=0.3, mode=["bilinear", "nearest"], prob=0.2),
-            RandZoomd(keys=["image", "label"], min_zoom=0.8, max_zoom=1.2, mode=["trilinear", "nearest"], align_corners=[True, None], prob=0.16),
-            RandGaussianSmoothd(keys=["image"], sigma_x=(0.5,1.15), sigma_y=(0.5,1.15), sigma_z=(0.5,1.15), prob=0.15),
+            RandRotated(
+                keys=["image", "label"], range_x=0.3, range_y=0.3, range_z=0.3, mode=["bilinear", "nearest"], prob=0.2
+            ),
+            RandZoomd(
+                keys=["image", "label"],
+                min_zoom=0.8,
+                max_zoom=1.2,
+                mode=["trilinear", "nearest"],
+                align_corners=[True, None],
+                prob=0.16,
+            ),
+            RandGaussianSmoothd(
+                keys=["image"], sigma_x=(0.5, 1.15), sigma_y=(0.5, 1.15), sigma_z=(0.5, 1.15), prob=0.15
+            ),
             RandScaleIntensityd(keys=["image"], factors=0.3, prob=0.5),
             RandShiftIntensityd(keys=["image"], offsets=0.1, prob=0.5),
             RandGaussianNoised(keys=["image"], std=0.01, prob=0.15),
@@ -307,7 +335,7 @@ def main():
             ScaleIntensityRanged(keys=["image"], a_min=-125.0, a_max=275.0, b_min=0.0, b_max=1.0, clip=True),
             CastToTyped(keys=["image", "label"], dtype=(np.float32, np.uint8)),
             EnsureTyped(keys=["image", "label"]),
-            ToTensord(keys=["image", "label"])
+            ToTensord(keys=["image", "label"]),
         ]
     )
 
@@ -322,9 +350,9 @@ def main():
     val_loader = ThreadDataLoader(val_ds, num_workers=4, batch_size=1, shuffle=False)
 
     ckpt = torch.load(args.arch_ckpt)
-    node_a = ckpt['node_a']
-    arch_code_a = ckpt['arch_code_a']
-    arch_code_c = ckpt['arch_code_c']
+    node_a = ckpt["node_a"]
+    arch_code_a = ckpt["arch_code_a"]
+    arch_code_c = ckpt["arch_code_c"]
 
     dints_space = monai.networks.nets.TopologyInstance(
         channel_mul=1.0,
@@ -362,12 +390,7 @@ def main():
     )
 
     # optimizer
-    optimizer = torch.optim.SGD(
-        model.parameters(),
-        lr=learning_rate * world_size,
-        momentum=0.9,
-        weight_decay=0.00004
-    )
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate * world_size, momentum=0.9, weight_decay=0.00004)
 
     print()
 
@@ -387,6 +410,7 @@ def main():
     # amp
     if amp:
         from torch.cuda.amp import autocast, GradScaler
+
         scaler = GradScaler()
         if dist.get_rank() == 0:
             print("[info] amp enabled")
@@ -415,7 +439,7 @@ def main():
         if dist.get_rank() == 0:
             print("-" * 10)
             print(f"epoch {epoch + 1}/{num_epochs}")
-            print('learning rate is set to {}'.format(lr))
+            print("learning rate is set to {}".format(lr))
 
         model.train()
         epoch_loss = 0
@@ -464,7 +488,9 @@ def main():
         loss_torch = loss_torch.tolist()
         if dist.get_rank() == 0:
             loss_torch_epoch = loss_torch[0] / loss_torch[1]
-            print(f"epoch {epoch + 1} average loss: {loss_torch_epoch:.4f}, best mean dice: {best_metric:.4f} at epoch {best_metric_epoch}")
+            print(
+                f"epoch {epoch + 1} average loss: {loss_torch_epoch:.4f}, best mean dice: {best_metric:.4f} at epoch {best_metric_epoch}"
+            )
 
         if (epoch + 1) % val_interval == 0:
             torch.cuda.empty_cache()
@@ -505,11 +531,7 @@ def main():
                     val_labels = post_label(val_labels[0, ...])
                     val_labels = val_labels[None, ...]
 
-                    value = compute_meandice(
-                        y_pred=val_outputs,
-                        y=val_labels,
-                        include_background=False
-                    )
+                    value = compute_meandice(y_pred=val_outputs, y=val_labels, include_background=False)
 
                     print(_index + 1, "/", len(val_loader), value)
 
@@ -564,7 +586,11 @@ def main():
                     current_time = time.time()
                     elapsed_time = (current_time - start_time) / 60.0
                     with open(os.path.join(args.output_root, "accuracy_history.csv"), "a") as f:
-                        f.write("{0:d}\t{1:.5f}\t{2:.5f}\t{3:.5f}\t{4:.1f}\t{5:d}\n".format(epoch + 1, avg_metric, loss_torch_epoch, lr, elapsed_time, idx_iter))
+                        f.write(
+                            "{0:d}\t{1:.5f}\t{2:.5f}\t{3:.5f}\t{4:.1f}\t{5:d}\n".format(
+                                epoch + 1, avg_metric, loss_torch_epoch, lr, elapsed_time, idx_iter
+                            )
+                        )
 
                 dist.barrier()
 

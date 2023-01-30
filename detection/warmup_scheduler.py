@@ -42,22 +42,16 @@ class GradualWarmupScheduler(_LRScheduler):
         if self.last_epoch > self.total_epoch:
             if self.after_scheduler:
                 if not self.finished:
-                    self.after_scheduler.base_lrs = [
-                        base_lr * self.multiplier for base_lr in self.base_lrs
-                    ]
+                    self.after_scheduler.base_lrs = [base_lr * self.multiplier for base_lr in self.base_lrs]
                     self.finished = True
                 return self.after_scheduler.get_last_lr()
             return [base_lr * self.multiplier for base_lr in self.base_lrs]
 
         if self.multiplier == 1.0:
-            return [
-                base_lr * (float(self.last_epoch) / self.total_epoch)
-                for base_lr in self.base_lrs
-            ]
+            return [base_lr * (float(self.last_epoch) / self.total_epoch) for base_lr in self.base_lrs]
         else:
             return [
-                base_lr
-                * ((self.multiplier - 1.0) * self.last_epoch / self.total_epoch + 1.0)
+                base_lr * ((self.multiplier - 1.0) * self.last_epoch / self.total_epoch + 1.0)
                 for base_lr in self.base_lrs
             ]
 
@@ -69,8 +63,7 @@ class GradualWarmupScheduler(_LRScheduler):
         )  # ReduceLROnPlateau is called at the end of epoch, whereas others are called at beginning
         if self.last_epoch <= self.total_epoch:
             warmup_lr = [
-                base_lr
-                * ((self.multiplier - 1.0) * self.last_epoch / self.total_epoch + 1.0)
+                base_lr * ((self.multiplier - 1.0) * self.last_epoch / self.total_epoch + 1.0)
                 for base_lr in self.base_lrs
             ]
             for param_group, lr in zip(self.optimizer.param_groups, warmup_lr):

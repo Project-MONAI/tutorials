@@ -92,7 +92,7 @@ def main(tempdir):
             Activationsd(keys="pred", sigmoid=True),
             AsDiscreted(keys="pred", threshold=0.5),
             KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
-            SaveImaged(keys="pred", meta_keys="image_meta_dict", output_dir="./runs/")
+            SaveImaged(keys="pred", meta_keys="image_meta_dict", output_dir="./runs/"),
         ]
     )
     val_handlers = [

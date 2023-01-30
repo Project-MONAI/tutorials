@@ -30,10 +30,7 @@ def get_kernels_strides(task_id):
     strides, kernels = [], []
     while True:
         spacing_ratio = [sp / min(spacings) for sp in spacings]
-        stride = [
-            2 if ratio <= 2 and size >= 8 else 1
-            for (ratio, size) in zip(spacing_ratio, sizes)
-        ]
+        stride = [2 if ratio <= 2 and size >= 8 else 1 for (ratio, size) in zip(spacing_ratio, sizes)]
         kernel = [3 if ratio <= 2 else 1 for ratio in spacing_ratio]
         if all(s == 1 for s in stride):
             break

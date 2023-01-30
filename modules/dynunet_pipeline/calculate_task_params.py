@@ -38,14 +38,10 @@ def get_task_params(args):
     datalist_name = "dataset_task{}.json".format(task_id)
 
     # get all training data
-    datalist = load_decathlon_datalist(
-        os.path.join(datalist_path, datalist_name), True, "training", dataset_path
-    )
+    datalist = load_decathlon_datalist(os.path.join(datalist_path, datalist_name), True, "training", dataset_path)
 
     # get modality info.
-    properties = load_decathlon_properties(
-        os.path.join(datalist_path, datalist_name), "modality"
-    )
+    properties = load_decathlon_properties(os.path.join(datalist_path, datalist_name), "modality")
 
     dataset = Dataset(
         data=datalist,
@@ -59,9 +55,7 @@ def get_task_params(args):
         print("CT input, calculate statistics:")
         calculator.calculate_statistics()
         print("mean: ", calculator.data_mean, " std: ", calculator.data_std)
-        calculator.calculate_percentiles(
-            sampling_flag=True, interval=10, min_percentile=0.5, max_percentile=99.5
-        )
+        calculator.calculate_percentiles(sampling_flag=True, interval=10, min_percentile=0.5, max_percentile=99.5)
         print(
             "min: ",
             calculator.data_min_percentile,
@@ -74,9 +68,7 @@ def get_task_params(args):
 
 if __name__ == "__main__":
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
-    parser.add_argument(
-        "-task_id", "--task_id", type=str, default="04", help="task 01 to 10"
-    )
+    parser.add_argument("-task_id", "--task_id", type=str, default="04", help="task 01 to 10")
     parser.add_argument(
         "-root_dir",
         "--root_dir",

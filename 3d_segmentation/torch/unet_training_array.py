@@ -24,7 +24,15 @@ import monai
 from monai.data import ImageDataset, create_test_image_3d, decollate_batch, DataLoader
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
-from monai.transforms import Activations, EnsureChannelFirst, AsDiscrete, Compose, RandRotate90, RandSpatialCrop, ScaleIntensity
+from monai.transforms import (
+    Activations,
+    EnsureChannelFirst,
+    AsDiscrete,
+    Compose,
+    RandRotate90,
+    RandSpatialCrop,
+    ScaleIntensity,
+)
 from monai.visualize import plot_2d_or_3d_image
 
 

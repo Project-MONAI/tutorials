@@ -64,8 +64,7 @@ class DynUNetTrainer(SupervisedTrainer):
             del preds
             engine.fire_event(IterationEvents.FORWARD_COMPLETED)
             engine.state.output[Keys.LOSS] = sum(
-                0.5 ** i * self.loss_function.forward(p, targets)
-                for i, p in enumerate(engine.state.output[Keys.PRED])
+                0.5**i * self.loss_function.forward(p, targets) for i, p in enumerate(engine.state.output[Keys.PRED])
             )
             engine.fire_event(IterationEvents.LOSS_COMPLETED)
 

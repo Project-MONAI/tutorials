@@ -53,13 +53,9 @@ def dicom_preprocess(dicom_file, save_prefix):
 
             os.makedirs(os.path.dirname(save_prefix), exist_ok=True)
             np.save(save_prefix + ".npy", curr_img.astype(np.float32))
-            skimage.io.imsave(
-                save_prefix + ".png", (255 * curr_img / curr_img.max()).astype(np.uint8)
-            )
+            skimage.io.imsave(save_prefix + ".png", (255 * curr_img / curr_img.max()).astype(np.uint8))
         else:
-            raise ValueError(
-                "Error: " + dicom_file + " - not a valid image file: " + dc_tags
-            )
+            raise ValueError("Error: " + dicom_file + " - not a valid image file: " + dc_tags)
     except BaseException as e:
         print(f"[WARNING] Reading {dicom_file} failed with Exception: {e}")
         return False, f"{dicom_file} failed"

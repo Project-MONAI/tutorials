@@ -120,9 +120,7 @@ def main():
     print(f"Load model from {env_dict['model_path']}")
 
     # 3) build detector
-    detector = RetinaNetDetector(
-        network=net, anchor_generator=anchor_generator, debug=False
-    )
+    detector = RetinaNetDetector(network=net, anchor_generator=anchor_generator, debug=False)
 
     # set inference components
     detector.set_box_selector_parameters(
@@ -147,26 +145,17 @@ def main():
         start_time = time.time()
         for inference_data in inference_loader:
             inference_img_filenames = [
-                inference_data_i["image_meta_dict"]["filename_or_obj"]
-                for inference_data_i in inference_data
+                inference_data_i["image_meta_dict"]["filename_or_obj"] for inference_data_i in inference_data
             ]
             print(inference_img_filenames)
             use_inferer = not all(
-                [
-                    inference_data_i["image"][0, ...].numel() < np.prod(patch_size)
-                    for inference_data_i in inference_data
-                ]
+                [inference_data_i["image"][0, ...].numel() < np.prod(patch_size) for inference_data_i in inference_data]
             )
-            inference_inputs = [
-                inference_data_i["image"].to(device)
-                for inference_data_i in inference_data
-            ]
+            inference_inputs = [inference_data_i["image"].to(device) for inference_data_i in inference_data]
 
             if amp:
                 with torch.cuda.amp.autocast():
-                    inference_outputs = detector(
-                        inference_inputs, use_inferer=use_inferer
-                    )
+                    inference_outputs = detector(inference_inputs, use_inferer=use_inferer)
             else:
                 inference_outputs = detector(inference_inputs, use_inferer=use_inferer)
             del inference_inputs
@@ -177,32 +166,16 @@ def main():
                     inference_data[i],
                     inference_outputs[i],
                 )
-                inference_data_i["pred_box"] = inference_pred_i[
-                    detector.target_box_key
-                ].to(torch.float32)
-                inference_data_i["pred_label"] = inference_pred_i[
-                    detector.target_label_key
-                ]
-                inference_data_i["pred_score"] = inference_pred_i[
-                    detector.pred_score_key
-                ].to(torch.float32)
+                inference_data_i["pred_box"] = inference_pred_i[detector.target_box_key].to(torch.float32)
+                inference_data_i["pred_label"] = inference_pred_i[detector.target_label_key]
+                inference_data_i["pred_score"] = inference_pred_i[detector.pred_score_key].to(torch.float32)
                 inference_data[i] = post_transforms(inference_data_i)
 
-            for inference_img_filename, inference_pred_i in zip(
-                inference_img_filenames, inference_data
-            ):
+            for inference_img_filename, inference_pred_i in zip(inference_img_filenames, inference_data):
                 result = {
-                    "label": inference_pred_i["pred_label"]
-                    .cpu()
-                    .detach()
-                    .numpy()
-                    .tolist(),
+                    "label": inference_pred_i["pred_label"].cpu().detach().numpy().tolist(),
                     "box": inference_pred_i["pred_box"].cpu().detach().numpy().tolist(),
-                    "score": inference_pred_i["pred_score"]
-                    .cpu()
-                    .detach()
-                    .numpy()
-                    .tolist(),
+                    "score": inference_pred_i["pred_score"].cpu().detach().numpy().tolist(),
                 }
                 result.update({"image": inference_img_filename})
                 results_dict["validation"].append(result)

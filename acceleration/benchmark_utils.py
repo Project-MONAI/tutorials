@@ -93,10 +93,11 @@ def profile_random(
         profile_memory=True,
         with_stack=False,
     ) as prof:
-        for _ in range(total_iter):
-            random_input = torch.rand(input_shape, dtype=torch.float32, device=device)
-            pred = model(random_input)
-            prof.step()
+        with torch.no_grad():
+            for _ in range(total_iter):
+                random_input = torch.rand(input_shape, dtype=torch.float32, device=device)
+                pred = model(random_input)
+                prof.step()
 
 
 def inference_random_python_timer(bundle_path, model, input_shape, input_precision, warmup_iter=20, active_iter=50):
@@ -104,22 +105,22 @@ def inference_random_python_timer(bundle_path, model, input_shape, input_precisi
 
     is_torch_module = not isinstance(model, ScriptModule)
     image_name = get_timing_image_name(bundle_path, is_torch_module, precision_str)
+    with torch.no_grad():
+        for _ in range(warmup_iter):
+            random_input = torch.rand(input_shape, dtype=torch.float32, device=device)
+            pred = model(random_input)
 
-    for _ in range(warmup_iter):
-        random_input = torch.rand(input_shape, dtype=torch.float32, device=device)
-        pred = model(random_input)
-
-    timeaccumulate = []
-    for _ in range(active_iter):
-        torch.cuda.synchronize()
-        starter = time.time()
-        pred = model(random_input)
-        torch.cuda.synchronize()
-        ender = time.time()
-        time_cur = (ender - starter) * 1000
-        timeaccumulate.append(time_cur)
-    total_time = sum(timeaccumulate)
-    average_time = total_time / (len(timeaccumulate) + 1e-12)
+        timeaccumulate = []
+        for _ in range(active_iter):
+            torch.cuda.synchronize()
+            starter = time.time()
+            pred = model(random_input)
+            torch.cuda.synchronize()
+            ender = time.time()
+            time_cur = (ender - starter) * 1000
+            timeaccumulate.append(time_cur)
+        total_time = sum(timeaccumulate)
+        average_time = total_time / (len(timeaccumulate) + 1e-12)
     print(f"Total time {total_time}ms. Average time {average_time}ms.")
     plt.plot(timeaccumulate)
     plt.savefig(image_name)
@@ -131,23 +132,54 @@ def inference_random_torch_timer(bundle_path, model, input_shape, input_precisio
 
     is_torch_module = not isinstance(model, ScriptModule)
     image_name = get_timing_image_name(bundle_path, is_torch_module, precision_str)
+    with torch.no_grad():
+        for _ in range(warmup_iter):
+            random_input = torch.rand(input_shape, dtype=torch.float32, device=device)
+            pred = model(random_input)
 
-    for _ in range(warmup_iter):
-        random_input = torch.rand(input_shape, dtype=torch.float32, device=device)
-        pred = model(random_input)
+        timeaccumulate = []
+        for _ in range(active_iter):
+            starter, ender = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
+            torch.cuda.synchronize()
+            starter.record()
+            pred = model(random_input)
+            ender.record()
+            torch.cuda.synchronize()
+            time_cur = starter.elapsed_time(ender)
+            timeaccumulate.append(time_cur)
+        total_time = sum(timeaccumulate)
+        average_time = total_time / (len(timeaccumulate) + 1e-12)
+    print(f"Total time {total_time}ms. Average time {average_time}ms.")
+    plt.plot(timeaccumulate)
+    plt.savefig(image_name)
+    return average_time
 
-    timeaccumulate = []
-    for _ in range(active_iter):
-        starter, ender = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
-        torch.cuda.synchronize()
-        starter.record()
-        pred = model(random_input)
-        ender.record()
-        torch.cuda.synchronize()
-        time_cur = starter.elapsed_time(ender)
-        timeaccumulate.append(time_cur)
-    total_time = sum(timeaccumulate)
-    average_time = total_time / (len(timeaccumulate) + 1e-12)
+
+def inference_bundle_torch_timer(bundle_path, evaluator, input_precision, model_type, warmup_iter=2, active_iter=2):
+    precision_str = get_precision_str(input_precision)
+
+    is_torch_module = not (model_type == "trt")
+    image_name = get_timing_image_name(bundle_path, is_torch_module, precision_str)
+    image_basename = os.path.basename(image_name)
+    image_name = image_name.replace(image_basename, f"bundle_{image_basename}")
+
+    with torch.no_grad():
+        for _ in range(warmup_iter):
+            evaluator.run()
+
+        timeaccumulate = []
+        for _ in range(active_iter):
+            starter, ender = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
+            torch.cuda.synchronize()
+            starter.record()
+            evaluator.run()
+            ender.record()
+            torch.cuda.synchronize()
+            time_cur = starter.elapsed_time(ender)
+            timeaccumulate.append(time_cur)
+        total_time = sum(timeaccumulate)
+        average_time = total_time / (len(timeaccumulate) + 1e-12)
+        average_time /= len(evaluator.data_loader)
     print(f"Total time {total_time}ms. Average time {average_time}ms.")
     plt.plot(timeaccumulate)
     plt.savefig(image_name)
@@ -207,6 +239,31 @@ def get_bundle_network(bundle_path, pretrained=True):
     return model
 
 
+def get_bundle_evaluator(bundle_path):
+    parser = get_bundle_parser(bundle_path)
+    evaluator = parser.get_parsed_content("evaluator")
+    return evaluator
+
+
+def get_trt_evaluator(bundle_path, convert_precision):
+    precision_string = get_precision_str(convert_precision)
+    trt_model_name = f"model_trt_{precision_string}.ts"
+    trt_model_path = os.path.join(bundle_path, "models", trt_model_name)
+    trt_model_load_cmd = f"$torch.jit.load('{trt_model_path}')"
+
+    parser = get_bundle_parser(bundle_path)
+    net_id = find_network_id(parser)
+    parser[net_id] = trt_model_load_cmd
+    ckpt_index = -1
+    for cnt, handler in enumerate(parser["handlers"]):
+        if handler["_target_"] == "CheckpointLoader":
+            ckpt_index = cnt
+    if ckpt_index != -1:
+        del parser["handlers"][ckpt_index]
+    evaluator = parser.get_parsed_content("evaluator")
+    return evaluator
+
+
 def get_bundle_input_shape(bundle_path):
     parser = get_bundle_parser(bundle_path)
 
@@ -224,33 +281,44 @@ def get_bundle_input_shape(bundle_path):
     return input_shape
 
 
-def convert_model_to_torchscript(model, input_shape, convert_precision):
+def convert_model_to_torchscript(model, input_shape, convert_precision, batch_size=1):
     model.to(device)
     model.eval()
     with torch.no_grad():
         jit_model = torch.jit.script(model)
 
+    min_input_shape = [*input_shape]
+    min_input_shape[0] *= batch_size
+    opt_input_shape = [*input_shape]
+    opt_input_shape[0] *= batch_size
+    max_input_shape = [*input_shape]
+    max_input_shape[0] *= batch_size
+
     inputs = [
         torch_tensorrt.Input(
-            min_shape=input_shape,
-            opt_shape=input_shape,
-            max_shape=input_shape,
+            min_shape=min_input_shape,
+            opt_shape=opt_input_shape,
+            max_shape=max_input_shape,
             dtype=torch.float,
         )
     ]
     enabled_precision = {convert_precision}
     with torch_tensorrt.logging.graphs():
-        trt_ts_model = torch_tensorrt.compile(jit_model, inputs=inputs, enabled_precisions=enabled_precision)
+        trt_ts_model = torch_tensorrt.compile(
+            jit_model,
+            inputs=inputs,
+            enabled_precisions=enabled_precision,
+        )
     return trt_ts_model
 
 
-def get_bundle_trt_model(bundle_path, model, input_shape, convert_precision, save_file=True):
+def get_bundle_trt_model(bundle_path, model, input_shape, convert_precision, batch_size=1, save_file=True):
     precision_string = get_precision_str(convert_precision)
     trt_model_file = os.path.join(bundle_path, "models", f"model_trt_{precision_string}.ts")
     if os.path.exists(trt_model_file):
         trt_model = torch.jit.load(trt_model_file)
     else:
-        trt_model = convert_model_to_torchscript(model, input_shape, convert_precision)
+        trt_model = convert_model_to_torchscript(model, input_shape, convert_precision, batch_size)
         model_path = os.path.dirname(trt_model_file)
         os.makedirs(model_path, exist_ok=True)
         if save_file:

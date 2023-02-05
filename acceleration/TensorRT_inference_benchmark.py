@@ -24,6 +24,9 @@ from benchmark_utils import (
     inference_random_python_timer,
     inference_random_torch_timer,
     get_current_device,
+    get_bundle_evaluator,
+    get_trt_evaluator,
+    inference_bundle_torch_timer,
 )
 
 
@@ -31,16 +34,21 @@ if __name__ == "__main__":
     support_precsion = ["fp32", "fp16"]
     current_path = os.path.dirname(os.path.abspath(__file__))
     parser = argparse.ArgumentParser()
-    parser.add_argument("-n", "--name", help="Bundle name in MONAI model zoo.")
-    parser.add_argument("-v", "--version", help="Version of the corresponding bundle.")
+    parser.add_argument("-n", "--name", default="spleen_ct_segmentation", help="Bundle name in MONAI model zoo.")
+    parser.add_argument("-v", "--version", default=None, help="Version of the corresponding bundle.")
     parser.add_argument(
         "-p",
         "--precision",
         default="fp32",
         help="Precision of converting TensorRT models. Can be chosen from [fp32, fp16].",
     )
-    parser.add_argument("-m", "--model", action="store_true", help="Only benchmark the model if input this parameter.")
-    parser.add_argument("-c", "--convert", action="store_true", help="Convert the model without benchmark.")
+    parser.add_argument(
+        "-m", "--model", default=False, action="store_true", help="Only benchmark the model if input this parameter."
+    )
+    parser.add_argument("-b", "--batchsize", default=4, type=int, help="The static input batchsize for the bundle.")
+    parser.add_argument(
+        "-c", "--convert", default=False, action="store_true", help="Convert the model without benchmark."
+    )
     parser.add_argument(
         "-t",
         "--timer",
@@ -55,13 +63,13 @@ if __name__ == "__main__":
     only_benchmark_model = args.model
     timer_type = args.timer
     only_convert = args.convert
+    batch_size = args.batchsize
     device = get_current_device()
-    
-    torch.backends.cuda.matmul.allow_tf32 = False 
-    torch.backends.cudnn.allow_tf32 = False 
+
+    torch.backends.cuda.matmul.allow_tf32 = False
+    torch.backends.cudnn.allow_tf32 = False
     print(f"Cudnn tf32 : {torch.backends.cudnn.allow_tf32}, CUDA tf32 : {torch.backends.cuda.matmul.allow_tf32}")
 
-     
     print(f"================Benchmarking on {bundle_name}.================")
 
     if not convert_precision in support_precsion:
@@ -78,7 +86,7 @@ if __name__ == "__main__":
     model.to(device)
     model_input_shape = get_bundle_input_shape(bundle_path)
 
-    trt_model = get_bundle_trt_model(bundle_path, model, model_input_shape, convert_precision)
+    trt_model = get_bundle_trt_model(bundle_path, model, model_input_shape, convert_precision, batch_size)
     sys.path.remove(bundle_path)
 
     if only_convert:
@@ -97,14 +105,21 @@ if __name__ == "__main__":
             trt_inference_time = inference_random_python_timer(
                 bundle_path, trt_model, model_input_shape, convert_precision
             )
-        print(
-            (
-                f"Torch : {torch_inference_time}.\n"
-                f"Trt : {trt_inference_time}.\n"
-                f"Acc ratio : {torch_inference_time/(trt_inference_time + 1e-12):.2f}"
-            )
-        )
     else:
-        pass
-
+        if timer_type == "torch_timer":
+            bundle_evaluator = get_bundle_evaluator(bundle_path)
+            bundle_evaluator.amp = False
+            trt_evalator = get_trt_evaluator(bundle_path, convert_precision)
+            trt_evalator.amp = False
+            torch_inference_time = inference_bundle_torch_timer(bundle_path, bundle_evaluator, torch.float32, "torch")
+            trt_inference_time = inference_bundle_torch_timer(bundle_path, trt_evalator, convert_precision, "trt")
+        else:
+            pass
+    print(
+        (
+            f"Torch : {torch_inference_time}.\n"
+            f"Trt : {trt_inference_time}.\n"
+            f"Acc ratio : {torch_inference_time/(trt_inference_time + 1e-12):.2f}"
+        )
+    )
     print(f"====================End {bundle_name}.========================")

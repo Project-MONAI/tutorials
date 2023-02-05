@@ -26,8 +26,6 @@ from benchmark_utils import (
     get_current_device,
 )
 
-torch.backends.cudnn.allow_tf32 = False
-torch.backends.cuda.matmul.allow_tf32 = False
 
 if __name__ == "__main__":
     support_precsion = ["fp32", "fp16"]
@@ -58,6 +56,13 @@ if __name__ == "__main__":
     timer_type = args.timer
     only_convert = args.convert
     device = get_current_device()
+    
+    torch.backends.cuda.matmul.allow_tf32 = False 
+    torch.backends.cudnn.allow_tf32 = False 
+    print(f"Cudnn tf32 : {torch.backends.cudnn.allow_tf32}, CUDA tf32 : {torch.backends.cuda.matmul.allow_tf32}")
+
+     
+    print(f"================Benchmarking on {bundle_name}.================")
 
     if not convert_precision in support_precsion:
         raise ValueError(f"Not supported precision {convert_precision}.")
@@ -68,11 +73,13 @@ if __name__ == "__main__":
     if not os.path.exists(bundle_path):
         monai.bundle.download(name=bundle_name, version=bundle_version, bundle_dir=current_path)
 
+    sys.path.append(bundle_path)
     model = get_bundle_network(bundle_path)
     model.to(device)
     model_input_shape = get_bundle_input_shape(bundle_path)
 
     trt_model = get_bundle_trt_model(bundle_path, model, model_input_shape, convert_precision)
+    sys.path.remove(bundle_path)
 
     if only_convert:
         sys.exit()
@@ -92,10 +99,12 @@ if __name__ == "__main__":
             )
         print(
             (
-                f"Torch module inference time is {torch_inference_time}.\n"
-                f"Trt model inference time if {trt_inference_time}.\n"
-                f"Acceleration ration equals {torch_inference_time/(trt_inference_time + 1e-12)}"
+                f"Torch : {torch_inference_time}.\n"
+                f"Trt : {trt_inference_time}.\n"
+                f"Acc ratio : {torch_inference_time/(trt_inference_time + 1e-12):.2f}"
             )
         )
     else:
         pass
+
+    print(f"====================End {bundle_name}.========================")

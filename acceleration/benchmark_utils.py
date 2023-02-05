@@ -14,7 +14,7 @@ import monai
 from monai.apps import download_and_extract
 from torch.jit._script import ScriptModule
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 def get_current_device():

@@ -21,4 +21,4 @@ The complete command of **Auto3DSeg** can be found [here](../../README.md#refere
 | DiNTS      | 3 | 4 | 2 | 0.6467 | 0.7491 | 0.7306	| 0.6638 | 0.6779 | 0.6936 |
 | **SegResNet2d** | 2 | 4 | 2 | 0.6320 | 0.7778 | 0.7607 | 0.7006 | 0.7613 | **0.7265** |
 
-The winning solution is fully based on 2D SegResNet because the network clearly has better average validation Dice score comparing to other networks.
+The winning solution is fully based on 2D SegResNet because the network has a better average validation Dice score compared to other networks.

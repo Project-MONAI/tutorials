@@ -10,7 +10,7 @@ For BTCV dataset, under Institutional Review Board (IRB) supervision, 50 abdomen
 - Target: 13 abdominal organs including
     1. Spleen
     2. Right Kidney
-    3. Left Kideny
+    3. Left Kidney
     4. Gallbladder
     5. Esophagus
     6. Liver

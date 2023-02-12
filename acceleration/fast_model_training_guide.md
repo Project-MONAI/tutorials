@@ -77,7 +77,7 @@ And the output `.json` file contains various aspects of GPU information.
 [NVIDIA Nsight™ Systems](https://developer.nvidia.com/nsight-systems) is a system-wide performance analysis tool designed to visualize algorithms, help to identify the largest opportunities to optimize, and tune to scale efficiently across any quantity or size of CPUs and GPUs.
 
 Nsight provides a great GUI to visualize the output database (`.qdrep` file) from the analysis results of DLProf. With necessary annotation inside the existing training scripts. The GPU utilization of each operation can be seen through the interface. Then, users understand better which components are the bottlenecks. The detailed example is shown in the following
-[performance profiling tutorial]( https://github.com/Project-MONAI/tutorials/blob/main/performance_profiling/).
+[performance profiling tutorial](../performance_profiling/).
 
 As shown in the following figure, each training epoch can be decomposed into multiple steps, including data loading (I/O), model forward/backward operation, optimization, etc. Then, necessary improvement can be conducted targeting certain steps. For example, if data loading (I/O) takes too much time during training, we can try to cache them into CPU/GPU bypassing data loading and pre-processing. After program optimization, users can re-run the analysis to compare the results before and after optimization.
 
@@ -126,7 +126,7 @@ with torch.cuda.amp.autocast():
 nvtx.end_range(rng_train_forward)
 ```
 
-The concrete examples can be found in the profiling tutorials of [radiology pipeline]( https://github.com/Project-MONAI/tutorials/blob/main/performance_profiling/radiology) and [pathology pipelines](https://github.com/Project-MONAI/tutorials/blob/main/pathology/tumor_detection/ignite/profiling_camelyon_pipeline.ipynb).
+The concrete examples can be found in the profiling tutorials of [radiology pipeline](../performance_profiling/radiology) and [pathology pipelines](https://github.com/Project-MONAI/tutorials/blob/main/pathology/tumor_detection/ignite/profiling_camelyon_pipeline.ipynb).
 
 ### 4. NVIDIA Management Library (NVML)
 

@@ -6,13 +6,13 @@ This tutorial shows how to adapt an example monai bundle from MONAI model-zoo to
 
 ## Data
 The new dataset is BTCV challenge dataset (https://www.synapse.org/#!Synapse:syn3193805/wiki/217752). It has 24 Training + 6 Validation CT abdominal scans.
-Introduction of BTCV dataset can be found in https://github.com/Project-MONAI/tutorials/blob/main/3d_segmentation/swin_unetr_btcv_segmentation_3d.ipynb.
+Introduction of BTCV dataset can be found in [tutorial swin_unetr_btcv_segmentation_3d](../../3d_segmentation/swin_unetr_btcv_segmentation_3d.ipynb).
 
 There are 13 organs labeld in BTCV. In this example, we focus on spleen segmentation only.
 
-Step 1: Download BTCV dataset RawData.zip following the instruction in https://github.com/Project-MONAI/tutorials/blob/main/3d_segmentation/swin_unetr_btcv_segmentation_3d.ipynb. Extract it as `./data/RawData`.
+Step 1: Download BTCV dataset RawData.zip following the instruction in [tutorial swin_unetr_btcv_segmentation_3d](../../3d_segmentation/swin_unetr_btcv_segmentation_3d.ipynb). Extract it as `./data/RawData`.
 
-Step 2: Download the the json file for data splits in https://github.com/Project-MONAI/tutorials/blob/main/3d_segmentation/swin_unetr_btcv_segmentation_3d.ipynb, and save it to `./data/dataset_0.json`.
+Step 2: Download the the json file for data splits in [tutorial swin_unetr_btcv_segmentation_3d](../../3d_segmentation/swin_unetr_btcv_segmentation_3d.ipynb), and save it to `./data/dataset_0.json`.
 
 Step 3: The segmentation labels in BTCV dataset contain 13 organs. Therefore there are 14 intensity levels in the label images.
 In this experiment, we focus on spleen only, which has intensity = 1 in the label images. We split the labels and create binary spleen masks by running `python ./split_spleen_labels.py`.

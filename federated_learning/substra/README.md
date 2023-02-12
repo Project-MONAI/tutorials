@@ -1,6 +1,6 @@
 # MONAI on the Substra platform
 
-This examples demonstrates how to run the [3D segmentation tutorial](https://github.com/Project-MONAI/tutorials/tree/main/3d_segmentation) on the [Substra](https://github.com/substrafoundation/substra) platform.
+This examples demonstrates how to run the [3D segmentation tutorial](../../3d_segmentation) on the [Substra](https://github.com/substrafoundation/substra) platform.
 
 In order to run the example, you'll need to have an instance of the substra platform running. Please refer to the [Substra documentation](https://doc.substra.ai/) for more information.
 

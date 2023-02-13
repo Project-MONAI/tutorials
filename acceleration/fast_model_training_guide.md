@@ -77,7 +77,7 @@ And the output `.json` file contains various aspects of GPU information.
 [NVIDIA Nsight™ Systems](https://developer.nvidia.com/nsight-systems) is a system-wide performance analysis tool designed to visualize algorithms, help to identify the largest opportunities to optimize, and tune to scale efficiently across any quantity or size of CPUs and GPUs.
 
 Nsight provides a great GUI to visualize the output database (`.qdrep` file) from the analysis results of DLProf. With necessary annotation inside the existing training scripts. The GPU utilization of each operation can be seen through the interface. Then, users understand better which components are the bottlenecks. The detailed example is shown in the following
-[performance profiling tutorial]( https://github.com/Project-MONAI/tutorials/blob/main/performance_profiling/).
+[performance profiling tutorial](../performance_profiling/).
 
 As shown in the following figure, each training epoch can be decomposed into multiple steps, including data loading (I/O), model forward/backward operation, optimization, etc. Then, necessary improvement can be conducted targeting certain steps. For example, if data loading (I/O) takes too much time during training, we can try to cache them into CPU/GPU bypassing data loading and pre-processing. After program optimization, users can re-run the analysis to compare the results before and after optimization.
 
@@ -126,7 +126,7 @@ with torch.cuda.amp.autocast():
 nvtx.end_range(rng_train_forward)
 ```
 
-The concrete examples can be found in the profiling tutorials of [radiology pipeline]( https://github.com/Project-MONAI/tutorials/blob/main/performance_profiling/radiology) and [pathology pipelines](https://github.com/Project-MONAI/tutorials/blob/main/pathology/tumor_detection/ignite/profiling_camelyon_pipeline.ipynb).
+The concrete examples can be found in the profiling tutorials of [radiology pipeline](../performance_profiling/radiology) and [pathology pipelines](../pathology/tumor_detection/ignite/profiling_camelyon_pipeline.ipynb).
 
 ### 4. NVIDIA Management Library (NVML)
 
@@ -176,12 +176,12 @@ With the tools described in the previous sections, we can identify the bottlenec
 
 Users often need to train the model with many (potentially thousands of) epochs over the training data to achieve decent model quality. A native PyTorch implementation may repeatedly load data and run the same pre-processing steps for every data point during training, which can be time-consuming and redundant.
 
-MONAI provides a multi-thread `CacheDataset` and `LMDBDataset` to accelerate these loading steps during training by storing the intermediate outcomes before the first randomized transform in the transform chain. Enabling this feature could potentially give 10x training speedups in the [Datasets experiment](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/dataset_type_performance.ipynb).
+MONAI provides a multi-thread `CacheDataset` and `LMDBDataset` to accelerate these loading steps during training by storing the intermediate outcomes before the first randomized transform in the transform chain. Enabling this feature could potentially give 10x training speedups in the [Datasets experiment](dataset_type_performance.ipynb).
 ![cache dataset](../figures/cache_dataset.png)
 
 ### 2. Cache intermediate outcomes into persistent storage
 
-`PersistentDataset` is similar to `CacheDataset`, where the caches are persisted to disk storage or LMDB for rapid retrieval across experimental runs (as is the case when tuning hyperparameters), or when the entire size of the dataset exceeds available memory. `PersistentDataset` could achieve similar performance when comparing to `CacheDataset` in [Datasets experiment](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/dataset_type_performance.ipynb).
+`PersistentDataset` is similar to `CacheDataset`, where the caches are persisted to disk storage or LMDB for rapid retrieval across experimental runs (as is the case when tuning hyperparameters), or when the entire size of the dataset exceeds available memory. `PersistentDataset` could achieve similar performance when comparing to `CacheDataset` in [Datasets experiment](dataset_type_performance.ipynb).
 
 ![cachedataset speed](../figures/datasets_speed.png)
 
@@ -199,13 +199,13 @@ epoch 3: [image3, image4, image5, image1]
 epoch 3: [image4, image5, image1, image2]
 epoch N: [image[N % 5] ...]
 ```
-Full example of `SmartCacheDataset` is available at [Distributed training with SmartCache](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/distributed_training/unet_training_smartcache.py).
+Full example of `SmartCacheDataset` is available at [Distributed training with SmartCache](distributed_training/unet_training_smartcache.py).
 
 ### 4. `ThreadDataLoader` vs. `DataLoader`
 
 If the transforms are light-weighted, especially when we cache all the data in RAM, the multiprocessing of PyTorch `DataLoader` may cause unnecessary IPC time and cause the drop of GPU utilization after every epoch. MONAI provides `ThreadDataLoader` which executes transforms in a separate thread:
 ![threaddataloader](../figures/threaddataloader.png)
-a `ThreadDataLoader` example is available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/fast_training_tutorial.ipynb).
+a `ThreadDataLoader` example is available at [Spleen fast training tutorial](fast_training_tutorial.ipynb).
 
 ## Algorithmic improvement
 
@@ -221,7 +221,7 @@ The following figure shows the great improvement in model convergence after we c
 ![diceceloss](../figures/diceceloss.png)
 
 Furthermore, we changed default optimizer to Novograd, modified learning rate related settings, and added other necessary improvements. The concrete examples are shown in
-[spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/fast_training_tutorial.ipynb) and [BraTS distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/distributed_training/brats_training_ddp.py). Both are very typical applications in 3D medical image segmentation but with unique challenges. Spleen segmentation has very limited data but with large image size, and brain tumor segmentation has relatively small image samples but with a much larger data pool. Combing algorithmic improvement with computing improvement, our model training cost is significantly reduced when reaching the same level of performance as the existing pipeline.
+[spleen fast training tutorial](fast_training_tutorial.ipynb) and [BraTS distributed training tutorial](distributed_training/brats_training_ddp.py). Both are very typical applications in 3D medical image segmentation but with unique challenges. Spleen segmentation has very limited data but with large image size, and brain tumor segmentation has relatively small image samples but with a much larger data pool. Combing algorithmic improvement with computing improvement, our model training cost is significantly reduced when reaching the same level of performance as the existing pipeline.
 
 ## Optimizing GPU utilization
 
@@ -238,7 +238,7 @@ We tried to compare the training speed of the spleen segmentation task if AMP ON
 
 ![amp a100 results](../figures/amp_training_a100.png)
 
-AMP tutorial is available at [AMP tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/automatic_mixed_precision.ipynb).
+AMP tutorial is available at [AMP tutorial](automatic_mixed_precision.ipynb).
 
 ### 2. Execute transforms on GPU
 
@@ -246,7 +246,7 @@ Running preprocessing transforms on CPU while keeping GPU busy by running the mo
 From MONAI v0.7 we introduced PyTorch `Tensor` based computation in transforms, many transforms already support both `NumPy array` and PyTorch `Tensor` as input types and computational backends. To get the supported backends of every transform, please execute: `python monai/transforms/utils.py`.
 
 To accelerate the high-computation transforms, users can first convert input data into GPU Tensor by `ToTensor` or `EnsureType` transform, then the following transforms can execute on GPU based on PyTorch `Tensor` APIs.
-GPU transform tutorial is available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/fast_training_tutorial.ipynb).
+GPU transform tutorial is available at [Spleen fast training tutorial](fast_training_tutorial.ipynb).
 
 ### 3. Adapt `cuCIM` to execute GPU transforms
 
@@ -283,7 +283,7 @@ train_transforms = [
 dataset = CacheDataset(..., transform=train_trans)
 ```
 Here we convert to PyTorch `Tensor` with `EnsureTyped` transform and move data to GPU with `ToDeviced` transform. `CacheDataset` caches the transform results until `ToDeviced`, so it is in GPU memory. Then in every epoch, the program fetches cached data from GPU memory and only execute the random transform `RandCropByPosNegLabeld` on GPU directly.
-GPU caching example is available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/fast_training_tutorial.ipynb).
+GPU caching example is available at [Spleen fast training tutorial](fast_training_tutorial.ipynb).
 
 ## Leveraging multi-GPU distributed training
 
@@ -293,19 +293,19 @@ Additionally, with more GPU devices, we can achieve more benefits:
 - Some training algorithms can converge faster with a larger batch size and the training progress is more stable.
 - If caching data in GPU memory, every GPU only needs to cache a partition, so we can use a larger cache rate to cache more data in total to accelerate training. Caching data to GPU can largely reduce CPU-based operations during model training. It can greatly improve the model training efficiency.
 
-For example, during the training of brain tumor segmentation task, with 8 GPUs, we can cache all the data in GPU memory directly and execute the following transforms on GPU device, so it's more than `10x` faster than single GPU training. More details are available at [BraTS distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/distributed_training/brats_training_ddp.py).
+For example, during the training of brain tumor segmentation task, with 8 GPUs, we can cache all the data in GPU memory directly and execute the following transforms on GPU device, so it's more than `10x` faster than single GPU training. More details are available at [BraTS distributed training tutorial](distributed_training/brats_training_ddp.py).
 
 ## Leveraging multi-node distributed training
 
 Distributed data parallelism (DDP) is an important feature of PyTorch to connect multiple GPU devices in multiple nodes to train or evaluate models. It can further improve the training speed when we fully leveraged multiple GPUs on multiple nodes.
 
-The distributed data parallel APIs of MONAI are compatible with the native PyTorch distributed module, PyTorch-ignite distributed module, Horovod, XLA, and the SLURM platform. Here we provide [a real-world training example](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/distributed_training/brats_training_ddp.py) based on [Decathlon challenge](http://medicaldecathlon.com/) Task01 - Brain Tumor segmentation using the module `torch.distributed.launch`.
+The distributed data parallel APIs of MONAI are compatible with the native PyTorch distributed module, PyTorch-ignite distributed module, Horovod, XLA, and the SLURM platform. Here we provide [a real-world training example](distributed_training/brats_training_ddp.py) based on [Decathlon challenge](http://medicaldecathlon.com/) Task01 - Brain Tumor segmentation using the module `torch.distributed.launch`.
 
 For more details about the PyTorch distributed training setup, please refer to: https://pytorch.org/docs/stable/distributed.html.
 
 And if using [SLURM](https://developer.nvidia.com/slurm) workload manager, please refer to [SLURM + Singularity MONAI example](https://github.com/UFResearchComputing/MultiNode_MONAI_example).
 
-More details are available at [BraTS distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/distributed_training/brats_training_ddp.py).
+More details are available at [BraTS distributed training tutorial](distributed_training/brats_training_ddp.py).
 
 ## Examples
 
@@ -323,7 +323,7 @@ With all the above strategies, in this section, we introduce how to apply them t
 In summary, with a A100 GPU and the target validation `mean dice = 0.94` of the `forground` channel only, it's more than `150x` speedup compared with the Pytorch regular implementation when achieving the same metric (validation accuracies). And every epoch is `50x` faster than regular training.
 ![spleen fast training](../figures/fast_training.png)
 
-More details are available at [Spleen fast training tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/fast_training_tutorial.ipynb).
+More details are available at [Spleen fast training tutorial](fast_training_tutorial.ipynb).
 
 ### 2. Brain tumor segmentation
 
@@ -343,7 +343,7 @@ In summary, combining the optimization strategies, the training time of eight A1
 
 ![brats benchmark](../figures/brats_benchmark.png)
 
-More details are available at [BraTS distributed training tutorial](https://github.com/Project-MONAI/tutorials/blob/main/acceleration/distributed_training/brats_training_ddp.py).
+More details are available at [BraTS distributed training tutorial](distributed_training/brats_training_ddp.py).
 
 
 ### 3. Pathology metastasis detection task
@@ -356,4 +356,4 @@ In this way, we accelerated the data loading, data augmentation and preprocessin
 - In these two experiments, the corresponding best FROC achieved is 0.70 for baseline (Numpy) pipeline at epoch 6, and 0.69 for CuCIM pipeline at epoch 2. Please note that the epoch at which the best model is achieved, as well as its corresponding FROC, can have some variabilities across runs with different random seeds.
 ![pathology gpu utilization](../figures/train_loss_pathology.png)
 
-More details are available at [Profiling Pathology Metastasis Detection Pipeline](https://github.com/Project-MONAI/tutorials/blob/main/performance_profiling/pathology/profiling_train_base_nvtx.md).
+More details are available at [Profiling Pathology Metastasis Detection Pipeline](../performance_profiling/pathology/profiling_train_base_nvtx.md).

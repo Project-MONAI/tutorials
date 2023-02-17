@@ -1,0 +1,19 @@
+# MetricsReloaded
+These scipts show how to use the [MetricsReloaded](https://github.com/Project-MONAI/MetricsReloaded) API to compute a range of metrics for a (binary) semantic segmentation task on synthetic data.
+
+## Install
+Besides having installed MONAI, make sure to install the MetricsReloaded package by, e.g:
+```sh
+pip install git+https://github.com/Project-MONAI/MetricsReloaded
+```
+
+## Run
+First run the training script:
+```sh
+python unet_training.py
+```
+to train a UNet on synthetic data. Then run the evaluation script:
+```sh
+python unet_evaluation.py
+```
+to predict on unsen cases and compute MetricsReloaded metrics from the predictions and references, which have been saved on disk. The requested metrics are printed to screen as well as saved to `results_metrics_reloaded.csv`.

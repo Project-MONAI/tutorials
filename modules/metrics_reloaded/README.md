@@ -1,5 +1,5 @@
 # MetricsReloaded
-These scipts show how to use the [MetricsReloaded](https://github.com/Project-MONAI/MetricsReloaded) API to compute a range of metrics for a (binary) semantic segmentation task on synthetic data.
+These scipts show how to use the [MetricsReloaded package](https://github.com/Project-MONAI/MetricsReloaded) with MONAI to compute a range of metrics for a binary segmentation task.
 
 ## Install
 Besides having installed MONAI, make sure to install the MetricsReloaded package by, e.g:

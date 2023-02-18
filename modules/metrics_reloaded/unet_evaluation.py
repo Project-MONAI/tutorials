@@ -31,8 +31,7 @@ from MetricsReloaded.processes.overall_process import ProcessEvaluation
 
 
 def get_metrics_reloaded_dict(pth_ref, pth_pred):
-    """Prepare input dictionary for MetricsReloaded package.
-    """
+    """Prepare input dictionary for MetricsReloaded package."""
     preds = []
     refs = []
     names = []
@@ -63,7 +62,7 @@ def main(tempdir, img_size=96):
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
     # Set patch size
-    patch_size = (int(img_size/2.0),) * 3
+    patch_size = (int(img_size / 2.0),) * 3
 
     print(f"generating synthetic data to {tempdir} (this may take a while)")
     for i in range(5):
@@ -86,7 +85,7 @@ def main(tempdir, img_size=96):
     # Compute UNet levels and strides from image size
     min_size = 4  # minimum size allowed at coarsest resolution level
     num_levels = int(np.maximum(np.ceil(np.log2(np.min(img_size)) - np.log2(min_size)), 1))
-    channels = [2**(i + 4) for i in range(num_levels)]
+    channels = [2 ** (i + 4) for i in range(num_levels)]
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     net = UNet(
@@ -173,9 +172,10 @@ def main(tempdir, img_size=96):
     )
 
     # Save results as CSV
-    PE.resseg.to_csv(cwd + os.sep + "results_metrics_reloaded.csv" )
+    PE.resseg.to_csv(cwd + os.sep + "results_metrics_reloaded.csv")
 
     return
+
 
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory() as tempdir:

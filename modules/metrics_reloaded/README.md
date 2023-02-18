@@ -4,7 +4,7 @@ These scipts show how to use the [MetricsReloaded](https://github.com/Project-MO
 ## Install
 Besides having installed MONAI, make sure to install the MetricsReloaded package by, e.g:
 ```sh
-pip install git+https://github.com/Project-MONAI/MetricsReloaded
+pip install git+https://github.com/Project-MONAI/MetricsReloaded@monai-support
 ```
 
 ## Run

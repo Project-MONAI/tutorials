@@ -24,7 +24,7 @@ from ignite.handlers import EarlyStopping, ModelCheckpoint
 import monai
 from monai.data import ImageDataset, create_test_image_3d, decollate_batch, DataLoader
 from monai.handlers import (
-    MeanDice,
+    MetricsReloadedBinaryHandler,
     StatsHandler,
     stopping_fn_from_metric,
 )
@@ -144,11 +144,12 @@ def main(tempdir, img_size=96):
     train_stats_handler = StatsHandler(name="trainer", output_transform=lambda x: x)
     train_stats_handler.attach(trainer)
 
-    validation_every_n_epochs = 1
     # Set parameters for validation
-    metric_name = "Mean_Dice"
+    validation_every_n_epochs = 1
+    # Use validation metrics from MetricsReloaded
+    metric_name = "Intersection_Over_Union"
     # add evaluation metric to the evaluator engine
-    val_metrics = {metric_name: MeanDice()}
+    val_metrics = {metric_name: MetricsReloadedBinaryHandler("Intersection Over Union")}
 
     post_pred = Compose([Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
     post_label = Compose([AsDiscrete(threshold=0.5)])

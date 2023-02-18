@@ -12,7 +12,9 @@ First run the training script:
 ```sh
 python unet_training.py
 ```
-to train a UNet on synthetic data. Then run the evaluation script:
+to train a UNet on synthetic data. This script shows you how to use MetricsReloaded during training, as validation metrics.
+
+Next, run the evaluation script:
 ```sh
 python unet_evaluation.py
 ```

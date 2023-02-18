@@ -8,11 +8,11 @@ pip install git+https://github.com/Project-MONAI/MetricsReloaded@monai-support
 ```
 
 ## Run
-First run the training script:
+First, run the training script:
 ```sh
 python unet_training.py
 ```
-to train a UNet on synthetic data. This script shows you how to use MetricsReloaded during training, as validation metrics.
+to train a UNet on synthetic data. This script shows you how to use MetricsReloaded during validation.
 
 Next, run the evaluation script:
 ```sh

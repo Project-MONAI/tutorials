@@ -1,6 +1,6 @@
 # Installation
 
-Users need to install both MONAI and nnU-Net before running any experiments.
+Users need to install both MONAI and nnU-Net to utilize the nnunet runner.
 
 ## MONAI
 

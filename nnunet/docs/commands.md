@@ -16,7 +16,7 @@ python -m monai.apps.nnunet nnUNetRunner run --input "{'dataset_name_or_id': 996
 ## Component run
 ```bash
 ## [component] convert dataset
-python -m monai.apps.nnunet nnUNetRunner convert_dataset --input "./input_new.yaml"
+python -m monai.apps.nnunet nnUNetRunner convert_dataset --input "./input.yaml"
 
 
 ## [component] converting msd datasets

@@ -1,10 +1,10 @@
 ## Pipeline run
 ```bash
-## [pipeline] one-click solution
+## [pipeline] option 1: one-click solution
 python -m monai.apps.nnunet nnUNetRunner run --input "./input.yaml"
 
 
-## [pipeline] one-click solution with dict input
+## [pipeline] option 2: one-click solution with dict input
 DIR_BASE="/home/dongy/Projects/MONAI/nnunet/nnunet_runner/data"
 DIR_RAW="${DIR_BASE}/nnUNet_raw_data_base"
 DIR_PREPROCESSED="${DIR_BASE}/nnUNet_preprocessed"

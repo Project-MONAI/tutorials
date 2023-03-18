@@ -92,7 +92,7 @@ python3 luna16_training.py \
 If you are tuning hyper-parameters, please add "-v" flag, e.g.
 ```bash
 python3 luna16_training.py \
-    -e ./config/environment_luna16_fold${i}.json \
+    -e ./config/environment_luna16_fold0.json \
     -c ./config/config_train_luna16_16g.json -v
 ```
 Details about matched anchors during training will be printed out.

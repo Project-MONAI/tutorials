@@ -108,6 +108,14 @@ python3 luna16_testing.py \
     -c ./config/config_train_luna16_16g.json
 ```
 
+If you are tuning hyper-parameters, please add "-v" flag, e.g.
+```bash
+python3 luna16_testing.py \
+    -e ./config/environment_luna16_fold${i}.json \
+    -c ./config/config_train_luna16_16g.json -v
+```
+Details about matched anchors during training will be printed out.
+
 #### [3.4 LUNA16 Detection Evaluation](./run_luna16_offical_eval.sh)
 Please download the official LUNA16 evaluation scripts from https://luna16.grand-challenge.org/Evaluation/,
 and save it as ./evaluation_luna16. Note that the official LUNA16 evaluation scripts are based on python2.

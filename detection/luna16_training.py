@@ -53,9 +53,16 @@ def main():
     )
     parser.add_argument(
         "-c",
-        "--config-file",
+        "--config-file",        
         default="./config/config_train.json",
-        help="config json file that stores hyper-parameters",
+        help="config json file that stores hyper-parameters",        
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        default=False, 
+        action="store_true",
+        help="whether to print verbose detail during training, recommand True when you are not sure about hyper-parameters",
     )
     args = parser.parse_args()
 
@@ -176,7 +183,10 @@ def main():
         returned_layers=args.returned_layers,
     )
     num_anchors = anchor_generator.num_anchors_per_location()[0]
-    size_divisible = [s * 2 * 2 ** max(args.returned_layers) for s in feature_extractor.body.conv1.stride]
+    size_divisible = [
+        s * 2 * 2 ** max(args.returned_layers)
+        for s in feature_extractor.body.conv1.stride
+    ]
     net = torch.jit.script(
         RetinaNet(
             spatial_dims=args.spatial_dims,
@@ -188,7 +198,9 @@ def main():
     )
 
     # 3) build detector
-    detector = RetinaNetDetector(network=net, anchor_generator=anchor_generator, debug=False).to(device)
+    detector = RetinaNetDetector(
+        network=net, anchor_generator=anchor_generator, debug=args.verbose
+    ).to(device)
 
     # set training components
     detector.set_atss_matcher(num_candidates=4, center_in_gt=False)
@@ -224,8 +236,12 @@ def main():
         weight_decay=3e-5,
         nesterov=True,
     )
-    after_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=150, gamma=0.1)
-    scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=1, total_epoch=10, after_scheduler=after_scheduler)
+    after_scheduler = torch.optim.lr_scheduler.StepLR(
+        optimizer, step_size=150, gamma=0.1
+    )
+    scheduler_warmup = GradualWarmupScheduler(
+        optimizer, multiplier=1, total_epoch=10, after_scheduler=after_scheduler
+    )
     scaler = torch.cuda.amp.GradScaler() if amp else None
     optimizer.zero_grad()
     optimizer.step()
@@ -241,7 +257,9 @@ def main():
 
     max_epochs = 300
     epoch_len = len(train_ds) // train_loader.batch_size
-    w_cls = config_dict.get("w_cls", 1.0)  # weight between classification loss and box regression loss, default 1.0
+    w_cls = config_dict.get(
+        "w_cls", 1.0
+    )  # weight between classification loss and box regression loss, default 1.0
     for epoch in range(max_epochs):
         # ------------- Training -------------
         print("-" * 10)
@@ -257,7 +275,9 @@ def main():
         for batch_data in train_loader:
             step += 1
             inputs = [
-                batch_data_ii["image"].to(device) for batch_data_i in batch_data for batch_data_ii in batch_data_i
+                batch_data_ii["image"].to(device)
+                for batch_data_i in batch_data
+                for batch_data_ii in batch_data_i
             ]
             targets = [
                 dict(
@@ -274,7 +294,10 @@ def main():
             if amp and (scaler is not None):
                 with torch.cuda.amp.autocast():
                     outputs = detector(inputs, targets)
-                    loss = w_cls * outputs[detector.cls_key] + outputs[detector.box_reg_key]
+                    loss = (
+                        w_cls * outputs[detector.cls_key]
+                        + outputs[detector.box_reg_key]
+                    )
                 scaler.scale(loss).backward()
                 scaler.step(optimizer)
                 scaler.update()
@@ -289,7 +312,9 @@ def main():
             epoch_cls_loss += outputs[detector.cls_key].detach().item()
             epoch_box_reg_loss += outputs[detector.box_reg_key].detach().item()
             print(f"{step}/{epoch_len}, train_loss: {loss.item():.4f}")
-            tensorboard_writer.add_scalar("train_loss", loss.detach().item(), epoch_len * epoch + step)
+            tensorboard_writer.add_scalar(
+                "train_loss", loss.detach().item(), epoch_len * epoch + step
+            )
 
         end_time = time.time()
         print(f"Training time: {end_time-start_time}s")
@@ -304,8 +329,12 @@ def main():
         print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
         tensorboard_writer.add_scalar("avg_train_loss", epoch_loss, epoch + 1)
         tensorboard_writer.add_scalar("avg_train_cls_loss", epoch_cls_loss, epoch + 1)
-        tensorboard_writer.add_scalar("avg_train_box_reg_loss", epoch_box_reg_loss, epoch + 1)
-        tensorboard_writer.add_scalar("train_lr", optimizer.param_groups[0]["lr"], epoch + 1)
+        tensorboard_writer.add_scalar(
+            "avg_train_box_reg_loss", epoch_box_reg_loss, epoch + 1
+        )
+        tensorboard_writer.add_scalar(
+            "train_lr", optimizer.param_groups[0]["lr"], epoch + 1
+        )
 
         # save last trained model
         torch.jit.save(detector.network, env_dict["model_path"][:-3] + "_last.pt")
@@ -322,9 +351,15 @@ def main():
                     # if all val_data_i["image"] smaller than args.val_patch_size, no need to use inferer
                     # otherwise, need inferer to handle large input images.
                     use_inferer = not all(
-                        [val_data_i["image"][0, ...].numel() < np.prod(args.val_patch_size) for val_data_i in val_data]
+                        [
+                            val_data_i["image"][0, ...].numel()
+                            < np.prod(args.val_patch_size)
+                            for val_data_i in val_data
+                        ]
                     )
-                    val_inputs = [val_data_i.pop("image").to(device) for val_data_i in val_data]
+                    val_inputs = [
+                        val_data_i.pop("image").to(device) for val_data_i in val_data
+                    ]
 
                     if amp:
                         with torch.cuda.amp.autocast():
@@ -343,9 +378,14 @@ def main():
             draw_img = visualize_one_xy_slice_in_3d_image(
                 gt_boxes=val_data[0]["box"].cpu().detach().numpy(),
                 image=val_inputs[0][0, ...].cpu().detach().numpy(),
-                pred_boxes=val_outputs[0][detector.target_box_key].cpu().detach().numpy(),
+                pred_boxes=val_outputs[0][detector.target_box_key]
+                .cpu()
+                .detach()
+                .numpy(),
             )
-            tensorboard_writer.add_image("val_img_xy", draw_img.transpose([2, 1, 0]), epoch + 1)
+            tensorboard_writer.add_image(
+                "val_img_xy", draw_img.transpose([2, 1, 0]), epoch + 1
+            )
 
             # compute metrics
             del val_inputs
@@ -354,17 +394,24 @@ def main():
                 iou_fn=box_utils.box_iou,
                 iou_thresholds=coco_metric.iou_thresholds,
                 pred_boxes=[
-                    val_data_i[detector.target_box_key].cpu().detach().numpy() for val_data_i in val_outputs_all
+                    val_data_i[detector.target_box_key].cpu().detach().numpy()
+                    for val_data_i in val_outputs_all
                 ],
                 pred_classes=[
-                    val_data_i[detector.target_label_key].cpu().detach().numpy() for val_data_i in val_outputs_all
+                    val_data_i[detector.target_label_key].cpu().detach().numpy()
+                    for val_data_i in val_outputs_all
                 ],
                 pred_scores=[
-                    val_data_i[detector.pred_score_key].cpu().detach().numpy() for val_data_i in val_outputs_all
+                    val_data_i[detector.pred_score_key].cpu().detach().numpy()
+                    for val_data_i in val_outputs_all
                 ],
-                gt_boxes=[val_data_i[detector.target_box_key].cpu().detach().numpy() for val_data_i in val_targets_all],
+                gt_boxes=[
+                    val_data_i[detector.target_box_key].cpu().detach().numpy()
+                    for val_data_i in val_targets_all
+                ],
                 gt_classes=[
-                    val_data_i[detector.target_label_key].cpu().detach().numpy() for val_data_i in val_targets_all
+                    val_data_i[detector.target_label_key].cpu().detach().numpy()
+                    for val_data_i in val_targets_all
                 ],
             )
             val_epoch_metric_dict = coco_metric(results_metric)[0]
@@ -372,7 +419,9 @@ def main():
 
             # write to tensorboard event
             for k in val_epoch_metric_dict.keys():
-                tensorboard_writer.add_scalar("val_" + k, val_epoch_metric_dict[k], epoch + 1)
+                tensorboard_writer.add_scalar(
+                    "val_" + k, val_epoch_metric_dict[k], epoch + 1
+                )
             val_epoch_metric = val_epoch_metric_dict.values()
             val_epoch_metric = sum(val_epoch_metric) / len(val_epoch_metric)
             tensorboard_writer.add_scalar("val_metric", val_epoch_metric, epoch + 1)
@@ -390,7 +439,10 @@ def main():
                 )
             )
 
-    print(f"train completed, best_metric: {best_val_epoch_metric:.4f} " f"at epoch: {best_val_epoch}")
+    print(
+        f"train completed, best_metric: {best_val_epoch_metric:.4f} "
+        f"at epoch: {best_val_epoch}"
+    )
     tensorboard_writer.close()
 
 

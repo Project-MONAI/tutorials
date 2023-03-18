@@ -26,7 +26,7 @@ from monai.apps.detection.transforms.dictionary import (
     RandRotateBox90d,
     RandZoomBoxd,
     ConvertBoxModed,
-    StandardizeEmptyBoxd
+    StandardizeEmptyBoxd,
 )
 
 
@@ -291,9 +291,7 @@ def generate_detection_inference_transform(
                 image_meta_key_postfix="meta_dict",
                 affine_lps_to_ras=affine_lps_to_ras,
             ),
-            ConvertBoxModed(
-                box_keys=[pred_box_key], src_mode="xyzxyz", dst_mode=gt_box_mode
-            ),
+            ConvertBoxModed(box_keys=[pred_box_key], src_mode="xyzxyz", dst_mode=gt_box_mode),
             DeleteItemsd(keys=[image_key]),
         ]
     )

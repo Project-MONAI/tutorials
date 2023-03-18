@@ -89,6 +89,14 @@ python3 luna16_training.py \
     -c ./config/config_train_luna16_16g.json
 ```
 
+If you are tuning hyper-parameters, please add "-v" flag, e.g.
+```bash
+python3 luna16_training.py \
+    -e ./config/environment_luna16_fold${i}.json \
+    -c ./config/config_train_luna16_16g.json -v
+```
+Details about matched anchors during training will be printed out.
+
 For each fold, 95% of the training data is used for training, while the rest 5% is used for validation and model selection.
 The training and validation curves for 300 epochs of 10 folds are shown below. The upper row shows the training losses for box regression and classification. The bottom row shows the validation mAP and mAR for IoU ranging from 0.1 to 0.5.
 <p align="center">
@@ -107,14 +115,6 @@ python3 luna16_testing.py \
     -e ./config/environment_luna16_fold${i}.json \
     -c ./config/config_train_luna16_16g.json
 ```
-
-If you are tuning hyper-parameters, please add "-v" flag, e.g.
-```bash
-python3 luna16_testing.py \
-    -e ./config/environment_luna16_fold${i}.json \
-    -c ./config/config_train_luna16_16g.json -v
-```
-Details about matched anchors during training will be printed out.
 
 #### [3.4 LUNA16 Detection Evaluation](./run_luna16_offical_eval.sh)
 Please download the official LUNA16 evaluation scripts from https://luna16.grand-challenge.org/Evaluation/,

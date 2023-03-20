@@ -1,12 +1,12 @@
-# nnU-Net Integration
+# MONAI and nnU-Net Integration
 
-[nnU-Net](https://github.com/MIC-DKFZ/nnUNet) is an open-source deep learning framework that has been specifically designed for medical image segmentation. Medical image segmentation is a challenging task that involves the identification and separation of different structures or regions of interest within an image. Accurate segmentation of medical images is critical for many applications, including diagnosis, treatment planning, and image-guided interventions.
+[nnU-Net](https://github.com/MIC-DKFZ/nnUNet) is an open-source deep learning framework that has been specifically designed for medical image segmentation. And nnU-Net is a state-of-the-art deep learning framework that is tailored for medical image segmentation. It builds upon the popular U-Net architecture and incorporates various advanced features and improvements, such as cascaded networks, novel loss functions, and pre-processing steps. nnU-Net also provides an easy-to-use interface that allows users to train and evaluate their segmentation models quickly. nnU-Net has been widely used in various medical imaging applications, including brain segmentation, liver segmentation, and prostate segmentation, among others. The framework has consistently achieved state-of-the-art performance in various benchmark datasets and challenges, demonstrating its effectiveness and potential for advancing medical image analysis.
 
-Traditional methods for medical image segmentation require significant manual intervention and often lack accuracy and consistency. In recent years, deep learning techniques, such as convolutional neural networks (CNNs), have shown great potential in achieving accurate and efficient medical image segmentation.
+nnU-Net and MONAI are two powerful open-source frameworks that offer advanced tools and algorithms for medical image analysis. Both frameworks have gained significant popularity in the research community, and many researchers have been using these frameworks to develop new and innovative medical imaging applications.
 
-nnU-Net is a state-of-the-art deep learning framework that is tailored for medical image segmentation. It builds upon the popular U-Net architecture and incorporates various advanced features and improvements, such as cascaded networks, novel loss functions, and pre-processing steps. nnU-Net also provides an easy-to-use interface that allows users to train and evaluate their segmentation models quickly.
+nnU-Net is a framework that provides a standardized pipeline for training and evaluating neural networks for medical image segmentation tasks. MONAI, on the other hand, is a framework that provides a comprehensive set of tools for medical image analysis, including pre-processing, data augmentation, and deep learning models. It is also built on top of PyTorch and offers a wide range of pre-trained models, as well as tools for model training and evaluation. The integration between nnUNet and MONAI can offer several benefits to researchers in the medical imaging field. By combining the strengths of both frameworks, researchers can take advantage of the standardized pipeline provided by nnUNet and the comprehensive set of tools provided by MONAI.
 
-nnU-Net has been widely used in various medical imaging applications, including brain segmentation, liver segmentation, and prostate segmentation, among others. The framework has consistently achieved state-of-the-art performance in various benchmark datasets and challenges, demonstrating its effectiveness and potential for advancing medical image analysis.
+Overall, the integration between nnU-Net and MONAI can offer significant benefits to researchers in the medical imaging field. By combining the strengths of both frameworks, researchers can accelerate their research and develop new and innovative solutions to complex medical imaging challenges.
 
 ## What's New in nnU-Net V2
 
@@ -19,11 +19,31 @@ nnU-Net has release a newer version, nnU-Net V2, recently. Some changes have bee
 
 Overall, nnU-Net v2 has introduced significant improvements and new features, making it a powerful and flexible deep learning framework for medical image segmentation. With its easy-to-use interface, modularized codebase, and advanced features, nnU-Net v2 is poised to advance the field of medical image analysis and improve patient outcomes.
 
-## MONAI and nnU-Net Integration
-nnU-Net and MONAI are two powerful open-source frameworks that offer advanced tools and algorithms for medical image analysis. Both frameworks have gained significant popularity in the research community, and many researchers have been using these frameworks to develop new and innovative medical imaging applications.
+## How does the integration works?
+As part of the integration, we have introduced a new class called the `nnUNetV2runner`, which utilizes the Python APIs available in the official nnU-Net repository. The `nnUNetV2runner` provides several key features that are useful for general users of MONAI.
+- The new class offers Python APIs at a high level to facilitate most of the components in nnU-Net, such as model training, model validation, model ensemble, and more;
+- Users are only required to provide the minimum input, as specified in most of the MONAI tutorials for 3D medical image segmentation. The new class will automatically handle data conversion to prepare data that meets the requirements of nnU-Net, which will largely save time for users to prepare the datatsets;
+- Additionally, we have enabled users with more GPU resources to automatically allocate model training jobs in parallel. As nnU-Net requires the training of 20 segmentation models by default, distributing model training to larger resources can significantly improve overall efficiency. For instance, users with 8 GPUs can increase model training speed by 6x to 8x automatically using the new class.
 
-nnU-Net is a framework that provides a standardized pipeline for training and evaluating neural networks for medical image segmentation tasks. MONAI, on the other hand, is a framework that provides a comprehensive set of tools for medical image analysis, including pre-processing, data augmentation, and deep learning models. It is also built on top of PyTorch and offers a wide range of pre-trained models, as well as tools for model training and evaluation.
+## Steps
 
-The integration between nnUNet and MONAI can offer several benefits to researchers in the medical imaging field. By combining the strengths of both frameworks, researchers can take advantage of the standardized pipeline provided by nnUNet and the comprehensive set of tools provided by MONAI.
+### 1. nnU-Net v2 installation
+### 2. Run with Minimal Input using ```AutoRunner```
 
-Overall, the integration between nnU-Net and MONAI can offer significant benefits to researchers in the medical imaging field. By combining the strengths of both frameworks, researchers can accelerate their research and develop new and innovative solutions to complex medical imaging challenges.
+The user needs to provide a data list (".json" file) for the new task and data root. A typical data list is as this [example](tasks/msd/Task05_Prostate/msd_task05_prostate_folds.json). A sample datalist for an existing MSD formatted dataset can be created using [this notebook](notebooks/msd_datalist_generator.ipynb). After creating the data list, the user can create a simple "task.yaml" file (shown below) as the minimum input for **Auto3DSeg**.
+
+```
+modality: CT
+datalist: "./task.json"
+dataroot: "/workspace/data/task"
+```
+
+User needs to define the modality of data. Currently **Auto3DSeg** supports both CT and MRI (single- or multi-modality MRI). Then user can run the pipeline further from start to finish using the following simple bash command with the ```AutoRunner``` class.
+
+```bash
+python -m monai.apps.nnunet nnUNetV2Runner run --input='./input.yaml'
+```
+
+### 2. Run nnUNet modules using ```AutoRunner```
+
+## FAQ

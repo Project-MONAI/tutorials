@@ -8,10 +8,8 @@ Users can follow the [link](https://https://docs.monai.io/en/stable/installation
 The following command shows the example to install MONAI and Necessary dependencies.
 
 ```bash
-# install monai (pip install monai)
-git clone https://github.com/Project-MONAI/MONAI.git
-cd MONAI/
-python setup.py develop
+# install latest monai (pip install monai)
+pip install git+https://github.com/Project-MONAI/MONAI#egg=monai
 
 # install dependencies
 pip install fire nibabel
@@ -29,14 +27,10 @@ pip install --upgrade git+https://github.com/MIC-DKFZ/acvl_utils.git
 pip install --upgrade git+https://github.com/MIC-DKFZ/dynamic-network-architectures.git
 
 # install nnunet
-git clone https://github.com/MIC-DKFZ/nnUNet.git
-cd nnUNet
-git checkout nnunet_remake
-git pull # just for good measure
-pip install -e .
+pip install nnunetv2
 
 # install hiddenlayer (optional)
 pip install --upgrade git+https://github.com/julien-blanchon/hiddenlayer.git
 ```
 
-The official instruction can be found [here](https://github.com/MIC-DKFZ/nnUNet/blob/nnunet_remake/documentation/installation_instructions.md).
+The official instruction can be found [here](https://github.com/MIC-DKFZ/nnUNet/blob/master/documentation/installation_instructions.md).

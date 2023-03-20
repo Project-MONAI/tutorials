@@ -31,17 +31,25 @@ As part of the integration, we have introduced a new class called the `nnUNetV2r
 
 THe installation instruction is described [here](docs/install.md).
 
-### 2. Run with Minimal Input using ```AutoRunner```
+### 2. Run with Minimal Input using ```nnUNetV2runner```
 
-The user needs to provide a data list (".json" file) for the new task and data root. A typical data list is as this [example](tasks/msd/Task05_Prostate/msd_task05_prostate_folds.json). A sample datalist for an existing MSD formatted dataset can be created using [this notebook](notebooks/msd_datalist_generator.ipynb). After creating the data list, the user can create a simple "task.yaml" file (shown below) as the minimum input for **Auto3DSeg**.
+User needs to provide a data list (".json" file) for the new task and data root. A typical data list is as this [example](tasks/msd/Task05_Prostate/msd_task05_prostate_folds.json), it can be consumed with Auto3DSeg as well. In general, a valid data list needs to follow the format of ones in [Medical Segmentaiton Decathlon](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2). After creating the data list, the user can create a simple "input.yaml" file (shown below) as the minimum input for **nnUNetV2runner**.
 
 ```
 modality: CT
-datalist: "./task.json"
-dataroot: "/workspace/data/task"
+datalist: "./msd_task09_spleen_folds.json"
+dataroot: "/workspace/data/nnunet_test/test09"
 ```
 
-User needs to define the modality of data. Currently **Auto3DSeg** supports both CT and MRI (single- or multi-modality MRI). Then user can run the pipeline further from start to finish using the following simple bash command with the ```AutoRunner``` class.
+User can also set values of directory variables as options in "input.yaml" if any directory needs to be specified.
+
+```
+nnunet_preprocessed: "./work_dir/nnUNet_preprocessed" # optional
+nnunet_raw: "./work_dir/nnUNet_raw_data_base" # optional
+nnunet_results: "./work_dir/nnUNet_trained_models" # optional
+```
+
+Once the minimum input information is provided, user can use the following commands to start the process of the entire nnU-Net pipeline automatically (from model training to model ensemble).
 
 ```bash
 python -m monai.apps.nnunet nnUNetV2Runner run --input='./input.yaml'
@@ -49,4 +57,48 @@ python -m monai.apps.nnunet nnUNetV2Runner run --input='./input.yaml'
 
 ### 2. Run nnUNet modules using ```AutoRunner```
 
+```nnUNetV2runner``` offers the one-stop API to execute the pipeline, as well as the APIs to access the underlying components of nnU-Net V2. Below are the command for different components.
+
+```bash
+## [component] convert dataset
+python -m monai.apps.nnunet nnUNetRunner convert_dataset --input "./input_new.yaml"
+
+## [component] converting msd datasets
+python -m monai.apps.nnunet nnUNetRunner convert_msd_dataset --input "./input.yaml" --data_dir "/workspace/data/Task05_Prostate"
+
+## [component] experiment planning and data pre-processing
+python -m monai.apps.nnunet nnUNetRunner plan_and_process --input "./input.yaml"
+
+## [component] single-gpu training for all 20 models
+python -m monai.apps.nnunet nnUNetRunner train --input "./input.yaml"
+
+## [component] single-gpu training for a single model
+python -m monai.apps.nnunet nnUNetRunner train_single_model --input "./input.yaml" \
+    --config "3d_fullres" \
+    --fold 0 \
+    --trainer_class_name "nnUNetTrainer" \
+    --export_validation_probabilities true
+
+## [component] multi-gpu training for all 20 models
+export CUDA_VISIBLE_DEVICES=0,1 # optional
+python -m monai.apps.nnunet nnUNetRunner train --input "./input.yaml" --num_gpus 2
+
+## [component] multi-gpu training for a single model
+export CUDA_VISIBLE_DEVICES=0,1 # optional
+python -m monai.apps.nnunet nnUNetRunner train_single_model --input "./input.yaml" \
+    --config "3d_fullres" \
+    --fold 0 \
+    --trainer_class_name "nnUNetTrainer" \
+    --export_validation_probabilities true \
+    --num_gpus 2
+
+## [component] find best configuration
+python -m monai.apps.nnunet nnUNetRunner find_best_configuration --input "./input.yaml"
+
+## [component] ensemble
+python -m monai.apps.nnunet nnUNetRunner predict_ensemble_postprocessing --input "./input.yaml"
+```
+
 ## FAQ
+
+THe common questions and answers can be found [here](docs/faq.md).

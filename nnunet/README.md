@@ -18,6 +18,7 @@ nnU-Net has release a newer version, nnU-Net V2, recently. Some changes have bee
 -- Multi-GPU training support, etc.
 
 Overall, nnU-Net v2 has introduced significant improvements and new features, making it a powerful and flexible deep learning framework for medical image segmentation. With its easy-to-use interface, modularized codebase, and advanced features, nnU-Net v2 is poised to advance the field of medical image analysis and improve patient outcomes.
+<<<<<<< HEAD
 
 ## MONAI and nnU-Net Integration
 nnUNet and MONAI are two powerful open-source frameworks that offer advanced tools and algorithms for medical image analysis. Both frameworks have gained significant popularity in the research community, and many researchers have been using these frameworks to develop new and innovative medical imaging applications.
@@ -28,3 +29,5 @@ MONAI, on the other hand, is a framework that provides a comprehensive set of to
 The integration between nnUNet and MONAI can offer several benefits to researchers in the medical imaging field. By combining the strengths of both frameworks, researchers can take advantage of the standardized pipeline provided by nnUNet and the comprehensive set of tools provided by MONAI.
 
 Overall, the integration between nnUNet and MONAI can offer significant benefits to researchers in the medical imaging field. By combining the strengths of both frameworks, researchers can accelerate their research and develop new and innovative solutions to complex medical imaging challenges.
+=======
+>>>>>>> 6556b3e977ae89784bfda5a3eeb94ceb40c4be1f

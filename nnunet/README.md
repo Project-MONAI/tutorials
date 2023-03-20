@@ -91,8 +91,21 @@ python -m monai.apps.nnunet nnUNetRunner train_single_model --input "./input.yam
 ## [component] find best configuration
 python -m monai.apps.nnunet nnUNetRunner find_best_configuration --input "./input.yaml"
 
-## [component] ensemble
+## [component] predict, ensemble, and postprocessing
 python -m monai.apps.nnunet nnUNetRunner predict_ensemble_postprocessing --input "./input.yaml"
+
+## [component] predict only
+python -m monai.apps.nnunet nnUNetRunner predict_ensemble_postprocessing --input "./input.yaml" \
+	--run_ensemble false --run_postprocessing false
+
+## [component] ensemble only
+python -m monai.apps.nnunet nnUNetRunner predict_ensemble_postprocessing --input "./input.yaml" \
+	--run_predict false --run_postprocessing false
+
+## [component] post-processing only
+python -m monai.apps.nnunet nnUNetRunner predict_ensemble_postprocessing --input "./input.yaml" \
+	--run_predict false --run_ensemble false
+
 ```
 
 ## FAQ

@@ -75,9 +75,7 @@ python -m monai.apps.nnunet nnUNetRunner train --input "./input.yaml"
 ## [component] single-gpu training for a single model
 python -m monai.apps.nnunet nnUNetRunner train_single_model --input "./input.yaml" \
     --config "3d_fullres" \
-    --fold 0 \
-    --trainer_class_name "nnUNetTrainer" \
-    --export_validation_probabilities true
+    --fold 0
 
 ## [component] multi-gpu training for all 20 models
 export CUDA_VISIBLE_DEVICES=0,1 # optional
@@ -88,8 +86,6 @@ export CUDA_VISIBLE_DEVICES=0,1 # optional
 python -m monai.apps.nnunet nnUNetRunner train_single_model --input "./input.yaml" \
     --config "3d_fullres" \
     --fold 0 \
-    --trainer_class_name "nnUNetTrainer" \
-    --export_validation_probabilities true \
     --num_gpus 2
 
 ## [component] find best configuration

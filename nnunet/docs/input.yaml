@@ -1,0 +1,5 @@
+modality:
+- T2
+- ADC
+datalist: "/home/Data/MSD/test/dataset.json"
+dataroot: "/home/Data/MSD/test/Task05_Prostate"

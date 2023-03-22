@@ -50,7 +50,7 @@ class HecktorCropNeckRegion(CropForegroundd):
 
         box_start, box_end = self.extract_roi(im_pet=im_pet, box_size=box_size)
 
-        use_label = 'label' in d and 'label' in self.keys and (d['image'].shape[1:]==d['label'].shape[1:])
+        use_label = "label" in d and "label" in self.keys and (d["image"].shape[1:] == d["label"].shape[1:])
 
         if use_label:
             # if label mask is available, let's check if the cropped region includes all foreground
@@ -63,21 +63,29 @@ class HecktorCropNeckRegion(CropForegroundd):
             if before_sum != after_sum:
                 warnings.warn(
                     "WARNING, H&N crop could be incorrect!!! ",
-                    before_sum, after_sum,
-                    "image:", d["image"].shape,
-                    "pet:", d["image2"].shape,
-                    "label:", d["label"].shape,
-                    "updated box_size", box_size,
-                    "box_start", box_start,
-                    "box_end:", box_end,
-                    "filename", filename
+                    before_sum,
+                    after_sum,
+                    "image:",
+                    d["image"].shape,
+                    "pet:",
+                    d["image2"].shape,
+                    "label:",
+                    d["label"].shape,
+                    "updated box_size",
+                    box_size,
+                    "box_start",
+                    box_start,
+                    "box_end:",
+                    box_end,
+                    "filename",
+                    filename,
                 )
 
         d[self.start_coord_key] = box_start
         d[self.end_coord_key] = box_end
 
         for key, m in self.key_iterator(d, self.mode):
-            if key=="label" and not use_label:
+            if key == "label" and not use_label:
                 continue
             d[key] = self.cropper.crop_pad(img=d[key], box_start=box_start, box_end=box_end, mode=m)
 

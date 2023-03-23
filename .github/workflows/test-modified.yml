@@ -33,6 +33,7 @@ jobs:
         pip uninstall -y monai-weekly # make sure there's no existing installation
         BUILD_MONAI=0 python -m pip install git+https://github.com/Project-MONAI/MONAI#egg=MONAI
         python -m pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/main/requirements-dev.txt
+        python -m pip install -U torch torchvision torchaudio
     - uses: actions/checkout@v3
     - name: Notebook quick check
       shell: bash

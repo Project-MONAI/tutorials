@@ -57,6 +57,13 @@ def main():
         default="./config/config_train.json",
         help="config json file that stores hyper-parameters",
     )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        default=False,
+        action="store_true",
+        help="whether to print verbose detail during training, recommand True when you are not sure about hyper-parameters",
+    )
     args = parser.parse_args()
 
     set_determinism(seed=0)
@@ -188,7 +195,7 @@ def main():
     )
 
     # 3) build detector
-    detector = RetinaNetDetector(network=net, anchor_generator=anchor_generator, debug=False).to(device)
+    detector = RetinaNetDetector(network=net, anchor_generator=anchor_generator, debug=args.verbose).to(device)
 
     # set training components
     detector.set_atss_matcher(num_candidates=4, center_in_gt=False)

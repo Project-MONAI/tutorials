@@ -50,7 +50,7 @@ if not os.path.exists(data_dir):
 
 ## Define train config - Set imports and input / output environments
 
-Now let's start to define the config file for a regular training task. MONAI bundle support both `JSON` and `YAML` format, here we use `JSON` as the example. the [whole config for training](spleen_ct_segmentation/configs/train.json) is available and can be a reference.
+Now let's start to define the config file for a regular training task. MONAI bundle support both `JSON` and `YAML` format, here we use `JSON` as the example. After downloading the spleen bundle, the train config file in `spleen_ct_segmentation/configs/train.json` can be a reference.
 
 According to the predefined syntax of MONAI bundle, `$` indicates an expression to evaluate and `@` refers to another object in the config content. For more details about the syntax in bundle config, please check: https://docs.monai.io/en/latest/config_syntax.html.
 

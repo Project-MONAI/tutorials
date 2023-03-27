@@ -50,7 +50,7 @@ if not os.path.exists(data_dir):
 
 ## Define train config - Set imports and input / output environments
 
-Now let's start to define the config file for a regular training task. MONAI bundle support both `JSON` and `YAML` format, here we use `JSON` as the example. After downloading the spleen bundle, the train config file in `spleen_ct_segmentation/configs/train.json` can be a reference.
+Now let's start to define the config file for a regular training task. MONAI bundle support both `JSON` and `YAML` format, here we use `JSON` as the example. After downloading the bundle, the train config file in `spleen_ct_segmentation/configs/train.json` is available for reference.
 
 According to the predefined syntax of MONAI bundle, `$` indicates an expression to evaluate and `@` refers to another object in the config content. For more details about the syntax in bundle config, please check: https://docs.monai.io/en/latest/config_syntax.html.
 
@@ -309,7 +309,7 @@ Just show an example of `macro text replacement` to simplify the config content 
 
 We can define a `metadata` file in the bundle, which contains the metadata information relating to the model, including what the shape and format of inputs and outputs are, what the meaning of the outputs are, what type of model is present, and other information. The structure is a dictionary containing a defined set of keys with additional user-specified keys.
 
-A typical [metadata example](spleen_segmentation/configs/metadata.json) is available.
+After downloading the bundle, a typical metadata example in `spleen_ct_segmentation/configs/metadata.json` is available for reference.
 
 ## Execute training with bundle script - `run`
 

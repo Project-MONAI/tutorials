@@ -60,6 +60,6 @@ The GPU utilization, as well as other metrics such as DRAM use, PCI Tx/Rx, can b
 
 ## GPU Utilization
 
-The overview of [NVIDIA DCGM Documentation](https://docs.nvidia.com/datacenter/dcgm/latest/user-guide/index.html) provides a detailed description on how to read the GPU utlization in the [metrics section](https://docs.nvidia.com/datacenter/dcgm/latest/user-guide/feature-overview.html?#metrics). 
+The overview of [NVIDIA DCGM Documentation](https://docs.nvidia.com/datacenter/dcgm/latest/user-guide/index.html) provides a detailed description on how to read the GPU utlization in the [metrics section](https://docs.nvidia.com/datacenter/dcgm/latest/user-guide/feature-overview.html?#metrics).
 
 Typically, the “GPU Utilization” from `nvidia-smi` or `NVML` is a rough metric that reflects how busy GPU cores are utilized. It is defined by “Percent of time over the past sample period during which one or more kernels was executing on the GPU”. In extreme cases, the metric is 100% even there’s only one thread launched to run kernel on GPU during past sample period.

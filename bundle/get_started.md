@@ -26,7 +26,7 @@ You can find the usage examples of MONAI bundle key features and syntax in this 
 
 Download the `spleen_ct_segmentation` bundle for this example.
 ```shell
-python -m monai.bundle download --name spleen_ct_segmentation --source "github" --bundle_dir "./"
+python -m monai.bundle download --name spleen_ct_segmentation --bundle_dir "./"
 ```
 
 The dataset for this example comes from http://medicaldecathlon.com/.

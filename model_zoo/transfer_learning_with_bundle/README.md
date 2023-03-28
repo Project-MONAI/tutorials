@@ -15,7 +15,7 @@ It can automatically download the bundle and load the model with the following c
 ```
 import monai
 pretrained_model = monai.bundle.load(
-    name="spleen_ct_segmentation", bundle_dir="./", version="0.1.1"
+    name="spleen_ct_segmentation", bundle_dir="./"
 )
 model.load_state_dict(pretrained_model)
 ```

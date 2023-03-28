@@ -93,7 +93,7 @@ For more details, please refer to: https://docs.monai.io/en/stable/handlers.html
 
 ## Download example MONAI bundle from model-zoo
 ```
-python -m monai.bundle download --name spleen_ct_segmentation --version "0.1.1" --bundle_dir "./"
+python -m monai.bundle download --name spleen_ct_segmentation --bundle_dir "./"
 ```
 
 ## Extend the workflow to print the execution time for every iteration, every epoch and total time
@@ -152,5 +152,5 @@ And please make sure the folder `spleen_ct_segmentation/scripts` is a valid pyth
 Execute training:
 
 ```
-python -m monai.bundle run training --meta_file configs/metadata.json --config_file configs/train.json --logging_file configs/logging.conf
+python -m monai.bundle run --meta_file configs/metadata.json --config_file configs/train.json --logging_file configs/logging.conf
 ```

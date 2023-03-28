@@ -86,7 +86,7 @@ def main(tempdir, load_pretrained_ckpt=False):
 
     if load_pretrained_ckpt:
         print("Load model from monai model-zoo.")
-        pretrained_model = monai.bundle.load(name="spleen_ct_segmentation", bundle_dir="./", version="0.1.1")
+        pretrained_model = monai.bundle.load(name="spleen_ct_segmentation", bundle_dir="./")
         model.load_state_dict(pretrained_model)
 
     # define transforms for image and segmentation

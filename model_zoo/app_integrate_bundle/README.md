@@ -22,12 +22,12 @@ The script is tested with:
 You can conda environments to install the dependencies.
 
 ```bash
-pip install monai==0.9.1 scikit-learn==0.24.2
+pip install monai==1.2.0 scikit-learn==0.24.2
 ```
 
 or you can just use nvidia docker.
 ```bash
-docker pull projectmonai/monai:0.9.1
+docker pull projectmonai/monai:1.2.0
 ```
 
 For more information please check out [the installation guide](https://docs.monai.io/en/latest/installation.html).

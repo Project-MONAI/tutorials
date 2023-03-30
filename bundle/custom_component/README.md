@@ -3,6 +3,14 @@ This example mainly shows a typical use case that brings customized python compo
 
 Please note that this example depends on the `spleen_ct_segmentation` bundle example and executes via overriding the config file of it.
 
+## Download bundle
+
+Download the `spleen_ct_segmentation` bundle for this example.
+
+```shell
+python -m monai.bundle download --name spleen_ct_segmentation --bundle_dir "./"
+```
+
 ## commands example
 To run the workflow with customized components, `PYTHONPATH` should be revised to include the path to the customized component:
 ```

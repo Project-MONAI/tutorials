@@ -1,9 +1,9 @@
 # Overview
-This tutorial shows how to extend the features of workflow in the model-zoo bundles based on `event-handler` mechanism.
+This tutorial shows how to extend the features of workflow in MONAI bundles based on `event-handler` mechanism.
 Here we try to add the execution time computation logic in the spleen segmentation bundle.
 
 ## Event-handler mechanism
-The bundles in the `model-zoo` are constructed by MONAI workflow, which can enable quick start of training and evaluation experiments.
+Bundles that constructed by MONAI workflow enable quick start of training and evaluation experiments.
 The MONAI workflow is compatible with pytorch-ignite `Engine` and `Event-Handler` mechanism: https://pytorch-ignite.ai/.
 
 So we can easily extend new features to the workflow by defining a new independent event handler and attaching to the workflow engine.
@@ -91,7 +91,7 @@ like the existing [StatsHandler](https://docs.monai.io/en/stable/handlers.html#m
 MONAI contains a convenient utility `monai.handlers.from_engine` to support most of the typical `output_transform` callables.
 For more details, please refer to: https://docs.monai.io/en/stable/handlers.html#monai.handlers.utils.from_engine.
 
-## Download example MONAI bundle from model-zoo
+## Download example MONAI bundle
 ```
 python -m monai.bundle download --name spleen_ct_segmentation --bundle_dir "./"
 ```

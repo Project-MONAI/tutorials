@@ -2,7 +2,7 @@
 Adapt a bundle to another dataset.
 
 # Overview
-This tutorial shows how to adapt an example monai bundle from MONAI model-zoo to a new dataset.
+This tutorial shows how to adapt an example monai bundle to a new dataset.
 
 ## Data
 The new dataset is BTCV challenge dataset (https://www.synapse.org/#!Synapse:syn3193805/wiki/217752). It has 24 Training + 6 Validation CT abdominal scans.
@@ -19,7 +19,7 @@ In this experiment, we focus on spleen only, which has intensity = 1 in the labe
 
 Step 4: `cp -avr ./data/RawData/Training/img ./data/btcv_spleen/imagesTr`
 
-## Download example monai bundle from model-zoo
+## Download example monai bundle
 ```
 python -m monai.bundle download --name spleen_ct_segmentation --bundle_dir "./"
 ```

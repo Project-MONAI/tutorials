@@ -315,7 +315,13 @@ After downloading the bundle, a typical metadata example in `spleen_ct_segmentat
 
 There are several predefined scripts in MONAI bundle module, here we leverage the `run` script and specify the ID of trainer in the config.
 
-Just define the entry point expressions in the config to execute in order, and specify the `runner_id` in CLI script.
+We can define the following three sections:
+
+"run" determines the section of the expected config expression to run.
+"initialize" determines the section of the expected config expression to initialize before running.
+"finalize" determines the section of the expected config expression to finalize after running.
+
+In this example, only "initialize" and "run" are utilized:
 
 ```json
 "initialize": [

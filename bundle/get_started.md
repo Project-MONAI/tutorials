@@ -22,10 +22,14 @@ You can find the usage examples of MONAI bundle key features and syntax in this 
 - Override config content at runtime.
 - Hybrid programming with config and python code.
 
-## Download dataset
+## Download bundle and dataset
 
-Downloads and extracts the dataset for this example.
-The dataset comes from http://medicaldecathlon.com/.
+Download the `spleen_ct_segmentation` bundle for this example.
+```shell
+python -m monai.bundle download --name spleen_ct_segmentation --bundle_dir "./"
+```
+
+The dataset for this example comes from http://medicaldecathlon.com/.
 Here specify a directory with the `MONAI_DATA_DIRECTORY` environment variable to save downloaded dataset and outputs, if no environment, save to the temorary directory.
 
 ```python
@@ -46,7 +50,7 @@ if not os.path.exists(data_dir):
 
 ## Define train config - Set imports and input / output environments
 
-Now let's start to define the config file for a regular training task. MONAI bundle support both `JSON` and `YAML` format, here we use `JSON` as the example. the [whole config for training](spleen_segmentation/configs/train.json) is available and can be a reference.
+Now let's start to define the config file for a regular training task. MONAI bundle support both `JSON` and `YAML` format, here we use `JSON` as the example. After downloading the bundle, the train config file in `spleen_ct_segmentation/configs/train.json` is available for reference.
 
 According to the predefined syntax of MONAI bundle, `$` indicates an expression to evaluate and `@` refers to another object in the config content. For more details about the syntax in bundle config, please check: https://docs.monai.io/en/latest/config_syntax.html.
 
@@ -305,24 +309,32 @@ Just show an example of `macro text replacement` to simplify the config content 
 
 We can define a `metadata` file in the bundle, which contains the metadata information relating to the model, including what the shape and format of inputs and outputs are, what the meaning of the outputs are, what type of model is present, and other information. The structure is a dictionary containing a defined set of keys with additional user-specified keys.
 
-A typical [metadata example](spleen_segmentation/configs/metadata.json) is available.
+After downloading the bundle, a typical metadata example in `spleen_ct_segmentation/configs/metadata.json` is available for reference.
 
 ## Execute training with bundle script - `run`
 
 There are several predefined scripts in MONAI bundle module, here we leverage the `run` script and specify the ID of trainer in the config.
 
-Just define the entry point expressions in the config to execute in order, and specify the `runner_id` in CLI script.
+We can define the following three sections:
+
+"run" determines the section of the expected config expression to run.
+"initialize" determines the section of the expected config expression to initialize before running.
+"finalize" determines the section of the expected config expression to finalize after running.
+
+In this example, only "initialize" and "run" are utilized:
 
 ```json
-"training": [
+"initialize": [
     "$monai.utils.set_determinism(seed=123)",
-    "$setattr(torch.backends.cudnn, 'benchmark', True)",
+    "$setattr(torch.backends.cudnn, 'benchmark', True)"
+],
+"run": [
     "$@train#trainer.run()"
 ]
 ```
 
 ```shell
-python -m monai.bundle run training --config_file configs/train.json
+python -m monai.bundle run --config_file configs/train.json
 ```
 
 ## Execute training with bundle script - Override config at runtime
@@ -331,11 +343,11 @@ To override some config items at runtime, users can specify the target `id` and 
 
 Please note that "#" and "$" may be meaningful syntax for some `shell` and `CLI` tools, so may need to add escape character or quotes for them in the command line, like: `"\$torch.device('cuda:1')"`. For more details: https://github.com/google/python-fire/blob/v0.4.0/fire/parser.py#L60.
 ```shell
-python -m monai.bundle run training --config_file configs/train.json --device "\$torch.device('cuda:1')"
+python -m monai.bundle run --config_file configs/train.json --device "\$torch.device('cuda:1')"
 ```
 Override content from another config file.
 ```shell
-python -m monai.bundle run training --config_file configs/train.json --network "%configs/test.json#network"
+python -m monai.bundle run --config_file configs/train.json --network "%configs/inference.json#network"
 ```
 
 ## Execute other bundle scripts
@@ -364,12 +376,6 @@ python -m monai.bundle verify_metadata --meta_file <meta path>
 python -m monai.bundle verify_net_in_out network --meta_file <metadata path> --config_file <config path>
 ```
 The acceptable data shape in the metadata can support `"*"` for any size, or use an expression with Python mathematical operators and one character variables to represent dependence on an unknown quantity, for example, `"2**p"` represents a size which must be a power of 2, `"2**p*n"` must be a multiple of a power of 2. `"spatial_shape": [ "32 * n", "2 ** p * n", "*"]`.
-
-
-5. Download a bundle from Github release or URL.
-```shell
-python -m monai.bundle download --name <bundle_name> --version "0.1.0" --bundle_dir "./"
-```
 
 ## Hybrid programming with config and python code
 

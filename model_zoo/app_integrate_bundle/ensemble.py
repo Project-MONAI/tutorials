@@ -48,7 +48,6 @@ class EnsembleTrainTask:
     """
     To construct an n-fold training and ensemble infer on any dataset.
     Just specify the bundle root path and data root path.
-    Bundle can be download from https://github.com/Project-MONAI/model-zoo/releases/tag/hosting_storage_v1
     Date root path also need a dataset.json which should be like:
         {
             "training": [
@@ -256,7 +255,7 @@ class EnsembleTrainTask:
 if __name__ == "__main__":
     """
     Usage
-        first download a bundle from model-zoo to somewhere as your bundle_root path
+        first download a bundle to somewhere as your bundle_root path
         split your data into train and test datalist
             train datalist: [
                 {

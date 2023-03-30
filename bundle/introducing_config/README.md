@@ -152,7 +152,7 @@ plt.show()
 
 ## Topics not covered but possible in the config
 
-- Running customized Python components (made available on the `PYTHONPATH`, more examples [in the model_zoo](https://github.com/Project-MONAI/model-zoo)).
+- Running customized Python components (made available on the `PYTHONPATH`).
 - Overriding the component in `example.yaml` using, for example, `--id=new_value` in the command line.
 - Multiple configuration files and cross-file references.
 - Replacing in terms of plain texts instead of Python objects ([tutorial](../get_started.md)).

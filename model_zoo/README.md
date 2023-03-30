@@ -1,4 +1,9 @@
-This folder contains typical usage examples of MONAI Bundles.
+This folder contains tutorials and examples to show how to use an existing bundle of our released models, including:
+
+- Adapt a bundle to another dataset.
+- Integrate a bundle into your own application.
+- Load the pre-trained weights from a bundle and do transfer-learning.
+- Extend the features of workflow in MONAI bundles based on `event-handler` mechanism.
 
 ## Getting Started
 

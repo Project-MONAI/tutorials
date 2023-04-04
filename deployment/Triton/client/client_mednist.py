@@ -65,7 +65,6 @@ def open_jpeg_files(input_path):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description="Triton CLI for MedNist classification inference from JPEG data")
     parser.add_argument(
         "input",

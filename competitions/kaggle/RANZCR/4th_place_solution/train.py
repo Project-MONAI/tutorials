@@ -42,7 +42,6 @@ from utils import (
 
 
 def main(cfg):
-
     os.makedirs(str(cfg.output_dir + f"/fold{cfg.fold}/"), exist_ok=True)
 
     # set random seed, works when use all data to train
@@ -194,12 +193,10 @@ def run_train(
             scheduler.step()
 
         if step % cfg.batch_size == 0:
-
             progress_bar.set_description(f"loss: {np.mean(losses[-10:]):.2f}")
 
 
 def run_eval(model, val_dataloader, cfg, writer, epoch):
-
     model.eval()
     torch.set_grad_enabled(False)
 
@@ -228,7 +225,6 @@ def run_eval(model, val_dataloader, cfg, writer, epoch):
     val_loss = np.mean(val_losses)
 
     if cfg.compute_auc is True:
-
         val_preds = torch.cat(val_preds)
         val_targets = torch.cat(val_targets)
         avg_auc = compute_roc_auc(val_preds, val_targets, average="macro")
@@ -240,7 +236,6 @@ def run_eval(model, val_dataloader, cfg, writer, epoch):
 
 
 def run_infer(weights_folder_path, cfg):
-
     cfg.pretrained = False
     # for local test, please modify the following path into actual path.
     cfg.data_folder = cfg.data_dir + "test/"
@@ -296,7 +291,6 @@ def run_infer(weights_folder_path, cfg):
 
 
 if __name__ == "__main__":
-
     sys.path.append("configs")
     sys.path.append("models")
     sys.path.append("data")

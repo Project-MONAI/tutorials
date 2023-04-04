@@ -22,7 +22,7 @@ class MonaiMetrics(tools.Metrics):
         metric_sum = 0.0
         metric_count = 0
         with torch.no_grad():
-            for (val_true, val_pred) in zip(y_true, y_pred):
+            for val_true, val_pred in zip(y_true, y_pred):
                 val_true, _ = val_true
                 val_pred, _ = val_pred
                 value = self.dice_metric(

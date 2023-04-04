@@ -214,7 +214,6 @@ with torch.autograd.profiler.emit_nvtx():
                 with torch.no_grad():
                     val_loader_iterator = iter(val_loader)
                     for val_step in range(len(val_loader)):
-
                         with nvtx.annotate("dataload", color="red"):
                             val_data = next(val_loader_iterator)
                             val_inputs, val_labels = (

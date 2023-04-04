@@ -23,9 +23,7 @@ from monai.data.box_utils import convert_box_mode
 
 
 def save_obj(vertices, faces, filename):
-
     with open(filename, "w") as f:
-
         for v in vertices:
             f.write("v {} {} {}\n".format(*np.array(v)))
 

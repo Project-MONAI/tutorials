@@ -206,7 +206,7 @@ Demonstrates the use of the `ThreadBuffer` class used to generate data batches d
 ##### [transform_speed](./acceleration/transform_speed.ipynb)
 Illustrate reading NIfTI files and test speed of different transforms on different devices.
 ##### [TensorRT_inference_acceleration](./acceleration/TensorRT_inference_acceleration.ipynb)
-This note book shows how to use TensorRT to accelerate the model and achieve a better inference latency.
+This notebook shows how to use TensorRT to accelerate the model and achieve a better inference latency.
 
 #### <ins>**Model Zoo**</ins>
 ##### [easy_integrate_bundle](./model_zoo/app_integrate_bundle)

@@ -12,7 +12,7 @@ hemorrhage, and subarachnoid hemorrhage), are used for model training. The size 
 
 ##### Validation performance: NVIDIA DGX-1 (4x V100 16G)
 
-The complete command of **Auto3DSeg** can be found [here](../../README.md#reference-python-apis-for-auto3dseg). And our validation results can be obtained by running the training script with MONAI 1.0.0 on NVIDIA DGX-1 with (4x V100 16GB) GPUs.
+The complete command of **Auto3DSeg** can be found [here](../../README.md#Reference-Python-APIs-for-Auto3DSeg). And our validation results can be obtained by running the training script with MONAI 1.0.0 on NVIDIA DGX-1 with (4x V100 16GB) GPUs.
 
 | Methods| Dimension | GPUs | Batch size / GPU | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Avg |
 |:------:|:---------:|:----:|:----------------:|:------:|:------:|:------:|:------:|:------:|:---:|

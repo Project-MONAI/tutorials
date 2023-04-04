@@ -55,55 +55,55 @@ Once the minimum input information is provided, user can use the following comma
 python -m monai.apps.nnunet nnUNetV2Runner run --input_config='./input.yaml'
 ```
 
-### 2. Run nnUNet modules using ```AutoRunner```
+### 2. Run nnU-Net modules using ```nnUNetV2Runner```
 
 ```nnUNetV2Runner``` offers the one-stop API to execute the pipeline, as well as the APIs to access the underlying components of nnU-Net V2. Below are the command for different components.
 
 ```bash
 ## [component] convert dataset
-python -m monai.apps.nnunet nnUNetRunner convert_dataset --input_config "./input_new.yaml"
+python -m monai.apps.nnunet nnUNetV2Runner convert_dataset --input_config "./input_new.yaml"
 
 ## [component] converting msd datasets
-python -m monai.apps.nnunet nnUNetRunner convert_msd_dataset --input_config "./input.yaml" --data_dir "/workspace/data/Task05_Prostate"
+python -m monai.apps.nnunet nnUNetV2Runner convert_msd_dataset --input_config "./input.yaml" --data_dir "/workspace/data/Task05_Prostate"
 
 ## [component] experiment planning and data pre-processing
-python -m monai.apps.nnunet nnUNetRunner plan_and_process --input_config "./input.yaml"
+python -m monai.apps.nnunet nnUNetV2Runner plan_and_process --input_config "./input.yaml"
 
 ## [component] single-gpu training for all 20 models
-python -m monai.apps.nnunet nnUNetRunner train --input_config "./input.yaml"
+python -m monai.apps.nnunet nnUNetV2Runner train --input_config "./input.yaml"
 
 ## [component] single-gpu training for a single model
-python -m monai.apps.nnunet nnUNetRunner train_single_model --input_config "./input.yaml" \
+python -m monai.apps.nnunet nnUNetV2Runner train_single_model --input_config "./input.yaml" \
     --config "3d_fullres" \
     --fold 0
 
 ## [component] multi-gpu training for all 20 models
 export CUDA_VISIBLE_DEVICES=0,1 # optional
-python -m monai.apps.nnunet nnUNetRunner train --input_config "./input.yaml" --num_gpus 2
+python -m monai.apps.nnunet nnUNetV2Runner train --input_config "./input.yaml" --num_gpus 2
 
 ## [component] multi-gpu training for a single model
 export CUDA_VISIBLE_DEVICES=0,1 # optional
-python -m monai.apps.nnunet nnUNetRunner train_single_model --input_config "./input.yaml" \
+python -m monai.apps.nnunet nnUNetV2Runner train_single_model --input_config "./input.yaml" \
     --config "3d_fullres" \
     --fold 0 \
     --num_gpus 2
 
 ## [component] find best configuration
-python -m monai.apps.nnunet nnUNetRunner find_best_configuration --input_config "./input.yaml"
+python -m monai.apps.nnunet nnUNetV2Runner find_best_configuration --input_config "./input.yaml"
 
 ## [component] predict, ensemble, and postprocessing
-python -m monai.apps.nnunet nnUNetRunner predict_ensemble_postprocessing --input_config "./input.yaml"
+python -m monai.apps.nnunet nnUNetV2Runner predict_ensemble_postprocessing --input_config "./input.yaml"
 
 ## [component] predict only
-python -m monai.apps.nnunet nnUNetRunner predict_ensemble_postprocessing --input_config "./input.yaml" \
+python -m monai.apps.nnunet nnUNetV2Runner predict_ensemble_postprocessing --input_config "./input.yaml" \
 	--run_ensemble false --run_postprocessing false
 
 ## [component] ensemble only
-python -m monai.apps.nnunet nnUNetRunner predict_ensemble_postprocessing --input_config "./input.yaml" \
+python -m monai.apps.nnunet nnUNetV2Runner predict_ensemble_postprocessing --input_config "./input.yaml" \
 	--run_predict false --run_postprocessing false
 
 ## [component] post-processing only
-python -m monai.apps.nnunet nnUNetRunner predict_ensemble_postprocessing --input_config "./input.yaml" \
+python -m monai.apps.nnunet nnUNetV2Runner predict_ensemble_postprocessing --input_config "./input.yaml" \
 	--run_predict false --run_ensemble false
 
 ```

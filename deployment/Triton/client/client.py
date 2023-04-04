@@ -61,7 +61,6 @@ def open_nifti_files(input_path):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description="Triton CLI for COVID classification inference from NIFTI data")
     parser.add_argument(
         "input",

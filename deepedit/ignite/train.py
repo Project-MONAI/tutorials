@@ -194,7 +194,6 @@ def get_loaders(args, pre_transforms):
 
 
 def create_trainer(args):
-
     set_determinism(seed=args.seed)
 
     multi_gpu = args.multi_gpu
@@ -431,7 +430,6 @@ def main():
 
 
 if __name__ == "__main__":
-
     logging.basicConfig(
         stream=sys.stdout,
         level=logging.INFO,

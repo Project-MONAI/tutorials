@@ -92,7 +92,6 @@ class UNetDecoder(nn.Module):
         self.blocks = nn.ModuleList(blocks)
 
     def forward(self, *features: Sequence[torch.Tensor]):
-
         features = features[1:][::-1]
         skips = features[1:]
         x = features[0]
@@ -215,7 +214,6 @@ class RanzcrNet(nn.Module):
             print("weights loaded from", cfg.pretrained_weights)
 
     def forward(self, batch):
-
         x_in = batch["input"]
         enc_out = self.encoder(x_in)
 

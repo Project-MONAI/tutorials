@@ -33,7 +33,6 @@ def get_train_dataset(train_df, cfg):
 
 
 def get_train_dataloader(train_dataset, cfg):
-
     train_dataloader = DataLoader(
         train_dataset,
         sampler=None,
@@ -54,7 +53,6 @@ def get_val_dataset(val_df, cfg):
 
 
 def get_val_dataloader(val_dataset, cfg):
-
     val_dataloader = DataLoader(
         val_dataset,
         sampler=SequentialSampler(val_dataset),
@@ -73,7 +71,6 @@ def get_test_dataset(test_df, cfg):
 
 
 def get_test_dataloader(test_dataset, cfg):
-
     test_dataloader = DataLoader(
         test_dataset,
         shuffle=False,
@@ -84,7 +81,6 @@ def get_test_dataloader(test_dataset, cfg):
 
 
 def get_optimizer(model, cfg):
-
     params = model.parameters()
     optimizer = optim.Adam(params, lr=cfg.lr, weight_decay=cfg.weight_decay)
 
@@ -92,7 +88,6 @@ def get_optimizer(model, cfg):
 
 
 def get_scheduler(cfg, optimizer, total_steps):
-
     scheduler = WarmupCosineSchedule(
         optimizer,
         warmup_steps=cfg.warmup * (total_steps // cfg.batch_size),

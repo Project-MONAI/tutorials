@@ -45,7 +45,6 @@ def set_seed(seed):
 
 
 def get_train_dataloader(train_dataset, cfg):
-
     train_dataloader = DataLoader(
         train_dataset,
         sampler=None,
@@ -61,7 +60,6 @@ def get_train_dataloader(train_dataset, cfg):
 
 
 def get_val_dataloader(val_dataset, cfg):
-
     val_dataloader = DataLoader(
         val_dataset,
         shuffle=False,

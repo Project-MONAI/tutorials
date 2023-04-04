@@ -2,7 +2,7 @@
 Adapt a bundle to another dataset.
 
 # Overview
-This tutorial shows how to adapt an example monai bundle from MONAI model-zoo to a new dataset.
+This tutorial shows how to adapt an example monai bundle to a new dataset.
 
 ## Data
 The new dataset is BTCV challenge dataset (https://www.synapse.org/#!Synapse:syn3193805/wiki/217752). It has 24 Training + 6 Validation CT abdominal scans.
@@ -19,9 +19,9 @@ In this experiment, we focus on spleen only, which has intensity = 1 in the labe
 
 Step 4: `cp -avr ./data/RawData/Training/img ./data/btcv_spleen/imagesTr`
 
-## Download example monai bundle from model-zoo
+## Download example monai bundle
 ```
-python -m monai.bundle download --name spleen_ct_segmentation --version "0.1.1" --bundle_dir "./"
+python -m monai.bundle download --name spleen_ct_segmentation --bundle_dir "./"
 ```
 
 ## Training configuration
@@ -33,7 +33,7 @@ Actual Model Input: 96 x 96 x 96
 ## Modify ./spleen_ct_segmentation/configs/train.json from the downloaded example
 | Old json config | Updated json config |
 | --- | --- |
-| "bundle_root": "/workspace/data/tutorials/bundle/spleen_segmentation", | "bundle_root": "./spleen_ct_segmentation", |
+| "bundle_root": ".", | "bundle_root": "./spleen_ct_segmentation", |
 | "dataset_dir": "/workspace/data/Task09_Spleen",| "data_file_base_dir": "./data/btcv_spleen", |
 | "images": "$list(sorted(glob.glob(@dataset_dir + '/imagesTr/*.nii.gz')))",| "data_list_file_path": "./data/dataset_0.json", |
 | "labels": "$list(sorted(glob.glob(@dataset_dir + '/labelsTr/*.nii.gz')))",| "train_datalist": "$monai.data.load_decathlon_datalist(@data_list_file_path, is_segmentation=True, data_list_key='training', base_dir=@data_file_base_dir)", |
@@ -59,13 +59,13 @@ Mean Dice = 0.9294.
 Execute training:
 
 ```
-python -m monai.bundle run training --meta_file ./spleen_ct_segmentation/configs/metadata.json --config_file ./spleen_ct_segmentation/configs/train.json --logging_file ./spleen_ct_segmentation/configs/logging.conf
+python -m monai.bundle run --meta_file ./spleen_ct_segmentation/configs/metadata.json --config_file ./spleen_ct_segmentation/configs/train.json --logging_file ./spleen_ct_segmentation/configs/logging.conf
 ```
 
 Override the `train` config to execute evaluation:
 
 ```
-python -m monai.bundle run evaluating --meta_file ./spleen_ct_segmentation/configs/metadata.json --config_file "['./spleen_ct_segmentation/configs/train.json','./spleen_ct_segmentation/configs/evaluate.json']" --logging_file ./spleen_ct_segmentation/configs/logging.conf
+python -m monai.bundle run --meta_file ./spleen_ct_segmentation/configs/metadata.json --config_file "['./spleen_ct_segmentation/configs/train.json','./spleen_ct_segmentation/configs/evaluate.json']" --logging_file ./spleen_ct_segmentation/configs/logging.conf
 ```
 
 

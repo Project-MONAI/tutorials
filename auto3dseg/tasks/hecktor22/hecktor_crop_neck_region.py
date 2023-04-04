@@ -37,7 +37,6 @@ class HecktorCropNeckRegion(CropForegroundd):
         self.box_size = box_size
 
     def __call__(self, data):
-
         d = dict(data)
 
         im_pet = d["image2"][0]
@@ -92,7 +91,6 @@ class HecktorCropNeckRegion(CropForegroundd):
         return d
 
     def extract_roi(self, im_pet, box_size):
-
         crop_len = int(0.75 * im_pet.shape[2])
         im = im_pet[..., crop_len:]
 

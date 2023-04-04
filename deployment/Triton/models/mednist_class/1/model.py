@@ -158,7 +158,6 @@ class TritonPythonModel:
         batched_img = []
         print("starting request")
         for request in requests:
-
             # get the input by name (as configured in config.pbtxt)
             input_0 = pb_utils.get_input_tensor_by_name(request, "INPUT0")
 

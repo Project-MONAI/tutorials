@@ -58,7 +58,6 @@ def train_epoch(model, loader, optimizer, scaler, epoch, args):
     loss, acc = 0.0, 0.0
 
     for idx, batch_data in enumerate(loader):
-
         data = batch_data["image"].as_subclass(torch.Tensor).cuda(args.rank)
         target = batch_data["label"].as_subclass(torch.Tensor).cuda(args.rank)
 
@@ -113,14 +112,11 @@ def val_epoch(model, loader, epoch, args, max_tiles=None):
     loss, acc = 0.0, 0.0
 
     with torch.no_grad():
-
         for idx, batch_data in enumerate(loader):
-
             data = batch_data["image"].as_subclass(torch.Tensor).cuda(args.rank)
             target = batch_data["label"].as_subclass(torch.Tensor).cuda(args.rank)
 
             with autocast(enabled=args.amp):
-
                 if max_tiles is not None and data.shape[1] > max_tiles:
                     # During validation, we want to use all instances/patches
                     # and if its number is very big, we may run out of GPU memory
@@ -224,7 +220,6 @@ class LabelEncodeIntegerGraded(MapTransform):
         self.num_classes = num_classes
 
     def __call__(self, data):
-
         d = dict(data)
         for key in self.keys:
             label = int(d[key])
@@ -254,7 +249,6 @@ def list_data_collate(batch: collections.abc.Sequence):
 
 
 def main_worker(gpu, args):
-
     args.gpu = gpu
 
     if args.distributed:
@@ -415,7 +409,6 @@ def main_worker(gpu, args):
     scaler = GradScaler(enabled=args.amp)
 
     for epoch in range(start_epoch, n_epochs):
-
         if args.distributed:
             train_sampler.set_epoch(epoch)
             torch.distributed.barrier()
@@ -440,7 +433,6 @@ def main_worker(gpu, args):
         b_new_best = False
         val_acc = 0
         if (epoch + 1) % args.val_every == 0:
-
             epoch_time = time.time()
             val_loss, val_acc, qwk = val_epoch(model, valid_loader, epoch=epoch, args=args, max_tiles=args.tile_count)
             if args.rank == 0:
@@ -475,7 +467,6 @@ def main_worker(gpu, args):
 
 
 def parse_args():
-
     parser = argparse.ArgumentParser(description="Multiple Instance Learning (MIL) example of classification from WSI.")
     parser.add_argument(
         "--data_root", default="/PandaChallenge2020/train_images/", help="path to root folder of images"
@@ -535,7 +526,6 @@ def parse_args():
 
 
 if __name__ == "__main__":
-
     args = parse_args()
 
     if args.dataset_json is None:

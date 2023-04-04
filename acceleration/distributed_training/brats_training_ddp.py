@@ -132,7 +132,6 @@ class BratsCacheDataset(DecathlonDataset):
         num_workers=0,
         shuffle=False,
     ) -> None:
-
         if not os.path.isdir(root_dir):
             raise ValueError("root directory root_dir must be a directory.")
         self.section = section

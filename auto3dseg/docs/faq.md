@@ -4,4 +4,4 @@ We list some common troubles faced by many users and their corresponding solutio
 
 ## Hardware
 
-**Auto3DSeg** is a GPU based application. The minimum requirement is a single GPU with more than 16GB RAM, which supports PyTorch version 1.8+.
+**Auto3DSeg** is a GPU based application. The minimum requirement is a single GPU with more than 16GB RAM, which supports PyTorch version 1.9+.

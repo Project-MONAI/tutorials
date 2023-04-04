@@ -97,7 +97,6 @@ class CustomDataset(Dataset):
         mask = np.zeros((img_shape[0], img_shape[1], self.cfg.seg_dim))
 
         for idx, data in df.iterrows():
-
             xys = [np.array(ast.literal_eval(data["data"])).clip(0, np.inf).astype(np.int32)[:, None, :]]
 
             m = np.zeros(img_shape)
@@ -120,7 +119,6 @@ class CustomDataset(Dataset):
         return mask
 
     def __getitem__(self, idx):
-
         study_id = self.study_ids[idx]
         label = self.labels[idx]
         is_annotated = self.is_annotated[idx]

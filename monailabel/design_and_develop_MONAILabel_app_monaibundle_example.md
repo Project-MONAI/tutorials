@@ -1,6 +1,6 @@
 # MONAI Label Tutorial: Develop MONAI Label App - the monaibundle App Example
 
-This tutorial demonstrates the monaibundle app modules for building a MONAI Label app. We show detailed structures for developing applications. MONAI Label provides interfaces and deployment utilities that end-users can develop in a serverless way. Medical image labeling applications are typically categorized into different imaging modalities, MONAI Label offers several sample teamplate apps including `radiology`, `pathology`, and `endoscopy`, each app is associated with processing features corresponding to radiographic, microscopic, and endoscopic images. However, AI-assisted algorithms, especially deep learning-based approaches are consisted of similar modules. Such as model inference, training pipeline, image pre-processing, post-process, or active learning strategies. Apart from above templates apps, this tutorial indroduces desgin details of monaibundle app with MONAI Label interfaces, and demonstrate how to integrate the modules into a complete app and deployable to MONAI Label server. 
+This tutorial demonstrates the monaibundle app modules for building a MONAI Label app. We show detailed structures for developing applications. MONAI Label provides interfaces and deployment utilities that end-users can develop in a serverless way. Medical image labeling applications are typically categorized into different imaging modalities, MONAI Label offers several sample teamplate apps including `radiology`, `pathology`, and `endoscopy`, each app is associated with processing features corresponding to radiographic, microscopic, and endoscopic images. However, AI-assisted algorithms, especially deep learning-based approaches are consisted of similar modules. Such as model inference, training pipeline, image pre-processing, post-process, or active learning strategies. Apart from above templates apps, this tutorial indroduces desgin details of monaibundle app with MONAI Label interfaces, and demonstrate how to integrate the modules into a complete app and deployable to MONAI Label server.
 
 <p align = "center"><img src="./figures/monailabel_bring_your_own_app/monailabel_interfaces.png" alt="drawing" width="800"/></p>
 <p align = "center">Modules Overview: MONAI Label provides interfaces that can be implemented by the label app developer for custom functionality as well as
@@ -105,7 +105,7 @@ class BundleInferTask(BasicInferTask):
 
 In the **BundleInferTask**, we can also update the transformations loaded from bundle JSON/YAML files. For example, to better adapt to MONAI Label, we can filter transformations by passing to argument, and we can extend transformation for customization purposes.
 
-- Pre-transforms 
+- Pre-transforms
 <pre style="background: #f4f4f4; border: 1px solid #ddd; border-left: 3px solid #02a3a3; line-height: 1.6; padding: 1.5em;">
 def pre_transforms(self, data=None) -> Sequence[Callable]:
     pre = []
@@ -152,7 +152,7 @@ def post_transforms(self, data=None) -> Sequence[Callable]:
 
 ### 1.2. Design Trainer Task
 
-Similar to **BundleInferTask**, most training configurations are from bundle config files. Below is a code section of **BundleTranTask**, bundle file roots, configs are passed and instantiated by the config parser. 
+Similar to **BundleInferTask**, most training configurations are from bundle config files. Below is a code section of **BundleTranTask**, bundle file roots, configs are passed and instantiated by the config parser.
 
 <pre style="background: #f4f4f4; border: 1px solid #ddd; border-left: 3px solid #02a3a3; line-height: 1.6; padding: 1.5em;">
 class BundleTrainTask(TrainTask):
@@ -335,11 +335,11 @@ class MyApp(MONAILabelApp):
 
 #### 1.4.2 Main app script methods initializations
 
-In the `man.py`, we can initialize the modules of infer, trainer, scoring tasks and active learning strategy that are defined in monailabel interfaces. 
+In the `man.py`, we can initialize the modules of infer, trainer, scoring tasks and active learning strategy that are defined in monailabel interfaces.
 Each model or network workflow will associate with one infer, trainer, and scoring method.
 
 - Infer Initialization
-  
+
 <pre style="background: #f4f4f4; border: 1px solid #ddd; border-left: 3px solid #02a3a3; line-height: 1.6; padding: 1.5em;">
     def init_infers(self) -> Dict[str, InferTask]:
         infers: Dict[str, InferTask] = {}

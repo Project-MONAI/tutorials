@@ -17,12 +17,14 @@ Each tutorial provides MONAI Label plugin installation steps associated with the
 - **Radiology App**:
   - Viewer: [3D Slicer](https://www.slicer.org/) | Datastore: Local | Task: Segmentation
     - [MONAILabel: HelloWorld](monailabel_HelloWorld_radiology_3dslicer.ipynb): Spleen segmentation with 3D Slicer setups.
+  - Viewer: [OHIF](https://ohif.org/) | Datastore: Local | Task: Segmentation
+    - [MONAILabel: Web-based OHIF Viewer](monailabel_radiology_spleen_segmentation_OHIF.ipynb): Spleen segmentation with OHIF setups.
 - **MONAIBUNDLE App**:
   - Viewer: [3D Slicer](https://www.slicer.org/) | Datastore: Local | Task: Segmentation
-    - [MONAILabel: Pancreas Tumor Segmentation with 3D Slicer](monailabel_pancreas_tumor_segmentation_3DSlicer.ipynb): Pancreas and tumor segmentation with CT scans in 3D Slicer.
+    - [MONAILabel: Pancreas Tumor Segmentation with 3D Slicer](monailabel_bring_your_own_data.ipynb): Pancreas and tumor segmentation with CT scans in 3D Slicer.
     - [MONAILabel: Multi-organ Segmentation with 3D Slicer](monailabel_monaibundle_3dslicer_multiorgan_seg.ipynb): Multi-organ segmentation with CT scans in 3D Slicer.
     - [MONAILabel: Whole Body CT Segmentation with 3D Slicer](monailabel_wholebody_totalSegmentator_3dslicer.ipynb): Whole body (104 structures) segmentation with CT scans.
-
+    - [MONAILabel: Lung nodule CT Detection with 3D Slicer](monaibundle_3dslicer_lung_nodule_detection.ipynb): Lung nodule detection task with CT scans.
 - **Pathology App**:
   - Viewer: [QuPath](https://qupath.github.io/) | Datastore: Local | Task: Segmentation
     - [MONAILabel: Nuclei Segmentation with QuPath](monailabel_pathology_nuclei_segmentation_QuPath.ipynb) Nuclei segmentation with QuPath setup and Nuclick models.

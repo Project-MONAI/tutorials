@@ -2,7 +2,7 @@
 This folder contains an example to train and validate a 3D detection RetinaNet model.
 The workflow of MONAI detection module is shown in the following figure.
 <p align="center">
-  <img src="https://github.com/Project-MONAI/MONAI/blob/dev/docs/images/detection.png" alt="detection scheme")
+  <img src="detection.png" alt="detection scheme")
 </p>
 
 MONAI detection implementation is based on the following papers:

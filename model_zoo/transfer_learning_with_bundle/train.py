@@ -72,7 +72,7 @@ def main(tempdir, load_pretrained_ckpt=False):
         save_model = "./models/model_from_scratch.pt"
         max_epochs = 600
 
-    # create UNet and load pretrained weights from monai model-zoo
+    # create UNet and load pretrained weights
     device = torch.device("cuda:0")
     model = UNet(
         spatial_dims=3,
@@ -85,8 +85,7 @@ def main(tempdir, load_pretrained_ckpt=False):
     ).to(device)
 
     if load_pretrained_ckpt:
-        print("Load model from monai model-zoo.")
-        pretrained_model = monai.bundle.load(name="spleen_ct_segmentation", bundle_dir="./", version="0.1.1")
+        pretrained_model = monai.bundle.load(name="spleen_ct_segmentation", bundle_dir="./")
         model.load_state_dict(pretrained_model)
 
     # define transforms for image and segmentation

@@ -35,7 +35,6 @@ from utils import (
 
 
 def main(cfg):
-
     os.makedirs(str(cfg.output_dir + f"/fold{cfg.fold}/"), exist_ok=True)
     set_seed(cfg.seed)
     # set dataset, dataloader
@@ -190,7 +189,6 @@ def run_train(
 
 
 def run_eval(model, val_dataloader, cfg, writer, epoch, metric):
-
     model.eval()
     torch.set_grad_enabled(False)
 
@@ -213,7 +211,6 @@ def run_eval(model, val_dataloader, cfg, writer, epoch, metric):
 
 
 if __name__ == "__main__":
-
     sys.path.append("configs")
     sys.path.append("models")
     sys.path.append("data")

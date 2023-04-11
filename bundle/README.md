@@ -4,9 +4,6 @@ This folder contains the `getting started` tutorial and below code examples of t
 ### [introducing_config](./introducing_config)
 A simple example to introduce the MONAI bundle config and parsing.
 
-### [spleen segmentation](./spleen_segmentation)
-A bundle example for volumetric (3D) segmentation of the spleen from CT image.
-
 ### [customize component](./custom_component)
 Example shows the use cases of bringing customized python components, such as transform, network, and metrics, in a configuration-based workflow.
 

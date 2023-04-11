@@ -20,7 +20,7 @@ As well as the requirements outlined in the [tutorials README](https://github.co
 
 ### Configure environment - `environment(-azure).yaml`
 
-- To be discussed with Dong et. al.
+- WIP -> hoping to have a Docker image integrated into ACR for this.
 
 ### Empty directory
 

@@ -115,7 +115,7 @@ Please download the official LUNA16 evaluation scripts from https://luna16.grand
 and save it as ./evaluation_luna16. Note that the official LUNA16 evaluation scripts are based on python2.
 
 To run it with python3, please 1) copy the files in ./evaluationScript_py3_update to replace the files in downloaded scripts in ./evaluation_luna16; 2) then run the following command to convert python2 code to python3 code: `python -m pip install future; futurize --stage1 -w evaluation_luna16/noduleCADEvaluationLUNA16.py; futurize --stage2 -w evaluation_luna16/noduleCADEvaluationLUNA16.py`;
-3) In ./evaluation_luna16/noduleCADEvaluationLUNA16.py, replace `plt.xscale('log', basex=2)` with `plt.xscale('log', base=2)`.
+3) In ./evaluation_luna16/noduleCADEvaluationLUNA16.py, replace `plt.xscale('log', basex=2)` with `plt.xscale('log', base=2)` and `plt.grid(b=True, which='both')` with `plt.grid(visible=True, which='both')`.
 
 ./evaluation_luna16/noduleCADEvaluationLUNA16.py will be the main python script to generate evaluation scores.
 

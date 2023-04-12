@@ -52,7 +52,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" preprocess_extract_
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" profiling_camelyon_pipeline.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_HelloWorld_radiology_3dslicer.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_monaibundle_3dslicer_multiorgan_seg.ipynb)
-doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_pancreas_tumor_segmentation_3DSlicer.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_bring_your_own_data.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_endoscopy_cvat_tooltracking.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_pathology_nuclei_segmentation_QuPath.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_radiology_spleen_segmentation_OHIF.ipynb)
@@ -64,6 +64,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" ssl_finetune.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" TCIA_PROSTATEx_Prostate_MRI_Anatomy_Model.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" lazy_resampling_functional.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" lazy_resampling_compose.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" TensorRT_inference_acceleration.ipynb)
 
 # Execution of the notebook in these folders / with the filename cannot be automated
 skip_run_papermill=()
@@ -86,7 +87,7 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*transfer_mmar*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*MRI_reconstruction*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_HelloWorld_radiology_3dslicer*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_monaibundle_3dslicer_multiorgan_seg*)
-skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_pancreas_tumor_segmentation_3DSlicer*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_bring_your_own_data*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_endoscopy_cvat_tooltracking*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_pathology_nuclei_segmentation_QuPath*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_radiology_spleen_segmentation_OHIF*)
@@ -95,6 +96,7 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_monaibundle_3dslicer
 skip_run_papermill=("${skip_run_papermill[@]}" .*ssl_train*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*ssl_finetune*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*transform_visualization*)  # https://github.com/Project-MONAI/tutorials/issues/1155
+skip_run_papermill=("${skip_run_papermill[@]}" .*TensorRT_inference_acceleration*)
 
 # output formatting
 separator=""

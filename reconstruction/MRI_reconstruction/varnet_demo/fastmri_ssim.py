@@ -26,4 +26,4 @@ def skimage_ssim(gt: ndarray, rec: ndarray) -> float:
         skimage SSIM score between gt and rec
     """
     # assumes 3D inputs
-    return compare_ssim(gt.transpose(1, 2, 0), rec.transpose(1, 2, 0), multichannel=True, data_range=gt.max())
+    return compare_ssim(gt.transpose(1, 2, 0), rec.transpose(1, 2, 0), channel_axis=2, data_range=gt.max())

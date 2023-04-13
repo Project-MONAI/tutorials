@@ -2,7 +2,7 @@
 
 ## Description
 
-Here we use a classification model to classify small batches extracted from very large whole-slide histopathology images. Since the patches are very small compare to the whole image, we can then use this model for detection of tumor in different area of a whole-slide pathology image.
+Here we use a classification model to classify small batches extracted from very large whole-slide histopathology images. Since the patches are very small compare to the whole image, we can then use this model for the detection of tumors in a different area of a whole-slide pathology image.
 
 ## Model Overview
 
@@ -10,9 +10,9 @@ The model is based on ResNet18 with the last fully connected layer replaced by a
 
 ## Data
 
-All the data used to train and validate this model is from [Camelyon-16 Challenge](https://camelyon16.grand-challenge.org/). You can download all the images for "CAMELYON16" data set from various sources listed [here](https://camelyon17.grand-challenge.org/Data/).
+All the data used to train and validate this model is from the [Camelyon-16 Challenge](https://camelyon16.grand-challenge.org/). You can download all the images for the "CAMELYON16" data set from various sources listed [here](https://camelyon17.grand-challenge.org/Data/).
 
-Location information for training/validation patches (the location on the whole slide image where patches are extracted) are adopted from [NCRF/coords](https://github.com/baidu-research/NCRF/tree/master/coords). The reformatted coordinations and labels in CSV format for training (`training.csv`) can be found [here](https://drive.google.com/file/d/1httIjgji6U6rMIb0P8pE0F-hXFAuvQEf/view?usp=sharing) and for validation (`validation.csv`) can be found [here](https://drive.google.com/file/d/1tJulzl9m5LUm16IeFbOCoFnaSWoB6i5L/view?usp=sharing).
+Location information for training/validation patches (the location on the whole slide image where patches are extracted) is adopted from [NCRF/coords](https://github.com/baidu-research/NCRF/tree/master/coords). The reformatted coordinations and labels in CSV format for training (`training.csv`) can be found [here](https://drive.google.com/file/d/1httIjgji6U6rMIb0P8pE0F-hXFAuvQEf/view?usp=sharing) and for validation (`validation.csv`) can be found [here](https://drive.google.com/file/d/1tJulzl9m5LUm16IeFbOCoFnaSWoB6i5L/view?usp=sharing).
 
 This pipeline expects the training/validation data (whole slide images) reside in `cfg["data_root"]/training/images`. By default `data_root` is pointing to the code folder `./`; however, you can easily modify it to point to a different directory by passing the following argument in the runtime: `--data-root /other/data/root/dir/`.
 
@@ -20,9 +20,9 @@ This pipeline expects the training/validation data (whole slide images) reside i
 
 ### Input and output formats
 
-Input for the training pipeline is a json file (dataset.json) which includes path to each WSI, the location and the label information for each training patch.
+Input for the training pipeline is a JSON file (dataset.json) which includes the path to each WSI, the location and the label information for each training patch.
 
-Output of the network is the probability of whether the input patch contains tumor or not.
+The output of the network is the probability of whether the input patch contains the tumor or not.
 
 ## Disclaimer
 

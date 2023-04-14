@@ -10,19 +10,19 @@ Overall, the integration between nnU-Net and MONAI can offer significant benefit
 
 ## What's New in nnU-Net V2
 
-nnU-Net has release a newer version, nnU-Net V2, recently. Some changes have been made as follows.
+nnU-Net has released a newer version, nnU-Net V2, recently. Some changes have been made as follows.
 - Refactored repository: nnU-Net v2 has undergone significant changes in the repository structure, making it easier to navigate and understand. The codebase has been modularized, and the documentation has been improved, allowing for easier integration with other tools and frameworks.
 - New features: nnU-Net v2 has introduced several new [features](https://github.com/MIC-DKFZ/nnUNet/blob/master/documentation/changelog.md), including:
-  - Region based formulation with sigmoid activation;
+  - Region-based formulation with sigmoid activation;
   - Cross-platform support;
   - Multi-GPU training support.
 
 Overall, nnU-Net v2 has introduced significant improvements and new features, making it a powerful and flexible deep learning framework for medical image segmentation. With its easy-to-use interface, modularized codebase, and advanced features, nnU-Net v2 is poised to advance the field of medical image analysis and improve patient outcomes.
 
-## How does the integration works?
+## How does the integration work?
 As part of the integration, we have introduced a new class called the `nnUNetV2Runner`, which utilizes the Python APIs available in the official nnU-Net repository. The `nnUNetV2Runner` provides several key features that are useful for general users of MONAI.
 - The new class offers Python APIs at a high level to facilitate most of the components in nnU-Net, such as model training, validation, ensemble;
-- Users are only required to provide the minimum input, as specified in most of the MONAI tutorials for 3D medical image segmentation. The new class will automatically handle data conversion to prepare data that meets the requirements of nnU-Net, which will largely save time for users to prepare the datatsets;
+- Users are only required to provide the minimum input, as specified in most of the MONAI tutorials for 3D medical image segmentation. The new class will automatically handle data conversion to prepare data that meets the requirements of nnU-Net, which will largely save time for users to prepare the datasets;
 - Additionally, we have enabled users with more GPU resources to automatically allocate model training jobs in parallel. As nnU-Net requires the training of 20 segmentation models by default, distributing model training to larger resources can significantly improve overall efficiency. For instance, users with 8 GPUs can increase model training speed by 6x to 8x automatically using the new class.
 
 ## Benchmarking Results on Public Datasets
@@ -34,7 +34,7 @@ In this session, we present the results of our `nnUNetV2Runner` and results from
 1. [BraTS21](http://braintumorsegmentation.org/): The RSNA-ASNR-MICCAI BraTS 2021 Challenge utilizes multi-institutional preoperative baseline multiparametric magnetic resonance imaging (mpMRI) scans and focuses on evaluating (task 1) state-of-the-art methods for segmentation of intrinsically heterogeneous brain glioblasts in mpMRI scans Tumor subregion.
 2. [AMOS22](https://amos22.grand-challenge.org/): Task 1 focuses on the segmentation of abdominal organs using CT scans. The goal is to evaluate the performance of different segmentation methods on a diverse set of 500 cases, with annotations for 15 organs. Task 2 extends the scope of Task 1 by including MRI scans in addition to CT scans. Under this “Cross Modality” setting, a single algorithm must segment abdominal organs from both CT and MRI scans. This task provides an additional 100 MRI scans with the same type of annotation.
 
-The table below shows the results of full-resolution 3D U-Net on fold 0 for each dataset. We can see that the performance of `nnUNetV2Runner` meets expectation.
+The table below shows the results of full-resolution 3D U-Net on fold 0 for each dataset. We can see that the performance of `nnUNetV2Runner` meets expectations.
 
 | Tasks | native nnU-Net | `nnUNetV2Runner` |
 |-----------------|-----------------|-----------------|
@@ -46,11 +46,11 @@ The table below shows the results of full-resolution 3D U-Net on fold 0 for each
 
 ### 1. nnU-Net v2 installation
 
-THe installation instruction is described [here](docs/install.md).
+The installation instruction is described [here](docs/install.md).
 
 ### 2. Run with Minimal Input using ```nnUNetV2Runner```
 
-User needs to provide a data list (".json" file) for the new task and data root. In general, a valid data list needs to follow the format of ones in [Medical Segmentaiton Decathlon](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2). After creating the data list, the user can create a simple "input.yaml" file (shown below) as the minimum input for **nnUNetV2Runner**.
+The user needs to provide a data list (".json" file) for the new task and data root. In general, a valid data list needs to follow the format of the ones in [Medical Segmentation Decathlon](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2). After creating the data list, the user can create a simple "input.yaml" file (shown below) as the minimum input for **nnUNetV2Runner**.
 
 ```
 modality: CT
@@ -58,7 +58,7 @@ datalist: "./msd_task09_spleen_folds.json"
 dataroot: "/workspace/data/nnunet_test/test09"
 ```
 
-User can also set values of directory variables as options in "input.yaml" if any directory needs to be specified.
+Users can also set values of directory variables as options in "input.yaml" if any directory needs to be specified.
 
 ```
 nnunet_preprocessed: "./work_dir/nnUNet_preprocessed" # optional
@@ -74,7 +74,7 @@ python -m monai.apps.nnunet nnUNetV2Runner run --input_config='./input.yaml'
 
 ### 2. Run nnU-Net modules using ```nnUNetV2Runner```
 
-```nnUNetV2Runner``` offers the one-stop API to execute the pipeline, as well as the APIs to access the underlying components of nnU-Net V2. Below are the command for different components.
+```nnUNetV2Runner``` offers the one-stop API to execute the pipeline, as well as the APIs to access the underlying components of nnU-Net V2. Below is the command for different components.
 
 ```bash
 ## [component] convert dataset
@@ -127,4 +127,4 @@ python -m monai.apps.nnunet nnUNetV2Runner predict_ensemble_postprocessing --inp
 
 ## FAQ
 
-THe common questions and answers can be found [here](docs/faq.md).
+The common questions and answers can be found [here](docs/faq.md).

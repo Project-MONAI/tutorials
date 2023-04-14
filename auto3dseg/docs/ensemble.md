@@ -15,7 +15,7 @@ from monai.apps.auto3dseg import (
     AlgoEnsembleBuilder,
     import_bundle_algo_history,
 )
-from monai.utils.enums import AlgoEnsembleKeys
+from monai.utils.enums import AlgoKeys
 
 # Assuming you have already trained the models
 
@@ -33,7 +33,7 @@ ensemble = builder.get_ensemble()
 pred = ensemble()
 print("ensemble picked the following best {0:d}:".format(n_best))
 for algo in ensemble.get_algo_ensemble():
-    print(algo[AlgoEnsembleKeys.ID])
+    print(algo[AlgoKeys.ID])
 ```
 
 ### Customization

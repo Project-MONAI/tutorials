@@ -216,7 +216,7 @@ This tutorial shows a straightforward ensemble application to instruct users on 
 ##### [video segmentation](./computer_assisted_intervention/video_seg.ipynb)
 This tutorial shows how to train a surgical tool segmentation model to locate tools in a given image. In addition, it also builds an example pipeline of an end-to-end video tool segmentation, with video input and video output.
 ##### [endoscopic inbody classification](./computer_assisted_intervention/endoscopic_inbody_classification.ipynb)
-Tutorial to show the pipeline of fine tuning an endoscopic inbody classification model based on a corresponding pretrained bundle in monai model zoo.
+Tutorial to show the pipeline of fine tuning an endoscopic inbody classification model based on a corresponding pretrained bundle.
 
 #### <ins>**Modules**</ins>
 ##### [bundle](./bundle)

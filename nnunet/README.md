@@ -25,6 +25,23 @@ As part of the integration, we have introduced a new class called the `nnUNetV2R
 - Users are only required to provide the minimum input, as specified in most of the MONAI tutorials for 3D medical image segmentation. The new class will automatically handle data conversion to prepare data that meets the requirements of nnU-Net, which will largely save time for users to prepare the datatsets;
 - Additionally, we have enabled users with more GPU resources to automatically allocate model training jobs in parallel. As nnU-Net requires the training of 20 segmentation models by default, distributing model training to larger resources can significantly improve overall efficiency. For instance, users with 8 GPUs can increase model training speed by 6x to 8x automatically using the new class.
 
+## Benchmarking Results on Public Datasets
+
+In this session, we present the results of our `nnUNetV2Runner` and results from the official nnU-Net repository on various public datasets. The goal is to verify that our `nnUNetV2Runner` implementation achieves the same performance as native nnU-Net runs.
+
+### Datasets
+
+1. [BraTS21](http://braintumorsegmentation.org/): The RSNA-ASNR-MICCAI BraTS 2021 Challenge utilizes multi-institutional preoperative baseline multiparametric magnetic resonance imaging (mpMRI) scans and focuses on evaluating (task 1) state-of-the-art methods for segmentation of intrinsically heterogeneous brain glioblasts in mpMRI scans Tumor subregion.
+2. [AMOS22](https://amos22.grand-challenge.org/): Task 1 focuses on the segmentation of abdominal organs using CT scans. The goal is to evaluate the performance of different segmentation methods on a diverse set of 500 cases, with annotations for 15 organs. Task 2 extends the scope of Task 1 by including MRI scans in addition to CT scans. Under this “Cross Modality” setting, a single algorithm must segment abdominal organs from both CT and MRI scans. This task provides an additional 100 MRI scans with the same type of annotation.
+
+The table below shows the results of full-resolution 3D U-Net on fold 0 for each dataset. We can see that the performance of `nnUNetV2Runner` meets expectation.
+
+| Tasks | native nnU-Net | `nnUNetV2Runner` |
+|-----------------|-----------------|-----------------|
+| BraTS21 | 0.92 | 0.94 |
+| AMOS22 (Task 1) | 0.90 | 0.90 |
+| AMOS22 (Task 2) | 0.89 | 0.89 |
+
 ## Steps
 
 ### 1. nnU-Net v2 installation

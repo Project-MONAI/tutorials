@@ -97,6 +97,7 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*ssl_train*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*ssl_finetune*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*transform_visualization*)  # https://github.com/Project-MONAI/tutorials/issues/1155
 skip_run_papermill=("${skip_run_papermill[@]}" .*TensorRT_inference_acceleration*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*mednist_classifier_ray*)  # https://github.com/Project-MONAI/tutorials/issues/1307
 
 # output formatting
 separator=""

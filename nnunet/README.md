@@ -75,7 +75,7 @@ nnunet_raw: "./work_dir/nnUNet_raw_data_base" # optional
 nnunet_results: "./work_dir/nnUNet_trained_models" # optional
 ```
 
-Once the minimum input information is provided, user can use the following commands to start the process of the entire nnU-Net pipeline automatically (from model training to model ensemble).
+Once the minimum input information is provided, the user can use the following commands to start the process of the entire nnU-Net pipeline automatically (from model training to model ensemble).
 
 ```bash
 python -m monai.apps.nnunet nnUNetV2Runner run --input_config='./input.yaml'

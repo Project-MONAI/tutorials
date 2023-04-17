@@ -13,11 +13,11 @@ python -m monai.apps.nnunet nnUNetRunner run --input "{'modality': '${MODALITY}'
 
 ```
 
-## I want to know more command example
+## I want to know more command examples
 
-Sure! please check out [this documentation](commands.md).
+Sure! Please check out [this documentation](commands.md).
 
 ## How to define multi-modal image inputs in the config file?
 
-The `modality` key in the input `yaml` file accepts list of strings as input.
+The `modality` key in the input `yaml` file accepts a list of strings as input.
 [This example](input.yaml) is prepared for the multi-modal MSD prostate dataset.

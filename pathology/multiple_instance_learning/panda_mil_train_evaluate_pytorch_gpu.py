@@ -1,3 +1,14 @@
+# Copyright (c) MONAI Consortium
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import argparse
 import collections.abc
 import os
@@ -47,7 +58,6 @@ def train_epoch(model, loader, optimizer, scaler, epoch, args):
     loss, acc = 0.0, 0.0
 
     for idx, batch_data in enumerate(loader):
-
         data = batch_data["image"].as_subclass(torch.Tensor).cuda(args.rank)
         target = batch_data["label"].as_subclass(torch.Tensor).cuda(args.rank)
 
@@ -102,14 +112,11 @@ def val_epoch(model, loader, epoch, args, max_tiles=None):
     loss, acc = 0.0, 0.0
 
     with torch.no_grad():
-
         for idx, batch_data in enumerate(loader):
-
             data = batch_data["image"].as_subclass(torch.Tensor).cuda(args.rank)
             target = batch_data["label"].as_subclass(torch.Tensor).cuda(args.rank)
 
             with autocast(enabled=args.amp):
-
                 if max_tiles is not None and data.shape[1] > max_tiles:
                     # During validation, we want to use all instances/patches
                     # and if its number is very big, we may run out of GPU memory
@@ -120,7 +127,7 @@ def val_epoch(model, loader, epoch, args, max_tiles=None):
                     logits2 = []
 
                     for i in range(int(np.ceil(data.shape[1] / float(max_tiles)))):
-                        data_slice = data[:, i * max_tiles: (i + 1) * max_tiles]
+                        data_slice = data[:, i * max_tiles : (i + 1) * max_tiles]
                         logits_slice = model(data_slice, no_head=True)
                         logits.append(logits_slice)
 
@@ -213,7 +220,6 @@ class LabelEncodeIntegerGraded(MapTransform):
         self.num_classes = num_classes
 
     def __call__(self, data):
-
         d = dict(data)
         for key in self.keys:
             label = int(d[key])
@@ -243,7 +249,6 @@ def list_data_collate(batch: collections.abc.Sequence):
 
 
 def main_worker(gpu, args):
-
     args.gpu = gpu
 
     if args.distributed:
@@ -293,7 +298,7 @@ def main_worker(gpu, args):
             RandFlipd(keys=["image"], spatial_axis=0, prob=0.5),
             RandFlipd(keys=["image"], spatial_axis=1, prob=0.5),
             RandRotate90d(keys=["image"], prob=0.5),
-            ScaleIntensityRanged(keys=["image"], a_min=np.float32(255), a_max=np.float32(0)),
+            ScaleIntensityRanged(keys=["image"], a_min=np.float32(0), a_max=np.float32(255)),
             ToTensord(keys=["image", "label"]),
         ]
     )
@@ -310,7 +315,7 @@ def main_worker(gpu, args):
                 constant_values=255,
             ),
             SplitDimd(keys=["image"], dim=0, keepdim=False, list_output=True),
-            ScaleIntensityRanged(keys=["image"], a_min=np.float32(255), a_max=np.float32(0)),
+            ScaleIntensityRanged(keys=["image"], a_min=np.float32(0), a_max=np.float32(255)),
             ToTensord(keys=["image", "label"]),
         ]
     )
@@ -397,14 +402,13 @@ def main_worker(gpu, args):
     else:
         writer = None
 
-    #RUN TRAINING
+    # RUN TRAINING
     n_epochs = args.epochs
     val_acc_max = 0.0
 
     scaler = GradScaler(enabled=args.amp)
 
     for epoch in range(start_epoch, n_epochs):
-
         if args.distributed:
             train_sampler.set_epoch(epoch)
             torch.distributed.barrier()
@@ -429,7 +433,6 @@ def main_worker(gpu, args):
         b_new_best = False
         val_acc = 0
         if (epoch + 1) % args.val_every == 0:
-
             epoch_time = time.time()
             val_loss, val_acc, qwk = val_epoch(model, valid_loader, epoch=epoch, args=args, max_tiles=args.tile_count)
             if args.rank == 0:
@@ -464,7 +467,6 @@ def main_worker(gpu, args):
 
 
 def parse_args():
-
     parser = argparse.ArgumentParser(description="Multiple Instance Learning (MIL) example of classification from WSI.")
     parser.add_argument(
         "--data_root", default="/PandaChallenge2020/train_images/", help="path to root folder of images"
@@ -493,7 +495,8 @@ def parse_args():
 
     parser.add_argument("--weight_decay", default=0, type=float, help="optimizer weight decay")
     parser.add_argument("--amp", action="store_true", help="use AMP, recommended")
-    parser.add_argument("--val_every",
+    parser.add_argument(
+        "--val_every",
         "--val_interval",
         default=1,
         type=int,
@@ -501,7 +504,7 @@ def parse_args():
     )
     parser.add_argument("--workers", default=2, type=int, help="number of workers for data loading")
 
-    #for multigpu
+    # for multigpu
     parser.add_argument("--distributed", action="store_true", help="use multigpu training, recommended")
     parser.add_argument("--world_size", default=1, type=int, help="number of nodes for distributed training")
     parser.add_argument("--rank", default=0, type=int, help="node rank for distributed training")
@@ -510,9 +513,7 @@ def parse_args():
     )
     parser.add_argument("--dist-backend", default="nccl", type=str, help="distributed backend")
 
-    parser.add_argument(
-        "--quick", action="store_true", help="use a small subset of data for debugging"
-    )
+    parser.add_argument("--quick", action="store_true", help="use a small subset of data for debugging")
 
     args = parser.parse_args()
 
@@ -523,8 +524,8 @@ def parse_args():
 
     return args
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     args = parse_args()
 
     if args.dataset_json is None:

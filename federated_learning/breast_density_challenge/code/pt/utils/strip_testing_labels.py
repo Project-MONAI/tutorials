@@ -40,16 +40,12 @@ def main():
             strip_set="test2",
         )
         with open(
-            os.path.join(
-                datalist_rootdir, f"./dataset_blinded_{client_id}.json"
-            ),
+            os.path.join(datalist_rootdir, f"./dataset_blinded_{client_id}.json"),
             "w",
         ) as f:
             json.dump(new_datalist1, f, indent=4)
         with open(
-            os.path.join(
-                datalist_rootdir, f"./dataset_blinded_phase2_{client_id}.json"
-            ),
+            os.path.join(datalist_rootdir, f"./dataset_blinded_phase2_{client_id}.json"),
             "w",
         ) as f:
             json.dump(new_datalist2, f, indent=4)

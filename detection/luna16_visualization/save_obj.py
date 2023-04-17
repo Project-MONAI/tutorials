@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright 2021 - 2022 MONAI Consortium
+# Copyright (c) MONAI Consortium
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -23,9 +23,7 @@ from monai.data.box_utils import convert_box_mode
 
 
 def save_obj(vertices, faces, filename):
-
     with open(filename, "w") as f:
-
         for v in vertices:
             f.write("v {} {} {}\n".format(*np.array(v)))
 
@@ -144,9 +142,7 @@ def main():
 
                 _i += 1
 
-            save_obj(
-                vertices, faces, os.path.join(args.output_dir, box_filename + ".obj")
-            )
+            save_obj(vertices, faces, os.path.join(args.output_dir, box_filename + ".obj"))
 
     return
 

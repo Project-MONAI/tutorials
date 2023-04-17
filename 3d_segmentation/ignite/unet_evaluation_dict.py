@@ -1,4 +1,4 @@
-# Copyright 2020 MONAI Consortium
+# Copyright (c) MONAI Consortium
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -26,7 +26,15 @@ from monai.data import create_test_image_3d, list_data_collate, decollate_batch
 from monai.handlers import CheckpointLoader, MeanDice, StatsHandler
 from monai.inferers import sliding_window_inference
 from monai.networks.nets import UNet
-from monai.transforms import Activations, EnsureChannelFirstd, AsDiscrete, Compose, LoadImaged, SaveImage, ScaleIntensityd
+from monai.transforms import (
+    Activations,
+    EnsureChannelFirstd,
+    AsDiscrete,
+    Compose,
+    LoadImaged,
+    SaveImage,
+    ScaleIntensityd,
+)
 
 
 def main(tempdir):

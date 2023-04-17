@@ -41,9 +41,7 @@ def visualize_one_xy_slice_in_3d_image(gt_boxes, image, pred_boxes, gt_box_index
         pred_boxes: numpy array sized (N, 6)
     """
     draw_box = gt_boxes[gt_box_index, :]
-    draw_box_center = [
-        round((draw_box[axis] + draw_box[axis + 3] - 1) / 2.0) for axis in range(3)
-    ]
+    draw_box_center = [round((draw_box[axis] + draw_box[axis + 3] - 1) / 2.0) for axis in range(3)]
     draw_box = np.round(draw_box).astype(int).tolist()
     draw_box_z = draw_box_center[2]  # the z-slice we will visualize
 

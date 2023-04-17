@@ -1,3 +1,14 @@
+# Copyright (c) MONAI Consortium
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Union
 
 import torch
@@ -90,9 +101,7 @@ class DynUNetEvaluator(SupervisedEvaluator):
         self.post_label = AsDiscrete(to_onehot=num_classes)
         self.tta_val = tta_val
 
-    def _iteration(
-        self, engine: Engine, batchdata: Dict[str, Any]
-    ) -> Dict[str, torch.Tensor]:
+    def _iteration(self, engine: Engine, batchdata: Dict[str, Any]) -> Dict[str, torch.Tensor]:
         """
         callback function for the Supervised Evaluation processing logic of 1 iteration in Ignite Engine.
         Return below items in a dictionary:
@@ -129,9 +138,7 @@ class DynUNetEvaluator(SupervisedEvaluator):
             else:
                 for dims in [[2], [3], [4], (2, 3), (2, 4), (3, 4), (2, 3, 4)]:
                     flip_inputs = torch.flip(inputs, dims=dims)
-                    flip_pred = torch.flip(
-                        self.inferer(flip_inputs, self.network).cpu(), dims=dims
-                    )
+                    flip_pred = torch.flip(self.inferer(flip_inputs, self.network).cpu(), dims=dims)
                     flip_pred = nn.functional.softmax(flip_pred, dim=1)
                     del flip_inputs
                     pred += flip_pred
@@ -158,9 +165,7 @@ class DynUNetEvaluator(SupervisedEvaluator):
         original_shape = batchdata["original_shape"][0].tolist()
         if resample_flag:
             # convert the prediction back to the original (after cropped) shape
-            predictions = recovery_prediction(
-                predictions.numpy(), [self.num_classes, *crop_shape], anisotrophy_flag
-            )
+            predictions = recovery_prediction(predictions.numpy(), [self.num_classes, *crop_shape], anisotrophy_flag)
             predictions = torch.tensor(predictions)
 
         # put iteration outputs into engine.state
@@ -171,9 +176,7 @@ class DynUNetEvaluator(SupervisedEvaluator):
         h_start, w_start, d_start = box_start
         h_end, w_end, d_end = box_end
 
-        engine.state.output[Keys.PRED][
-            0, :, h_start:h_end, w_start:w_end, d_start:d_end
-        ] = predictions
+        engine.state.output[Keys.PRED][0, :, h_start:h_end, w_start:w_end, d_start:d_end] = predictions
         del predictions
 
         engine.fire_event(IterationEvents.FORWARD_COMPLETED)

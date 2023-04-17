@@ -1,4 +1,4 @@
-# Copyright 2020 MONAI Consortium
+# Copyright (c) MONAI Consortium
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -141,7 +141,7 @@ def evaluate(args):
             Activationsd(keys="pred", sigmoid=True),
             AsDiscreted(keys="pred", threshold=0.5),
             KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
-            SaveImaged(keys="pred", meta_keys="image_meta_dict", output_dir="./runs/")
+            SaveImaged(keys="pred", meta_keys="image_meta_dict", output_dir="./runs/"),
         ]
     )
     val_handlers = [

@@ -52,13 +52,9 @@ Each user is responsible for checking the content of datasets and the applicable
 - For bugs relating to MONAI functionality, please create an issue on the [main repository](https://github.com/Project-MONAI/MONAI/issues).
 - For bugs relating to the running of a tutorial, please create an issue in [this repository](https://github.com/Project-MONAI/Tutorials/issues).
 
-### 3. Note to developers
+### 3. Become a contributor
 
-During integration testing, we run these notebooks. To save time, we modify variables to avoid unecessary `for` loop iterations. Hence, during training please use the variables `max_epochs` and `val_interval` for the number of training epochs and validation interval, respectively.
-
-If your notebook doesn't use the idea of epochs, then please add it to the variable `doesnt_contain_max_epochs` in `runner.sh`. This lets the runner know that it's not a problem if it doesn't find `max_epochs`.
-
-If you have any other variables that would benefit by setting them to `1` during testing, add them to `strings_to_replace` in `runner.sh`.
+You can read details about adding a tutorial in our [CONTRIBUTING GUIDELINES](CONTRIBUTING.md).
 
 ### 4. List of notebooks and examples
 #### <ins>**2D classification**</ins>
@@ -139,7 +135,7 @@ inference on a pretrained DeepEdit model.
 
 #### <ins>**Deployment**</ins>
 ##### [BentoML](./deployment/bentoml)
-This is a simple example of training and deploying a MONAI network with [BentoML](https://www.bentoml.ai/) as a web server, either locally using the BentoML respository or as a containerized service.
+This is a simple example of training and deploying a MONAI network with [BentoML](https://www.bentoml.ai/) as a web server, either locally using the BentoML repository or as a containerized service.
 ##### [Ray](./deployment/ray)
 This uses the previous notebook's trained network to demonstrate deployment a web server using [Ray](https://docs.ray.io/en/master/serve/index.html#rayserve).
 ##### [Triton](./deployment/Triton/)
@@ -209,6 +205,8 @@ This notebook is a quick demo for devices, run the Ignite trainer engine on CPU,
 Demonstrates the use of the `ThreadBuffer` class used to generate data batches during training in a separate thread.
 ##### [transform_speed](./acceleration/transform_speed.ipynb)
 Illustrate reading NIfTI files and test speed of different transforms on different devices.
+##### [TensorRT_inference_acceleration](./acceleration/TensorRT_inference_acceleration.ipynb)
+This notebook shows how to use TensorRT to accelerate the model and achieve a better inference latency.
 
 #### <ins>**Model Zoo**</ins>
 ##### [easy_integrate_bundle](./model_zoo/app_integrate_bundle)
@@ -294,4 +292,11 @@ This tutorial demonstrates a transfer learning pipeline from a pretrained model 
 This tutorial shows several visualization approaches for 3D image during transform augmentation.
 
 #### [Auto3DSeg](./auto3dseg/)
-This folder shows how to run the comprehensive Auto3Dseg pipeline with minimal inputs and customize the Auto3Dseg modules to meet different user requirements.
+This folder shows how to run the comprehensive Auto3DSeg pipeline with minimal inputs and customize the Auto3Dseg modules to meet different user requirements.
+
+#### <ins>**Self-Supervised Learning**</ins>
+##### [self_supervised_pretraining](./self_supervised_pretraining/ssl_train.ipynb)
+This tutorial shows how to construct a training workflow of self-supervised learning where unlabeled data is utilized. The tutorial shows how to train a model on TCIA dataset of unlabeled Covid-19 cases.
+
+##### [self_supervised_pretraining_based_finetuning](./self_supervised_pretraining/ssl_finetune.ipynb)
+This tutorial shows how to utilize pre-trained weights from the self-supervised learning framework where unlabeled data is utilized. This tutorial shows how to train a model of multi-class 3D segmentation using pretrained weights.

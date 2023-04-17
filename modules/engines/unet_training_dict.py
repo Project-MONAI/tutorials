@@ -1,4 +1,4 @@
-# Copyright 2020 MONAI Consortium
+# Copyright (c) MONAI Consortium
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -160,12 +160,16 @@ def main(tempdir):
 
     train_handlers = [
         # apply “EarlyStop” logic based on the loss value, use “-” negative value because smaller loss is better
-        EarlyStopHandler(trainer=None, patience=20, score_function=lambda x: -x.state.output[0]["loss"], epoch_level=False),
+        EarlyStopHandler(
+            trainer=None, patience=20, score_function=lambda x: -x.state.output[0]["loss"], epoch_level=False
+        ),
         LrScheduleHandler(lr_scheduler=lr_scheduler, print_lr=True),
         ValidationHandler(validator=evaluator, interval=2, epoch_level=True),
         # use the logger "train_log" defined at the beginning of this program
         StatsHandler(name="train_log", tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
-        TensorBoardStatsHandler(log_dir="./runs/", tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
+        TensorBoardStatsHandler(
+            log_dir="./runs/", tag_name="train_loss", output_transform=from_engine(["loss"], first=True)
+        ),
         CheckpointSaver(save_dir="./runs/", save_dict={"net": net, "opt": opt}, save_interval=2, epoch_level=True),
     ]
 

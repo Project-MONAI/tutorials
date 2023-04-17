@@ -1,10 +1,33 @@
+# Copyright (c) MONAI Consortium
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import numpy as np
-from monai.transforms import (CastToTyped,
-                              Compose, CropForegroundd, EnsureChannelFirstd, LoadImaged,
-                              NormalizeIntensity, RandCropByPosNegLabeld,
-                              RandFlipd, RandGaussianNoised,
-                              RandGaussianSmoothd, RandScaleIntensityd,
-                              RandZoomd, SpatialCrop, SpatialPadd, ToTensord, EnsureTyped)
+from monai.transforms import (
+    CastToTyped,
+    Compose,
+    CropForegroundd,
+    EnsureChannelFirstd,
+    LoadImaged,
+    NormalizeIntensity,
+    RandCropByPosNegLabeld,
+    RandFlipd,
+    RandGaussianNoised,
+    RandGaussianSmoothd,
+    RandScaleIntensityd,
+    RandZoomd,
+    SpatialCrop,
+    SpatialPadd,
+    ToTensord,
+    EnsureTyped,
+)
 from monai.transforms.compose import MapTransform
 from monai.transforms.utils import generate_spatial_bounding_box
 from skimage.transform import resize
@@ -83,6 +106,7 @@ def get_task_transforms(mode, task_id, pos_sample_num, neg_sample_num, num_sampl
 
     all_transforms = load_transforms + sample_transforms + other_transforms
     return Compose(all_transforms)
+
 
 def resample_image(image, shape, anisotrophy_flag):
     resized_channels = []
@@ -231,9 +255,9 @@ def recovery_prediction(prediction, shape, anisotrophy_flag):
 
 class PreprocessAnisotropic(MapTransform):
     """
-        This transform class takes NNUNet's preprocessing method for reference.
-        That code is in:
-        https://github.com/MIC-DKFZ/nnUNet/blob/master/nnunet/preprocessing/preprocessing.py
+    This transform class takes NNUNet's preprocessing method for reference.
+    That code is in:
+    https://github.com/MIC-DKFZ/nnUNet/blob/master/nnunet/preprocessing/preprocessing.py
 
     """
 

@@ -1,3 +1,14 @@
+# Copyright (c) MONAI Consortium
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import argparse
 import gc
 import glob
@@ -31,7 +42,6 @@ from utils import (
 
 
 def main(cfg):
-
     os.makedirs(str(cfg.output_dir + f"/fold{cfg.fold}/"), exist_ok=True)
 
     # set random seed, works when use all data to train
@@ -58,9 +68,7 @@ def main(cfg):
         train_val_dataset = get_val_dataset(train_df, cfg)
         train_val_dataloader = get_val_dataloader(train_val_dataset, cfg)
 
-    to_device_transform = ToDeviced(
-        keys=("input", "target", "mask", "is_annotated"), device=cfg.device
-    )
+    to_device_transform = ToDeviced(keys=("input", "target", "mask", "is_annotated"), device=cfg.device)
     cfg.to_device_transform = to_device_transform
     # set model
 
@@ -114,9 +122,7 @@ def main(cfg):
 
         if cfg.train_val is True:
             if (epoch + 1) % cfg.eval_train_epochs == 0 or (epoch + 1) == cfg.epochs:
-                train_val_loss = run_eval(
-                    model, train_val_dataloader, cfg, writer, epoch
-                )
+                train_val_loss = run_eval(model, train_val_dataloader, cfg, writer, epoch)
                 print(f"train_val_loss {train_val_loss:.5}")
 
         if val_loss < best_val_loss:
@@ -187,12 +193,10 @@ def run_train(
             scheduler.step()
 
         if step % cfg.batch_size == 0:
-
             progress_bar.set_description(f"loss: {np.mean(losses[-10:]):.2f}")
 
 
 def run_eval(model, val_dataloader, cfg, writer, epoch):
-
     model.eval()
     torch.set_grad_enabled(False)
 
@@ -221,7 +225,6 @@ def run_eval(model, val_dataloader, cfg, writer, epoch):
     val_loss = np.mean(val_losses)
 
     if cfg.compute_auc is True:
-
         val_preds = torch.cat(val_preds)
         val_targets = torch.cat(val_targets)
         avg_auc = compute_roc_auc(val_preds, val_targets, average="macro")
@@ -233,14 +236,11 @@ def run_eval(model, val_dataloader, cfg, writer, epoch):
 
 
 def run_infer(weights_folder_path, cfg):
-
     cfg.pretrained = False
     # for local test, please modify the following path into actual path.
     cfg.data_folder = cfg.data_dir + "test/"
 
-    to_device_transform = ToDeviced(
-        keys=("input", "target", "mask", "is_annotated"), device=cfg.device
-    )
+    to_device_transform = ToDeviced(keys=("input", "target", "mask", "is_annotated"), device=cfg.device)
 
     all_path = []
     for path in glob.iglob(os.path.join(weights_folder_path, "*.pth")):
@@ -291,7 +291,6 @@ def run_infer(weights_folder_path, cfg):
 
 
 if __name__ == "__main__":
-
     sys.path.append("configs")
     sys.path.append("models")
     sys.path.append("data")
@@ -302,9 +301,7 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--fold", type=int, default=-1, help="fold")
     parser.add_argument("-s", "--seed", type=int, default=-1, help="fold")
     parser.add_argument("-i", "--infer", type=bool, default=None, help="do inference")
-    parser.add_argument(
-        "-p", "--weights_folder_path", default=None, help="the folder path of weights"
-    )
+    parser.add_argument("-p", "--weights_folder_path", default=None, help="the folder path of weights")
 
     parser_args, _ = parser.parse_known_args(sys.argv)
 

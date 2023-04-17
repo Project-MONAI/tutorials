@@ -1,3 +1,14 @@
+# Copyright (c) MONAI Consortium
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 
 import numpy as np
@@ -24,9 +35,7 @@ class SurgDataset(Dataset):
         label = row[self.cfg.labels] > 0
         image_path = os.path.join(self.cfg.data_dir, row["frame"])
 
-        return self.transform(
-            {"input": image_path, "label": torch.tensor(label).float()}
-        )
+        return self.transform({"input": image_path, "label": torch.tensor(label).float()})
 
 
 def set_seed(seed):
@@ -36,7 +45,6 @@ def set_seed(seed):
 
 
 def get_train_dataloader(train_dataset, cfg):
-
     train_dataloader = DataLoader(
         train_dataset,
         sampler=None,
@@ -52,7 +60,6 @@ def get_train_dataloader(train_dataset, cfg):
 
 
 def get_val_dataloader(val_dataset, cfg):
-
     val_dataloader = DataLoader(
         val_dataset,
         shuffle=False,

@@ -1,4 +1,4 @@
-# Copyright 2020 MONAI Consortium
+# Copyright (c) MONAI Consortium
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -93,7 +93,6 @@ def main():
     # Ignite trainer expects batch=(img, label) and returns output=loss at every iteration,
     # user can add output_transform to return other values, like: y_pred, y, etc.
     def prepare_batch(batch, device=None, non_blocking=False):
-
         return _prepare_batch((batch["img"], batch["label"]), device, non_blocking)
 
     trainer = create_supervised_trainer(net, opt, loss, device, False, prepare_batch=prepare_batch)
@@ -125,7 +124,17 @@ def main():
     post_pred = Compose([Activations(softmax=True)])
     # Ignite evaluator expects batch=(img, label) and returns output=(y_pred, y) at every iteration,
     # user can add output_transform to return other values
-    evaluator = create_supervised_evaluator(net, val_metrics, device, True, prepare_batch=prepare_batch, output_transform=lambda x, y, y_pred: ([post_pred(i) for i in decollate_batch(y_pred)], [post_label(i) for i in decollate_batch(y, detach=False)]))
+    evaluator = create_supervised_evaluator(
+        net,
+        val_metrics,
+        device,
+        True,
+        prepare_batch=prepare_batch,
+        output_transform=lambda x, y, y_pred: (
+            [post_pred(i) for i in decollate_batch(y_pred)],
+            [post_label(i) for i in decollate_batch(y, detach=False)],
+        ),
+    )
 
     # add stats event handler to print validation stats via evaluator
     val_stats_handler = StatsHandler(

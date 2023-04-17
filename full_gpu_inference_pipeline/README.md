@@ -13,7 +13,7 @@
     + [HTTP vs. gRPC vs. shared memory](#http-vs-grpc-vs-shared-memory)
     + [Pre/Post-processing on GPU vs. CPU](#pre-post-processing-on-gpu-vs-cpu)
 
-## overview
+## Overview
 
 This example is to implement a 3D medical imaging AI inference pipeline using the model and transforms of MONAI, and deploy the pipeline using Triton. the goal of it is to test the influence brought by different features of MONAI and Triton to medical imaging AI inference performance.
 
@@ -23,12 +23,12 @@ In this repository, I will try following features:
 
 Before starting, I highly recommand you to read the the following two links to get familiar with the basic features of Triton python backend and MONAI:
 - https://github.com/triton-inference-server/python_backend
-- https://github.com/Project-MONAI/tutorials/blob/main/acceleration/fast_model_training_guide.md
+- [Tutorial fast_model_training_guide](../acceleration/fast_model_training_guide.md)
 
 ## Prepare the model repository
 The full pipeline is as below:
 
-<img src="https://github.com/Project-MONAI/tutorials/raw/main/full_gpu_inference_pipeline/pics/Picture3.png">
+<img src="../figures/full_gpu_inference_pipeline.png">
 
 ### Prepare the model repository file directories
 The Triton model repository of the experiment can be fast set up by: 
@@ -138,9 +138,9 @@ Since 3D medical images are generally big, the overhead brought by protocols can
 Note that all the processes (pre/post and AI inference) are on GPU.
 From the result, we can come to a conclusion that using shared memory will greatly reduce the latency when data transfer is huge.
 
-![](https://github.com/Project-MONAI/tutorials/raw/main/full_gpu_inference_pipeline/pics/Picture2.png)
+![](../figures/full_gpu_inference_figure1.png)
 
 ### Pre/Post-processing on GPU vs. CPU 
 After doing pre and post-processing on GPU, we can get a 12x speedup for the full pipeline.
 
-![](https://github.com/Project-MONAI/tutorials/raw/main/full_gpu_inference_pipeline/pics/Picture1.png)
+![](../figures/full_gpu_inference_figure2.png)

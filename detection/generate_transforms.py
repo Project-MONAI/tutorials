@@ -1,3 +1,14 @@
+# Copyright (c) MONAI Consortium
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import torch
 import numpy as np
 from monai.transforms import (
@@ -26,6 +37,7 @@ from monai.apps.detection.transforms.dictionary import (
     RandRotateBox90d,
     RandZoomBoxd,
     ConvertBoxModed,
+    StandardizeEmptyBoxd,
 )
 
 
@@ -59,7 +71,6 @@ def generate_detection_train_transform(
     Return:
         training transform for detection
     """
-    amp = True
     if amp:
         compute_dtype = torch.float16
     else:
@@ -71,6 +82,7 @@ def generate_detection_train_transform(
             EnsureChannelFirstd(keys=[image_key]),
             EnsureTyped(keys=[image_key, box_key], dtype=torch.float32),
             EnsureTyped(keys=[label_key], dtype=torch.long),
+            StandardizeEmptyBoxd(box_keys=[box_key], box_ref_image_keys=image_key),
             Orientationd(keys=[image_key], axcodes="RAS"),
             intensity_transform,
             EnsureTyped(keys=[image_key], dtype=torch.float16),
@@ -205,7 +217,6 @@ def generate_detection_val_transform(
     Return:
         validation transform for detection
     """
-    amp = True
     if amp:
         compute_dtype = torch.float16
     else:
@@ -217,6 +228,7 @@ def generate_detection_val_transform(
             EnsureChannelFirstd(keys=[image_key]),
             EnsureTyped(keys=[image_key, box_key], dtype=torch.float32),
             EnsureTyped(keys=[label_key], dtype=torch.long),
+            StandardizeEmptyBoxd(box_keys=[box_key], box_ref_image_keys=image_key),
             Orientationd(keys=[image_key], axcodes="RAS"),
             intensity_transform,
             ConvertBoxToStandardModed(box_keys=[box_key], mode=gt_box_mode),
@@ -261,7 +273,6 @@ def generate_detection_inference_transform(
     Return:
         validation transform for detection
     """
-    amp = True
     if amp:
         compute_dtype = torch.float16
     else:
@@ -291,9 +302,7 @@ def generate_detection_inference_transform(
                 image_meta_key_postfix="meta_dict",
                 affine_lps_to_ras=affine_lps_to_ras,
             ),
-            ConvertBoxModed(
-                box_keys=[pred_box_key], src_mode="xyzxyz", dst_mode=gt_box_mode
-            ),
+            ConvertBoxModed(box_keys=[pred_box_key], src_mode="xyzxyz", dst_mode=gt_box_mode),
             DeleteItemsd(keys=[image_key]),
         ]
     )

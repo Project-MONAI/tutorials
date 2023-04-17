@@ -32,20 +32,21 @@
 ## Auto3DSeg Leaderboard Performance
 
 - **Auto3DSeg** won 1st place in MICCAI 2022 challenge **[HECKTOR 2022: Head and neck tumor segmentation and outcome prediction in PET/CT images](https://hecktor.grand-challenge.org/)**
-  - 1st place GTVp and GTVn segmentation (Task 1)
-- **Auto3DSeg** won 2nd place in MICCAI 2022 challenge **[INSTANCE22: The 2022 Intracranial Hemorrhage Segmentation Challenge on Non-Contrast head CT (NCCT)](https://instance.grand-challenge.org/)**
-  - 1st place in terms of Dice score
-- **Auto3DSeg** won a top-3 place in MICCAI 2022 challenge **[ISLES'22: Ischemic Stroke Lesion Segmentation Challenge](https://isles22.grand-challenge.org/)**
-  - The final results will announced at MICCAI 2022
+  - 1st place  (segmentation task)
+- **Auto3DSeg** got 2nd place in MICCAI 2022 challenge **[INSTANCE22: The 2022 Intracranial Hemorrhage Segmentation Challenge on Non-Contrast head CT (NCCT)](https://instance.grand-challenge.org/)**
+  - 1st rank in terms of Dice score
+- **Auto3DSeg** got 2nd place in MICCAI 2022 challenge **[ISLES'22: Ischemic Stroke Lesion Segmentation Challenge](https://isles22.grand-challenge.org/)**
+  - 1st rank in terms of Dice score
 
 We have demonstrated preliminary results of public datasets are described in the [tasks](tasks) folder.
 
-- [INSTANCE22](tasks/instance22)
-- [Beyond the Cranial Vault (BTCV) Abdomen Dataset](tasks/btcv)
+- [HECKTOR22](tasks/hecktor22/README.md)
+- [INSTANCE22](tasks/instance22/README.md)
+- [Beyond the Cranial Vault (BTCV) Abdomen Dataset](tasks/btcv/README.md)
 - Medical Segmentation Decathlon (MSD) Dataset
-        - [Task04 Task04_Hippocampus](tasks/msd/Task04_Hippocampus)
-	- [Task05 Prostate](tasks/msd/Task05_Prostate)
-	- [Task09 Spleen](tasks/msd/Task09_Spleen)
+	- [Task04 Task04_Hippocampus](tasks/msd/Task04_Hippocampus/README.md)
+	- [Task05 Prostate](tasks/msd/Task05_Prostate/README.md)
+	- [Task09 Spleen](tasks/msd/Task09_Spleen/README.md)
 
 ## A Two-Minute "Hello-World" Example
 
@@ -61,7 +62,7 @@ To further demonstrate the capabilities of **Auto3DSeg**, [here](tasks/instance2
 
 ### 1. Run with Minimal Input using ```AutoRunner```
 
-The user needs to provide a data list (".json" file) for the new task and data root. A typical data list is as this [example](tasks/msd/Task05_Prostate/msd_task05_prostate_folds.json). After creating the data list, the user can create a simple "task.yaml" file (shown below) as the minimum input for **Auto3DSeg**.
+The user needs to provide a data list (".json" file) for the new task and data root. A typical data list is as this [example](tasks/msd/Task05_Prostate/msd_task05_prostate_folds.json). A sample datalist for an existing MSD formatted dataset can be created using [this notebook](notebooks/msd_datalist_generator.ipynb). After creating the data list, the user can create a simple "task.yaml" file (shown below) as the minimum input for **Auto3DSeg**.
 
 ```
 modality: CT
@@ -90,6 +91,13 @@ Each module of **Auto3DSeg** in different steps can be individually used for dif
 - Step 3: [Model training, validation, and inference](docs/bundle.md)
 - Step 4: [Hyper-parameter optimization](docs/hpo.md)
 - Step 5: [Model ensemble](docs/ensemble.md)
+
+## GPU utilization optimization
+
+Given the variety of GPU devices users have, we provide an automated way to optimize the GPU utilization (e.g., memory usage) of algorithms in Auto3DSeg.
+During algorithm generation, users can enable the optimization option.
+Auto3DSeg can then further automatically tune the hyper-parameters to fully utilize the available GPU capacity.
+Concrete examples can be found [here](docs/gpu_opt.md).
 
 ## FAQ
 

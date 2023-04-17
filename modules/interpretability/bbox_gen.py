@@ -1,4 +1,4 @@
-# Copyright 2020 MONAI Consortium
+# Copyright (c) MONAI Consortium
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -8,6 +8,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
 Script used to generate lesion/non-lesion patches from MSD lung.
 (requires numpy/torch/skimage.measure/monai)
@@ -80,20 +81,14 @@ for name in data_names:
         resize = Resized(keys, patch_size, mode=("trilinear", "nearest"))
         data_out = resize(data_out)
 
-        patch_out = (
-            f"{folder}/patch/lesion_{s[0]}_{s[1]}_{s[2]}_{e[0]}_{e[1]}_{e[2]}_{name_id}"
-        )
-        label_out = (
-            f"{folder}/patch/labels_{s[0]}_{s[1]}_{s[2]}_{e[0]}_{e[1]}_{e[2]}_{name_id}"
-        )
+        patch_out = f"{folder}/patch/lesion_{s[0]}_{s[1]}_{s[2]}_{e[0]}_{e[1]}_{e[2]}_{name_id}"
+        label_out = f"{folder}/patch/labels_{s[0]}_{s[1]}_{s[2]}_{e[0]}_{e[1]}_{e[2]}_{name_id}"
         write_nifti(data_out["image"][0], file_name=patch_out)
         write_nifti(data_out["label"][0], file_name=label_out)
 
         # generate random negative samples
         rand_data_out = AddChanneld(keys)(data)
-        rand_data_out["inv_label"] = (
-            rand_data_out["label"] == 0
-        )  # non-lesion sampling map
+        rand_data_out["inv_label"] = rand_data_out["label"] == 0  # non-lesion sampling map
         rand_crop = RandWeightedCropd(keys, "inv_label", patch_size, num_samples=3)
         rand_data_out = rand_crop(rand_data_out)
         for idx, d in enumerate(rand_data_out):

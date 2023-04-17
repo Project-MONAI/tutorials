@@ -1,0 +1,40 @@
+name: build
+
+on:
+  # quick tests for every pull request
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  # caching of these jobs:
+  #   - docker-20-03-py3-pip- (shared)
+  #   - ubuntu py37 pip-
+  #   - os-latest-pip- (shared)
+  copyright:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v3
+      with:
+        python-version: 3.8
+    - name: cache weekly timestamp
+      id: pip-cache
+      run: |
+        echo "::set-output name=datew::$(date '+%Y-%V')"
+    - name: cache for pip
+      uses: actions/cache@v3
+      id: cache
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ steps.pip-cache.outputs.datew }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip wheel
+        python -m pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/dev/requirements-dev.txt
+        python -m pip install -r requirements.txt
+    - name: Copyright check
+      run: |
+        $(pwd)/runner.sh --no-run --no-checks --copyright

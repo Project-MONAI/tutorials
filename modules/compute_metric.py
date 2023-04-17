@@ -1,4 +1,4 @@
-# Copyright 2020 MONAI Consortium
+# Copyright (c) MONAI Consortium
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -133,6 +133,7 @@ def compute(args):
 # usage example(refer to https://github.com/pytorch/pytorch/blob/master/torch/distributed/launch.py):
 
 # torchrun --standalone --nnodes=NUM_NODES --nproc_per_node=NUM_GPUS_PER_NODE compute_metric.py -d DIR_OF_OUTPUT
+
 
 def main():
     parser = argparse.ArgumentParser()

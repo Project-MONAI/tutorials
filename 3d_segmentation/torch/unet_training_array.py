@@ -1,4 +1,4 @@
-# Copyright 2020 MONAI Consortium
+# Copyright (c) MONAI Consortium
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -24,7 +24,15 @@ import monai
 from monai.data import ImageDataset, create_test_image_3d, decollate_batch, DataLoader
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
-from monai.transforms import Activations, EnsureChannelFirst, AsDiscrete, Compose, RandRotate90, RandSpatialCrop, ScaleIntensity
+from monai.transforms import (
+    Activations,
+    EnsureChannelFirst,
+    AsDiscrete,
+    Compose,
+    RandRotate90,
+    RandSpatialCrop,
+    ScaleIntensity,
+)
 from monai.visualize import plot_2d_or_3d_image
 
 

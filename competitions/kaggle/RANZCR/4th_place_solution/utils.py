@@ -1,3 +1,14 @@
+# Copyright (c) MONAI Consortium
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import torch
 from monai.optimizers.lr_scheduler import WarmupCosineSchedule
 from monai.utils import set_determinism
@@ -22,7 +33,6 @@ def get_train_dataset(train_df, cfg):
 
 
 def get_train_dataloader(train_dataset, cfg):
-
     train_dataloader = DataLoader(
         train_dataset,
         sampler=None,
@@ -43,7 +53,6 @@ def get_val_dataset(val_df, cfg):
 
 
 def get_val_dataloader(val_dataset, cfg):
-
     val_dataloader = DataLoader(
         val_dataset,
         sampler=SequentialSampler(val_dataset),
@@ -55,12 +64,13 @@ def get_val_dataloader(val_dataset, cfg):
     print(f"valid: dataset {len(val_dataset)}, dataloader {len(val_dataloader)}")
     return val_dataloader
 
+
 def get_test_dataset(test_df, cfg):
     test_dataset = CustomDataset(test_df, cfg, aug=cfg.test_aug, mode="test")
     return test_dataset
 
-def get_test_dataloader(test_dataset, cfg):
 
+def get_test_dataloader(test_dataset, cfg):
     test_dataloader = DataLoader(
         test_dataset,
         shuffle=False,
@@ -69,8 +79,8 @@ def get_test_dataloader(test_dataset, cfg):
     )
     return test_dataloader
 
-def get_optimizer(model, cfg):
 
+def get_optimizer(model, cfg):
     params = model.parameters()
     optimizer = optim.Adam(params, lr=cfg.lr, weight_decay=cfg.weight_decay)
 
@@ -78,7 +88,6 @@ def get_optimizer(model, cfg):
 
 
 def get_scheduler(cfg, optimizer, total_steps):
-
     scheduler = WarmupCosineSchedule(
         optimizer,
         warmup_steps=cfg.warmup * (total_steps // cfg.batch_size),

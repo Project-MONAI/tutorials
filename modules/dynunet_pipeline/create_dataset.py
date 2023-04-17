@@ -1,8 +1,18 @@
+# Copyright (c) MONAI Consortium
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 
 import torch.distributed as dist
-from monai.data import (CacheDataset, DataLoader, load_decathlon_datalist,
-                        load_decathlon_properties, partition_dataset)
+from monai.data import CacheDataset, DataLoader, load_decathlon_datalist, load_decathlon_properties, partition_dataset
 
 from task_params import task_name
 from transforms import get_task_transforms
@@ -37,13 +47,9 @@ def get_data(args, batch_size=1, mode="train"):
         "numTest",
     ]
 
-    datalist = load_decathlon_datalist(
-        os.path.join(datalist_path, datalist_name), True, list_key, dataset_path
-    )
+    datalist = load_decathlon_datalist(os.path.join(datalist_path, datalist_name), True, list_key, dataset_path)
 
-    properties = load_decathlon_properties(
-        os.path.join(datalist_path, datalist_name), property_keys
-    )
+    properties = load_decathlon_properties(os.path.join(datalist_path, datalist_name), property_keys)
     if mode in ["validation", "test"]:
         if multi_gpu_flag:
             datalist = partition_dataset(

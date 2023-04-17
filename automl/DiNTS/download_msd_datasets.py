@@ -1,4 +1,4 @@
-# Copyright 2020 - 2021 MONAI Consortium
+# Copyright (c) MONAI Consortium
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -35,6 +35,7 @@ def main():
     compressed_file = os.path.join(args.root, args.msd_task + ".tar")
     if not os.path.exists(args.root):
         download_and_extract(resource, compressed_file, args.root)
+
 
 if __name__ == "__main__":
     main()

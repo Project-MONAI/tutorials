@@ -5,7 +5,7 @@ python -m monai.apps.nnunet nnUNetV2Runner run --input "./input.yaml"
 
 
 ## [pipeline] option 2: one-click solution with dict input
-DIR_BASE="/home/dongy/Projects/MONAI/nnunet/nnunet_runner/data"
+DIR_BASE="/workspace/data"
 DIR_RAW="${DIR_BASE}/nnUNet_raw_data_base"
 DIR_PREPROCESSED="${DIR_BASE}/nnUNet_preprocessed"
 DIR_RESULTS="${DIR_BASE}/nnUNet_trained_models"
@@ -20,7 +20,7 @@ python -m monai.apps.nnunet nnUNetV2Runner convert_dataset --input "./input.yaml
 
 
 ## [component] converting msd datasets
-python -m monai.apps.nnunet nnUNetV2Runner convert_msd_dataset --input "./input.yaml" --data_dir "/home/dongy/Data/MSD/NGC/Task05_Prostate"
+python -m monai.apps.nnunet nnUNetV2Runner convert_msd_dataset --input "./input.yaml" --data_dir "/workspace/data/Task05_Prostate"
 
 
 ## [component] experiment planning and data pre-processing

@@ -1,6 +1,14 @@
-# --------------------------------------------------------
-# Put MONAI License File here
-# --------------------------------------------------------
+# Copyright (c) MONAI Consortium
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import time
 import argparse
@@ -13,7 +21,7 @@ import torch.distributed as dist
 from timm.utils import AverageMeter
 
 from torch.utils.data import DataLoader, DistributedSampler
-from .utils.utils import collate_fn, reduce_tensor, save_checkpoint, TensorboardLogger
+from utils import collate_fn, reduce_tensor, save_checkpoint, TensorboardLogger
 
 from monai.transforms import (
     LoadImaged,
@@ -31,7 +39,7 @@ from monai.transforms import (
 )
 
 from monai.networks.nets import ViTAutoEnc
-from monai.data import (
+from monai.data import(
     CacheDataset,
     load_decathlon_datalist,
 )
@@ -48,114 +56,25 @@ def parse_option():
     parser.add_argument('--json_path', default="./datalists/tcia/dataset_split.json", type=str,
                         help='Json file path for list of data samples')
     parser.add_argument('--logdir_path', default="/to/be/defined", type=str, help='output log directory')
-
+    parser.add_argument('--output', default='output', type=str, metavar='PATH',
+                        help='root of output folder, the full path is <output>/<model_name>/<tag> (default: output)')
     # Distributed Training
-    parser.add_argument("--local_rank", type=int, required=True, help='local rank for DistributedDataParallel')
+    parser.add_argument("--local_rank", type=int, help='local rank for DistributedDataParallel')
 
     # DL Training Hyper-parameters
     parser.add_argument('--epochs', default=100, type=int, help='number of epochs')
     parser.add_argument('--batch_size', default=1, type=int, help="batch size for single GPU")
-
-    ######TODO: LEGACY HYPER-PARAMS, LEVERAGE & THEN DELETE ######
-    parser.add_argument('--in_channels', default=1, type=int, help='number of input channels')
-    parser.add_argument('--num_classes', default=0, type=int, help='number of input channels')
-    parser.add_argument('--window_size', default=(7, 7, 7), type=tuple, help='window size')
-    parser.add_argument('--patch_size', default=(2, 2, 2), type=tuple, help='window size')
-    parser.add_argument('--mask_patch_size', default=16, type=int, help='window size')
-    parser.add_argument('--img_size', default=96, type=int, help='image size')
-    parser.add_argument('--num_heads', default=[3, 6, 12, 24], type=list, help='number of heads')
-    parser.add_argument('--depths', default=[2, 2, 2, 2], type=list, help='number of depths')
-    parser.add_argument('--embed_dim', default=48, type=int, help='embedding dimention')
-    parser.add_argument('--mlp_ratio', default=4.0, type=float, help='MLP ratio')
-    parser.add_argument('--drop_rate', default=0.0, type=float, help='drop rate')
-    parser.add_argument('--attn_drop_rate', default=0.0, type=float, help='attention drop rate')
-    parser.add_argument('--drop_path_rate', default=0.0, type=float, help='drop path rate')
-    parser.add_argument('--layer_decay', default=1.0, type=float, help='layer decay')
-    parser.add_argument('--num_workers', default=8, type=int, help='number of workers')
-    parser.add_argument('--mask_ratio', default=0.6, type=float, help='drop path rate')
-
-    parser.add_argument('--optimizer_name', type=str, default='adamw', help='optimizer name')
-    parser.add_argument('--momentum', default=0.9, type=float, help='optimizer momentum')
     parser.add_argument('--base_lr', default=5e-4, type=float, help='base learning rate')
-    parser.add_argument('--weight_decay', default=0.05, type=float, help='weight decay')
-    parser.add_argument('--betas', default=(0.9, 0.999), type=tuple, help='optimizer betas')
-    parser.add_argument('--eps', default=1e-8, type=float, help='eps')
-    parser.add_argument('--decoder', type=str, default='upsample', help='decoder type')
-    parser.add_argument('--loss_type', type=str, default='mask_only', help='decoder type')
 
-    parser.add_argument('--amp_opt_level', type=str, default='O1', help='amp opt level')
-    parser.add_argument('--epoch', default=100, type=int, help='number of epochs')
-    parser.add_argument('--start_epoch', default=0, type=int, help='number of epochs')
-    parser.add_argument('--warmpup_epoch', default=20, type=int, help='warmup epoch')
-    parser.add_argument('--decay_epoch', default=30, type=int, help='warmup epoch')
-    parser.add_argument('--save_freq', default=1, type=int, help='saving frequency')
-    parser.add_argument('--print_freq', default=10, type=int, help='print frequency')
-    parser.add_argument('--accumulate_step', default=0, type=int, help='accumulation step')
-    parser.add_argument('--clip_grad', default=1, type=int, help='saving frequency')
-    parser.add_argument('--seed', default=0, type=int, help='seed')
-
-    parser.add_argument('--lr_scheduler_name', type=str, default='cosine', help='learning rate scheduler name')
-    parser.add_argument('--min_lr', default=5e-6, type=float, help='min learning rate')
-    parser.add_argument('--warmup_lr', default=5e-7, type=float, help='warmup lr')
-    parser.add_argument('--lr_decay_rate', default=0.1, type=float, help='lr decay rate')
-    parser.add_argument('--lr_gamma', default=0.1, type=float, help='lr gamma')
-    parser.add_argument('--auto_resume', default=True, type=bool)
-    parser.add_argument('--iso_spacing', action='store_true')
-    parser.add_argument('--local', action='store_true')
-    parser.add_argument('--model_type', type=str, default='swin', help='model type')
-    parser.add_argument('--cache_dataset', default=True, action='store_true')
-    parser.add_argument('--thread_loader', default=True, action='store_true')
-    parser.add_argument('--onlycovid', default=False, action='store_true')
-    parser.add_argument('--only_ten_k', default=False, action='store_true')
-
-    parser.add_argument('--cache_rate', default=0.5, type=float, help='drop path rate')
-    parser.add_argument('--sw_batch_size', default=1, type=int, help="batch size for single GPU")
-    parser.add_argument('--data-path', type=str, help='path to dataset')
-    parser.add_argument('--log_dir', default=None,
-                        help='path where to tensorboard log')
-
-    parser.add_argument('--resume', action='store_true', help='resume from checkpoint')
+    parser.add_argument('--seed', default=19, type=int, help='seed')
     parser.add_argument('--deterministic', help='set seed for deterministic training', action='store_true')
-    parser.add_argument('--use_grad_checkpoint', action='store_true',
-                        help="whether to use gradient checkpointing to save memory")
-
-    parser.add_argument('--output', default='output', type=str, metavar='PATH',
-                        help='root of output folder, the full path is <output>/<model_name>/<tag> (default: output)')
-    parser.add_argument('--tag', help='tag of experiment')
-    parser.add_argument('--decoder_off', action='store_true')
-    parser.add_argument('--encoder_off', action='store_true')
-    parser.add_argument('--pretrained_dir', default='./pretrained_models/', type=str,
-                        help='pretrained checkpoint directory')
-
-    # parser.add_argument('--tag', help='tag of experiment')
-
-    parser.add_argument('--roi_x', default=96, type=int, help='roi size in x direction')
-    parser.add_argument('--roi_y', default=96, type=int, help='roi size in y direction')
-    parser.add_argument('--roi_z', default=96, type=int, help='roi size in z direction')
-    parser.add_argument('--dropout_rate', default=0.0, type=float, help='dropout rate')
-    parser.add_argument('--dropout_path_rate', default=0.0, type=float, help='drop path rate')
-    # parser.add_argument('--in_channels', default=1, type=int, help='number of input channels')
-    parser.add_argument('--out_channels', default=14, type=int, help='number of output channels')
-    # parser.add_argument('--tag', help='tag of experiment')
-    parser.add_argument('--feature_size', default=48, type=int, help='feature size')
-    parser.add_argument('--use_checkpoint', action='store_true', help='use gradient checkpointing to save memory')
-    parser.add_argument('--choice', default="mae", type=str, help='choice')
-    parser.add_argument('--inf', default="notsim", type=str, help='choice')
-
-    parser.add_argument('--variance', default=0.1, type=float, help='')
-    parser.add_argument('--interpolate', default=4, type=float, help='')
-    parser.add_argument('--temperature', default=0.07, type=float, help='drop path rate')
-    parser.add_argument('--mm_con', default=0.02, type=float, help='drop path rate')
-
     args = parser.parse_args()
-
     return args
 
-
 def main(args):
+
     json_path = args.json_path
     data_root = args.data_root
-    logdir_path = args.logdir_path
 
     # Define training transforms
     train_transforms = Compose(
@@ -213,14 +132,14 @@ def main(args):
                                        data_list_key="validation",
                                        base_dir=data_root)
 
-    # TODO Delete the below print statements
+    #TODO Delete the below print statements
     print('List of training samples: {}'.format(train_list))
     print('List of validation samples: {}'.format(val_list))
 
     print('Total training data are {} and validation data are {}'.format(len(train_list), len(val_list)))
 
-    train_dataset = CacheDataset(data=train_list, transform=train_transforms, cache_rate=1.0, num_workers=8)
-    val_dataset = CacheDataset(data=val_list, transform=train_transforms, cache_rate=1.0, num_workers=8)
+    train_dataset = CacheDataset(data=train_list, transform=train_transforms, cache_rate=1.0, num_workers=4)
+    val_dataset = CacheDataset(data=val_list, transform=train_transforms, cache_rate=1.0, num_workers=4)
 
     train_sampler = DistributedSampler(train_dataset,
                                        num_replicas=dist.get_world_size(),
@@ -233,22 +152,21 @@ def main(args):
                                      shuffle=False)
 
     train_loader = DataLoader(train_dataset,
-                              batch_size=args.batch_size,
-                              sampler=train_sampler,
-                              num_workers=8,
-                              pin_memory=True,
-                              drop_last=True,
-                              collate_fn=collate_fn)
+                                  batch_size=args.batch_size,
+                                  sampler=train_sampler,
+                                  num_workers=4,
+                                  pin_memory=True,
+                                  drop_last=True,
+                                  collate_fn=collate_fn)
 
     val_loader = DataLoader(val_dataset,
-                            batch_size=args.batch_size,
-                            sampler=val_sampler,
-                            num_workers=8,
-                            pin_memory=True,
-                            collate_fn=collate_fn)
+                                batch_size=args.batch_size,
+                                sampler=val_sampler,
+                                num_workers=4,
+                                pin_memory=True,
+                                collate_fn=collate_fn)
 
     # Data Loaders Built
-
     # Define the model, losses and optimizer
     model = ViTAutoEnc(
         in_channels=1,
@@ -262,8 +180,7 @@ def main(args):
     model.cuda()
 
     optimizer = torch.optim.Adam(model.parameters(),
-                                 lr=args.base_lr,
-                                 weight_decay=args.reg_weight)
+                                 lr=args.base_lr)
 
     model = torch.nn.parallel.DistributedDataParallel(model,
                                                       device_ids=[args.local_rank],
@@ -292,26 +209,22 @@ def main(args):
                                                                      loss_functions=loss_funcs)
 
         val_loss_avg = validate(data_loader=val_loader,
-                                model=model,
-                                loss_functions=loss_funcs)
+                              model=model,
+                              loss_functions=loss_funcs)
 
         if dist.get_rank() == 0:
-            # log_writer.update(loss_val_avg=val_loss_avg, head="perf", step=epoch)
             log_writer.update(loss_val_L1=val_loss_avg, head="perf", step=epoch)
-            # log_writer.update(loss_val_MM=val_MM_avg, head="perf", step=epoch)
             log_writer.update(loss_train_avg=train_loss_avg, head="perf", step=epoch)
             log_writer.update(loss_train_L1=train_l1_avg, head="perf", step=epoch)
             log_writer.update(loss_train_MM=train_cl_avg, head="perf", step=epoch)
             if val_loss_avg <= val_loss_best:
                 save_checkpoint(args, epoch, model_without_ddp, 0., optimizer, best_model=True)
 
-        if dist.get_rank() == 0 and (epoch == (args.epoch - 1)):
+        if dist.get_rank() == 0 and (epoch == (args.epochs - 1)):
             save_checkpoint(args, epoch, model_without_ddp, 0., optimizer, best_model=False)
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
-    # logger.info('Training time {}'.format(total_time_str))
-
 
 def train_one_epoch(args,
                     model,
@@ -320,7 +233,6 @@ def train_one_epoch(args,
                     epoch,
                     loss_functions):
     model.train()
-    # optimizer.zero_grad()
 
     num_steps = len(data_loader)
     batch_time = AverageMeter()
@@ -334,6 +246,8 @@ def train_one_epoch(args,
     end = time.time()
 
     for idx, batch_data in enumerate(data_loader):
+
+        batch_data=batch_data[0]
         inputs, inputs_2, gt_input = (
             batch_data["image"].cuda(non_blocking=True),
             batch_data["image_2"].cuda(non_blocking=True),
@@ -367,7 +281,6 @@ def train_one_epoch(args,
         loss_cont_meter.update(cl_loss_t.item(), inputs.size(0))
         loss_meter.update(total_loss_t.item(), inputs.size(0))
 
-        # norm_meter.update(grad_norm)
         batch_time.update(time.time() - end)
         end = time.time()
 
@@ -381,7 +294,6 @@ def train_one_epoch(args,
             f'loss_L1 {loss_l1_meter.val:.4f} ({loss_l1_meter.avg:.4f})\t'
             f'loss_MM {loss_cont_meter.val:.4f} ({loss_cont_meter.avg:.4f})\t'
             f'loss {loss_meter.val:.4f} ({loss_meter.avg:.4f})\t'
-            f'grad_norm {norm_meter.val:.4f} ({norm_meter.avg:.4f})\t'
             f'mem {memory_used:.0f}MB')
 
     epoch_time = time.time() - start
@@ -389,13 +301,15 @@ def train_one_epoch(args,
 
     return loss_meter.avg, loss_l1_meter.avg, loss_cont_meter.avg
 
-
 @torch.no_grad()
 def validate(data_loader, model, loss_functions):
     model.eval()
     loss_l1_meter = AverageMeter()
 
     for idx, batch_data in enumerate(data_loader):
+
+        batch_data=batch_data[0]
+
         inputs, gt_input = (
             batch_data["image"].cuda(non_blocking=True),
             batch_data["gt_image"].cuda(non_blocking=True),
@@ -409,6 +323,7 @@ def validate(data_loader, model, loss_functions):
         print(
             f'Test: [{idx}/{len(data_loader)}]\t'
             f'Loss_L1 {loss_l1_meter.val:.4f} ({loss_l1_meter.avg:.4f})\t')
+
     print(f' * Val Loss {loss_l1_meter.avg:.3f}')
 
     return loss_l1_meter.avg
@@ -417,7 +332,6 @@ if __name__ == '__main__':
     args = parse_option()
 
     if 'RANK' in os.environ and 'WORLD_SIZE' in os.environ:
-        # rank = int(os.environ["RANK"])
         rank = int(os.environ['LOCAL_RANK'])
         world_size = int(os.environ['WORLD_SIZE'])
         print(f"RANK and WORLD_SIZE in environ: {rank}/{world_size}")

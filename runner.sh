@@ -63,6 +63,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" ssl_train.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" ssl_finetune.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" TCIA_PROSTATEx_Prostate_MRI_Anatomy_Model.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" lazy_resampling_functional.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" lazy_resampling_compose.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" TensorRT_inference_acceleration.ipynb)
 
 # Execution of the notebook in these folders / with the filename cannot be automated
@@ -96,6 +97,7 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*ssl_train*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*ssl_finetune*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*transform_visualization*)  # https://github.com/Project-MONAI/tutorials/issues/1155
 skip_run_papermill=("${skip_run_papermill[@]}" .*TensorRT_inference_acceleration*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*mednist_classifier_ray*)  # https://github.com/Project-MONAI/tutorials/issues/1307
 
 # output formatting
 separator=""

@@ -91,7 +91,7 @@ class TrainWorkflow(BundleWorkflow):
         elif name in self._set_props:
             value = self._set_props[name]
         else:
-            if name == "bundle_root": 
+            if name == "bundle_root":
                 value = "."
             elif name == "device":
                 value = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -144,7 +144,9 @@ class TrainWorkflow(BundleWorkflow):
                     ValidationHandler(validator=self.evaluator, interval=self.val_interval, epoch_level=True),
                     # use the logger "train_log" defined at the beginning of this program
                     StatsHandler(
-                        name="train_log", tag_name="train_loss", output_transform=from_engine(["loss"], first=True),
+                        name="train_log",
+                        tag_name="train_loss",
+                        output_transform=from_engine(["loss"], first=True),
                     ),
                     CheckpointSaver(
                         save_dir="./runs/",
@@ -180,7 +182,7 @@ class TrainWorkflow(BundleWorkflow):
                     ]
                 )
             elif name == "train_key_metric":
-                value = {"train_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},
+                value = ({"train_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},)
             elif name == "evaluator":
                 value = SupervisedEvaluator(
                     device=self.device,
@@ -232,9 +234,13 @@ class TrainWorkflow(BundleWorkflow):
                     ]
                 )
             elif name == "val_key_metric":
-                value = {
-                    "val_mean_dice": MeanDice(include_background=True, output_transform=from_engine(["pred", "label"]))
-                },
+                value = (
+                    {
+                        "val_mean_dice": MeanDice(
+                            include_background=True, output_transform=from_engine(["pred", "label"])
+                        )
+                    },
+                )
             elif property[BundleProperty.REQUIRED]:
                 raise ValueError(f"unsupported property '{name}' is required in the bundle properties.")
             self._props[name] = value

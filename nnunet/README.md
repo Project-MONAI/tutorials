@@ -44,19 +44,28 @@ The table below shows the results of full-resolution 3D U-Net on fold 0 for each
 
 ## Steps
 
-### 1. nnU-Net v2 installation
+### Installation
 
 The installation instruction is described [here](docs/install.md).
 
-### 2. Run with Minimal Input using ```nnUNetV2Runner```
+### Dataset and Datalist Preparation
 
-The user needs to provide a data list (".json" file) for the new task and data root. In general, a valid data list needs to follow the format of the ones in [Medical Segmentation Decathlon](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2). After creating the data list, the user can create a simple "input.yaml" file (shown below) as the minimum input for **nnUNetV2Runner**.
+The user needs to provide a data list (".json" file) for the new task and data root. In general, a valid data list needs to follow the format of the ones in [Medical Segmentation Decathlon](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2).
+
+In [this tutorial](../auto3dseg/notebooks/msd_datalist_generator.ipynb), we provided example steps to download the [MSD Spleen dataset](http://medicaldecathlon.com) and prepare a datalist.
+Below we assume the dataset is downloaded to `/workspace/data/Task05_Prostate` and the datalist is in the current directory.
+
+### Run with Minimal Input using ```nnUNetV2Runner```
+
+After creating the data list, the user can create a simple "input.yaml" file (shown below) as the minimum input for **nnUNetV2Runner**.
 
 ```
 modality: CT
 datalist: "./msd_task09_spleen_folds.json"
-dataroot: "/workspace/data/nnunet_test/test09"
+dataroot: "/workspace/data/Task09_Spleen"
 ```
+
+Note: For multi-modal inputs, please check the [Frequently Asked Questions section](#FAQ)
 
 Users can also set values of directory variables as options in "input.yaml" if any directory needs to be specified.
 
@@ -66,13 +75,13 @@ nnunet_raw: "./work_dir/nnUNet_raw_data_base" # optional
 nnunet_results: "./work_dir/nnUNet_trained_models" # optional
 ```
 
-Once the minimum input information is provided, user can use the following commands to start the process of the entire nnU-Net pipeline automatically (from model training to model ensemble).
+Once the minimum input information is provided, the user can use the following commands to start the process of the entire nnU-Net pipeline automatically (from model training to model ensemble).
 
 ```bash
 python -m monai.apps.nnunet nnUNetV2Runner run --input_config='./input.yaml'
 ```
 
-### 2. Run nnU-Net modules using ```nnUNetV2Runner```
+### Run nnU-Net modules using ```nnUNetV2Runner```
 
 ```nnUNetV2Runner``` offers the one-stop API to execute the pipeline, as well as the APIs to access the underlying components of nnU-Net V2. Below is the command for different components.
 
@@ -81,7 +90,7 @@ python -m monai.apps.nnunet nnUNetV2Runner run --input_config='./input.yaml'
 python -m monai.apps.nnunet nnUNetV2Runner convert_dataset --input_config "./input_new.yaml"
 
 ## [component] converting msd datasets
-python -m monai.apps.nnunet nnUNetV2Runner convert_msd_dataset --input_config "./input.yaml" --data_dir "/workspace/data/Task05_Prostate"
+python -m monai.apps.nnunet nnUNetV2Runner convert_msd_dataset --input_config "./input.yaml" --data_dir "/workspace/data/Task09_Spleen"
 
 ## [component] experiment planning and data pre-processing
 python -m monai.apps.nnunet nnUNetV2Runner plan_and_process --input_config "./input.yaml"

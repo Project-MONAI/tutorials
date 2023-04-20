@@ -244,7 +244,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--load_pretrained_ckpt",
         action="store_true",
-        help="whether to load pretrained checkpoint from model zoo",
+        help="whether to load pretrained checkpoint",
     )
 
     args = parser.parse_args()

@@ -12,7 +12,6 @@
 import logging
 import os
 import sys
-import tempfile
 from glob import glob
 
 import nibabel as nib
@@ -20,22 +19,21 @@ import numpy as np
 import torch
 from ignite.metrics import Accuracy
 
-import monai
 from monai.apps import get_logger
-from monai.data import create_test_image_3d
+from monai.bundle import BundleWorkflow
+from monai.config import print_config
+from monai.data import create_test_image_3d, CacheDataset, DataLoader
 from monai.engines import SupervisedEvaluator, SupervisedTrainer
 from monai.handlers import (
     CheckpointSaver,
-    EarlyStopHandler,
-    LrScheduleHandler,
     MeanDice,
     StatsHandler,
-    TensorBoardImageHandler,
-    TensorBoardStatsHandler,
     ValidationHandler,
     from_engine,
 )
 from monai.inferers import SimpleInferer, SlidingWindowInferer
+from monai.losses import DiceLoss
+from monai.networks.nets import UNet
 from monai.transforms import (
     Activationsd,
     AsChannelFirstd,
@@ -48,151 +46,198 @@ from monai.transforms import (
     ScaleIntensityd,
     EnsureTyped,
 )
+from monai.utils import BundleProperty, set_determinism
 
 
-def main(tempdir):
-    monai.config.print_config()
-    # set root log level to INFO and init a train logger, will be used in `StatsHandler`
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    get_logger("train_log")
+class TrainWorkflow(BundleWorkflow):
+    """
+    Test class simulates the bundle workflow defined by Python script directly.
 
-    # create a temporary directory and 40 random image, mask pairs
-    print(f"generating synthetic data to {tempdir} (this may take a while)")
-    for i in range(40):
-        im, seg = create_test_image_3d(128, 128, 128, num_seg_classes=1, channel_dim=-1)
-        n = nib.Nifti1Image(im, np.eye(4))
-        nib.save(n, os.path.join(tempdir, f"img{i:d}.nii.gz"))
-        n = nib.Nifti1Image(seg, np.eye(4))
-        nib.save(n, os.path.join(tempdir, f"seg{i:d}.nii.gz"))
+    """
 
-    images = sorted(glob(os.path.join(tempdir, "img*.nii.gz")))
-    segs = sorted(glob(os.path.join(tempdir, "seg*.nii.gz")))
-    train_files = [{"image": img, "label": seg} for img, seg in zip(images[:20], segs[:20])]
-    val_files = [{"image": img, "label": seg} for img, seg in zip(images[-20:], segs[-20:])]
+    def __init__(self, datapath: str):
+        super().__init__(workflow="train")
+        print_config()
+        # set root log level to INFO and init a train logger, will be used in `StatsHandler`
+        logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+        get_logger("train_log")
 
-    # define transforms for image and segmentation
-    train_transforms = Compose(
-        [
-            LoadImaged(keys=["image", "label"]),
-            AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
-            ScaleIntensityd(keys="image"),
-            RandCropByPosNegLabeld(
-                keys=["image", "label"], label_key="label", spatial_size=[96, 96, 96], pos=1, neg=1, num_samples=4
-            ),
-            RandRotate90d(keys=["image", "label"], prob=0.5, spatial_axes=[0, 2]),
-            EnsureTyped(keys=["image", "label"]),
-        ]
-    )
-    val_transforms = Compose(
-        [
-            LoadImaged(keys=["image", "label"]),
-            AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
-            ScaleIntensityd(keys="image"),
-            EnsureTyped(keys=["image", "label"]),
-        ]
-    )
+        # create a temporary directory and 40 random image, mask pairs
+        print(f"generating synthetic data to {datapath} (this may take a while)")
+        for i in range(40):
+            im, seg = create_test_image_3d(128, 128, 128, num_seg_classes=1, channel_dim=-1)
+            n = nib.Nifti1Image(im, np.eye(4))
+            nib.save(n, os.path.join(datapath, f"img{i:d}.nii.gz"))
+            n = nib.Nifti1Image(seg, np.eye(4))
+            nib.save(n, os.path.join(datapath, f"seg{i:d}.nii.gz"))
 
-    # create a training data loader
-    train_ds = monai.data.CacheDataset(data=train_files, transform=train_transforms, cache_rate=0.5)
-    # use batch_size=2 to load images and use RandCropByPosNegLabeld to generate 2 x 4 images for network training
-    train_loader = monai.data.DataLoader(train_ds, batch_size=2, shuffle=True, num_workers=4)
-    # create a validation data loader
-    val_ds = monai.data.CacheDataset(data=val_files, transform=val_transforms, cache_rate=1.0)
-    val_loader = monai.data.DataLoader(val_ds, batch_size=1, num_workers=4)
+        self._datapath = datapath
+        self._props = {}
+        self._set_props = {}
 
-    # create UNet, DiceLoss and Adam optimizer
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    net = monai.networks.nets.UNet(
-        spatial_dims=3,
-        in_channels=1,
-        out_channels=1,
-        channels=(16, 32, 64, 128, 256),
-        strides=(2, 2, 2, 2),
-        num_res_units=2,
-    ).to(device)
-    loss = monai.losses.DiceLoss(sigmoid=True)
-    opt = torch.optim.Adam(net.parameters(), 1e-3)
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=2, gamma=0.1)
+    def initialize(self):
+        set_determinism(0)
+        self.props = {}
 
-    val_post_transforms = Compose(
-        [
-            EnsureTyped(keys="pred"),
-            Activationsd(keys="pred", sigmoid=True),
-            AsDiscreted(keys="pred", threshold=0.5),
-            KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
-        ]
-    )
-    val_handlers = [
-        # apply “EarlyStop” logic based on the validation metrics
-        EarlyStopHandler(trainer=None, patience=2, score_function=lambda x: x.state.metrics["val_mean_dice"]),
-        # use the logger "train_log" defined at the beginning of this program
-        StatsHandler(name="train_log", output_transform=lambda x: None),
-        TensorBoardStatsHandler(log_dir="./runs/", output_transform=lambda x: None),
-        TensorBoardImageHandler(
-            log_dir="./runs/",
-            batch_transform=from_engine(["image", "label"]),
-            output_transform=from_engine(["pred"]),
-        ),
-        CheckpointSaver(save_dir="./runs/", save_dict={"net": net}, save_key_metric=True),
-    ]
+    def run(self):
+        self.trainer.run()
 
-    evaluator = SupervisedEvaluator(
-        device=device,
-        val_data_loader=val_loader,
-        network=net,
-        inferer=SlidingWindowInferer(roi_size=(96, 96, 96), sw_batch_size=4, overlap=0.5),
-        postprocessing=val_post_transforms,
-        key_val_metric={
-            "val_mean_dice": MeanDice(include_background=True, output_transform=from_engine(["pred", "label"]))
-        },
-        additional_metrics={"val_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},
-        val_handlers=val_handlers,
-        amp=True,
-    )
+    def finalize(self):
+        set_determinism(None)
 
-    train_post_transforms = Compose(
-        [
-            Activationsd(keys="pred", sigmoid=True),
-            AsDiscreted(keys="pred", threshold=0.5),
-            KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
-        ]
-    )
+    def _get_property(self, name, property):
+        if name in self._props:
+            value = self._props[value]
+        elif name in self._set_props:
+            value = self._set_props[name]
+        else:
+            if name == "bundle_root": 
+                value = "."
+            elif name == "device":
+                value = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            elif name == "dataset_dir":
+                value = self.datapath
+            elif name == "network":
+                value = UNet(
+                    spatial_dims=3,
+                    in_channels=1,
+                    out_channels=1,
+                    channels=(16, 32, 64, 128, 256),
+                    strides=(2, 2, 2, 2),
+                    num_res_units=2,
+                ).to(self.device)
+            elif name == "loss":
+                value = DiceLoss(sigmoid=True)
+            elif name == "optimizer":
+                value = torch.optim.Adam(self.network.parameters(), 1e-3)
+            elif name == "trainer":
+                value = SupervisedTrainer(
+                    device=self.device,
+                    max_epochs=self.max_epochs,
+                    train_data_loader=DataLoader(self.train_dataset, batch_size=2, shuffle=True, num_workers=4),
+                    network=self.network,
+                    optimizer=self.optimizer,
+                    loss_function=self.loss,
+                    inferer=self.train_inferer,
+                    postprocessing=self.train_postprocessing,
+                    key_train_metric={"train_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},
+                    train_handlers=self.train_handlers,
+                    # if no FP16 support in GPU or PyTorch version < 1.6, will not enable AMP training
+                    amp=True,
+                )
+            elif name == "max_epochs":
+                value = 5
+            elif name == "train_dataset":
+                images = sorted(glob(os.path.join(self.dataset_dir, "img*.nii.gz")))
+                segs = sorted(glob(os.path.join(self.dataset_dir, "seg*.nii.gz")))
+                value = CacheDataset(
+                    data=[{"image": img, "label": seg} for img, seg in zip(images[:20], segs[:20])],
+                    transform=self.train_preprocessing,
+                    cache_rate=0.5,
+                )
+            elif name == "train_dataset_data":
+                value = self.train_dataset.data
+            elif name == "train_inferer":
+                value = SimpleInferer()
+            elif name == "train_handlers":
+                value = [
+                    ValidationHandler(validator=self.evaluator, interval=self.val_interval, epoch_level=True),
+                    # use the logger "train_log" defined at the beginning of this program
+                    StatsHandler(
+                        name="train_log", tag_name="train_loss", output_transform=from_engine(["loss"], first=True),
+                    ),
+                    CheckpointSaver(
+                        save_dir="./runs/",
+                        save_dict={"net": self.network, "opt": self.optimizer},
+                        save_interval=2,
+                        epoch_level=True,
+                    ),
+                ]
+            elif name == "train_preprocessing":
+                value = Compose(
+                    [
+                        LoadImaged(keys=["image", "label"]),
+                        AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
+                        ScaleIntensityd(keys="image"),
+                        RandCropByPosNegLabeld(
+                            keys=["image", "label"],
+                            label_key="label",
+                            spatial_size=[96, 96, 96],
+                            pos=1,
+                            neg=1,
+                            num_samples=4,
+                        ),
+                        RandRotate90d(keys=["image", "label"], prob=0.5, spatial_axes=[0, 2]),
+                        EnsureTyped(keys=["image", "label"]),
+                    ]
+                )
+            elif name == "train_postprocessing":
+                value = Compose(
+                    [
+                        Activationsd(keys="pred", sigmoid=True),
+                        AsDiscreted(keys="pred", threshold=0.5),
+                        KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
+                    ]
+                )
+            elif name == "train_key_metric":
+                value = {"train_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},
+            elif name == "evaluator":
+                value = SupervisedEvaluator(
+                    device=self.device,
+                    val_data_loader=DataLoader(self.val_dataset, batch_size=1, num_workers=4),
+                    network=self.network,
+                    inferer=self.val_inferer,
+                    postprocessing=self.val_postprocessing,
+                    key_val_metric=self.val_key_metric,
+                    additional_metrics={"val_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},
+                    val_handlers=self.val_handlers,
+                    amp=True,
+                )
+            elif name == "val_interval":
+                value = 2
+            elif name == "val_handlers":
+                value = [
+                    # use the logger "train_log" defined at the beginning of this program
+                    StatsHandler(name="train_log", output_transform=lambda x: None),
+                    CheckpointSaver(save_dir="./runs/", save_dict={"net": self.network}, save_key_metric=True),
+                ]
+            elif name == "val_dataset":
+                images = sorted(glob(os.path.join(self.dataset_dir, "img*.nii.gz")))
+                segs = sorted(glob(os.path.join(self.dataset_dir, "seg*.nii.gz")))
+                value = CacheDataset(
+                    data=[{"image": img, "label": seg} for img, seg in zip(images[-20:], segs[-20:])],
+                    transform=self.val_preprocessing,
+                    cache_rate=1.0,
+                )
+            elif name == "val_dataset_data":
+                value = self.val_dataset.data
+            elif name == "val_inferer":
+                value = SlidingWindowInferer(roi_size=(96, 96, 96), sw_batch_size=4, overlap=0.5)
+            elif name == "val_preprocessing":
+                value = Compose(
+                    [
+                        LoadImaged(keys=["image", "label"]),
+                        AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
+                        ScaleIntensityd(keys="image"),
+                        EnsureTyped(keys=["image", "label"]),
+                    ]
+                )
+            elif name == "val_postprocessing":
+                value = Compose(
+                    [
+                        EnsureTyped(keys="pred"),
+                        Activationsd(keys="pred", sigmoid=True),
+                        AsDiscreted(keys="pred", threshold=0.5),
+                        KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
+                    ]
+                )
+            elif name == "val_key_metric":
+                value = {
+                    "val_mean_dice": MeanDice(include_background=True, output_transform=from_engine(["pred", "label"]))
+                },
+            elif property[BundleProperty.REQUIRED]:
+                raise ValueError(f"unsupported property '{name}' is required in the bundle properties.")
+            self._props[name] = value
 
-    train_handlers = [
-        # apply “EarlyStop” logic based on the loss value, use “-” negative value because smaller loss is better
-        EarlyStopHandler(
-            trainer=None, patience=20, score_function=lambda x: -x.state.output[0]["loss"], epoch_level=False
-        ),
-        LrScheduleHandler(lr_scheduler=lr_scheduler, print_lr=True),
-        ValidationHandler(validator=evaluator, interval=2, epoch_level=True),
-        # use the logger "train_log" defined at the beginning of this program
-        StatsHandler(name="train_log", tag_name="train_loss", output_transform=from_engine(["loss"], first=True)),
-        TensorBoardStatsHandler(
-            log_dir="./runs/", tag_name="train_loss", output_transform=from_engine(["loss"], first=True)
-        ),
-        CheckpointSaver(save_dir="./runs/", save_dict={"net": net, "opt": opt}, save_interval=2, epoch_level=True),
-    ]
-
-    trainer = SupervisedTrainer(
-        device=device,
-        max_epochs=5,
-        train_data_loader=train_loader,
-        network=net,
-        optimizer=opt,
-        loss_function=loss,
-        inferer=SimpleInferer(),
-        postprocessing=train_post_transforms,
-        key_train_metric={"train_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},
-        train_handlers=train_handlers,
-        # if no FP16 support in GPU or PyTorch version < 1.6, will not enable AMP training
-        amp=True,
-    )
-    # set initialized trainer for "early stop" handlers
-    val_handlers[0].set_trainer(trainer=trainer)
-    train_handlers[0].set_trainer(trainer=trainer)
-    trainer.run()
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory() as tempdir:
-        main(tempdir)
+    def _set_property(self, name, _, value):
+        self._set_props[name] = value

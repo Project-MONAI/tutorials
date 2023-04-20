@@ -10,5 +10,5 @@ Example shows the use cases of bringing customized python components, such as tr
 ### [hybrid programming](./hybrid_programming)
 Example shows how to parse the config files in your own python program, instantiate necessary components with python program and execute the inference.
 
-### [python bundle workflow](./python_bundle_workflow.md)
-Step by step tutorial document shows how to develop a bundle training or inference workflow in Python instead of JSON / YAML configs.
+### [python bundle workflow](./python_bundle_workflow)
+Step by step tutorial examples show how to develop a bundle training or inference workflow in Python instead of JSON / YAML configs.

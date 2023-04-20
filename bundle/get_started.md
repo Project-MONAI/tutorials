@@ -313,7 +313,7 @@ After downloading the bundle, a typical metadata example in `spleen_ct_segmentat
 
 ## Execute training with bundle script - `run`
 
-There are several predefined scripts in the MONAI bundle module, here we leverage the `run` script and specify the ID of trainer in the config.
+There are several predefined scripts in the MONAI bundle module, here we leverage the `run` script.
 
 We can define the following three sections:
 

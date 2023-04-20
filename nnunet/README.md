@@ -87,7 +87,7 @@ python -m monai.apps.nnunet nnUNetV2Runner run --input_config='./input.yaml'
 
 ```bash
 ## [component] convert dataset
-python -m monai.apps.nnunet nnUNetV2Runner convert_dataset --input_config "./input_new.yaml"
+python -m monai.apps.nnunet nnUNetV2Runner convert_dataset --input_config "./input.yaml"
 
 ## [component] converting msd datasets
 python -m monai.apps.nnunet nnUNetV2Runner convert_msd_dataset --input_config "./input.yaml" --data_dir "/workspace/data/Task09_Spleen"

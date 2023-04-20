@@ -17,7 +17,7 @@ export PYTHONPATH=$PYTHONPATH:"<path to 'python_bundle_workflow/scripts'>"
 And please make sure the folder `python_bundle_workflow/scripts` is a valid python module (it has a `__init__.py` file in the folder).
 
 ```shell
-python -m monai.bundle run --config_file configs/train.json
+python -m monai.bundle run_workflow "scripts.train.TrainWorkflow"
 ```
 
 ```shell

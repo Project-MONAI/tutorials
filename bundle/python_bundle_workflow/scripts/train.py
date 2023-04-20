@@ -55,7 +55,7 @@ class TrainWorkflow(BundleWorkflow):
 
     """
 
-    def __init__(self, datapath: str):
+    def __init__(self, dataset_dir: str = "."):
         super().__init__(workflow="train")
         print_config()
         # set root log level to INFO and init a train logger, will be used in `StatsHandler`
@@ -63,17 +63,17 @@ class TrainWorkflow(BundleWorkflow):
         get_logger("train_log")
 
         # create a temporary directory and 40 random image, mask pairs
-        print(f"generating synthetic data to {datapath} (this may take a while)")
+        print(f"generating synthetic data to {dataset_dir} (this may take a while)")
         for i in range(40):
             im, seg = create_test_image_3d(128, 128, 128, num_seg_classes=1, channel_dim=-1)
             n = nib.Nifti1Image(im, np.eye(4))
-            nib.save(n, os.path.join(datapath, f"img{i:d}.nii.gz"))
+            nib.save(n, os.path.join(dataset_dir, f"img{i:d}.nii.gz"))
             n = nib.Nifti1Image(seg, np.eye(4))
-            nib.save(n, os.path.join(datapath, f"seg{i:d}.nii.gz"))
+            nib.save(n, os.path.join(dataset_dir, f"seg{i:d}.nii.gz"))
 
-        self._datapath = datapath
         self._props = {}
         self._set_props = {}
+        self.dataset_dir = dataset_dir
 
     def initialize(self):
         set_determinism(0)
@@ -87,7 +87,7 @@ class TrainWorkflow(BundleWorkflow):
 
     def _get_property(self, name, property):
         if name in self._props:
-            value = self._props[value]
+            value = self._props[name]
         elif name in self._set_props:
             value = self._set_props[name]
         else:
@@ -96,7 +96,7 @@ class TrainWorkflow(BundleWorkflow):
             elif name == "device":
                 value = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             elif name == "dataset_dir":
-                value = self.datapath
+                value = "."
             elif name == "network":
                 value = UNet(
                     spatial_dims=3,
@@ -149,7 +149,7 @@ class TrainWorkflow(BundleWorkflow):
                         output_transform=from_engine(["loss"], first=True),
                     ),
                     CheckpointSaver(
-                        save_dir="./runs/",
+                        save_dir=self.bundle_root + "/models/",
                         save_dict={"net": self.network, "opt": self.optimizer},
                         save_interval=2,
                         epoch_level=True,
@@ -201,7 +201,9 @@ class TrainWorkflow(BundleWorkflow):
                 value = [
                     # use the logger "train_log" defined at the beginning of this program
                     StatsHandler(name="train_log", output_transform=lambda x: None),
-                    CheckpointSaver(save_dir="./runs/", save_dict={"net": self.network}, save_key_metric=True),
+                    CheckpointSaver(
+                        save_dir=self.bundle_root + "/models/", save_dict={"net": self.network}, save_key_metric=True,
+                    ),
                 ]
             elif name == "val_dataset":
                 images = sorted(glob(os.path.join(self.dataset_dir, "img*.nii.gz")))
@@ -244,6 +246,7 @@ class TrainWorkflow(BundleWorkflow):
             elif property[BundleProperty.REQUIRED]:
                 raise ValueError(f"unsupported property '{name}' is required in the bundle properties.")
             self._props[name] = value
+        return value
 
-    def _set_property(self, name, _, value):
+    def _set_property(self, name, property, value):
         self._set_props[name] = value

@@ -46,7 +46,7 @@ from monai.transforms import (
     ScaleIntensityd,
     EnsureTyped,
 )
-from monai.utils import BundleProperty, set_determinism
+from monai.utils import BundleProperty, BundlePropertyConfig, BundleProperty, set_determinism
 
 
 class TrainWorkflow(BundleWorkflow):
@@ -74,6 +74,23 @@ class TrainWorkflow(BundleWorkflow):
         self._props = {}
         self._set_props = {}
         self.dataset_dir = dataset_dir
+        # add components to the train properties, these are task specific
+        self.properties = dict(self.properties)
+        self.properties["network"] = {
+            BundleProperty.DESC: "network for the training.",
+            BundleProperty.REQUIRED: False,
+            BundlePropertyConfig.ID: "network",
+        }
+        self.properties["loss"] = {
+            BundleProperty.DESC: "loss function for the training.",
+            BundleProperty.REQUIRED: False,
+            BundlePropertyConfig.ID: "loss",
+        }
+        self.properties["optimizer"] = {
+            BundleProperty.DESC: "optimizer for the training.",
+            BundleProperty.REQUIRED: False,
+            BundlePropertyConfig.ID: "optimizer",
+        }
 
     def initialize(self):
         set_determinism(0)
@@ -148,12 +165,6 @@ class TrainWorkflow(BundleWorkflow):
                         tag_name="train_loss",
                         output_transform=from_engine(["loss"], first=True),
                     ),
-                    CheckpointSaver(
-                        save_dir=self.bundle_root + "/models/",
-                        save_dict={"net": self.network, "opt": self.optimizer},
-                        save_interval=2,
-                        epoch_level=True,
-                    ),
                 ]
             elif name == "train_preprocessing":
                 value = Compose(
@@ -205,6 +216,7 @@ class TrainWorkflow(BundleWorkflow):
                         save_dir=self.bundle_root + "/models/",
                         save_dict={"net": self.network},
                         save_key_metric=True,
+                        key_metric_filename="model.pt",
                     ),
                 ]
             elif name == "val_dataset":
@@ -243,7 +255,7 @@ class TrainWorkflow(BundleWorkflow):
                         "val_mean_dice": MeanDice(
                             include_background=True, output_transform=from_engine(["pred", "label"])
                         )
-                    },
+                    }
                 )
             elif property[BundleProperty.REQUIRED]:
                 raise ValueError(f"unsupported property '{name}' is required in the bundle properties.")

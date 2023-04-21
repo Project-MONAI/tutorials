@@ -59,7 +59,7 @@ def main(tempdir):
     val_files = [{"image": img, "label": seg} for img, seg in zip(images, segs)]
 
     # model file path
-    model_file = glob("./runs/net_key_metric*")[0]
+    model_file = "./models/model.pt"
 
     # define transforms for image and segmentation
     val_transforms = Compose(

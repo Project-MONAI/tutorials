@@ -250,13 +250,9 @@ class TrainWorkflow(BundleWorkflow):
                     ]
                 )
             elif name == "val_key_metric":
-                value = (
-                    {
-                        "val_mean_dice": MeanDice(
-                            include_background=True, output_transform=from_engine(["pred", "label"])
-                        )
-                    }
-                )
+                value = {
+                    "val_mean_dice": MeanDice(include_background=True, output_transform=from_engine(["pred", "label"]))
+                }
             elif property[BundleProperty.REQUIRED]:
                 raise ValueError(f"unsupported property '{name}' is required in the bundle properties.")
             self._props[name] = value

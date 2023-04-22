@@ -4,7 +4,7 @@ Users need to install both MONAI and nnU-Net to utilize the nnunet runner.
 
 ## MONAI
 
-Users can follow the [link](https://https://docs.monai.io/en/stable/installation.html#option-1-as-a-part-of-your-system-wide-module) to install dev branch of MONAI.
+Users can follow the [link](https://docs.monai.io/en/stable/installation.html#option-1-as-a-part-of-your-system-wide-module) to install dev branch of MONAI.
 The following command shows the example to install MONAI and Necessary dependencies.
 
 ```bash

@@ -53,7 +53,7 @@ The installation instruction is described [here](docs/install.md).
 The user needs to provide a data list (".json" file) for the new task and data root. In general, a valid data list needs to follow the format of the ones in [Medical Segmentation Decathlon](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2).
 
 In [this tutorial](../auto3dseg/notebooks/msd_datalist_generator.ipynb), we provided example steps to download the [MSD Spleen dataset](http://medicaldecathlon.com) and prepare a datalist.
-Below we assume the dataset is downloaded to `/workspace/data/Task05_Prostate` and the datalist is in the current directory.
+Below we assume the dataset is downloaded to `/workspace/data/Task09_Spleen` and the datalist is in the current directory.
 
 ### Run with Minimal Input using ```nnUNetV2Runner```
 
@@ -87,7 +87,7 @@ python -m monai.apps.nnunet nnUNetV2Runner run --input_config='./input.yaml'
 
 ```bash
 ## [component] convert dataset
-python -m monai.apps.nnunet nnUNetV2Runner convert_dataset --input_config "./input_new.yaml"
+python -m monai.apps.nnunet nnUNetV2Runner convert_dataset --input_config "./input.yaml"
 
 ## [component] converting msd datasets
 python -m monai.apps.nnunet nnUNetV2Runner convert_msd_dataset --input_config "./input.yaml" --data_dir "/workspace/data/Task09_Spleen"

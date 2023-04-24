@@ -98,7 +98,7 @@ python -m monai.apps.nnunet nnUNetV2Runner plan_and_process --input_config "./in
 ## [component] use all available GPU(s) to train all 20 models
 python -m monai.apps.nnunet nnUNetV2Runner train --input_config "./input.yaml"
 
-## [component] single-gpu training for a single model
+## [component] use all available GPU(s) to train a single model
 python -m monai.apps.nnunet nnUNetV2Runner train_single_model --input_config "./input.yaml" \
     --config "3d_fullres" \
     --fold 0

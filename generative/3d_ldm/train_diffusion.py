@@ -1,3 +1,19 @@
+# ---
+# jupyter:
+#   jupytext:
+#     formats: py:percent,ipynb
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.14.4
+#   kernelspec:
+#     display_name: Python 3 (ipykernel)
+#     language: python
+#     name: python3
+# ---
+
+# %%
 # Copyright (c) MONAI Consortium
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -9,50 +25,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# %% [markdown]
+# # Denoising Diffusion Probabilistic Model on 3D data
+#
+# This tutorial illustrates how to use MONAI for training a denoising diffusion probabilistic model (DDPM)[1] to create synthetic 3D images.
+#
+# [1] - [Ho et al. "Denoising Diffusion Probabilistic Models"](https://arxiv.org/abs/2006.11239)
+#
+#
+# ## Setup environment
+
+# %%
+# !python -c "import monai" || pip install -q "monai-weekly[nibabel, tqdm]"
+# !python -c "import matplotlib" || pip install -q matplotlib
+# %matplotlib inline
+
+# %% [markdown]
+# ## Setup imports
+
 import argparse
 import json
 import logging
+
+# %%
 import os
 import sys
-import tempfile
-import time
-from datetime import datetime, timedelta
 
-import matplotlib.pyplot as plt
-import numpy as np
 import torch
-import torch.distributed as dist
-import torch.multiprocessing as mp
 import torch.nn.functional as F
 from generative.inferers import LatentDiffusionInferer
-from generative.losses import PatchAdversarialLoss, PerceptualLoss
-from generative.networks.nets import AutoencoderKL, DiffusionModelUNet, PatchDiscriminator
 from generative.networks.schedulers import DDPMScheduler
-from monai.apps import DecathlonDataset
 from monai.config import print_config
-from monai.data import DataLoader, ThreadDataLoader, partition_dataset
-from monai.transforms import (
-    AddChanneld,
-    CenterSpatialCropd,
-    Compose,
-    EnsureChannelFirstd,
-    EnsureTyped,
-    Lambdad,
-    LoadImaged,
-    Orientationd,
-    Resized,
-    ScaleIntensityd,
-    ScaleIntensityRangePercentilesd,
-    Spacingd,
-)
 from monai.utils import first, set_determinism
 from torch.cuda.amp import GradScaler, autocast
-from torch.nn import L1Loss
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
-from tqdm import tqdm
 
-from train_autoencoder import define_autoencoder, prepare_dataloader, setup_ddp
+from utils import define_instance, prepare_dataloader, setup_ddp
 from visualize_image import visualize_one_slice_in_3d_image
 
 
@@ -131,7 +140,15 @@ def main():
     #     # For the data loader, we are using mini-batches of 8 images, which consumes about 21GB of GPU memory during training. Please, reduce this value to run on smaller GPUs.
 
     # %%
-    train_loader, val_loader = prepare_dataloader(args, args.DiffusionModel["batch_size"], rank, world_size, cache=1.0)
+    train_loader, val_loader = prepare_dataloader(
+        args,
+        args.diffusion_train["batch_size"],
+        args.diffusion_train["patch_size"],
+        randcrop=False,
+        rank=rank,
+        world_size=world_size,
+        cache=1.0,
+    )
 
     # initialize tensorboard writer
     if rank == 0:
@@ -145,7 +162,7 @@ def main():
     #
 
     # +
-    autoencoder = define_autoencoder(args, device)
+    autoencoder = define_instance(args, "autoencoder_def").to(device)
 
     trained_g_path = os.path.join(args.model_dir, "autoencoder.pt")
 
@@ -185,18 +202,10 @@ def main():
     # In this section, we will define the diffusion model that will learn data distribution of the latent representation of the autoencoder. Together with the diffusion model, we define a beta scheduler responsible for defining the amount of noise tahat is added across the diffusion's model Markov chain.
 
     # +
-    unet = DiffusionModelUNet(
-        spatial_dims=3,
-        in_channels=args.latent_channels,
-        out_channels=args.latent_channels,
-        num_res_blocks=args.DiffusionModel["num_res_blocks"],
-        num_channels=args.DiffusionModel["num_channels"],
-        attention_levels=args.DiffusionModel["attention_levels"],
-        num_head_channels=args.DiffusionModel["num_head_channels"],
-    )
-    unet.to(device)
+    unet = define_instance(args, "diffusion_def").to(device)
 
     trained_diffusion_path = os.path.join(args.model_dir, "diffusion_unet.pt")
+    trained_diffusion_path_last = os.path.join(args.model_dir, "diffusion_unet_last.pt")
 
     if args.resume_ckpt:
         map_location = {"cuda:%d" % 0: "cuda:%d" % rank}
@@ -221,14 +230,14 @@ def main():
 
     inferer = LatentDiffusionInferer(scheduler, scale_factor=scale_factor)
 
-    optimizer_diff = torch.optim.Adam(params=unet.parameters(), lr=args.DiffusionModel["lr"] * world_size)
+    optimizer_diff = torch.optim.Adam(params=unet.parameters(), lr=args.diffusion_train["lr"] * world_size)
+    lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer_diff, milestones=[100, 1000], gamma=0.1)
 
     # ### Train model
 
     # +
-    n_epochs = args.n_epochs
-    val_interval = args.val_interval
-    diffusion_warm_up_n_epochs = 1000
+    n_epochs = args.diffusion_train["n_epochs"]
+    val_interval = args.diffusion_train["val_interval"]
     autoencoder.eval()
     scaler = GradScaler()
     total_step = 0
@@ -237,6 +246,7 @@ def main():
     for epoch in range(n_epochs):
         unet.train()
         epoch_loss = 0
+        lr_scheduler.step()
         if ddp_bool:
             train_loader.sampler.set_epoch(epoch)
             val_loader.sampler.set_epoch(epoch)
@@ -315,6 +325,13 @@ def main():
                     if rank == 0:
                         tensorboard_writer.add_scalar("val_diffusion_loss", val_recon_epoch_loss, epoch)
                         print(f"Epoch {epoch} val_diffusion_loss: {val_recon_epoch_loss}")
+                        # save last model
+                        if ddp_bool:
+                            torch.save(unet.module.state_dict(), trained_diffusion_path_last)
+                        else:
+                            torch.save(unet.state_dict(), trained_diffusion_path_last)
+
+                        # save best model
                         if val_recon_epoch_loss < best_val_recon_epoch_loss and rank == 0:
                             best_val_recon_epoch_loss = val_recon_epoch_loss
                             if ddp_bool:

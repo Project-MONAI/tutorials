@@ -27,9 +27,9 @@
         "with_decoder_nonlocal_attn": false
     },
     "autoencoder_train": {
-        "batch_size": 2,
+        "batch_size": 1,
         "patch_size": [112,128,80],
-        "lr": 1e-5,
+        "lr": 5e-6,
         "perceptual_weight": 0.01,
         "kl_weight": 1e-7,
         "recon_loss": "l1",
@@ -47,9 +47,9 @@
         "num_res_blocks": 2
     },
     "diffusion_train": {
-        "batch_size": 4,
+        "batch_size": 2,
         "patch_size": [144,176,112],
-        "lr": 1e-5,
+        "lr": 5e-6,
         "n_epochs": 10000,
         "val_interval": 2
     },

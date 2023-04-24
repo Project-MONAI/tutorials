@@ -1,3 +1,19 @@
+# ---
+# jupyter:
+#   jupytext:
+#     formats: py:percent,ipynb
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.14.4
+#   kernelspec:
+#     display_name: Python 3 (ipykernel)
+#     language: python
+#     name: python3
+# ---
+
+# %%
 # Copyright (c) MONAI Consortium
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -9,154 +25,44 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# %% [markdown]
+# # Denoising Diffusion Probabilistic Model on 3D data
+#
+# This tutorial illustrates how to use MONAI for training a denoising diffusion probabilistic model (DDPM)[1] to create synthetic 3D images.
+#
+# [1] - [Ho et al. "Denoising Diffusion Probabilistic Models"](https://arxiv.org/abs/2006.11239)
+#
+#
+# ## Setup environment
+
+# %%
+# !python -c "import monai" || pip install -q "monai-weekly[nibabel, tqdm]"
+# !python -c "import matplotlib" || pip install -q matplotlib
+# %matplotlib inline
+
+# %% [markdown]
+# ## Setup imports
+
 import argparse
 import json
 import logging
+
+# %%
 import os
 import sys
-import tempfile
-import time
-from datetime import datetime, timedelta
 from pathlib import Path
 
-import matplotlib.pyplot as plt
-import numpy as np
 import torch
-import torch.distributed as dist
-import torch.multiprocessing as mp
-import torch.nn.functional as F
-from generative.inferers import LatentDiffusionInferer
 from generative.losses import PatchAdversarialLoss, PerceptualLoss
-from generative.networks.nets import AutoencoderKL, DiffusionModelUNet, PatchDiscriminator
-from generative.networks.schedulers import DDPMScheduler
-from monai.apps import DecathlonDataset
+from generative.networks.nets import PatchDiscriminator
 from monai.config import print_config
-from monai.data import DataLoader, ThreadDataLoader, partition_dataset
-from monai.transforms import (
-    AddChanneld,
-    CenterSpatialCropd,
-    Compose,
-    EnsureChannelFirstd,
-    EnsureTyped,
-    Lambdad,
-    LoadImaged,
-    Orientationd,
-    Resized,
-    ScaleIntensityd,
-    ScaleIntensityRangePercentilesd,
-    Spacingd,
-)
 from monai.utils import set_determinism
-from torch.cuda.amp import GradScaler, autocast
-from torch.nn import L1Loss
+from torch.nn import L1Loss, MSELoss
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
-from tqdm import tqdm
 
+from utils import KL_loss, define_instance, prepare_dataloader, setup_ddp
 from visualize_image import visualize_one_slice_in_3d_image
-
-
-def setup_ddp(rank, world_size):
-    print(f"Running DDP diffusion example on rank {rank}/world_size {world_size}.")
-    print(f"Initing to IP {os.environ['MASTER_ADDR']}")
-    dist.init_process_group(
-        backend="nccl", init_method="env://", timeout=timedelta(seconds=36000), rank=rank, world_size=world_size
-    )  # gloo, nccl
-    dist.barrier()
-    device = torch.device(f"cuda:{rank}")
-    return dist, device
-
-
-def prepare_dataloader(args, batch_size, rank=0, world_size=1, cache=1.0):
-    # %% [markdown]
-    #     # ## Setup Decathlon Dataset and training and validation data loaders
-    #     #
-    #     # In this tutorial, we will use the 3D T1 weighted brain images from the [2016 and 2017 Brain Tumor Segmentation (BraTS) challenges](https://www.med.upenn.edu/sbia/brats2017/data.html). This dataset can be easily downloaded using the [DecathlonDataset](https://docs.monai.io/en/stable/apps.html#monai.apps.DecathlonDataset) from MONAI (`task="Task01_BrainTumour"`). To load the training and validation images, we are using the `data_transform` transformations that are responsible for the following:
-    #     #
-    #     # 1. `LoadImaged`:  Loads the brain images from files.
-    #     # 2. `Lambdad`: Choose channel 1 of the image, which is the T1-weighted image.
-    #     # 3. `AddChanneld`: Add the channel dimension of the input data.
-    #     # 4. `ScaleIntensityd`: Apply a min-max scaling in the intensity values of each image to be in the `[0, 1]` range.
-    #     # 5. `CenterSpatialCropd`: Crop the background of the images using a roi of size `[160, 200, 155]`.
-    #     # 6. `Resized`: Resize the images to a volume with size `[32, 40, 32]`.
-    #     #
-    #     # For the data loader, we are using mini-batches of 8 images, which consumes about 21GB of GPU memory during training. Please, reduce this value to run on smaller GPUs.
-
-    ddp_bool = world_size > 1
-    channel = args.channel  # 0 = Flair, 1 = T1
-    assert channel in [0, 1, 2, 3], "Choose a valid channel"
-    roi_size = (176, 192, 144)
-    size_divisible = 2 ** (len(args.Autoencoder["num_channels"]) + len(args.DiffusionModel["num_channels"]) - 2)
-    resized_roi_size = [
-        int(np.floor(roi_size[i] / args.spacing[i] / size_divisible)) * size_divisible for i in range(3)
-    ]
-    train_transforms = Compose(
-        [
-            LoadImaged(keys=["image"]),
-            EnsureChannelFirstd(keys=["image"]),
-            Lambdad(keys="image", func=lambda x: x[channel, :, :, :]),
-            AddChanneld(keys=["image"]),
-            EnsureTyped(keys=["image"]),
-            Orientationd(keys=["image"], axcodes="RAS"),
-            CenterSpatialCropd(keys=["image"], roi_size=roi_size),
-            Spacingd(keys=["image"], pixdim=args.spacing, mode=("bilinear")),
-            CenterSpatialCropd(keys=["image"], roi_size=resized_roi_size),
-            ScaleIntensityRangePercentilesd(keys="image", lower=0, upper=99.5, b_min=0, b_max=1),
-        ]
-    )
-    train_ds = DecathlonDataset(
-        root_dir=args.data_base_dir,
-        task="Task01_BrainTumour",
-        section="training",  # validation
-        cache_rate=cache,  # you may need a few Gb of RAM... Set to 0 otherwise
-        num_workers=8,
-        download=False,  # Set download to True if the dataset hasnt been downloaded yet
-        seed=0,
-        transform=train_transforms,
-    )
-    val_ds = DecathlonDataset(
-        root_dir=args.data_base_dir,
-        task="Task01_BrainTumour",
-        section="validation",  # validation
-        cache_rate=cache,  # you may need a few Gb of RAM... Set to 0 otherwise
-        num_workers=8,
-        download=False,  # Set download to True if the dataset hasnt been downloaded yet
-        seed=0,
-        transform=train_transforms,
-    )
-    if ddp_bool:
-        train_sampler = torch.utils.data.distributed.DistributedSampler(train_ds, num_replicas=world_size, rank=rank)
-        val_sampler = torch.utils.data.distributed.DistributedSampler(val_ds, num_replicas=world_size, rank=rank)
-    else:
-        train_sampler = None
-        val_sampler = None
-
-    train_loader = DataLoader(
-        train_ds, batch_size=batch_size, shuffle=(not ddp_bool), num_workers=0, pin_memory=False, sampler=train_sampler
-    )
-    val_loader = DataLoader(
-        val_ds, batch_size=batch_size, shuffle=False, num_workers=0, pin_memory=False, sampler=val_sampler
-    )
-    if rank == 0:
-        print(f'Image shape {train_ds[0]["image"].shape}')
-    return train_loader, val_loader
-
-
-def define_autoencoder(args, device):
-    autoencoder = AutoencoderKL(
-        spatial_dims=args.spatial_dims,
-        in_channels=1,
-        out_channels=1,
-        num_channels=args.Autoencoder["num_channels"],
-        latent_channels=args.latent_channels,
-        num_res_blocks=args.Autoencoder["num_res_blocks"],
-        norm_num_groups=16,
-        attention_levels=args.Autoencoder["attention_levels"],
-        with_encoder_nonlocal_attn=False,  # current attention block causes stride warning when using ddp
-        with_decoder_nonlocal_attn=False,
-    )
-    autoencoder.to(device)
-    return autoencoder
 
 
 def main():
@@ -221,7 +127,15 @@ def main():
     set_determinism(42)
 
     # %%
-    train_loader, val_loader = prepare_dataloader(args, args.Autoencoder["batch_size"], rank, world_size, cache=1.0)
+    train_loader, val_loader = prepare_dataloader(
+        args,
+        args.autoencoder_train["batch_size"],
+        args.autoencoder_train["patch_size"],
+        randcrop=True,
+        rank=rank,
+        world_size=world_size,
+        cache=1.0,
+    )
 
     # ## Autoencoder KL
     #
@@ -231,11 +145,9 @@ def main():
     #
 
     # +
-    autoencoder = define_autoencoder(args, device)
+    autoencoder = define_instance(args, "autoencoder_def").to(device)
 
     discriminator_norm = "INSTANCE"
-    if ddp_bool and discriminator_norm == "BATCH":
-        raise ValueError("When using DDP, discriminator does not support BatchNorm.")
     discriminator = PatchDiscriminator(
         spatial_dims=args.spatial_dims,
         num_layers_d=3,
@@ -243,11 +155,15 @@ def main():
         in_channels=1,
         out_channels=1,
         norm=discriminator_norm,
-    )
-    discriminator.to(device)
+    ).to(device)
+    if ddp_bool:
+        # When using DDP, BatchNorm needs to be converted to SyncBatchNorm.
+        discriminator = torch.nn.SyncBatchNorm.convert_sync_batchnorm(discriminator)
 
     trained_g_path = os.path.join(args.model_dir, "autoencoder.pt")
     trained_d_path = os.path.join(args.model_dir, "discriminator.pt")
+    trained_g_path_last = os.path.join(args.model_dir, "autoencoder_last.pt")
+    trained_d_path_last = os.path.join(args.model_dir, "discriminator_last.pt")
 
     if rank == 0:
         Path(args.model_dir).mkdir(parents=True, exist_ok=True)
@@ -276,36 +192,39 @@ def main():
     # We will also specify the perceptual and adversarial losses, including the involved networks, and the optimizers to use during the training process.
 
     # +
-    l1_loss = L1Loss()
+    if "recon_loss" in args.autoencoder_train and args.autoencoder_train["recon_loss"] == "l2":
+        intensity_loss = MSELoss()
+        if rank == 0:
+            print("Use l2 loss")
+    else:
+        intensity_loss = L1Loss()
+        if rank == 0:
+            print("Use l1 loss")
     adv_loss = PatchAdversarialLoss(criterion="least_squares")
     loss_perceptual = PerceptualLoss(spatial_dims=3, network_type="squeeze", is_fake_3d=True, fake_3d_ratio=0.2)
     loss_perceptual.to(device)
 
-    def KL_loss(z_mu, z_sigma):
-        kl_loss = 0.5 * torch.sum(z_mu.pow(2) + z_sigma.pow(2) - torch.log(z_sigma.pow(2)) - 1, dim=[1, 2, 3, 4])
-        return torch.sum(kl_loss) / kl_loss.shape[0]
-
     adv_weight = 0.01
-    perceptual_weight = args.Autoencoder["perceptual_weight"]
+    perceptual_weight = args.autoencoder_train["perceptual_weight"]
     # kl_weight: important hyper-parameter. If too large, decoder cannot recon good results from latent space. If too small, latent space will not be regularized enough for the diffusion model
-    kl_weight = args.Autoencoder["kl_weight"]
+    kl_weight = args.autoencoder_train["kl_weight"]
 
     # -
-    optimizer_g = torch.optim.Adam(params=autoencoder.parameters(), lr=args.Autoencoder["lr"] * world_size)
-    optimizer_d = torch.optim.Adam(params=discriminator.parameters(), lr=args.Autoencoder["lr"] * world_size)
+    optimizer_g = torch.optim.Adam(params=autoencoder.parameters(), lr=args.autoencoder_train["lr"] * world_size)
+    optimizer_d = torch.optim.Adam(params=discriminator.parameters(), lr=args.autoencoder_train["lr"] * world_size)
 
     # initialize tensorboard writer
     if rank == 0:
-        Path(args.tfevent_path + "autoencoder").mkdir(parents=True, exist_ok=True)
-        tensorboard_writer = SummaryWriter(args.tfevent_path + "autoencoder")
+        tensorboard_path = args.tfevent_path + "autoencoder"
+        Path(tensorboard_path).mkdir(parents=True, exist_ok=True)
+        tensorboard_writer = SummaryWriter(tensorboard_path)
 
     # ### Train model
 
     # +
-    n_epochs = args.n_epochs
     autoencoder_warm_up_n_epochs = 5
-    val_interval = args.val_interval
-    val_recon_epoch_loss_list = []
+    n_epochs = args.autoencoder_train["n_epochs"]
+    val_interval = args.autoencoder_train["val_interval"]
     intermediary_images = []
     n_example_images = 4
     best_val_recon_epoch_loss = 100.0
@@ -326,7 +245,7 @@ def main():
             optimizer_g.zero_grad(set_to_none=True)
             reconstruction, z_mu, z_sigma = autoencoder(images)
 
-            recons_loss = l1_loss(reconstruction, images)
+            recons_loss = intensity_loss(reconstruction, images)
             kl_loss = KL_loss(z_mu, z_sigma)
             p_loss = loss_perceptual(reconstruction.float(), images.float())
             loss_g = recons_loss + kl_weight * kl_loss + perceptual_weight * p_loss
@@ -371,15 +290,23 @@ def main():
                 images = batch["image"].to(device)  # choose only one of Brats channels
                 with torch.no_grad():
                     reconstruction, z_mu, z_sigma = autoencoder(images)
-                    recons_loss = l1_loss(reconstruction.float(), images.float())
+                    recons_loss = intensity_loss(
+                        reconstruction.float(), images.float()
+                    ) + perceptual_weight * loss_perceptual(reconstruction.float(), images.float())
 
                 val_recon_epoch_loss += recons_loss.item()
 
             val_recon_epoch_loss = val_recon_epoch_loss / (step + 1)
             if rank == 0:
-                # save best model
+                # save last model
                 print(f"Epoch {epoch} val_recon_loss: {val_recon_epoch_loss}")
-                val_recon_epoch_loss_list.append(val_recon_epoch_loss)
+                if ddp_bool:
+                    torch.save(autoencoder.module.state_dict(), trained_g_path_last)
+                    torch.save(discriminator.module.state_dict(), trained_d_path_last)
+                else:
+                    torch.save(autoencoder.state_dict(), trained_g_path_last)
+                    torch.save(discriminator.state_dict(), trained_d_path_last)
+                # save best model
                 if val_recon_epoch_loss < best_val_recon_epoch_loss and rank == 0:
                     best_val_recon_epoch_loss = val_recon_epoch_loss
                     if ddp_bool:

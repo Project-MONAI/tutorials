@@ -2,7 +2,7 @@
 This folder contains an example to train and validate a 3D detection RetinaNet model.
 The workflow of MONAI detection module is shown in the following figure.
 <p align="center">
-  <img src="https://github.com/Project-MONAI/MONAI/blob/dev/docs/images/detection.png" alt="detection scheme")
+  <img src="detection.png" alt="detection scheme")
 </p>
 
 MONAI detection implementation is based on the following papers:
@@ -50,7 +50,7 @@ Alternatively, you can download the original data and resample them by yourself 
 
 The raw CT images in LUNA16 have various voxel sizes. The first step is to resample them to the same voxel size, which is defined in the value of "spacing" in [./config/config_train_luna16_16g.json](./config/config_train_luna16_16g.json).
 
-Then, please open [luna16_prepare_env_files.py](luna16_prepare_env_files.py), change the value of "raw_data_base_dir" to the directory where you store the downloaded images, the value of "downloaded_datasplit_dir" to where you downloaded the data-split JSON files, and the value of "resampled_data_base_dir" to the target directory where you will save the resampled images. If you are using DICOM data, please also provide path to "dicom_meta_data_csv" which can be found in the downloaded folder from LIDC-IDRI.
+Then, please open [luna16_prepare_env_files.py](luna16_prepare_env_files.py), change the value of "raw_data_base_dir" to the directory where you store the downloaded images, the value of "downloaded_datasplit_dir" to where you downloaded the data-split JSON files, and the value of "resampled_data_base_dir" to the target directory where you will save the resampled images. If you are using DICOM data, please also provide path to "dicom_meta_data_csv" which can be found in the downloaded folder from LIDC-IDRI. Otherwise, please make sure that the "dicom_meta_data_csv" variable in the script equals to `None`.
 
 If you downloaded mhd/raw data, please resample the images by running
 ```bash
@@ -115,7 +115,7 @@ Please download the official LUNA16 evaluation scripts from https://luna16.grand
 and save it as ./evaluation_luna16. Note that the official LUNA16 evaluation scripts are based on python2.
 
 To run it with python3, please 1) copy the files in ./evaluationScript_py3_update to replace the files in downloaded scripts in ./evaluation_luna16; 2) then run the following command to convert python2 code to python3 code: `python -m pip install future; futurize --stage1 -w evaluation_luna16/noduleCADEvaluationLUNA16.py; futurize --stage2 -w evaluation_luna16/noduleCADEvaluationLUNA16.py`;
-3) In ./evaluation_luna16/noduleCADEvaluationLUNA16.py, replace `plt.xscale('log', basex=2)` with `plt.xscale('log', base=2)`.
+3) In ./evaluation_luna16/noduleCADEvaluationLUNA16.py, replace `plt.xscale('log', basex=2)` with `plt.xscale('log', base=2)` and `plt.grid(b=True, which='both')` with `plt.grid(visible=True, which='both')`.
 
 ./evaluation_luna16/noduleCADEvaluationLUNA16.py will be the main python script to generate evaluation scores.
 

@@ -29,6 +29,7 @@ class Const:
     CONFIGS = ("train.json", "train.yaml")
     MULTI_GPU_CONFIGS = ("multi_gpu_train.json", "multi_gpu_train.yaml")
     INFERENCE_CONFIGS = ("inference.json", "inference.yaml")
+    LOGGING_CONFIG = "logging.conf"
     METADATA_JSON = "metadata.json"
 
     KEY_DEVICE = "device"
@@ -87,6 +88,7 @@ class EnsembleTrainTask:
         self.bundle_config.update({Const.KEY_BUNDLE_ROOT: self.bundle_path})
 
         self.bundle_metadata_path = os.path.join(path, "configs", Const.METADATA_JSON)
+        self.bundle_logging_path = os.path.join(path, "configs", Const.LOGGING_CONFIG)
 
     def _partition_datalist(self, datalist, n_splits=5, shuffle=False):
         logger.info(f"Total Records in Dataset: {len(datalist)}")
@@ -153,7 +155,7 @@ class EnsembleTrainTask:
             postprocessing=bundle_inference_config.get_parsed_content("postprocessing"),
         )
         evaluator.run()
-        logger.info(f"Inference Finished....")
+        logger.info("Inference Finished....")
 
     def __call__(self, args, datalist, test_datalist=None):
         dataset_dir = args.dataset_dir
@@ -199,7 +201,6 @@ class EnsembleTrainTask:
 
                 train_path = os.path.join(self.bundle_path, "configs", f"train_multigpu_fold{fold}.json")
                 multi_gpu_train_path = os.path.join(self.bundle_path, "configs", config_paths[0])
-                logging_file = os.path.join(self.bundle_path, "configs", "logging.conf")
                 for k, v in overrides.items():
                     if k != Const.KEY_DEVICE:
                         self.bundle_config.set(v, k)
@@ -216,20 +217,19 @@ class EnsembleTrainTask:
                     "-m",
                     "monai.bundle",
                     "run",
-                    "training",
                     "--meta_file",
                     self.bundle_metadata_path,
                     "--config_file",
                     f"['{train_path}','{multi_gpu_train_path}']",
                     "--logging_file",
-                    logging_file,
+                    self.bundle_logging_path,
                 ]
                 self.run_command(cmd, env)
             else:
                 monai.bundle.run(
-                    "training",
                     meta_file=self.bundle_metadata_path,
                     config_file=self.bundle_config_path,
+                    logging_file=self.bundle_logging_path,
                     **overrides,
                 )
             fold += 1

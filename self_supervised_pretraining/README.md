@@ -155,3 +155,18 @@ Below are expected run time comparison between a single GPU and multi-GPU benchm
 | Hardware         | Training Time  |
 |------------------|----------------|
 | 2 GPU A100 80 GB | 2 hrs 15 mins  |
+
+### Tutorial Usage Citation
+
+If you found the tutorial to be helpful in your work please support us by citing the below reference:
+
+1.) Tang, Yucheng, Dong Yang, Wenqi Li, Holger R. Roth, Bennett Landman, Daguang Xu, Vishwesh Nath, and Ali Hatamizadeh. "Self-supervised pre-training of swin transformers for 3d medical image analysis." In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pp. 20730-20740. 2022.
+
+Bibtex: `@inproceedings{tang2022self,
+  title={Self-supervised pre-training of swin transformers for 3d medical image analysis},
+  author={Tang, Yucheng and Yang, Dong and Li, Wenqi and Roth, Holger R and Landman, Bennett and Xu, Daguang and Nath, Vishwesh and Hatamizadeh, Ali},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+  pages={20730--20740},
+  year={2022}
+}
+`

@@ -95,7 +95,7 @@ python -m monai.apps.nnunet nnUNetV2Runner convert_msd_dataset --input_config ".
 ## [component] experiment planning and data pre-processing
 python -m monai.apps.nnunet nnUNetV2Runner plan_and_process --input_config "./input.yaml"
 
-## [component] use all available GPU to train all 20 models
+## [component] use all available GPU(s) to train all 20 models
 python -m monai.apps.nnunet nnUNetV2Runner train --input_config "./input.yaml"
 
 ## [component] single-gpu training for a single model

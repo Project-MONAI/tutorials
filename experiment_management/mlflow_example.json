@@ -6,7 +6,7 @@
         },
         "validator": {
             "id": "validate#evaluator",
-            "handlers": "evaluate#handlers"
+            "handlers": "validate#handlers"
         },
         "evaluator": {
             "id": "evaluator",

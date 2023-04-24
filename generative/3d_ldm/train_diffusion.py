@@ -1,19 +1,3 @@
-# ---
-# jupyter:
-#   jupytext:
-#     formats: py:percent,ipynb
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.14.4
-#   kernelspec:
-#     display_name: Python 3 (ipykernel)
-#     language: python
-#     name: python3
-# ---
-
-# %%
 # Copyright (c) MONAI Consortium
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,29 +9,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# %% [markdown]
-# # Denoising Diffusion Probabilistic Model on 3D data
-#
-# This tutorial illustrates how to use MONAI for training a denoising diffusion probabilistic model (DDPM)[1] to create synthetic 3D images.
-#
-# [1] - [Ho et al. "Denoising Diffusion Probabilistic Models"](https://arxiv.org/abs/2006.11239)
-#
-#
-# ## Setup environment
-
-# %%
-# !python -c "import monai" || pip install -q "monai-weekly[nibabel, tqdm]"
-# !python -c "import matplotlib" || pip install -q matplotlib
-# %matplotlib inline
-
-# %% [markdown]
-# ## Setup imports
-
 import argparse
 import json
 import logging
 
-# %%
 import os
 import sys
 
@@ -82,7 +47,8 @@ def main():
     parser.add_argument("-g", "--gpus", default=1, type=int, help="number of gpus per node")
     args = parser.parse_args()
 
-    ddp_bool = args.gpus > 1
+    # Step 0: configuration
+    ddp_bool = args.gpus > 1  # whether to use distributed data parallel
     if ddp_bool:
         rank = int(os.environ["LOCAL_RANK"])
         world_size = int(os.environ["WORLD_SIZE"])
@@ -107,39 +73,10 @@ def main():
     for k, v in config_dict.items():
         setattr(args, k, v)
 
-    # %% [markdown]
-    #     # ## Setup data directory
-    #     #
-    #     # You can specify a directory with the MONAI_DATA_DIRECTORY environment variable.
-    #     #
-    #     # This allows you to save results and reuse downloads.
-    #     #
-    #     # If not specified a temporary directory will be used.
-
-    # %%
     directory = os.environ.get("MONAI_DATA_DIRECTORY")
-
-    # %% [markdown]
-    #     # ## Set deterministic training for reproducibility
-
-    # %%
     set_determinism(42)
 
-    # %% [markdown]
-    #     # ## Setup Decathlon Dataset and training and validation data loaders
-    #     #
-    #     # In this tutorial, we will use the 3D T1 weighted brain images from the [2016 and 2017 Brain Tumor Segmentation (BraTS) challenges](https://www.med.upenn.edu/sbia/brats2017/data.html). This dataset can be easily downloaded using the [DecathlonDataset](https://docs.monai.io/en/stable/apps.html#monai.apps.DecathlonDataset) from MONAI (`task="Task01_BrainTumour"`). To load the training and validation images, we are using the `data_transform` transformations that are responsible for the following:
-    #     #
-    #     # 1. `LoadImaged`:  Loads the brain images from files.
-    #     # 2. `Lambdad`: Choose channel 1 of the image, which is the T1-weighted image.
-    #     # 3. `AddChanneld`: Add the channel dimension of the input data.
-    #     # 4. `ScaleIntensityd`: Apply a min-max scaling in the intensity values of each image to be in the `[0, 1]` range.
-    #     # 5. `CenterSpatialCropd`: Crop the background of the images using a roi of size `[160, 200, 155]`.
-    #     # 6. `Resized`: Resize the images to a volume with size `[32, 40, 32]`.
-    #     #
-    #     # For the data loader, we are using mini-batches of 8 images, which consumes about 21GB of GPU memory during training. Please, reduce this value to run on smaller GPUs.
-
-    # %%
+    # Step 1: set data loader
     train_loader, val_loader = prepare_dataloader(
         args,
         args.diffusion_train["batch_size"],
@@ -154,14 +91,8 @@ def main():
     if rank == 0:
         tensorboard_writer = SummaryWriter(args.tfevent_path + "diffusion")
 
-    # ## Load Autoencoder KL
-    #
-    # ### Define Autoencoder KL network
-    #
-    # In this section, we will define an autoencoder with KL-regularization for the LDM. The autoencoder's primary purpose is to transform input images into a latent representation that the diffusion model will subsequently learn. By doing so, we can decrease the computational resources required to train the diffusion component, making this approach suitable for learning high-resolution medical images.
-    #
-
-    # +
+    # Step 2: Define Autoencoder KL network and diffusion model
+    # Load Autoencoder KL network
     autoencoder = define_instance(args, "autoencoder_def").to(device)
 
     trained_g_path = os.path.join(args.model_dir, "autoencoder.pt")
@@ -170,13 +101,13 @@ def main():
     autoencoder.load_state_dict(torch.load(trained_g_path, map_location=map_location))
     print(f"Rank {rank}: Load trained autoencoder from {trained_g_path}")
 
-    # +
-    # ### Scaling factor
-    #
-    # As mentioned in Rombach et al. [1] Section 4.3.2 and D.1, the signal-to-noise ratio (induced by the scale of the latent space) can affect the results obtained with the LDM, if the standard deviation of the latent space distribution drifts too much from that of a Gaussian. For this reason, it is best practice to use a scaling factor to adapt this standard deviation.
-    #
-    # _Note: In case where the latent space is close to a Gaussian distribution, the scaling factor will be close to one, and the results will not differ from those obtained when it is not used._
-    #
+    # Compute Scaling factor
+    # As mentioned in Rombach et al. [1] Section 4.3.2 and D.1, the signal-to-noise ratio (induced by the scale of the latent space) can affect the results obtained with the LDM,
+    # if the standard deviation of the latent space distribution drifts too much from that of a Gaussian.
+    # For this reason, it is best practice to use a scaling factor to adapt this standard deviation.
+    # _Note: In case where the latent space is close to a Gaussian distribution, the scaling factor will be close to one,
+    # and the results will not differ from those obtained when it is not used._
+
     with torch.no_grad():
         with autocast(enabled=True):
             check_data = first(train_loader)
@@ -191,17 +122,8 @@ def main():
                     )
                 print(f"Scaling factor set to {1/torch.std(z)}")
     scale_factor = 1 / torch.std(z)
-    # -
 
-    # -
-
-    # ## Diffusion Model
-    #
-    # ### Define diffusion model and scheduler
-    #
-    # In this section, we will define the diffusion model that will learn data distribution of the latent representation of the autoencoder. Together with the diffusion model, we define a beta scheduler responsible for defining the amount of noise tahat is added across the diffusion's model Markov chain.
-
-    # +
+    # Define Diffusion Model
     unet = define_instance(args, "diffusion_def").to(device)
 
     trained_diffusion_path = os.path.join(args.model_dir, "diffusion_unet.pt")
@@ -227,15 +149,13 @@ def main():
         unet = DDP(unet, device_ids=[device], output_device=rank, find_unused_parameters=True)
 
     # We define the inferer using the scale factor:
-
     inferer = LatentDiffusionInferer(scheduler, scale_factor=scale_factor)
 
+    # Step 3: training config
     optimizer_diff = torch.optim.Adam(params=unet.parameters(), lr=args.diffusion_train["lr"] * world_size)
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer_diff, milestones=[100, 1000], gamma=0.1)
 
-    # ### Train model
-
-    # +
+    # Step 4: training
     n_epochs = args.diffusion_train["n_epochs"]
     val_interval = args.diffusion_train["val_interval"]
     autoencoder.eval()

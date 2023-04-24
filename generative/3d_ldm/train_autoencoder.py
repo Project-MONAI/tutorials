@@ -1,19 +1,3 @@
-# ---
-# jupyter:
-#   jupytext:
-#     formats: py:percent,ipynb
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.14.4
-#   kernelspec:
-#     display_name: Python 3 (ipykernel)
-#     language: python
-#     name: python3
-# ---
-
-# %%
 # Copyright (c) MONAI Consortium
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,29 +9,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# %% [markdown]
-# # Denoising Diffusion Probabilistic Model on 3D data
-#
-# This tutorial illustrates how to use MONAI for training a denoising diffusion probabilistic model (DDPM)[1] to create synthetic 3D images.
-#
-# [1] - [Ho et al. "Denoising Diffusion Probabilistic Models"](https://arxiv.org/abs/2006.11239)
-#
-#
-# ## Setup environment
-
-# %%
-# !python -c "import monai" || pip install -q "monai-weekly[nibabel, tqdm]"
-# !python -c "import matplotlib" || pip install -q matplotlib
-# %matplotlib inline
-
-# %% [markdown]
-# ## Setup imports
-
 import argparse
 import json
 import logging
 
-# %%
 import os
 import sys
 from pathlib import Path
@@ -82,7 +47,8 @@ def main():
     parser.add_argument("-g", "--gpus", default=1, type=int, help="number of gpus per node")
     args = parser.parse_args()
 
-    ddp_bool = args.gpus > 1
+    # Step 0: configuration
+    ddp_bool = args.gpus > 1  # whether to use distributed data parallel
     if ddp_bool:
         rank = int(os.environ["LOCAL_RANK"])
         world_size = int(os.environ["WORLD_SIZE"])
@@ -108,25 +74,10 @@ def main():
     for k, v in config_dict.items():
         setattr(args, k, v)
 
-    # %% [markdown]
-    #     # ## Setup data directory
-    #     #
-    #     # You can specify a directory with the MONAI_DATA_DIRECTORY environment variable.
-    #     #
-    #     # This allows you to save results and reuse downloads.
-    #     #
-    #     # If not specified a temporary directory will be used.
-
-    # %%
+    set_determinism(42)
     directory = os.environ.get("MONAI_DATA_DIRECTORY")
 
-    # %% [markdown]
-    #     # ## Set deterministic training for reproducibility
-
-    # %%
-    set_determinism(42)
-
-    # %%
+    # Step 1: set data loader
     train_loader, val_loader = prepare_dataloader(
         args,
         args.autoencoder_train["batch_size"],
@@ -137,16 +88,8 @@ def main():
         cache=1.0,
     )
 
-    # ## Autoencoder KL
-    #
-    # ### Define Autoencoder KL network
-    #
-    # In this section, we will define an autoencoder with KL-regularization for the LDM. The autoencoder's primary purpose is to transform input images into a latent representation that the diffusion model will subsequently learn. By doing so, we can decrease the computational resources required to train the diffusion component, making this approach suitable for learning high-resolution medical images.
-    #
-
-    # +
+    # Step 2: Define Autoencoder KL network and discriminator
     autoencoder = define_instance(args, "autoencoder_def").to(device)
-
     discriminator_norm = "INSTANCE"
     discriminator = PatchDiscriminator(
         spatial_dims=args.spatial_dims,
@@ -185,13 +128,8 @@ def main():
     if ddp_bool:
         autoencoder = DDP(autoencoder, device_ids=[device], output_device=rank, find_unused_parameters=True)
         discriminator = DDP(discriminator, device_ids=[device], output_device=rank, find_unused_parameters=True)
-    # -
 
-    # ### Defining Losses
-    #
-    # We will also specify the perceptual and adversarial losses, including the involved networks, and the optimizers to use during the training process.
-
-    # +
+    # Step 3: training config
     if "recon_loss" in args.autoencoder_train and args.autoencoder_train["recon_loss"] == "l2":
         intensity_loss = MSELoss()
         if rank == 0:
@@ -206,10 +144,11 @@ def main():
 
     adv_weight = 0.01
     perceptual_weight = args.autoencoder_train["perceptual_weight"]
-    # kl_weight: important hyper-parameter. If too large, decoder cannot recon good results from latent space. If too small, latent space will not be regularized enough for the diffusion model
+    # kl_weight: important hyper-parameter.
+    #     If too large, decoder cannot recon good results from latent space.
+    #     If too small, latent space will not be regularized enough for the diffusion model
     kl_weight = args.autoencoder_train["kl_weight"]
 
-    # -
     optimizer_g = torch.optim.Adam(params=autoencoder.parameters(), lr=args.autoencoder_train["lr"] * world_size)
     optimizer_d = torch.optim.Adam(params=discriminator.parameters(), lr=args.autoencoder_train["lr"] * world_size)
 
@@ -219,9 +158,7 @@ def main():
         Path(tensorboard_path).mkdir(parents=True, exist_ok=True)
         tensorboard_writer = SummaryWriter(tensorboard_path)
 
-    # ### Train model
-
-    # +
+    # Step 4: training
     autoencoder_warm_up_n_epochs = 5
     n_epochs = args.autoencoder_train["n_epochs"]
     val_interval = args.autoencoder_train["val_interval"]

@@ -16,6 +16,7 @@ from torch.utils.data._utils.collate import default_collate
 import torch.distributed as dist
 from tensorboardX import SummaryWriter
 
+
 def collate_fn(batch):
     if not isinstance(batch[0][0], tuple):
         return default_collate(batch)
@@ -30,23 +31,28 @@ def collate_fn(batch):
         ret.append(default_collate([batch[i][1] for i in range(batch_num)]))
         return ret
 
+
 def reduce_tensor(tensor):
     rt = tensor.clone()
     dist.all_reduce(rt, op=dist.ReduceOp.SUM)
     rt /= dist.get_world_size()
     return rt
 
+
 def save_checkpoint(args, epoch, model, max_accuracy, optimizer, best_model=False):
-    save_state = {'state_dict': model.state_dict(),
-                  'optimizer': optimizer.state_dict(),
-                  'max_accuracy': max_accuracy,
-                  'epoch': epoch}
+    save_state = {
+        "state_dict": model.state_dict(),
+        "optimizer": optimizer.state_dict(),
+        "max_accuracy": max_accuracy,
+        "epoch": epoch,
+    }
 
     if best_model:
-        save_path = os.path.join(args.output, f'ckpt_best.pth')
+        save_path = os.path.join(args.output, f"ckpt_best.pth")
     else:
-        save_path = os.path.join(args.output, f'ckpt_epoch_{epoch}.pth')
+        save_path = os.path.join(args.output, f"ckpt_epoch_{epoch}.pth")
     torch.save(save_state, save_path)
+
 
 class TensorboardLogger(object):
     def __init__(self, log_dir):
@@ -59,7 +65,7 @@ class TensorboardLogger(object):
         else:
             self.step += 1
 
-    def update(self, head='scalar', step=None, **kwargs):
+    def update(self, head="scalar", step=None, **kwargs):
         for k, v in kwargs.items():
             if v is None:
                 continue
@@ -68,7 +74,7 @@ class TensorboardLogger(object):
             assert isinstance(v, (float, int))
             self.writer.add_scalar(head + "/" + k, v, self.step if step is None else step)
 
-    def update_img(self, head='images', step=None, **kwargs):
+    def update_img(self, head="images", step=None, **kwargs):
         for k, v in kwargs.items():
             self.writer.add_image(head + "/" + k, v, self.step if step is None else step)
 

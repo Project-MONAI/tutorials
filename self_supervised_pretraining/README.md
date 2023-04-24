@@ -6,7 +6,7 @@ are based on augmentations of different types. The second is notebook 'ssl_finet
 the pre-trained weights generated from the first script and performs fine-tuning on a fully supervised
 task.
 
-The tutorial also provides a multi-GPU version of the SSL training. Code to run multi-gpu SSL can 
+The tutorial also provides a multi-GPU version of the SSL training. Code to run multi-gpu SSL can
 be found in `multi_gpu` directory. Detailed instructions on how to run it can be found section 6.
 
 

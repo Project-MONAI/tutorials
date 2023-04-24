@@ -39,7 +39,7 @@ from monai.transforms import (
 )
 
 from monai.networks.nets import ViTAutoEnc
-from monai.data import(
+from monai.data import (
     CacheDataset,
     load_decathlon_datalist,
 )
@@ -49,30 +49,39 @@ from torch.nn import L1Loss
 
 
 def parse_option():
-    parser = argparse.ArgumentParser('ViT Self-Supervised Learning', add_help=False)
+    parser = argparse.ArgumentParser("ViT Self-Supervised Learning", add_help=False)
 
     # Set Paths for running SSL training
-    parser.add_argument('--data_root', default="/workspace/datasets/tcia/", type=str, help='path to data root')
-    parser.add_argument('--json_path', default="./datalists/tcia/dataset_split.json", type=str,
-                        help='Json file path for list of data samples')
-    parser.add_argument('--logdir_path', default="/to/be/defined", type=str, help='output log directory')
-    parser.add_argument('--output', default='output', type=str, metavar='PATH',
-                        help='root of output folder, the full path is <output>/<model_name>/<tag> (default: output)')
+    parser.add_argument("--data_root", default="/workspace/datasets/tcia/", type=str, help="path to data root")
+    parser.add_argument(
+        "--json_path",
+        default="./datalists/tcia/dataset_split.json",
+        type=str,
+        help="Json file path for list of data samples",
+    )
+    parser.add_argument("--logdir_path", default="/to/be/defined", type=str, help="output log directory")
+    parser.add_argument(
+        "--output",
+        default="output",
+        type=str,
+        metavar="PATH",
+        help="root of output folder, the full path is <output>/<model_name>/<tag> (default: output)",
+    )
     # Distributed Training
-    parser.add_argument("--local_rank", type=int, help='local rank for DistributedDataParallel')
+    parser.add_argument("--local_rank", type=int, help="local rank for DistributedDataParallel")
 
     # DL Training Hyper-parameters
-    parser.add_argument('--epochs', default=100, type=int, help='number of epochs')
-    parser.add_argument('--batch_size', default=1, type=int, help="batch size for single GPU")
-    parser.add_argument('--base_lr', default=5e-4, type=float, help='base learning rate')
+    parser.add_argument("--epochs", default=100, type=int, help="number of epochs")
+    parser.add_argument("--batch_size", default=1, type=int, help="batch size for single GPU")
+    parser.add_argument("--base_lr", default=5e-4, type=float, help="base learning rate")
 
-    parser.add_argument('--seed', default=19, type=int, help='seed')
-    parser.add_argument('--deterministic', help='set seed for deterministic training', action='store_true')
+    parser.add_argument("--seed", default=19, type=int, help="seed")
+    parser.add_argument("--deterministic", help="set seed for deterministic training", action="store_true")
     args = parser.parse_args()
     return args
 
-def main(args):
 
+def main(args):
     json_path = args.json_path
     data_root = args.data_root
 
@@ -122,49 +131,49 @@ def main(args):
     )
 
     # Build the data loader
-    train_list = load_decathlon_datalist(data_list_file_path=json_path,
-                                         is_segmentation=False,
-                                         data_list_key="training",
-                                         base_dir=data_root)
+    train_list = load_decathlon_datalist(
+        data_list_file_path=json_path, is_segmentation=False, data_list_key="training", base_dir=data_root
+    )
 
-    val_list = load_decathlon_datalist(data_list_file_path=json_path,
-                                       is_segmentation=False,
-                                       data_list_key="validation",
-                                       base_dir=data_root)
+    val_list = load_decathlon_datalist(
+        data_list_file_path=json_path, is_segmentation=False, data_list_key="validation", base_dir=data_root
+    )
 
-    #TODO Delete the below print statements
-    print('List of training samples: {}'.format(train_list))
-    print('List of validation samples: {}'.format(val_list))
+    # TODO Delete the below print statements
+    print("List of training samples: {}".format(train_list))
+    print("List of validation samples: {}".format(val_list))
 
-    print('Total training data are {} and validation data are {}'.format(len(train_list), len(val_list)))
+    print("Total training data are {} and validation data are {}".format(len(train_list), len(val_list)))
 
     train_dataset = CacheDataset(data=train_list, transform=train_transforms, cache_rate=1.0, num_workers=4)
     val_dataset = CacheDataset(data=val_list, transform=train_transforms, cache_rate=1.0, num_workers=4)
 
-    train_sampler = DistributedSampler(train_dataset,
-                                       num_replicas=dist.get_world_size(),
-                                       rank=dist.get_rank(),
-                                       shuffle=True)
+    train_sampler = DistributedSampler(
+        train_dataset, num_replicas=dist.get_world_size(), rank=dist.get_rank(), shuffle=True
+    )
 
-    val_sampler = DistributedSampler(val_dataset,
-                                     num_replicas=dist.get_world_size(),
-                                     rank=dist.get_rank(),
-                                     shuffle=False)
+    val_sampler = DistributedSampler(
+        val_dataset, num_replicas=dist.get_world_size(), rank=dist.get_rank(), shuffle=False
+    )
 
-    train_loader = DataLoader(train_dataset,
-                                  batch_size=args.batch_size,
-                                  sampler=train_sampler,
-                                  num_workers=4,
-                                  pin_memory=True,
-                                  drop_last=True,
-                                  collate_fn=collate_fn)
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=args.batch_size,
+        sampler=train_sampler,
+        num_workers=4,
+        pin_memory=True,
+        drop_last=True,
+        collate_fn=collate_fn,
+    )
 
-    val_loader = DataLoader(val_dataset,
-                                batch_size=args.batch_size,
-                                sampler=val_sampler,
-                                num_workers=4,
-                                pin_memory=True,
-                                collate_fn=collate_fn)
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=args.batch_size,
+        sampler=val_sampler,
+        num_workers=4,
+        pin_memory=True,
+        collate_fn=collate_fn,
+    )
 
     # Data Loaders Built
     # Define the model, losses and optimizer
@@ -179,13 +188,11 @@ def main(args):
 
     model.cuda()
 
-    optimizer = torch.optim.Adam(model.parameters(),
-                                 lr=args.base_lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.base_lr)
 
-    model = torch.nn.parallel.DistributedDataParallel(model,
-                                                      device_ids=[args.local_rank],
-                                                      broadcast_buffers=False,
-                                                      find_unused_parameters=True)
+    model = torch.nn.parallel.DistributedDataParallel(
+        model, device_ids=[args.local_rank], broadcast_buffers=False, find_unused_parameters=True
+    )
     model_without_ddp = model.module
 
     recon_loss = L1Loss()
@@ -195,22 +202,22 @@ def main(args):
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print("number of params: {}".format(n_parameters))
 
-    print('Training Begins ...')
+    print("Training Begins ...")
 
     start_time = time.time()
     val_loss_best = 1e9
 
     for epoch in range(args.epochs):
-        train_loss_avg, train_l1_avg, train_cl_avg = train_one_epoch(args=args,
-                                                                     model=model,
-                                                                     data_loader=train_loader,
-                                                                     optimizer=optimizer,
-                                                                     epoch=epoch,
-                                                                     loss_functions=loss_funcs)
+        train_loss_avg, train_l1_avg, train_cl_avg = train_one_epoch(
+            args=args,
+            model=model,
+            data_loader=train_loader,
+            optimizer=optimizer,
+            epoch=epoch,
+            loss_functions=loss_funcs,
+        )
 
-        val_loss_avg = validate(data_loader=val_loader,
-                              model=model,
-                              loss_functions=loss_funcs)
+        val_loss_avg = validate(data_loader=val_loader, model=model, loss_functions=loss_funcs)
 
         if dist.get_rank() == 0:
             log_writer.update(loss_val_L1=val_loss_avg, head="perf", step=epoch)
@@ -218,20 +225,16 @@ def main(args):
             log_writer.update(loss_train_L1=train_l1_avg, head="perf", step=epoch)
             log_writer.update(loss_train_MM=train_cl_avg, head="perf", step=epoch)
             if val_loss_avg <= val_loss_best:
-                save_checkpoint(args, epoch, model_without_ddp, 0., optimizer, best_model=True)
+                save_checkpoint(args, epoch, model_without_ddp, 0.0, optimizer, best_model=True)
 
         if dist.get_rank() == 0 and (epoch == (args.epochs - 1)):
-            save_checkpoint(args, epoch, model_without_ddp, 0., optimizer, best_model=False)
+            save_checkpoint(args, epoch, model_without_ddp, 0.0, optimizer, best_model=False)
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
 
-def train_one_epoch(args,
-                    model,
-                    data_loader,
-                    optimizer,
-                    epoch,
-                    loss_functions):
+
+def train_one_epoch(args, model, data_loader, optimizer, epoch, loss_functions):
     model.train()
 
     num_steps = len(data_loader)
@@ -246,8 +249,7 @@ def train_one_epoch(args,
     end = time.time()
 
     for idx, batch_data in enumerate(data_loader):
-
-        batch_data=batch_data[0]
+        batch_data = batch_data[0]
         inputs, inputs_2, gt_input = (
             batch_data["image"].cuda(non_blocking=True),
             batch_data["image_2"].cuda(non_blocking=True),
@@ -284,22 +286,24 @@ def train_one_epoch(args,
         batch_time.update(time.time() - end)
         end = time.time()
 
-        lr = optimizer.param_groups[0]['lr']
+        lr = optimizer.param_groups[0]["lr"]
         memory_used = torch.cuda.max_memory_allocated() / (1024.0 * 1024.0)
         etas = batch_time.avg * (num_steps - idx)
         print(
-            f'Train: [{epoch}/{args.epochs}][{idx}/{num_steps}]\t'
-            f'eta {datetime.timedelta(seconds=int(etas))} lr {lr:.6f}\t'
-            f'time {batch_time.val:.4f} ({batch_time.avg:.4f})\t'
-            f'loss_L1 {loss_l1_meter.val:.4f} ({loss_l1_meter.avg:.4f})\t'
-            f'loss_MM {loss_cont_meter.val:.4f} ({loss_cont_meter.avg:.4f})\t'
-            f'loss {loss_meter.val:.4f} ({loss_meter.avg:.4f})\t'
-            f'mem {memory_used:.0f}MB')
+            f"Train: [{epoch}/{args.epochs}][{idx}/{num_steps}]\t"
+            f"eta {datetime.timedelta(seconds=int(etas))} lr {lr:.6f}\t"
+            f"time {batch_time.val:.4f} ({batch_time.avg:.4f})\t"
+            f"loss_L1 {loss_l1_meter.val:.4f} ({loss_l1_meter.avg:.4f})\t"
+            f"loss_MM {loss_cont_meter.val:.4f} ({loss_cont_meter.avg:.4f})\t"
+            f"loss {loss_meter.val:.4f} ({loss_meter.avg:.4f})\t"
+            f"mem {memory_used:.0f}MB"
+        )
 
     epoch_time = time.time() - start
     print(f"EPOCH {epoch} training takes {datetime.timedelta(seconds=int(epoch_time))}")
 
     return loss_meter.avg, loss_l1_meter.avg, loss_cont_meter.avg
+
 
 @torch.no_grad()
 def validate(data_loader, model, loss_functions):
@@ -307,8 +311,7 @@ def validate(data_loader, model, loss_functions):
     loss_l1_meter = AverageMeter()
 
     for idx, batch_data in enumerate(data_loader):
-
-        batch_data=batch_data[0]
+        batch_data = batch_data[0]
 
         inputs, gt_input = (
             batch_data["image"].cuda(non_blocking=True),
@@ -320,26 +323,25 @@ def validate(data_loader, model, loss_functions):
         loss = reduce_tensor(val_loss)
         loss_l1_meter.update(loss.item(), inputs.size(0))
 
-        print(
-            f'Test: [{idx}/{len(data_loader)}]\t'
-            f'Loss_L1 {loss_l1_meter.val:.4f} ({loss_l1_meter.avg:.4f})\t')
+        print(f"Test: [{idx}/{len(data_loader)}]\t" f"Loss_L1 {loss_l1_meter.val:.4f} ({loss_l1_meter.avg:.4f})\t")
 
-    print(f' * Val Loss {loss_l1_meter.avg:.3f}')
+    print(f" * Val Loss {loss_l1_meter.avg:.3f}")
 
     return loss_l1_meter.avg
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     args = parse_option()
 
-    if 'RANK' in os.environ and 'WORLD_SIZE' in os.environ:
-        rank = int(os.environ['LOCAL_RANK'])
-        world_size = int(os.environ['WORLD_SIZE'])
+    if "RANK" in os.environ and "WORLD_SIZE" in os.environ:
+        rank = int(os.environ["LOCAL_RANK"])
+        world_size = int(os.environ["WORLD_SIZE"])
         print(f"RANK and WORLD_SIZE in environ: {rank}/{world_size}")
     else:
         rank = -1
         world_size = -1
     torch.cuda.set_device(args.local_rank)
-    torch.distributed.init_process_group(backend='nccl', init_method='env://', world_size=world_size, rank=rank)
+    torch.distributed.init_process_group(backend="nccl", init_method="env://", world_size=world_size, rank=rank)
     torch.distributed.barrier()
 
     seed = args.seed + dist.get_rank()

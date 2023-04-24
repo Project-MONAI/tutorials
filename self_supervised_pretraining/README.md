@@ -6,7 +6,7 @@ are based on augmentations of different types. The second is notebook 'ssl_finet
 the pre-trained weights generated from the first script and performs fine-tuning on a fully supervised
 task.
 
-The tutorial also provides a multi-GPU version of the SSL training, the code to run multi-gpu SSL can 
+The tutorial also provides a multi-GPU version of the SSL training. Code to run multi-gpu SSL can 
 be found in `multi_gpu` directory. Detailed instructions on how to run it can be found section 6.
 
 
@@ -152,7 +152,6 @@ and increasing the total count of GPU's `--nproc_per_node`
 Below are expected run time comparison between a single GPU and multi-GPU benchmarked on A100 GPU's
 
 
-| Hardware   | Training Time  |
-|------------|----------------|
-| 1 GPU A100 | Under Progress |
-| 2 GPU A100 | 2 hrs 15 mins  |
+| Hardware         | Training Time  |
+|------------------|----------------|
+| 2 GPU A100 80 GB | 2 hrs 15 mins  |

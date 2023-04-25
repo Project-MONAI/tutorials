@@ -58,11 +58,13 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_patholog
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_radiology_spleen_segmentation_OHIF.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_wholebody_totalSegmentator_3dslicer.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_monaibundle_3dslicer_lung_nodule_detection.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_pathology_HoVerNet_QuPath.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" example_feature.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" ssl_train.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" ssl_finetune.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" TCIA_PROSTATEx_Prostate_MRI_Anatomy_Model.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" lazy_resampling_functional.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" lazy_resampling_compose.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" TensorRT_inference_acceleration.ipynb)
 
 # Execution of the notebook in these folders / with the filename cannot be automated
@@ -92,10 +94,13 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_pathology_nuclei_seg
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_radiology_spleen_segmentation_OHIF*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_wholebody_totalSegmentator_3dslicer*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_monaibundle_3dslicer_lung_nodule_detection*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*monailabel_pathology_HoVerNet_QuPath*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*ssl_train*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*ssl_finetune*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*transform_visualization*)  # https://github.com/Project-MONAI/tutorials/issues/1155
 skip_run_papermill=("${skip_run_papermill[@]}" .*TensorRT_inference_acceleration*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*mednist_classifier_ray*)  # https://github.com/Project-MONAI/tutorials/issues/1307
+skip_run_papermill=("${skip_run_papermill[@]}" .*TorchIO_MONAI_PyTorch_Lightning*)  # https://github.com/Project-MONAI/tutorials/issues/1324
 
 # output formatting
 separator=""

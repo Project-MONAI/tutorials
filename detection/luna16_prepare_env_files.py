@@ -17,20 +17,18 @@ import sys
 
 def main():
     #  ------------- Modification starts -------------
-    raw_data_base_dir = (
-        "/home/canz/Projects/datasets/LIDC/manifest-1600709154662/LIDC-IDRI"  # the directory of the raw images
-    )
-    resampled_data_base_dir = "/home/canz/Projects/datasets/LIDC/manifest-1600709154662/LIDC-IDRI_resample"  # the directory of the resampled images
-    downloaded_datasplit_dir = "./LUNA16_datasplit"  # the directory of downloaded data split files
+    raw_data_base_dir = "/orig_datasets/"  # the directory of the raw images
+    resampled_data_base_dir = "/datasets/"  # the directory of the resampled images
+    downloaded_datasplit_dir = "LUNA16_datasplit"  # the directory of downloaded data split files
 
     out_trained_models_dir = "trained_models"  # the directory to save trained model weights
     out_tensorboard_events_dir = "tfevent_train"  # the directory to save tensorboard training curves
     out_inference_result_dir = "result"  # the directory to save predicted boxes for inference
 
     # if deal with mhd/raw data, set it to be None
-    # dicom_meta_data_csv = None
+    dicom_meta_data_csv = None
     # if deal with DICOM data, also need metadata.csv
-    dicom_meta_data_csv = "/home/canz/Projects/datasets/LIDC/manifest-1600709154662/metadata.csv"
+    # dicom_meta_data_csv = "/orig_datasets/dicom/metadata.csv"
     #  ------------- Modification ends ---------------
 
     try:

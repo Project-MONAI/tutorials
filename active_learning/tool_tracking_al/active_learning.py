@@ -27,17 +27,14 @@ from monai.losses import DiceLoss
 from monai.data import DataLoader, CacheDataset, Dataset, decollate_batch
 from monai.transforms import (
     LoadImaged,
-    AsChannelFirstd,
     EnsureChannelFirstd,
     CastToTyped,
-    AddChanneld,
     EnsureTyped,
     ScaleIntensityd,
     RandRotated,
     Lambdad,
     RandZoomd,
     Resized,
-    ToTensord,
     ToMetaTensord,
     Compose,
     AsDiscrete
@@ -45,20 +42,14 @@ from monai.transforms import (
 
 from torch.utils.tensorboard import SummaryWriter
 from monai.networks.nets import FlexibleUNet
-from private_metrics import IoUMetric
-#from utils import infer_seg
-#from strategies import (
-#    variance_2d_image,
-#)
 
 # Argument Parser
-parser = argparse.ArgumentParser(description='Active Learning Setting')
+parser = argparse.ArgumentParser(description='Active Learning Settings')
 
 # Directory & Json & Seed
 parser.add_argument('--base_dir', default='/home/vishwesh/experiments/robo_tool_experiments/variance_sanity', type=str)
 parser.add_argument('--data_root', default='/scratch_2/robo_tool_dataset_2023', type=str)
 parser.add_argument('--json_path', default='/scratch_2/robo_tool_dataset_2023/data_list.json', type=str)
-#parser.add_argument('--json_path', default='/scratch/data_2021/68111/dataset_dints_0.json', type=str)
 parser.add_argument('--seed', default=120, type=int)
 
 # Active learning parameters
@@ -67,44 +58,15 @@ parser.add_argument('--dropout_ratio', default=0.2, type=float)
 parser.add_argument('--mc_number', default=10, type=int)
 parser.add_argument('--initial_pool', default=10, type=int)
 parser.add_argument('--queries', default=10, type=int)
-parser.add_argument('--strategy', default='variance', type=str) # Options available entropy, entropy_ssl, random, ssl
-#parser.add_argument('--max_cover_k', default=4, type=int) # TODO Figure out ratio between queries and max_cover_k
-parser.add_argument('--pretrain_rank_flag', default=0, type=int) # If set to 1, pre-train metric will be used to rank
-# the data
-parser.add_argument('--psuedo_rank_flag', default=0, type=int) # If set to 1, pre-train psuedo label entropy/variance
-# metric will be used to rank the data, cannot work unless pretrain_rank_flag is set to 1
-parser.add_argument('--semi_supervised_flag', default=0, type=int) # If set to 1, semi-supervised training will be used
-# instead of fully supervised
+parser.add_argument('--strategy', default='variance', type=str) # Options available variance, random
 
 # DL Hyper-parameters
 parser.add_argument('--steps', default=300, type=int) # Default is 2000, this needs to be tweaked more
 parser.add_argument('--val_interval', default=1, type=int)
-# TODO Batch size is not yet tied in the script
 parser.add_argument('--batch_size', default=1, type=int)
 parser.add_argument('--val_batch_size', default=1, type=int)
 parser.add_argument('--lr', default=1e-4, type=float)
 
-# Pre-training Hyper-parameters
-# TODO Match these Hyper-parameters in the pre-training part
-parser.add_argument('--pretraining_flag', default=0, type=int) # If pre-trained flag is set to 0, it will not be used
-
-def variance_2d_image(vol_input):
-    # The input is assumed with repetitions, channels and then volumetric data
-
-    vol_input = vol_input.astype(dtype='float32')
-    dims = vol_input.shape
-
-    # Threshold values less than or equal to zero
-    threshold = 0.0005
-    vol_input[vol_input<=0] = threshold
-
-    vari = np.nanvar(vol_input, axis=0)
-    variance = np.sum(vari, axis=0)
-
-    #variance = np.expand_dims(variance, axis=0)
-    #variance = np.expand_dims(variance, axis=0)
-
-    return variance
 
 def main():
 
@@ -150,25 +112,21 @@ def main():
     p_test_data = p_json_data['test']
     p_copy_test_data = copy.deepcopy(p_test_data)
 
-    if args.pretrain_rank_flag == 1:
-        print("pretrain_rank_flag was set to 1, it is NOT IMPLEMENTED YET")
-        return None
 
-    elif args.pretrain_rank_flag == 0:
-        print('Random Strategy is being used for selection instead of SSL based ranking ...')
-        p_grab_indices = random.sample(range(0, len(p_copy_train_data)), args.initial_pool)
-        p_labeled_data = []
-        p_copy_train_data = np.array(p_copy_train_data)
-        p_samples = p_copy_train_data[p_grab_indices]
-        for each in p_samples:
-            p_labeled_data.append(each)
+    print('Random Strategy is being used for selection instead of SSL based ranking ...')
+    p_grab_indices = random.sample(range(0, len(p_copy_train_data)), args.initial_pool)
+    p_labeled_data = []
+    p_copy_train_data = np.array(p_copy_train_data)
+    p_samples = p_copy_train_data[p_grab_indices]
+    for each in p_samples:
+        p_labeled_data.append(each)
 
-        p_copy_unl_d = np.delete(p_copy_train_data, p_grab_indices)
-        p_copy_unl_d = p_copy_unl_d.tolist()
+    p_copy_unl_d = np.delete(p_copy_train_data, p_grab_indices)
+    p_copy_unl_d = p_copy_unl_d.tolist()
 
-        print("Updated Json File Sample Count")
-        print("Number of Training samples for next iter: {}".format(len(p_labeled_data)))
-        print("Number of Unlabeled samples for next iter: {}".format(len(p_copy_unl_d)))
+    print("Updated Json File Sample Count")
+    print("Number of Training samples for next iter: {}".format(len(p_labeled_data)))
+    print("Number of Unlabeled samples for next iter: {}".format(len(p_copy_unl_d)))
 
     # Write new json file
     p_copy_train_data = p_copy_train_data.tolist()
@@ -207,7 +165,7 @@ def main():
 
     # Get the metrics
     dice_metric = DiceMetric(include_background=False, reduction="mean")
-    iou_metric = IoUMetric(include_background=False, reduction="mean")
+    iou_metric = MeanIoU(include_background=False, reduction="mean")
 
     # Training & Validation Transforms
     train_transforms = Compose(
@@ -216,9 +174,6 @@ def main():
             EnsureChannelFirstd(keys=["image", "label"]),
             CastToTyped(keys=["image", "label"], dtype=torch.float32),
             Lambdad(keys='label', func=lambda x: x[:1, :, :]),
-            #Lambdad(keys='label', func=lambda x: torch.mean(x, dim=0)),
-            #AsChannelFirstd("image"),
-            #AddChanneld("label"),
             Resized(keys=["image", "label"],
                     spatial_size=[736, 480],
                     mode=["bilinear", "nearest"]
@@ -235,8 +190,6 @@ def main():
                 mode=["bilinear", "nearest"],
             ),
             ToMetaTensord(keys=["image", "label"])
-            #EnsureTyped(keys=["image", "label"])
-            #ToTensord(keys=["image", "label"]),
         ]
     )
 
@@ -245,7 +198,6 @@ def main():
             LoadImaged(keys=["image", "label"]),
             EnsureChannelFirstd(keys=["image", "label"]),
             Lambdad(keys='label', func=lambda x: x[:1, :, :]),
-            #AddChanneld("label"),
             Resized(keys=["image", "label"],
                     spatial_size=[736, 480],
                     mode=["bilinear", "nearest"]
@@ -253,26 +205,24 @@ def main():
             ScaleIntensityd(keys=["image", "label"]),
             CastToTyped(keys=["image", "label"], dtype=torch.float32),
             EnsureTyped(keys=["image", "label"])
-            #ToTensord(keys=["image", "label"]),
         ]
     )
 
-    unl_transforms = [
+    unl_transforms = Compose(
+        [
             LoadImaged(keys=["image"]),
             EnsureChannelFirstd("image"),
-            #AddChanneld("label"),
             Resized(keys=["image"],
                     spatial_size=[736, 480],
                     mode=["bilinear"]
                     ),
             ScaleIntensityd(keys=["image"]),
             EnsureTyped(keys=["image"])
-            #ToTensord(keys=["image", "label"]),
         ]
+    )
 
     post_trans = Compose([AsDiscrete(to_onehot=2, argmax=True)])
     post_label = Compose([AsDiscrete(to_onehot=2)])
-
     # End of Training & Validation Transforms
 
     # Active Learning iterations
@@ -333,139 +283,114 @@ def main():
         train_ds = CacheDataset(
             data=train_d, transform=train_transforms,
             cache_rate=1.0)
-        #train_ds = Dataset(data=train_d, transform=train_transforms)
 
-        # use batch_size=2 to load images and use RandCropByPosNegLabeld
-        # to generate 2 x 4 images for network training
         train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True)
 
         val_ds = CacheDataset(
             data=val_d, transform=val_transforms, cache_rate=1.0)
-        #val_ds = Dataset(data=val_d, transform=val_transforms)
         val_loader = DataLoader(val_ds, batch_size=args.val_batch_size)
 
         test_ds = CacheDataset(
             data=test_d, transform=val_transforms, cache_rate=1.0)
-        # val_ds = Dataset(data=validation_data, transform=val_transforms)
-        test_loader = DataLoader(test_ds, batch_size=12)
+        test_loader = DataLoader(test_ds, batch_size=args.val_batch_size)
 
         unl_ds = Dataset(
             data=unl_d, transform=unl_transforms)
-        # val_ds = Dataset(data=validation_data, transform=val_transforms)
         unl_loader = DataLoader(unl_ds, batch_size=1)
 
         # Calculation of Epochs based on steps
         max_epochs = np.int(args.steps / (np.ceil(len(train_d) / args.batch_size)))
         print('Epochs Estimated are {} for Active Iter {} with {} Vols'.format(max_epochs, active_iter, len(train_d)))
 
-        # TODO Keep track of Best_metric, it is being used as IoU and not Dice
+        # Keep track of Best_metric, it is being used as IoU and not Dice
         best_metric = -1
         metric_values_dice = []
         metric_values_iou = []
         epoch_loss_values = []
 
-        # Model Training begins for one active iteration
-        if args.semi_supervised_flag == 0:
+        for epoch in range(max_epochs):
+            print("-" * 10)
+            print(f"epoch {epoch + 1}/{max_epochs}")
+            network.train()
+            epoch_loss = 0
+            step = 0
 
-            for epoch in range(max_epochs):
-                print("-" * 10)
-                print(f"epoch {epoch + 1}/{max_epochs}")
-                network.train()
-                epoch_loss = 0
-                step = 0
+            for batch_data in train_loader:
+                step += 1
 
-                for batch_data in train_loader:
-                    step += 1
+                inputs, labels = (
+                    batch_data["image"].to(device),
+                    batch_data["label"].to(device),
+                )
 
-                    inputs, labels = (
-                        batch_data["image"].to(device),
-                        batch_data["label"].to(device),
+                optimizer.zero_grad()
+                outputs = network(inputs)
+
+                loss_dice = loss_function(outputs, labels)
+                loss_dice.backward()
+                optimizer.step()
+
+                # Total Loss Storage of value
+                epoch_loss += loss_dice.item()
+
+                print(
+                    f"{step}/{(len(train_ds)) // train_loader.batch_size}, "
+                    f"train_loss: {loss_dice.item():.4f}")
+
+            epoch_loss /= step
+            epoch_loss_values.append(epoch_loss)
+            writer.add_scalar("Train/Dice Loss", epoch_loss, epoch)
+            print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
+
+            if (epoch + 1) % args.val_interval == 0:
+                network.eval()
+                with torch.no_grad():
+                    for val_data in val_loader:
+                        val_inputs, val_labels = (
+                            val_data["image"].to(device),
+                            val_data["label"].to(device),
+                        )
+                        print('File name: {}'.format(val_inputs._meta['filename_or_obj']))
+                        print('File name: {}'.format(val_labels._meta['filename_or_obj']))
+                        val_outputs = [post_trans(i) for i in decollate_batch(network(val_inputs))]
+                        val_labels = [post_label(i) for i in decollate_batch(val_labels)]
+
+                        print('Val Outputs Shape: {}'.format(val_outputs[0].shape))
+                        print('Val Labels Shape: {}'.format(val_labels[0].shape))
+                        dice_metric(y_pred=val_outputs, y=val_labels)
+                        iou_metric(y_pred=val_outputs, y=val_labels)
+
+                    print(dice_metric)
+                    metric = dice_metric.aggregate().item()
+                    dice_metric.reset()
+
+                    iou = iou_metric.aggregate().item()
+                    iou_metric.reset()
+
+                    writer.add_scalar("Validation/Dice", metric, epoch)
+                    metric_values_dice.append(metric)
+                    writer.add_scalar("Validation/IoU", iou, epoch)
+                    metric_values_iou.append(iou)
+
+                    print("Epoch", epoch + 1, time.strftime("%Y-%m-%d, %H:%M:%S", time.localtime(time.time())),
+                        "IOU:", iou,
                     )
 
-                    #print('File name: {}'.format(inputs._meta['filename_or_obj']))
-                    #print('File name: {}'.format(labels._meta['filename_or_obj']))
-
-                    #TODO Debug code
-                    #print('Input Shape: {}'.format(inputs.shape))
-                    #print('Label Shape: {}'.format(labels.shape))
-
-                    optimizer.zero_grad()
-                    outputs = network(inputs)
-
-                    #print(inputs.shape)
-                    #print(labels.shape)
-                    #print(outputs.shape)
-
-                    loss_dice = loss_function(outputs, labels)
-                    #print(loss_dice)
-                    loss_dice.backward()
-                    optimizer.step()
-
-                    # Total Loss Storage of value
-                    epoch_loss += loss_dice.item()
-
+                    if iou > best_metric:
+                        best_metric = iou
+                        best_metric_epoch = epoch + 1
+                        torch.save(network.state_dict(), os.path.join(
+                            active_model_dir, "model.pt"))
+                        print("saved new best metric model")
                     print(
-                        f"{step}/{(len(train_ds)) // train_loader.batch_size}, "
-                        f"train_loss: {loss_dice.item():.4f}")
-
-                epoch_loss /= step
-                epoch_loss_values.append(epoch_loss)
-                writer.add_scalar("Train/Dice Loss", epoch_loss, epoch)
-                print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
-
-                if (epoch + 1) % args.val_interval == 0:
-                    # TODO Consider replacing the eval with 'eval_model` from Bin's code
-                    network.eval()
-                    with torch.no_grad():
-                        for val_data in val_loader:
-                            val_inputs, val_labels = (
-                                val_data["image"].to(device),
-                                val_data["label"].to(device),
-                            )
-                            print('File name: {}'.format(val_inputs._meta['filename_or_obj']))
-                            print('File name: {}'.format(val_labels._meta['filename_or_obj']))
-                            # TODO Import infer_seg from the utils.py of activ_surgical and then delete this comment
-                            #val_outputs = infer_seg(val_inputs, network, post_trans)
-                            val_outputs = [post_trans(i) for i in decollate_batch(network(val_inputs))]
-                            val_labels = [post_label(i) for i in decollate_batch(val_labels)]
-
-                            print('Val Outputs Shape: {}'.format(val_outputs[0].shape))
-                            print('Val Labels Shape: {}'.format(val_labels[0].shape))
-                            dice_metric(y_pred=val_outputs, y=val_labels)
-                            iou_metric(y_pred=val_outputs, y=val_labels)
-
-                        print(dice_metric)
-                        metric = dice_metric.aggregate().item()
-                        dice_metric.reset()
-
-                        iou = iou_metric.aggregate().item()
-                        iou_metric.reset()
-
-                        writer.add_scalar("Validation/Dice", metric, epoch)
-                        metric_values_dice.append(metric)
-                        writer.add_scalar("Validation/IoU", iou, epoch)
-                        metric_values_iou.append(iou)
-
-                        print("Epoch", epoch + 1, time.strftime("%Y-%m-%d, %H:%M:%S", time.localtime(time.time())),
-                            "IOU:", iou,
-                        )
-
-                        if iou > best_metric:
-                            best_metric = iou
-                            best_metric_epoch = epoch + 1
-                            torch.save(network.state_dict(), os.path.join(
-                                active_model_dir, "model.pt"))
-                            print("saved new best metric model")
-                        print(
-                            f"current epoch: {epoch + 1} current mean dice: {metric:.4f} current mean IoU: {best_metric:.4f}"
-                            f"\nbest IoU: {best_metric:.4f} "
-                            f"at epoch: {best_metric_epoch}"
-                        )
-
+                        f"current epoch: {epoch + 1} current mean dice: {metric:.4f} current mean IoU: {best_metric:.4f}"
+                        f"\nbest IoU: {best_metric:.4f} "
+                        f"at epoch: {best_metric_epoch}"
+                    )
 
         # Model training ends for a single active iteration
 
-        # Beginning Acquisition Strategy function
+        # Begin Acquisition Strategy function
         print('Prepping to run inference on unlabeled pool of data')
         print('Loading the final set of trained weights for running inference')
         prev_best_ckpt = os.path.join(active_model_dir, 'model.pt')
@@ -475,7 +400,7 @@ def main():
         network.load_state_dict(ckpt)
         network.to(device=device)
 
-        # TODO Run metrics on test data for IoU & Dice metric
+        # Run metrics on test data for IoU & Dice metric
         network.eval()
         with torch.no_grad():
             for test_data in test_loader:
@@ -483,8 +408,7 @@ def main():
                     test_data["image"].to(device),
                     test_data["label"].to(device),
                 )
-                # TODO Import infer_seg from the utils.py of activ_surgical and then delete this comment
-                #test_outputs = infer_seg(test_inputs, network, post_trans)
+
                 test_outputs = [post_trans(i) for i in decollate_batch(network(test_inputs))]
                 test_labels = [post_label(i) for i in decollate_batch(test_labels)]
                 dice_metric(y_pred=test_outputs, y=test_labels)
@@ -519,9 +443,9 @@ def main():
             pickle.dump(all_metric_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
         handle.close()
 
-        # PLEASE NOTE THAT THE MODEL IS BEING PUT INTO train mode explicitly for MC simulations
+        # Please note that the model is being put to 'train' mode explicitly for Monte-Carlo simulations
         network.train()
-        print('Weights Loaded and the Network has been put in TRAIN mode, not eval')
+        print('Weights Loaded and the Network has been put in TRAIN mode, not eval ...')
 
         if args.strategy == 'variance':
 
@@ -546,30 +470,23 @@ def main():
                         # Accumulate
                         accum_unl_outputs.append(unl_act_outputs)
 
-                    # Stack it up
+                    # Stack it up, Squeeze and send to CPU
                     accum_tensor = torch.stack(accum_unl_outputs)
-                    # Squeeze
                     accum_tensor = torch.squeeze(accum_tensor)
-                    # Send to CPU
                     accum_numpy = accum_tensor.to('cpu').numpy()
-                    # accum_numpy = accum_numpy[:, 1, :, :, :]
-                    # Generate Entropy Map and Plot all slices
-                    # TODO Only send the Spleen Prediction Class for Uncertainty Estimation,
-                    #  modify when using other multi-class datasets
                     accum_numpy = accum_numpy[:, 1:, :, :]
 
-                    variance = variance_2d_image(accum_numpy)
-                    variance_dims = np.shape(variance)
+                    vol_input = accum_numpy.astype(dtype='float32')
+                    # Threshold values less than or equal to zero
+                    threshold = 0.0005
+                    vol_input[vol_input <= 0] = threshold
+                    variance = np.sum(np.nanvar(vol_input, axis=0), axis=0)
+
                     score_list.append(np.nanmean(variance))
                     name_list.append(unl_data['image_meta_dict']['filename_or_obj'][0])
-                    #scores[unl_data['image_meta_dict']['filename_or_obj'][0]] = np.nanmean(entropy)
                     print('Variance for image: {} is: {}'.format(unl_data['image_meta_dict']['filename_or_obj'][0], np.nanmean(variance)))
 
-                    #scores[unl_data['image_meta_dict']['filename_or_obj'][0]] = np.sum(entropy)
-                    #print('Entropy for image: {} is: {}'.format(unl_data['image_meta_dict']['filename_or_obj'][0], np.sum(entropy)))
-                    #print('Debug here')
-
-                    # Plot with matplotlib and save all slices
+                    # Plot with matplotlib and save slices
                     plt.figure(1)
                     plt.imshow(variance)
                     plt.colorbar()
@@ -581,11 +498,10 @@ def main():
                     counter = counter + 1
 
             print('Inference for Uncertainty Complete, working on ranking the unlabeled data')
-            # Normalize Entropy scores between 0 and 1
+            # Normalize Scores between 0 and 1
             norm_entropy = (score_list - np.min(score_list)) / (
                         np.max(score_list) - np.min(score_list))
 
-            #TODO Put together name and score from the 2 lists
             for (ent_score, ent_name) in zip(norm_entropy, name_list):
                 scores[ent_name] = ent_score
 
@@ -664,5 +580,6 @@ def main():
         new_json_path = new_json_file_path
         print('Active Iteration {} Completed'.format(active_iter))
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     main()

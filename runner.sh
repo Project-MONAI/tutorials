@@ -66,6 +66,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" TCIA_PROSTATEx_Pros
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" lazy_resampling_functional.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" lazy_resampling_compose.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" TensorRT_inference_acceleration.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" lazy_resampling_benchmark.ipynb)
 
 # Execution of the notebook in these folders / with the filename cannot be automated
 skip_run_papermill=()

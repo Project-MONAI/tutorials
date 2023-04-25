@@ -149,7 +149,7 @@ script:
 It can be configured to launch on more GPU's by adding the relevant `CUDA Device` ID in `CUDA_VISIBLE_DEVICES`
 and increasing the total count of GPU's `--nproc_per_node`
 
-Below are expected run time comparison between a single GPU and multi-GPU benchmarked on A100 GPU's
+Below are expected run time comparison for the multi-GPU benchmarked on A100:
 
 
 | Hardware         | Training Time  |

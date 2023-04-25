@@ -6,6 +6,9 @@ are based on augmentations of different types. The second is notebook 'ssl_finet
 the pre-trained weights generated from the first script and performs fine-tuning on a fully supervised
 task.
 
+The tutorial also provides a multi-GPU version of the SSL training. Code to run multi-gpu SSL can
+be found in `multi_gpu` directory. Detailed instructions on how to run it can be found section 6.
+
 
 ### Steps to run the tutorial
 1. Download the two datasets [TCIA-Covid19](https://wiki.cancerimagingarchive.net/display/Public/CT+Images+in+COVID-19)
@@ -132,3 +135,38 @@ L1.
 | 6      | 6 | 63.07 | 70.09 | ~11.13% |
 | 12      | 6 | 76.06 | 79.55 | ~4.58% |
 | 24      | 6 | 78.91 | 82.30 | ~4.29% |
+
+### 6. Multi-GPU SSL Training
+
+At the time of creation of this tutorial, the below additional dependencies are required:
+`pip install timm==0.4.12`
+
+To begin training with 2 GPU's please see the below example command for execution of the SSL multi-gpu training
+script:
+
+`CUDA_VISIBLE_DEVICES=0,1 python -m torch.distributed.launch --nproc_per_node=2 mgpu_ssl_train.py --batch_size=8 --epochs=500 --base_lr=2e-4 --logdir_path=/to/be/defined --output=/to/be/defined --data_root=/to/be/defined --json_path=/to/be/defined`
+
+It can be configured to launch on more GPU's by adding the relevant `CUDA Device` ID in `CUDA_VISIBLE_DEVICES`
+and increasing the total count of GPU's `--nproc_per_node`
+
+Below are expected run time comparison between a single GPU and multi-GPU benchmarked on A100 GPU's
+
+
+| Hardware         | Training Time  |
+|------------------|----------------|
+| 2 GPU A100 80 GB | 2 hrs 15 mins  |
+
+### Tutorial Usage Citation
+
+If you found the tutorial to be helpful in your work please support us by citing the below reference:
+
+1.) Tang, Yucheng, Dong Yang, Wenqi Li, Holger R. Roth, Bennett Landman, Daguang Xu, Vishwesh Nath, and Ali Hatamizadeh. "Self-supervised pre-training of swin transformers for 3d medical image analysis." In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pp. 20730-20740. 2022.
+
+Bibtex: `@inproceedings{tang2022self,
+  title={Self-supervised pre-training of swin transformers for 3d medical image analysis},
+  author={Tang, Yucheng and Yang, Dong and Li, Wenqi and Roth, Holger R and Landman, Bennett and Xu, Daguang and Nath, Vishwesh and Hatamizadeh, Ali},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+  pages={20730--20740},
+  year={2022}
+}
+`

@@ -1,26 +1,50 @@
 # Active Learning Simulation Tutorial For Surgical Tool Segmentation
 
-Write an active learning description here
+Active learning (AL) is a machine learning framework that can serve as a data selection engine given an unlabeled pool of data. Active learning provides uncertainty estimation capabilities for trained deep learning models, in brief the models are able to assess about which predictions they are under or over confident. Based on the confidence the most relevant data for annotation can be selected. Thereafter annotation the labeled data is added to training pool of data for the model.
+
+This tutorial provides a toy example of active learning for surgical tool task segmentation. Exploratory notebooks on how to visualize uncertainty/confidence of model as provided as well
 
 ### Steps to run the tutorial
-1. Download the data from **put the dataset link here**
-2. To just launch the active learning script with 'variance' acquisition function, launch the code with the below command: `python active_learning.py --list_all_arguments here`
-3. For executing the active learning acquisition functions and the full baseline, execute the `runner.sh`
-4. To interpret results, launch jupyter notebook `results_uncertainty.ipynb`
+1. Download the data from [here](https://www.synapse.org/#!Synapse:syn22427422)
+2. To just launch the active learning script with 'variance' acquisition function, launch the code with the below command: `python active_learning.py --base_dir /to/be/defined --data_root /to/be/defined --json_path /to/be/defined --seed 120 --active_iters 6 --dropout_ratio 0.2 --mc_number 10 --initial_pool 15 --queries 15 --strategy variance --steps 2000 --val_interval 1 --batch_size 1 --val_batch_size 1 --lr 1e-4`
+3. For executing the active learning acquisition functions of `random`, `variance` and the `full dataset` baseline, execute the `./runner.sh`
+4. Once all script finish running, to analyze results, launch the jupyter notebook `results_uncertainty.ipynb`. The second part particularly will visualize the below shown plot in the results. The first part of the notebook is an exploration of uncertainty spatial maps.
 
 ### 1. Data
 
-**Write what you know about the dataset here don't forget to use references**
+[RoboTool dataset](https://www.synapse.org/#!Synapse:syn22427422) [Garcia-Peraza-Herrera et. al 2021] has been used for the purpose of this tutorial. The dataset consists of 514 labeled 2D frames where the surgical tool has been annotated as the foreground mask, the rest of the image has been treated as the background.
+
+For purpose of experimentation the data was split into 360 images for unlabeled/training, 77 images for validation and 77 for testing. Please note the validation and testing sets were kept consistent at all active iterations.
+
+Reference:
+
+1.) Garcia-Peraza-Herrera, Luis C., Lucas Fidon, Claudia D’Ettorre, Danail Stoyanov, Tom Vercauteren, and Sebastien Ourselin. "Image compositing for segmentation of surgical tools without manual annotations." IEEE transactions on medical imaging 40, no. 5 (2021): 1450-1460.
 
 ### 2. Active Learning Hyper-parameters
 
-**Write all the active learning hyper params here**
+Active learning iterations: 6 \
+Monet-Carlo simulations: 10 \
+Initial training pool: 15 \
+Queries per active iteration: 15 
 
 ### 3. Training Hyper-parameters
 
-**Write all the active learning hyper params here**
+Steps per active iteration: 2000 \
+Batch-size: 1 \
+Learning Rate: 1 \
+Optimizer: Adam \
+Loss: DiceLoss
 
 ### 4. Results & Discussion
 
-**Plot some uncertainty figures and show the main result**
+![al_robotool_results](../../figures/al_robotool_results.png)
 
+**Plot some uncertainty figures and show the main result** (WIP)
+
+### References 
+
+If you find the tutorial helpful in your work, please support us by citing the following works:
+
+1.) Nath, Vishwesh, Dong Yang, Bennett A. Landman, Daguang Xu, and Holger R. Roth. "Diminishing uncertainty within the training pool: Active learning for medical image segmentation." IEEE Transactions on Medical Imaging 40, no. 10 (2020): 2534-2547.
+
+2.) Nath, Vishwesh, Dong Yang, Holger R. Roth, and Daguang Xu. "Warm start active learning with proxy labels and selection via semi-supervised fine-tuning." In Medical Image Computing and Computer Assisted Intervention–MICCAI 2022: 25th International Conference, Singapore, September 18–22, 2022, Proceedings, Part VIII, pp. 297-308. Cham: Springer Nature Switzerland, 2022.

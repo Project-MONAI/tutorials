@@ -46,7 +46,7 @@ from monai.transforms import (
     ScaleIntensityd,
     EnsureTyped,
 )
-from monai.utils import BundleProperty, BundlePropertyConfig, BundleProperty, set_determinism
+from monai.utils import BundleProperty, set_determinism
 
 
 class TrainWorkflow(BundleWorkflow):
@@ -74,23 +74,11 @@ class TrainWorkflow(BundleWorkflow):
         self._props = {}
         self._set_props = {}
         self.dataset_dir = dataset_dir
-        # add components to the train properties, these are task specific
-        self.properties = dict(self.properties)
-        self.properties["network"] = {
-            BundleProperty.DESC: "network for the training.",
-            BundleProperty.REQUIRED: False,
-            BundlePropertyConfig.ID: "network",
-        }
-        self.properties["loss"] = {
-            BundleProperty.DESC: "loss function for the training.",
-            BundleProperty.REQUIRED: False,
-            BundlePropertyConfig.ID: "loss",
-        }
-        self.properties["optimizer"] = {
-            BundleProperty.DESC: "optimizer for the training.",
-            BundleProperty.REQUIRED: False,
-            BundlePropertyConfig.ID: "optimizer",
-        }
+
+        # besides the predefined properties, this bundle workflow can also provide `network`, `loss`, `optimizer`
+        self.add_property(name="network", required=True, desc="network for the training.")
+        self.add_property(name="loss", required=True, desc="loss function for the training.")
+        self.add_property(name="optimizer", required=True, desc="optimizer for the training.")
 
     def initialize(self):
         set_determinism(0)
@@ -102,161 +90,211 @@ class TrainWorkflow(BundleWorkflow):
     def finalize(self):
         set_determinism(None)
 
+    def _set_property(self, name, property, value):
+        self._set_props[name] = value
+
     def _get_property(self, name, property):
+        value = None
         if name in self._props:
             value = self._props[name]
         elif name in self._set_props:
             value = self._set_props[name]
         else:
-            if name == "bundle_root":
-                value = "."
-            elif name == "device":
-                value = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            elif name == "dataset_dir":
-                value = "."
-            elif name == "network":
-                value = UNet(
-                    spatial_dims=3,
-                    in_channels=1,
-                    out_channels=1,
-                    channels=(16, 32, 64, 128, 256),
-                    strides=(2, 2, 2, 2),
-                    num_res_units=2,
-                ).to(self.device)
-            elif name == "loss":
-                value = DiceLoss(sigmoid=True)
-            elif name == "optimizer":
-                value = torch.optim.Adam(self.network.parameters(), 1e-3)
-            elif name == "trainer":
-                value = SupervisedTrainer(
-                    device=self.device,
-                    max_epochs=self.max_epochs,
-                    train_data_loader=DataLoader(self.train_dataset, batch_size=2, shuffle=True, num_workers=4),
-                    network=self.network,
-                    optimizer=self.optimizer,
-                    loss_function=self.loss,
-                    inferer=self.train_inferer,
-                    postprocessing=self.train_postprocessing,
-                    key_train_metric={"train_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},
-                    train_handlers=self.train_handlers,
-                    # if no FP16 support in GPU or PyTorch version < 1.6, will not enable AMP training
-                    amp=True,
-                )
-            elif name == "max_epochs":
-                value = 5
-            elif name == "train_dataset":
-                images = sorted(glob(os.path.join(self.dataset_dir, "img*.nii.gz")))
-                segs = sorted(glob(os.path.join(self.dataset_dir, "seg*.nii.gz")))
-                value = CacheDataset(
-                    data=[{"image": img, "label": seg} for img, seg in zip(images[:20], segs[:20])],
-                    transform=self.train_preprocessing,
-                    cache_rate=0.5,
-                )
-            elif name == "train_dataset_data":
-                value = self.train_dataset.data
-            elif name == "train_inferer":
-                value = SimpleInferer()
-            elif name == "train_handlers":
-                value = [
-                    ValidationHandler(validator=self.evaluator, interval=self.val_interval, epoch_level=True),
-                    # use the logger "train_log" defined at the beginning of this program
-                    StatsHandler(
-                        name="train_log",
-                        tag_name="train_loss",
-                        output_transform=from_engine(["loss"], first=True),
-                    ),
-                ]
-            elif name == "train_preprocessing":
-                value = Compose(
-                    [
-                        LoadImaged(keys=["image", "label"]),
-                        AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
-                        ScaleIntensityd(keys="image"),
-                        RandCropByPosNegLabeld(
-                            keys=["image", "label"],
-                            label_key="label",
-                            spatial_size=[96, 96, 96],
-                            pos=1,
-                            neg=1,
-                            num_samples=4,
-                        ),
-                        RandRotate90d(keys=["image", "label"], prob=0.5, spatial_axes=[0, 2]),
-                        EnsureTyped(keys=["image", "label"]),
-                    ]
-                )
-            elif name == "train_postprocessing":
-                value = Compose(
-                    [
-                        Activationsd(keys="pred", sigmoid=True),
-                        AsDiscreted(keys="pred", threshold=0.5),
-                        KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
-                    ]
-                )
-            elif name == "train_key_metric":
-                value = ({"train_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},)
-            elif name == "evaluator":
-                value = SupervisedEvaluator(
-                    device=self.device,
-                    val_data_loader=DataLoader(self.val_dataset, batch_size=1, num_workers=4),
-                    network=self.network,
-                    inferer=self.val_inferer,
-                    postprocessing=self.val_postprocessing,
-                    key_val_metric=self.val_key_metric,
-                    additional_metrics={"val_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},
-                    val_handlers=self.val_handlers,
-                    amp=True,
-                )
-            elif name == "val_interval":
-                value = 2
-            elif name == "val_handlers":
-                value = [
-                    # use the logger "train_log" defined at the beginning of this program
-                    StatsHandler(name="train_log", output_transform=lambda x: None),
-                    CheckpointSaver(
-                        save_dir=self.bundle_root + "/models/",
-                        save_dict={"net": self.network},
-                        save_key_metric=True,
-                        key_metric_filename="model.pt",
-                    ),
-                ]
-            elif name == "val_dataset":
-                images = sorted(glob(os.path.join(self.dataset_dir, "img*.nii.gz")))
-                segs = sorted(glob(os.path.join(self.dataset_dir, "seg*.nii.gz")))
-                value = CacheDataset(
-                    data=[{"image": img, "label": seg} for img, seg in zip(images[-20:], segs[-20:])],
-                    transform=self.val_preprocessing,
-                    cache_rate=1.0,
-                )
-            elif name == "val_dataset_data":
-                value = self.val_dataset.data
-            elif name == "val_inferer":
-                value = SlidingWindowInferer(roi_size=(96, 96, 96), sw_batch_size=4, overlap=0.5)
-            elif name == "val_preprocessing":
-                value = Compose(
-                    [
-                        LoadImaged(keys=["image", "label"]),
-                        AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
-                        ScaleIntensityd(keys="image"),
-                        EnsureTyped(keys=["image", "label"]),
-                    ]
-                )
-            elif name == "val_postprocessing":
-                value = Compose(
-                    [
-                        EnsureTyped(keys="pred"),
-                        Activationsd(keys="pred", sigmoid=True),
-                        AsDiscreted(keys="pred", threshold=0.5),
-                        KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
-                    ]
-                )
-            elif name == "val_key_metric":
-                value = {
-                    "val_mean_dice": MeanDice(include_background=True, output_transform=from_engine(["pred", "label"]))
-                }
-            elif property[BundleProperty.REQUIRED]:
-                raise ValueError(f"unsupported property '{name}' is required in the bundle properties.")
+            try:
+                value = self.__getattribute__(f"_{name}")
+            except AttributeError:
+                if property[BundleProperty.REQUIRED]:
+                    raise ValueError(f"unsupported property '{name}' is required in the bundle properties.")
             self._props[name] = value
         return value
 
-    def _set_property(self, name, property, value):
-        self._set_props[name] = value
+    @property
+    def _bundle_root(self):
+        return "."
+
+    @property
+    def _device(self):
+        return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    @property
+    def _dataset_dir(self):
+        return "."
+
+    @property
+    def _network(self):
+        return UNet(
+            spatial_dims=3,
+            in_channels=1,
+            out_channels=1,
+            channels=(16, 32, 64, 128, 256),
+            strides=(2, 2, 2, 2),
+            num_res_units=2,
+        ).to(self.device)
+
+    @property
+    def _loss(self):
+        return DiceLoss(sigmoid=True)
+
+    @property
+    def _optimizer(self):
+        return torch.optim.Adam(self.network.parameters(), 1e-3)
+
+    @property
+    def _trainer(self):
+        return SupervisedTrainer(
+            device=self.device,
+            max_epochs=self.max_epochs,
+            train_data_loader=DataLoader(self.train_dataset, batch_size=2, shuffle=True, num_workers=4),
+            network=self.network,
+            optimizer=self.optimizer,
+            loss_function=self.loss,
+            inferer=self.train_inferer,
+            postprocessing=self.train_postprocessing,
+            key_train_metric={"train_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},
+            train_handlers=self.train_handlers,
+            # if no FP16 support in GPU or PyTorch version < 1.6, will not enable AMP training
+            amp=True,
+        )
+
+    @property
+    def _max_epochs(self):
+        return 5
+
+    @property
+    def _train_dataset(self):
+        images = sorted(glob(os.path.join(self.dataset_dir, "img*.nii.gz")))
+        segs = sorted(glob(os.path.join(self.dataset_dir, "seg*.nii.gz")))
+        return CacheDataset(
+            data=[{"image": img, "label": seg} for img, seg in zip(images[:20], segs[:20])],
+            transform=self.train_preprocessing,
+            cache_rate=0.5,
+        )
+
+    @property
+    def _train_dataset_data(self):
+        return self.train_dataset.data
+
+    @property
+    def _train_inferer(self):
+        return SimpleInferer()
+
+    @property
+    def _train_handlers(self):
+        return [
+            ValidationHandler(validator=self.evaluator, interval=self.val_interval, epoch_level=True),
+            # use the logger "train_log" defined at the beginning of this program
+            StatsHandler(
+                name="train_log",
+                tag_name="train_loss",
+                output_transform=from_engine(["loss"], first=True),
+            ),
+        ]
+
+    @property
+    def _train_preprocessing(self):
+        return Compose(
+            [
+                LoadImaged(keys=["image", "label"]),
+                AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
+                ScaleIntensityd(keys="image"),
+                RandCropByPosNegLabeld(
+                    keys=["image", "label"],
+                    label_key="label",
+                    spatial_size=[96, 96, 96],
+                    pos=1,
+                    neg=1,
+                    num_samples=4,
+                ),
+                RandRotate90d(keys=["image", "label"], prob=0.5, spatial_axes=[0, 2]),
+                EnsureTyped(keys=["image", "label"]),
+            ]
+        )
+
+    @property
+    def _train_postprocessing(self):
+        return Compose(
+            [
+                Activationsd(keys="pred", sigmoid=True),
+                AsDiscreted(keys="pred", threshold=0.5),
+                KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
+            ]
+        )
+
+    @property
+    def _train_key_metric(self):
+        return ({"train_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},)
+
+    @property
+    def _evaluator(self):
+        return SupervisedEvaluator(
+            device=self.device,
+            val_data_loader=DataLoader(self.val_dataset, batch_size=1, num_workers=4),
+            network=self.network,
+            inferer=self.val_inferer,
+            postprocessing=self.val_postprocessing,
+            key_val_metric=self.val_key_metric,
+            additional_metrics={"val_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},
+            val_handlers=self.val_handlers,
+            amp=True,
+        )
+
+    @property
+    def _val_interval(self):
+        return 2
+
+    @property
+    def _val_handlers(self):
+        return [
+            # use the logger "train_log" defined at the beginning of this program
+            StatsHandler(name="train_log", output_transform=lambda x: None),
+            CheckpointSaver(
+                save_dir=self.bundle_root + "/models/",
+                save_dict={"net": self.network},
+                save_key_metric=True,
+                key_metric_filename="model.pt",
+            ),
+        ]
+
+    @property
+    def _val_dataset(self):
+        images = sorted(glob(os.path.join(self.dataset_dir, "img*.nii.gz")))
+        segs = sorted(glob(os.path.join(self.dataset_dir, "seg*.nii.gz")))
+        return CacheDataset(
+            data=[{"image": img, "label": seg} for img, seg in zip(images[-20:], segs[-20:])],
+            transform=self.val_preprocessing,
+            cache_rate=1.0,
+        )
+
+    @property
+    def _val_dataset_data(self):
+        return self.val_dataset.data
+
+    @property
+    def _val_inferer(self):
+        return SlidingWindowInferer(roi_size=(96, 96, 96), sw_batch_size=4, overlap=0.5)
+
+    @property
+    def _val_preprocessing(self):
+        return Compose(
+            [
+                LoadImaged(keys=["image", "label"]),
+                AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
+                ScaleIntensityd(keys="image"),
+                EnsureTyped(keys=["image", "label"]),
+            ]
+        )
+
+    @property
+    def _val_postprocessing(self):
+        return Compose(
+            [
+                EnsureTyped(keys="pred"),
+                Activationsd(keys="pred", sigmoid=True),
+                AsDiscreted(keys="pred", threshold=0.5),
+                KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
+            ]
+        )
+
+    @property
+    def _val_key_metric(self):
+        return {"val_mean_dice": MeanDice(include_background=True, output_transform=from_engine(["pred", "label"]))}

@@ -152,7 +152,6 @@ class TrainWorkflow(BundleWorkflow):
             postprocessing=self.train_postprocessing,
             key_train_metric={"train_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},
             train_handlers=self.train_handlers,
-            # if no FP16 support in GPU or PyTorch version < 1.6, will not enable AMP training
             amp=True,
         )
 

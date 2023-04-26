@@ -44,7 +44,7 @@ def setup_ddp(rank, world_size):
     return dist, device
 
 
-def prepare_dataloader(args, batch_size, patch_size, randcrop=True, rank=0, world_size=1, cache=1.0):
+def prepare_dataloader(args, batch_size, patch_size, randcrop=True, rank=0, world_size=1, cache=1.0, download=False):
     # %% [markdown]
     #     # ## Setup Decathlon Dataset and training and validation data loaders
     #     #
@@ -102,7 +102,7 @@ def prepare_dataloader(args, batch_size, patch_size, randcrop=True, rank=0, worl
         section="training",  # validation
         cache_rate=cache,  # you may need a few Gb of RAM... Set to 0 otherwise
         num_workers=8,
-        download=False,  # Set download to True if the dataset hasnt been downloaded yet
+        download=download,  # Set download to True if the dataset hasnt been downloaded yet
         seed=0,
         transform=train_transforms,
     )
@@ -112,7 +112,7 @@ def prepare_dataloader(args, batch_size, patch_size, randcrop=True, rank=0, worl
         section="validation",  # validation
         cache_rate=cache,  # you may need a few Gb of RAM... Set to 0 otherwise
         num_workers=8,
-        download=False,  # Set download to True if the dataset hasnt been downloaded yet
+        download=download,  # Set download to True if the dataset hasnt been downloaded yet
         seed=0,
         transform=val_transforms,
     )

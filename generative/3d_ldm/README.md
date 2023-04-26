@@ -41,7 +41,7 @@ pip install lpips
 
 #### [3.1 3D Autoencoder Training](./train_autoencoder.py)
 
-The network configuration is in [./config/config_train_32g.json](./config/config_train_32g.json) for 32G GPU 
+The network configuration is in [./config/config_train_32g.json](./config/config_train_32g.json) for 32G GPU
 and [./config/config_train_16g.json](./config/config_train_16g.json) for 16G GPU.
 You may play with the hyper-parameters in these configuration files based on your needs.
 The training python script resamples the brain images into the voxel spacing defined in `"spacing"` in the configuration files. Here we have `"spacing": [1.1, 1.1, 1.1]`, indicating the images are resampled to 1.1x1.1x1.1 mm.

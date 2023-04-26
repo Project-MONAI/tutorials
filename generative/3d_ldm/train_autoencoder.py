@@ -92,7 +92,7 @@ def main():
         rank=rank,
         world_size=world_size,
         cache=1.0,
-        download=args.download_data
+        download=args.download_data,
     )
 
     # Step 2: Define Autoencoder KL network and discriminator

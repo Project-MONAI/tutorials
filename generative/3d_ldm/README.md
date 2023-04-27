@@ -108,7 +108,12 @@ torchrun \
   <img src="./figs/val_diffusion.png" alt="latent diffusion validation curve" width="45%" >
 </p>
 
-#### [3.3 Inference]()
+#### [3.3 Inference](./inference.py)
+To generate one image during inference, please run the following command:
+```bash
+python3 inference.py -c ./config/config_train_32g.json -e ./config/environment.json --num 1
+```
+`--num` defines how many images it would generate.
 
 
 

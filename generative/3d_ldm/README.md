@@ -52,6 +52,7 @@ Before you start training, please set the path in [./config/environment.json](./
 
 - `"model_dir"`: where it saves the trained models
 - `"tfevent_path"`: where it saves the tensorboard events
+- `"output_dir"`: where you store the generated images during inference.
 - `"resume_ckpt"`: whether to resume training from existing checkpoints.
 - `"data_base_dir"`: where you store the Brats dataset.
 

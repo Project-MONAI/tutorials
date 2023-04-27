@@ -62,8 +62,6 @@ def prepare_dataloader(args, batch_size, patch_size, randcrop=True, rank=0, worl
     ddp_bool = world_size > 1
     channel = args.channel  # 0 = Flair, 1 = T1
     assert channel in [0, 1, 2, 3], "Choose a valid channel"
-    size_divisible = 2 ** (len(args.autoencoder_def["num_channels"]) + len(args.diffusion_def["num_channels"]) - 2)
-    patch_size = [int(np.ceil(p / size_divisible) * size_divisible) for p in patch_size]
     if randcrop:
         train_crop_transform = RandSpatialCropd(keys=["image"], roi_size=patch_size, random_size=False)
         val_patch_size = [int(np.ceil(1.5 * p / size_divisible) * size_divisible) for p in patch_size]

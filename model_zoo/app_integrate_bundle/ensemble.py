@@ -133,19 +133,17 @@ class EnsembleTrainTask:
 
         inference_workflow.initialize()
         # update postprocessing with mean ensemble or vote ensemble
-        post_transform = list(inference_workflow.postprocessing.transforms)
         _ensemble_transform = MeanEnsembled if ensemble == "Mean" else VoteEnsembled
         ensemble_transform = _ensemble_transform(
             keys=["pred"] * args.n_splits,
             output_key="pred"
         )
         if ensemble == "Mean":
-            post_transform.insert(0, ensemble_transform)
+            _postprocessing = Compose([ensemble_transform, inference_workflow.postprocessing])
         elif ensemble == "Vote":
-            post_transform.insert(-1, ensemble_transform)
+            _postprocessing = Compose([inference_workflow.postprocessing, ensemble_transform])
         else:
             raise NotImplementedError
-        _postprocessing = Compose(transforms=post_transform)
 
         # update network weights
         networks = []
@@ -157,8 +155,11 @@ class EnsembleTrainTask:
         # temporarily
         _dataset = Dataset(data=test_datalist, transform=inference_workflow.preprocessing)
         _dataloader = DataLoader(dataset=_dataset, batch_size=1, shuffle=False, num_workers=4)
+        # inference_workflow.dataset_data = test_datalist
+        # inference_workflow.initialize()
+        # _dataloader = DataLoader(dataset=inference_workflow.dataset, batch_size=1, shuffle=False, num_workers=4)
 
-        inference_workflow.evaluator = EnsembleEvaluator(
+        evaluator = EnsembleEvaluator(
             device=device,
             val_data_loader=_dataloader,
             pred_keys=["pred"] * args.n_splits,
@@ -166,8 +167,7 @@ class EnsembleTrainTask:
             inferer=inference_workflow.inferer,
             postprocessing=_postprocessing,
         )
-        inference_workflow.initialize()
-        inference_workflow.run()
+        evaluator.run()
         logger.info("Inference Finished....")
 
     def __call__(self, args, datalist, test_datalist=None):
@@ -225,6 +225,7 @@ class EnsembleTrainTask:
                     f"--validate#dataset#data {_val_ds}",
                     f"--dataset_dir {dataset_dir}",
                 ]
+                print(cmd)
                 self.run_command(cmd, env)
             else:
                 self.train_workflow.run()

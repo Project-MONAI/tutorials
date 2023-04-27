@@ -92,7 +92,7 @@ class EnsembleTrainTask:
             config_file=self.bundle_config_path,
             meta_file=self.bundle_metadata_path,
             logging_file=self.bundle_logging_path,
-            workflow="train"
+            workflow="train",
         )
 
     def _partition_datalist(self, datalist, n_splits=5, shuffle=False):
@@ -134,10 +134,7 @@ class EnsembleTrainTask:
         inference_workflow.initialize()
         # update postprocessing with mean ensemble or vote ensemble
         _ensemble_transform = MeanEnsembled if ensemble == "Mean" else VoteEnsembled
-        ensemble_transform = _ensemble_transform(
-            keys=["pred"] * args.n_splits,
-            output_key="pred"
-        )
+        ensemble_transform = _ensemble_transform(keys=["pred"] * args.n_splits, output_key="pred")
         if ensemble == "Mean":
             _postprocessing = Compose([ensemble_transform, inference_workflow.postprocessing])
         elif ensemble == "Vote":
@@ -215,15 +212,15 @@ class EnsembleTrainTask:
                 env["CUDA_VISIBLE_DEVICES"] = ",".join([str(g) for g in gpus])
                 logger.info(f"Using CUDA_VISIBLE_DEVICES: {env['CUDA_VISIBLE_DEVICES']}")
                 cmd = (
-                    f"torchrun --standalone --nnodes=1 --nproc_per_node={len(gpus)}" +
-                    f" -m monai.bundle run --meta_file {self.bundle_metadata_path}" +
-                    f" --config_file ['{self.bundle_config_path}','{multi_gpu_train_path}']" +
-                    f" --logging_file {self.bundle_logging_path}" +
-                    f" --bundle_root {self.bundle_path}" +
-                    f" --max_epochs {max_epochs}" +
-                    f" --train#dataset#data {_train_ds}" +
-                    f" --validate#dataset#data {_val_ds}" +
-                    f" --dataset_dir {dataset_dir}"
+                    f"torchrun --standalone --nnodes=1 --nproc_per_node={len(gpus)}"
+                    + f" -m monai.bundle run --meta_file {self.bundle_metadata_path}"
+                    + f" --config_file ['{self.bundle_config_path}','{multi_gpu_train_path}']"
+                    + f" --logging_file {self.bundle_logging_path}"
+                    + f" --bundle_root {self.bundle_path}"
+                    + f" --max_epochs {max_epochs}"
+                    + f" --train#dataset#data {_train_ds}"
+                    + f" --validate#dataset#data {_val_ds}"
+                    + f" --dataset_dir {dataset_dir}"
                 )
                 self.run_command(cmd, env)
             else:

@@ -50,6 +50,7 @@ def prepare_dataloader(args, batch_size, patch_size, randcrop=True, rank=0, worl
     assert channel in [0, 1, 2, 3], "Choose a valid channel"
     if randcrop:
         train_crop_transform = RandSpatialCropd(keys=["image"], roi_size=patch_size, random_size=False)
+        size_divisible = 2 ** (len(args.autoencoder_def["num_channels"]) + len(args.diffusion_def["num_channels"]) - 2)
         val_patch_size = [int(np.ceil(1.5 * p / size_divisible) * size_divisible) for p in patch_size]
     else:
         train_crop_transform = CenterSpatialCropd(keys=["image"], roi_size=patch_size)

@@ -214,18 +214,17 @@ class EnsembleTrainTask:
                 env = os.environ.copy()
                 env["CUDA_VISIBLE_DEVICES"] = ",".join([str(g) for g in gpus])
                 logger.info(f"Using CUDA_VISIBLE_DEVICES: {env['CUDA_VISIBLE_DEVICES']}")
-                cmd = [
-                    f"torchrun --standalone --nnodes=1 --nproc_per_node={len(gpus)}",
-                    f"-m monai.bundle run --meta_file {self.bundle_metadata_path}",
-                    f"--config_file ['{self.bundle_config_path}','{multi_gpu_train_path}']",
-                    f"--logging_file {self.bundle_logging_path}",
-                    f"--bundle_root {self.bundle_path}",
-                    f"--max_epochs {max_epochs}",
-                    f"--train#dataset#data {_train_ds}",
-                    f"--validate#dataset#data {_val_ds}",
-                    f"--dataset_dir {dataset_dir}",
-                ]
-                print(cmd)
+                cmd = (
+                    f"torchrun --standalone --nnodes=1 --nproc_per_node={len(gpus)}" +
+                    f" -m monai.bundle run --meta_file {self.bundle_metadata_path}" +
+                    f" --config_file ['{self.bundle_config_path}','{multi_gpu_train_path}']" +
+                    f" --logging_file {self.bundle_logging_path}" +
+                    f" --bundle_root {self.bundle_path}" +
+                    f" --max_epochs {max_epochs}" +
+                    f" --train#dataset#data {_train_ds}" +
+                    f" --validate#dataset#data {_val_ds}" +
+                    f" --dataset_dir {dataset_dir}"
+                )
                 self.run_command(cmd, env)
             else:
                 self.train_workflow.run()

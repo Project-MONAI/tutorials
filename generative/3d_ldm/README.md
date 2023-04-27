@@ -76,10 +76,9 @@ torchrun \
 ```
 
 <p align="center">
-  <img src="train_recon.png" alt="autoencoder train curve")
-</p>
-<p align="center">
-  <img src="val_recon.png" alt="autoencoder validation curve")
+  <img src="train_recon.png" alt="autoencoder train curve" width="45%" >
+&nbsp; &nbsp; &nbsp; &nbsp;
+  <img src="val_recon.png" alt="autoencoder validation curve" width="45%" >
 </p>
 
 With eight DGX1V 32G GPU, it took around 55 hours to train 1000 epochs.

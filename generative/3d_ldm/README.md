@@ -115,6 +115,14 @@ python3 inference.py -c ./config/config_train_32g.json -e ./config/environment.j
 ```
 `--num` defines how many images it would generate.
 
+An example output is shown below.
+<p align="center">
+  <img src="./figs/syn_axial.png" width="30%" >
+&nbsp; &nbsp; &nbsp; &nbsp;
+  <img src="./figs/syn_sag.png" width="30%" >
+&nbsp; &nbsp; &nbsp; &nbsp;
+  <img src="./figs/syn_cor.png" width="30%" >
+</p>
 
 
 ### Acknowledgement

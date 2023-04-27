@@ -10,6 +10,8 @@ MONAI latent diffusion model implementation is based on the following papers:
 
 [**Latent Diffusion:** Rombach, Robin, et al. "High-resolution image synthesis with latent diffusion models." CVPR 2022.](https://openaccess.thecvf.com/content/CVPR2022/papers/Rombach_High-Resolution_Image_Synthesis_With_Latent_Diffusion_Models_CVPR_2022_paper.pdf)
 
+This is a demonstration network meant to just show the training process for this sort of network with MONAI. To achieve better performance, users need to have GPU with memory larger than 32G to enable larger networks and attention layers.
+
 ### 1. Data
 
 The dataset we are experimenting with in this example is BraTS 2018 data (https://www.med.upenn.edu/sbia/brats2018.html).

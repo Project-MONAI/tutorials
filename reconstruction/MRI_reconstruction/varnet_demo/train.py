@@ -137,6 +137,9 @@ def trainer(args):
         model.load_state_dict(torch.load(args.checkpoint_dir))
         print("resume training from a given checkpoint...")
 
+    # create the loss function
+    loss_function = SSIMLoss(spatial_dims=2).to(device)
+
     # create the optimizer and the learning rate scheduler
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, args.lr_step_size, args.lr_gamma)
@@ -162,9 +165,7 @@ def trainer(args):
 
             final_shape = target.shape[-2:]
             max_value = torch.tensor(max_value).unsqueeze(0).to(device)
-
-            # create the loss function with data_range
-            loss_function = SSIMLoss(spatial_dims=2, data_range=max_value).to(device)
+            loss_function.ssim_metric.data_range = max_value
 
             # iterate through all slices
             slice_dim = 1  # change this if another dimension is your slice dimension

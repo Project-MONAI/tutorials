@@ -51,9 +51,9 @@ def main():
         help="number of generated images",
     )
     args = parser.parse_args()
-    
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
+
     print_config()
     torch.backends.cudnn.benchmark = True
     torch.set_num_threads(4)
@@ -68,16 +68,16 @@ def main():
 
     directory = os.environ.get("MONAI_DATA_DIRECTORY")
     set_determinism(42)
-    
+
     # load trained networks
     autoencoder = define_instance(args, "autoencoder_def").to(device)
     trained_g_path = os.path.join(args.model_dir, "autoencoder.pt")
     autoencoder.load_state_dict(torch.load(trained_g_path))
-    
+
     diffusion_model = define_instance(args, "diffusion_def").to(device)
     trained_diffusion_path = os.path.join(args.model_dir, "diffusion_unet.pt")
     diffusion_model.load_state_dict(torch.load(trained_diffusion_path))
-    
+
     scheduler = DDPMScheduler(
         num_train_timesteps=args.NoiseScheduler["num_train_timesteps"],
         beta_schedule="scaled_linear",
@@ -87,9 +87,9 @@ def main():
     inferer = LatentDiffusionInferer(scheduler, scale_factor=1.0)
 
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
-    latent_shape = [p//4 for p in args.diffusion_train["patch_size"]]
+    latent_shape = [p // 4 for p in args.diffusion_train["patch_size"]]
     noise_shape = [1, args.latent_channels] + latent_shape
-    
+
     for _ in range(args.num):
         noise = torch.randn(noise_shape, dtype=torch.float32).to(device)
         with torch.no_grad():
@@ -99,13 +99,11 @@ def main():
                 diffusion_model=diffusion_model,
                 scheduler=scheduler,
             )
-        filename = os.path.join(args.output_dir, datetime.now().strftime('synimg_%Y%m%d_%H%M%S'))
-        final_img = nib.Nifti1Image(synthetic_images[0,0,...].unsqueeze(-1).cpu().numpy(), np.eye(4))
-        nib.save(final_img, filename)  
+        filename = os.path.join(args.output_dir, datetime.now().strftime("synimg_%Y%m%d_%H%M%S"))
+        final_img = nib.Nifti1Image(synthetic_images[0, 0, ...].unsqueeze(-1).cpu().numpy(), np.eye(4))
+        nib.save(final_img, filename)
 
 
-                    
-                         
 if __name__ == "__main__":
     logging.basicConfig(
         stream=sys.stdout,

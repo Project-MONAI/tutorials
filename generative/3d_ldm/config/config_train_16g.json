@@ -30,7 +30,7 @@
         "batch_size": 1,
         "patch_size": [112,128,80],
         "lr": 5e-6,
-        "perceptual_weight": 0.01,
+        "perceptual_weight": 0.001,
         "kl_weight": 1e-7,
         "recon_loss": "l1",
         "n_epochs": 1000,

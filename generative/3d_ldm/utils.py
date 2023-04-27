@@ -45,20 +45,6 @@ def setup_ddp(rank, world_size):
 
 
 def prepare_dataloader(args, batch_size, patch_size, randcrop=True, rank=0, world_size=1, cache=1.0, download=False):
-    # %% [markdown]
-    #     # ## Setup Decathlon Dataset and training and validation data loaders
-    #     #
-    #     # In this tutorial, we will use the 3D T1 weighted brain images from the [2016 and 2017 Brain Tumor Segmentation (BraTS) challenges](https://www.med.upenn.edu/sbia/brats2017/data.html). This dataset can be easily downloaded using the [DecathlonDataset](https://docs.monai.io/en/stable/apps.html#monai.apps.DecathlonDataset) from MONAI (`task="Task01_BrainTumour"`). To load the training and validation images, we are using the `data_transform` transformations that are responsible for the following:
-    #     #
-    #     # 1. `LoadImaged`:  Loads the brain images from files.
-    #     # 2. `Lambdad`: Choose channel 1 of the image, which is the T1-weighted image.
-    #     # 3. `AddChanneld`: Add the channel dimension of the input data.
-    #     # 4. `ScaleIntensityd`: Apply a min-max scaling in the intensity values of each image to be in the `[0, 1]` range.
-    #     # 5. `CenterSpatialCropd`: Crop the background of the images using a roi of size `[160, 200, 155]`.
-    #     # 6. `Resized`: Resize the images to a volume with size `[32, 40, 32]`.
-    #     #
-    #     # For the data loader, we are using mini-batches of 8 images, which consumes about 21GB of GPU memory during training. Please, reduce this value to run on smaller GPUs.
-
     ddp_bool = world_size > 1
     channel = args.channel  # 0 = Flair, 1 = T1
     assert channel in [0, 1, 2, 3], "Choose a valid channel"

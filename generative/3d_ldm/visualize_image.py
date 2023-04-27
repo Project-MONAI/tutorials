@@ -9,7 +9,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import cv2
 import numpy as np
 from monai.utils.type_conversion import convert_to_numpy
 
@@ -46,5 +45,5 @@ def visualize_one_slice_in_3d_image(image, axis: int = 2):
         draw_img = normalize_image_to_uint8(image[:, :, center])
     else:
         raise ValueError("axis should be in [0,1,2]")
-    draw_img = cv2.cvtColor(draw_img, cv2.COLOR_GRAY2BGR)
+    draw_img = np.stack([draw_img, draw_img, draw_img], axis=-1)
     return draw_img

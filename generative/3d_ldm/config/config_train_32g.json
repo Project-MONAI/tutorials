@@ -47,7 +47,7 @@
         "num_res_blocks": 2
     },
     "diffusion_train": {
-        "batch_size": 4,
+        "batch_size": 3,
         "patch_size": [144,176,112],
         "lr": 1e-5,
         "n_epochs": 10000,

@@ -161,7 +161,8 @@ def main():
 
     # initialize tensorboard writer
     if rank == 0:
-        tensorboard_path = args.tfevent_path + "autoencoder"
+        Path(args.tfevent_path).mkdir(parents=True, exist_ok=True)
+        tensorboard_path = os.path.join(args.tfevent_path, "autoencoder")
         Path(tensorboard_path).mkdir(parents=True, exist_ok=True)
         tensorboard_writer = SummaryWriter(tensorboard_path)
 

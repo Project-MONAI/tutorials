@@ -89,7 +89,9 @@ def main():
 
     # initialize tensorboard writer
     if rank == 0:
-        tensorboard_writer = SummaryWriter(args.tfevent_path + "diffusion")
+        Path(args.tfevent_path).mkdir(parents=True, exist_ok=True)
+        tensorboard_path = os.path.join(args.tfevent_path, "diffusion")
+        tensorboard_writer = SummaryWriter(tensorboard_path)
 
     # Step 2: Define Autoencoder KL network and diffusion model
     # Load Autoencoder KL network

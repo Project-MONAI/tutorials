@@ -103,8 +103,9 @@ torchrun \
     train_diffusion.py -c ./config/config_train_32g.json -e ./config/environment.json -g ${NUM_GPUS_PER_NODE}
 ```
 <p align="center">
-  <img src="train_diffusion.png" alt="latent diffusion train curve") />
-  <img src="val_diffusion.png" alt="latent diffusion validation curve") />
+  <img src="train_diffusion.png" alt="latent diffusion train curve" width="45%" >
+&nbsp; &nbsp; &nbsp; &nbsp;
+  <img src="val_diffusion.png" alt="latent diffusion validation curve" width="45%" >
 </p>
 
 #### [3.3 Inference]()

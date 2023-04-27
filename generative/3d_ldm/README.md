@@ -3,7 +3,7 @@ This folder contains an example to train and validate a 3D latent diffusion mode
 
 The workflow of latent diffusion model is shown in the following figure. It first trains an autoencoder in pixel space that can encode the images into latent features. Then it trains a diffusion model in latent space that can denoise the noisy latent features. During inference, it first generates latent features from random noise through multiple steps of denoising using the trained diffusion model, then decodes the latent features into images using the trained autoencoder.
 <p align="center">
-  <img src="ldm.png" alt="detection scheme")
+  <img src="ldm.png" alt="latent diffusion scheme")
 </p>
 
 MONAI latent diffusion model implementation is based on the following papers:
@@ -76,7 +76,10 @@ torchrun \
 ```
 
 <p align="center">
-  <img src="placeholder" alt="autoencoder train curve")
+  <img src="train_recon.png" alt="autoencoder train curve")
+</p>
+<p align="center">
+  <img src="val_recon.png" alt="autoencoder validation curve")
 </p>
 
 With eight DGX1V 32G GPU, it took around 55 hours to train 1000 epochs.
@@ -99,7 +102,12 @@ torchrun \
     --master_addr=localhost --master_port=1234 \
     train_diffusion.py -c ./config/config_train_32g.json -e ./config/environment.json -g ${NUM_GPUS_PER_NODE}
 ```
-
+<p align="center">
+  <img src="train_diffusion.png" alt="latent diffusion train curve")
+</p>
+<p align="center">
+  <img src="val_diffusion.png" alt="latent diffusion validation curve")
+</p>
 
 #### [3.3 Inference]()
 

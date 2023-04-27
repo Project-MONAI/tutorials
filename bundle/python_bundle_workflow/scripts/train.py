@@ -161,17 +161,13 @@ class TrainWorkflow(BundleWorkflow):
 
     @property
     def _train_dataset(self):
-        images = sorted(glob(os.path.join(self.dataset_dir, "img*.nii.gz")))
-        segs = sorted(glob(os.path.join(self.dataset_dir, "seg*.nii.gz")))
-        return CacheDataset(
-            data=[{"image": img, "label": seg} for img, seg in zip(images[:20], segs[:20])],
-            transform=self.train_preprocessing,
-            cache_rate=0.5,
-        )
+        return CacheDataset(data=self.train_dataset_data, transform=self.train_preprocessing, cache_rate=0.5)
 
     @property
     def _train_dataset_data(self):
-        return self.train_dataset.data
+        images = sorted(glob(os.path.join(self.dataset_dir, "img*.nii.gz")))
+        segs = sorted(glob(os.path.join(self.dataset_dir, "seg*.nii.gz")))
+        return [{"image": img, "label": seg} for img, seg in zip(images[:20], segs[:20])]
 
     @property
     def _train_inferer(self):
@@ -205,7 +201,6 @@ class TrainWorkflow(BundleWorkflow):
                     num_samples=4,
                 ),
                 RandRotate90d(keys=["image", "label"], prob=0.5, spatial_axes=[0, 2]),
-                EnsureTyped(keys=["image", "label"]),
             ]
         )
 
@@ -256,17 +251,13 @@ class TrainWorkflow(BundleWorkflow):
 
     @property
     def _val_dataset(self):
-        images = sorted(glob(os.path.join(self.dataset_dir, "img*.nii.gz")))
-        segs = sorted(glob(os.path.join(self.dataset_dir, "seg*.nii.gz")))
-        return CacheDataset(
-            data=[{"image": img, "label": seg} for img, seg in zip(images[-20:], segs[-20:])],
-            transform=self.val_preprocessing,
-            cache_rate=1.0,
-        )
+        return CacheDataset(data=self.val_dataset_data, transform=self.val_preprocessing, cache_rate=1.0)
 
     @property
     def _val_dataset_data(self):
-        return self.val_dataset.data
+        images = sorted(glob(os.path.join(self.dataset_dir, "img*.nii.gz")))
+        segs = sorted(glob(os.path.join(self.dataset_dir, "seg*.nii.gz")))
+        return [{"image": img, "label": seg} for img, seg in zip(images[-20:], segs[-20:])]
 
     @property
     def _val_inferer(self):
@@ -279,7 +270,6 @@ class TrainWorkflow(BundleWorkflow):
                 LoadImaged(keys=["image", "label"]),
                 AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
                 ScaleIntensityd(keys="image"),
-                EnsureTyped(keys=["image", "label"]),
             ]
         )
 
@@ -287,7 +277,6 @@ class TrainWorkflow(BundleWorkflow):
     def _val_postprocessing(self):
         return Compose(
             [
-                EnsureTyped(keys="pred"),
                 Activationsd(keys="pred", sigmoid=True),
                 AsDiscreted(keys="pred", threshold=0.5),
                 KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),

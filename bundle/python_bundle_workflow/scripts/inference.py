@@ -20,12 +20,14 @@ import numpy as np
 import torch
 from ignite.metrics import Accuracy
 
-import monai
 from monai.apps import get_logger
-from monai.data import create_test_image_3d
+from monai.bundle import BundleWorkflow
+from monai.config import print_config
+from monai.data import create_test_image_3d, Dataset, DataLoader
 from monai.engines import SupervisedEvaluator
 from monai.handlers import CheckpointLoader, MeanDice, StatsHandler, from_engine
 from monai.inferers import SlidingWindowInferer
+from monai.networks.nets import UNet
 from monai.transforms import (
     Activationsd,
     AsChannelFirstd,
@@ -37,86 +39,145 @@ from monai.transforms import (
     ScaleIntensityd,
     EnsureTyped,
 )
+from monai.utils import BundleProperty
 
 
-def main(tempdir):
-    monai.config.print_config()
-    # set root log level to INFO and init a evaluation logger, will be used in `StatsHandler`
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    get_logger("eval_log")
+class InferenceWorkflow(BundleWorkflow):
+    """
+    Test class simulates the bundle workflow defined by Python script directly.
 
-    # create a temporary directory and 40 random image, mask pairs
-    print(f"generating synthetic data to {tempdir} (this may take a while)")
-    for i in range(5):
-        im, seg = create_test_image_3d(128, 128, 128, num_seg_classes=1, channel_dim=-1)
-        n = nib.Nifti1Image(im, np.eye(4))
-        nib.save(n, os.path.join(tempdir, f"im{i:d}.nii.gz"))
-        n = nib.Nifti1Image(seg, np.eye(4))
-        nib.save(n, os.path.join(tempdir, f"seg{i:d}.nii.gz"))
+    """
 
-    images = sorted(glob(os.path.join(tempdir, "im*.nii.gz")))
-    segs = sorted(glob(os.path.join(tempdir, "seg*.nii.gz")))
-    val_files = [{"image": img, "label": seg} for img, seg in zip(images, segs)]
+    def __init__(self, dataset_dir: str = "."):
+        super().__init__(workflow="inference")
+        print_config()
+        # set root log level to INFO and init a evaluation logger, will be used in `StatsHandler`
+        logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+        get_logger("eval_log")
 
-    # model file path
-    model_file = "./models/model.pt"
+        # create a temporary directory and 40 random image, mask pairs
+        print(f"generating synthetic data to {dataset_dir} (this may take a while)")
+        for i in range(5):
+            im, seg = create_test_image_3d(128, 128, 128, num_seg_classes=1, channel_dim=-1)
+            n = nib.Nifti1Image(im, np.eye(4))
+            nib.save(n, os.path.join(dataset_dir, f"img{i:d}.nii.gz"))
+            n = nib.Nifti1Image(seg, np.eye(4))
+            nib.save(n, os.path.join(dataset_dir, f"seg{i:d}.nii.gz"))
 
-    # define transforms for image and segmentation
-    val_transforms = Compose(
-        [
-            LoadImaged(keys=["image", "label"]),
-            AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
-            ScaleIntensityd(keys="image"),
-            EnsureTyped(keys=["image", "label"]),
+        self._props = {}
+        self._set_props = {}
+        self.dataset_dir = dataset_dir
+
+    def initialize(self):
+        self.props = {}
+
+    def run(self):
+        self.evaluator.run()
+
+    def finalize(self):
+        pass
+
+    def _set_property(self, name, property, value):
+        self._set_props[name] = value
+
+    def _get_property(self, name, property):
+        value = None
+        if name in self._props:
+            value = self._props[name]
+        elif name in self._set_props:
+            value = self._set_props[name]
+        else:
+            try:
+                value = self.__getattribute__(f"_{name}")
+            except AttributeError:
+                if property[BundleProperty.REQUIRED]:
+                    raise ValueError(f"unsupported property '{name}' is required in the bundle properties.")
+            self._props[name] = value
+        return value
+
+    @property
+    def _bundle_root(self):
+        return "."
+
+    @property
+    def _device(self):
+        return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    @property
+    def _dataset_dir(self):
+        return "."
+
+    @property
+    def _network_def(self):
+        return UNet(
+            spatial_dims=3,
+            in_channels=1,
+            out_channels=1,
+            channels=(16, 32, 64, 128, 256),
+            strides=(2, 2, 2, 2),
+            num_res_units=2,
+        )
+
+    @property
+    def _evaluator(self):
+        return SupervisedEvaluator(
+            device=self.device,
+            val_data_loader=DataLoader(self.dataset, batch_size=1, num_workers=4),
+            network=self.network_def.to(self.device),
+            inferer=self.inferer,
+            postprocessing=self.postprocessing,
+            key_val_metric=self.key_metric,
+            additional_metrics={"val_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},
+            val_handlers=self.handlers,
+            amp=True,
+        )
+
+    @property
+    def _handlers(self):
+        return [
+            # use the logger "eval_log" defined at the beginning of this program
+            StatsHandler(name="eval_log", output_transform=lambda x: None),
+            CheckpointLoader(load_path=self.bundle_root + "/models/model.pt", load_dict={"net": self._network_def}),
         ]
-    )
 
-    # create a validation data loader
-    val_ds = monai.data.Dataset(data=val_files, transform=val_transforms)
-    val_loader = monai.data.DataLoader(val_ds, batch_size=1, num_workers=4)
+    @property
+    def _dataset(self):
+        return Dataset(
+            data=self._dataset_data,
+            transform=self.preprocessing,
+        )
 
-    # create UNet, DiceLoss and Adam optimizer
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    net = monai.networks.nets.UNet(
-        spatial_dims=3,
-        in_channels=1,
-        out_channels=1,
-        channels=(16, 32, 64, 128, 256),
-        strides=(2, 2, 2, 2),
-        num_res_units=2,
-    ).to(device)
+    @property
+    def _dataset_data(self):
+        images = sorted(glob(os.path.join(self.dataset_dir, "img*.nii.gz")))
+        segs = sorted(glob(os.path.join(self.dataset_dir, "seg*.nii.gz")))
+        return [{"image": img, "label": seg} for img, seg in zip(images, segs)]
 
-    val_post_transforms = Compose(
-        [
-            EnsureTyped(keys="pred"),
-            Activationsd(keys="pred", sigmoid=True),
-            AsDiscreted(keys="pred", threshold=0.5),
-            KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
-            SaveImaged(keys="pred", meta_keys="image_meta_dict", output_dir="./runs/"),
-        ]
-    )
-    val_handlers = [
-        # use the logger "eval_log" defined at the beginning of this program
-        StatsHandler(name="eval_log", output_transform=lambda x: None),
-        CheckpointLoader(load_path=model_file, load_dict={"net": net}),
-    ]
+    @property
+    def _inferer(self):
+        return SlidingWindowInferer(roi_size=(96, 96, 96), sw_batch_size=4, overlap=0.5)
 
-    evaluator = SupervisedEvaluator(
-        device=device,
-        val_data_loader=val_loader,
-        network=net,
-        inferer=SlidingWindowInferer(roi_size=(96, 96, 96), sw_batch_size=4, overlap=0.5),
-        postprocessing=val_post_transforms,
-        key_val_metric={
-            "val_mean_dice": MeanDice(include_background=True, output_transform=from_engine(["pred", "label"]))
-        },
-        additional_metrics={"val_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},
-        val_handlers=val_handlers,
-        amp=True,
-    )
-    evaluator.run()
+    @property
+    def _preprocessing(self):
+        return Compose(
+            [
+                LoadImaged(keys=["image", "label"]),
+                AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
+                ScaleIntensityd(keys="image"),
+            ]
+        )
 
+    @property
+    def _postprocessing(self):
+        return Compose(
+            [
+                Activationsd(keys="pred", sigmoid=True),
+                AsDiscreted(keys="pred", threshold=0.5),
+                KeepLargestConnectedComponentd(keys="pred", applied_labels=[1]),
+                SaveImaged(keys="pred", meta_keys="image_meta_dict", output_dir=self.bundle_root + "/preds/"),
+            ]
+        )
 
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory() as tempdir:
-        main(tempdir)
+    @property
+    def _key_metric(self):
+        return {"val_mean_dice": MeanDice(include_background=True, output_transform=from_engine(["pred", "label"]))}

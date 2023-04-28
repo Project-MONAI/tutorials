@@ -37,7 +37,6 @@ from monai.transforms import (
     LoadImaged,
     SaveImaged,
     ScaleIntensityd,
-    EnsureTyped,
 )
 from monai.utils import BundleProperty
 
@@ -81,11 +80,20 @@ class InferenceWorkflow(BundleWorkflow):
         self._set_props[name] = value
 
     def _get_property(self, name, property):
+        """
+        Here the customized bundle workflow must implement required properties in:
+        https://github.com/Project-MONAI/MONAI/blob/dev/monai/bundle/properties.py.
+        If the property is already generated, return from the bucket directly.
+        If user explicitly set the property, return it directly.
+        Otherwise, generate the expected property as a class private property with prefix "_".
+
+        """
         value = None
         if name in self._props:
             value = self._props[name]
         elif name in self._set_props:
             value = self._set_props[name]
+            self._props[name] = value
         else:
             try:
                 value = self.__getattribute__(f"_{name}")

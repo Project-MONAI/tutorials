@@ -44,14 +44,13 @@ from monai.transforms import (
     RandCropByPosNegLabeld,
     RandRotate90d,
     ScaleIntensityd,
-    EnsureTyped,
 )
 from monai.utils import BundleProperty, set_determinism
 
 
 class TrainWorkflow(BundleWorkflow):
     """
-    Test class simulates the bundle workflow defined by Python script directly.
+    Test class simulates the bundle training workflow defined by Python script directly.
 
     """
 
@@ -71,6 +70,7 @@ class TrainWorkflow(BundleWorkflow):
             n = nib.Nifti1Image(seg, np.eye(4))
             nib.save(n, os.path.join(dataset_dir, f"seg{i:d}.nii.gz"))
 
+        # define buckets to store the generated properties and set properties
         self._props = {}
         self._set_props = {}
         self.dataset_dir = dataset_dir
@@ -94,11 +94,20 @@ class TrainWorkflow(BundleWorkflow):
         self._set_props[name] = value
 
     def _get_property(self, name, property):
+        """
+        Here the customized bundle workflow must implement required properties in:
+        https://github.com/Project-MONAI/MONAI/blob/dev/monai/bundle/properties.py.
+        If the property is already generated, return from the bucket directly.
+        If user explicitly set the property, return it directly.
+        Otherwise, generate the expected property as a class private property with prefix "_".
+
+        """
         value = None
         if name in self._props:
             value = self._props[name]
         elif name in self._set_props:
             value = self._set_props[name]
+            self._props[name] = value
         else:
             try:
                 value = self.__getattribute__(f"_{name}")

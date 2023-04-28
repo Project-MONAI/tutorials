@@ -1,9 +1,11 @@
 
 # Write a Bundle workflow in Python
 
-MONAI provides the `BundleWorkflow` interface from version 1.2, which is used as the standard API for other applications to access and operate a bundle workflow, like training, evaluation, or inference. `BundleWorkflow` can help reduce the effort of application development and define standard interface and required properties for bundle development. Once a bundle workflow inherits from `BundleWorkflow`, we can accept it in the associated applications, no matter the bundle workflow is implemented by JSON / YAML or python code.
+MONAI provides the `BundleWorkflow` interface from version 1.2, which is used as the standard API for other applications to access and operate a bundle workflow, like training, evaluation, or inference. `BundleWorkflow` can help reducing the effort of application development and defining standard interface and required properties for the bundle development. Once a bundle workflow inherits from `BundleWorkflow`, we can accept it in the associated applications, no matter whether the bundle workflow is implemented by JSON / YAML or python code.
 
-MONAI already implemented `ConfigWorkflow` for the common JSON / YAML config-based bundle workflow, this example shows how to write python-based training and inference workflows and implement the interfaces: `initialize`, `run`, `finalize`, `_set_property`, `_get_property`, and execute them with bundle CLI command.
+MONAI already implemented `ConfigWorkflow` for the common JSON / YAML config-based bundle workflow. This example shows how to write python-based training and inference workflows and implement the interfaces: `initialize`, `run`, `finalize`, `_set_property`, `_get_property` and all the required properties in: https://github.com/Project-MONAI/MONAI/blob/dev/monai/bundle/properties.py, then execute them with bundle CLI command.
+
+If users want to check whether all the required properties are existing in the bundle workflow, they can call the `check_properties` API.
 
 ## Execute training and inference with bundle script - `run_workflow`
 

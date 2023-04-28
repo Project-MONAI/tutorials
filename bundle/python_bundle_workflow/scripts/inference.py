@@ -30,9 +30,9 @@ from monai.inferers import SlidingWindowInferer
 from monai.networks.nets import UNet
 from monai.transforms import (
     Activationsd,
-    AsChannelFirstd,
     AsDiscreted,
     Compose,
+    EnsureChannelFirstd,
     KeepLargestConnectedComponentd,
     LoadImaged,
     SaveImaged,
@@ -170,7 +170,7 @@ class InferenceWorkflow(BundleWorkflow):
         return Compose(
             [
                 LoadImaged(keys=["image", "label"]),
-                AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
+                EnsureChannelFirstd(keys=["image", "label"]),
                 ScaleIntensityd(keys="image"),
             ]
         )

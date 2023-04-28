@@ -36,9 +36,9 @@ from monai.losses import DiceLoss
 from monai.networks.nets import UNet
 from monai.transforms import (
     Activationsd,
-    AsChannelFirstd,
     AsDiscreted,
     Compose,
+    EnsureChannelFirstd,
     KeepLargestConnectedComponentd,
     LoadImaged,
     RandCropByPosNegLabeld,
@@ -199,7 +199,7 @@ class TrainWorkflow(BundleWorkflow):
         return Compose(
             [
                 LoadImaged(keys=["image", "label"]),
-                AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
+                EnsureChannelFirstd(keys=["image", "label"]),
                 ScaleIntensityd(keys="image"),
                 RandCropByPosNegLabeld(
                     keys=["image", "label"],
@@ -277,7 +277,7 @@ class TrainWorkflow(BundleWorkflow):
         return Compose(
             [
                 LoadImaged(keys=["image", "label"]),
-                AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
+                EnsureChannelFirstd(keys=["image", "label"]),
                 ScaleIntensityd(keys="image"),
             ]
         )

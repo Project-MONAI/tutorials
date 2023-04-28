@@ -56,7 +56,7 @@ Before you start training, please set the path in [./config/environment.json](./
 - `"resume_ckpt"`: whether to resume training from existing checkpoints.
 - `"data_base_dir"`: where you store the Brats dataset.
 
-If the Brats dataset is not downloaded, please add `--download_data` in training command, the Brats data will be downloaded from [Medical Decathlon](http://medicaldecathlon.com/) and extracted to `$data_base_dir`. You will see a subfolder `Task01_BrainTumour` under $data_base_dir. 
+If the Brats dataset is not downloaded, please add `--download_data` in training command, the Brats data will be downloaded from [Medical Decathlon](http://medicaldecathlon.com/) and extracted to `$data_base_dir`. You will see a subfolder `Task01_BrainTumour` under `$data_base_dir`. 
 For example, this command is for running the training script with one 32G gpu.
 ```bash
 python train_autoencoder.py -c ./config/config_train_32g.json -e ./config/environment.json -g 1 --download_data

@@ -25,12 +25,17 @@ Disclaimer: We are not the host of the data. Please make sure to read the requir
 #### 2 Installation
 ```
 pip install lpips
+pip install git+https://github.com/Project-MONAI/GenerativeModels.git#egg=Generative
+```
+
+Or install it from source:
+```
+pip install lpips
 git clone https://github.com/Project-MONAI/GenerativeModels.git
 cd GenerativeModels/
 python setup.py install
 cd ..
 ```
-
 ### 3. Run the example
 
 #### [3.1 3D Autoencoder Training](./train_autoencoder.py)

@@ -61,11 +61,11 @@ Before you start training, please set the path in [./config/environment.json](./
 
 If the Brats dataset is not downloaded, please add `--download_data` in training command, the Brats data will be downloaded from [Medical Decathlon](http://medicaldecathlon.com/) and extracted to `$data_base_dir/Task01_BrainTumour`. For example, this command is for running the training script with one 32G gpu.
 ```bash
-python3 train_autoencoder.py -c ./config/config_train_32g.json -e ./config/environment.json -g 1 --download_data
+python train_autoencoder.py -c ./config/config_train_32g.json -e ./config/environment.json -g 1 --download_data
 ```
 If `$data_base_dir/Task01_BrainTumour` already exists, you may omit the downloading.
 ```bash
-python3 train_autoencoder.py -c ./config/config_train_32g.json -e ./config/environment.json -g 1
+python train_autoencoder.py -c ./config/config_train_32g.json -e ./config/environment.json -g 1
 ```
 
 The training script also enables multi-GPU training. For instance, if you are using eight 32G GPUs, you can run the training script with the following command:
@@ -112,7 +112,7 @@ torchrun \
 #### [3.3 Inference](./inference.py)
 To generate one image during inference, please run the following command:
 ```bash
-python3 inference.py -c ./config/config_train_32g.json -e ./config/environment.json --num 1
+python inference.py -c ./config/config_train_32g.json -e ./config/environment.json --num 1
 ```
 `--num` defines how many images it would generate.
 

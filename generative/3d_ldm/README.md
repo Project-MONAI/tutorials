@@ -22,7 +22,7 @@ The data can be automatically downloaded at the beginning of training.
 
 Disclaimer: We are not the host of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the dataset! We acknowledge the National Cancer Institute and the Foundation for the National Institutes of Health, and their critical role in the creation of the free publicly available LIDC/IDRI Database used in this study.
 
-#### 2 Installation
+### 2 Installation
 ```
 pip install lpips
 pip install git+https://github.com/Project-MONAI/GenerativeModels.git#egg=Generative

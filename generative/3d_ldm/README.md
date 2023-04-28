@@ -1,7 +1,7 @@
 # 3D Latent Diffusion Example
-This folder contains an example to train and validate a 3D latent diffusion model on Brats data using multi-gpu. It adds support of multi-gpu training with distributed data parallel based on a single GPU tutorial https://github.com/Project-MONAI/GenerativeModels/blob/main/tutorials/generative/3d_ldm/3d_ldm_tutorial.ipynb
+This folder contains an example for training and validating a 3D Latent Diffusion Model on Brats data. The example includes support for multi-GPU training with distributed data parallelism based on a tutorial designed for a single GPU. https://github.com/Project-MONAI/GenerativeModels/blob/main/tutorials/generative/3d_ldm/3d_ldm_tutorial.ipynb
 
-The workflow of latent diffusion model is shown in the following figure. It first trains an autoencoder in pixel space that can encode the images into latent features. Then it trains a diffusion model in latent space that can denoise the noisy latent features. During inference, it first generates latent features from random noise through multiple steps of denoising using the trained diffusion model, then decodes the latent features into images using the trained autoencoder.
+The workflow of the Latent Diffusion Model is depicted in the figure below. It begins by training an autoencoder in pixel space to encode images into latent features. Following that, it trains a diffusion model in the latent space to denoise the noisy latent features. During inference, it first generates latent features from random noise by applying multiple denoising steps using the trained diffusion model. Finally, it decodes the denoised latent features into images using the trained autoencoder.
 <p align="center">
   <img src="./figs/ldm.png" alt="latent diffusion scheme")
 </p>
@@ -10,7 +10,7 @@ MONAI latent diffusion model implementation is based on the following papers:
 
 [**Latent Diffusion:** Rombach, Robin, et al. "High-resolution image synthesis with latent diffusion models." CVPR 2022.](https://openaccess.thecvf.com/content/CVPR2022/papers/Rombach_High-Resolution_Image_Synthesis_With_Latent_Diffusion_Models_CVPR_2022_paper.pdf)
 
-This is a demonstration network meant to just show the training process for this sort of network with MONAI. To achieve better performance, users need to have GPU with memory larger than 32G to enable larger networks and attention layers.
+This network is designed as a demonstration to showcase the training process for this type of network using MONAI. To achieve optimal performance, it is recommended that users have a GPU with memory larger than 32G to accommodate larger networks and attention layers.
 
 ### 1. Data
 
@@ -43,12 +43,13 @@ pip install lpips
 
 #### [3.1 3D Autoencoder Training](./train_autoencoder.py)
 
-The network configuration is in [./config/config_train_32g.json](./config/config_train_32g.json) for 32G GPU
+The network configuration files are located in [./config/config_train_32g.json](./config/config_train_32g.json) for 32G GPU
 and [./config/config_train_16g.json](./config/config_train_16g.json) for 16G GPU.
-You may play with the hyper-parameters in these configuration files based on your needs.
-The training python script resamples the brain images into the voxel spacing defined in `"spacing"` in the configuration files. Here we have `"spacing": [1.1, 1.1, 1.1]`, indicating the images are resampled to 1.1x1.1x1.1 mm.
-If you have GPU with larger memory, you may consider changing it to `"spacing": [1.0, 1.0, 1.0]`.
-The training python script uses batch size and patch size defined in the configuration files. If you have a different GPU memory size, please change `"batch_size"` and `"patch_size"` in `"autoencoder_train"` to fit the GPU you use. `"patch_size"` needs to be divisible by 4.
+You can modify the hyperparameters in these files to suit your requirements.
+
+The training script resamples the brain images based on the voxel spacing specified in the `"spacing"` field of the configuration files. For instance, `"spacing": [1.1, 1.1, 1.1]` resamples the images to a resolution of 1.1x1.1x1.1 mm. If you have a GPU with larger memory, you may consider changing the `"spacing"` field to `"spacing": [1.0, 1.0, 1.0]`.
+
+The training script uses the batch size and patch size defined in the configuration files. If you have a different GPU memory size, you should adjust the `"batch_size"` and `"patch_size"` parameters in the `"autoencoder_train"` to match your GPU. Note that the `"patch_size"` needs to be divisible by 4.
 
 Before you start training, please set the path in [./config/environment.json](./config/environment.json).
 
@@ -67,8 +68,7 @@ If `$data_base_dir/Task01_BrainTumour` already exists, you may omit the download
 python3 train_autoencoder.py -c ./config/config_train_32g.json -e ./config/environment.json -g 1
 ```
 
-The training script also supports multi-gpu training.
-For example, if you are running the training script with eight 32G gpu, please run:
+The training script also enables multi-GPU training. For instance, if you are using eight 32G GPUs, you can run the training script with the following command:
 ```bash
 export NUM_GPUS_PER_NODE=8
 torchrun \
@@ -84,18 +84,17 @@ torchrun \
   <img src="./figs/val_recon.png" alt="autoencoder validation curve" width="45%" >
 </p>
 
-With eight DGX1V 32G GPU, it took around 55 hours to train 1000 epochs.
+With eight DGX1V 32G GPUs, it took around 55 hours to train 1000 epochs.
 
 #### [3.2 3D Latent Diffusion Training](./train_diffusion.py)
-The training python script uses batch size and patch size defined in the configuration files. If you have a different GPU memory size, please change `"batch_size"` and `"patch_size"` in `"diffusion_train"` to fit the GPU you use. `"patch_size"` needs to be divisible by 16.
+The training script uses the batch size and patch size defined in the configuration files. If you have a different GPU memory size, you should adjust the `"batch_size"` and `"patch_size"` parameters in the `"diffusion_train"` to match your GPU. Note that the `"patch_size"` needs to be divisible by 4.
 
 To train with single 32G GPU, please run:
 ```bash
 python3 train_diffusion.py -c ./config/config_train_32g.json -e ./config/environment.json -g 1
 ```
 
-The training script also supports multi-gpu training.
-For example, if you are running the training script with eight 32G gpu, please run:
+The training script also enables multi-GPU training. For instance, if you are using eight 32G GPUs, you can run the training script with the following command:
 ```bash
 export NUM_GPUS_PER_NODE=8
 torchrun \

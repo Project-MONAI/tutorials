@@ -87,7 +87,7 @@ torchrun \
 With eight DGX1V 32G GPUs, it took around 55 hours to train 1000 epochs.
 
 #### [3.2 3D Latent Diffusion Training](./train_diffusion.py)
-The training script uses the batch size and patch size defined in the configuration files. If you have a different GPU memory size, you should adjust the `"batch_size"` and `"patch_size"` parameters in the `"diffusion_train"` to match your GPU. Note that the `"patch_size"` needs to be divisible by 4.
+The training script uses the batch size and patch size defined in the configuration files. If you have a different GPU memory size, you should adjust the `"batch_size"` and `"patch_size"` parameters in the `"diffusion_train"` to match your GPU. Note that the `"patch_size"` needs to be divisible by 16.
 
 To train with single 32G GPU, please run:
 ```bash

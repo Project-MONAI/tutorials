@@ -94,7 +94,7 @@ def main():
         world_size=world_size,
         cache=1.0,
         download=args.download_data,
-        size_divisible = size_divisible
+        size_divisible=size_divisible,
     )
 
     # Step 2: Define Autoencoder KL network and discriminator

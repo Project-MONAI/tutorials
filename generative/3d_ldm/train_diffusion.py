@@ -87,7 +87,7 @@ def main():
         rank=rank,
         world_size=world_size,
         cache=1.0,
-        size_divisible = size_divisible
+        size_divisible=size_divisible,
     )
 
     # initialize tensorboard writer

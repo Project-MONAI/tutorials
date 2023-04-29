@@ -44,7 +44,9 @@ def setup_ddp(rank, world_size):
     return dist, device
 
 
-def prepare_dataloader(args, batch_size, patch_size, randcrop=True, rank=0, world_size=1, cache=1.0, download=False,size_divisible=16):
+def prepare_dataloader(
+    args, batch_size, patch_size, randcrop=True, rank=0, world_size=1, cache=1.0, download=False, size_divisible=16
+):
     ddp_bool = world_size > 1
     channel = args.channel  # 0 = Flair, 1 = T1
     assert channel in [0, 1, 2, 3], "Choose a valid channel"

@@ -78,6 +78,7 @@ def main():
     set_determinism(42)
 
     # Step 1: set data loader
+    size_divisible = 2 ** (len(args.autoencoder_def["num_channels"]) + len(args.diffusion_def["num_channels"]) - 2)
     train_loader, val_loader = prepare_dataloader(
         args,
         args.diffusion_train["batch_size"],
@@ -86,6 +87,7 @@ def main():
         rank=rank,
         world_size=world_size,
         cache=1.0,
+        size_divisible = size_divisible
     )
 
     # initialize tensorboard writer

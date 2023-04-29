@@ -84,6 +84,7 @@ def main():
     directory = os.environ.get("MONAI_DATA_DIRECTORY")
 
     # Step 1: set data loader
+    size_divisible = 2 ** (len(args.autoencoder_def["num_channels"]) - 1)
     train_loader, val_loader = prepare_dataloader(
         args,
         args.autoencoder_train["batch_size"],
@@ -93,6 +94,7 @@ def main():
         world_size=world_size,
         cache=1.0,
         download=args.download_data,
+        size_divisible = size_divisible
     )
 
     # Step 2: Define Autoencoder KL network and discriminator

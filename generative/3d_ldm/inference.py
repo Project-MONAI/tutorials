@@ -30,7 +30,7 @@ from utils import define_instance
 
 
 def main():
-    parser = argparse.ArgumentParser(description="PyTorch Object Detection Training")
+    parser = argparse.ArgumentParser(description="PyTorch Latent Diffusion Model Inference")
     parser.add_argument(
         "-e",
         "--environment-file",

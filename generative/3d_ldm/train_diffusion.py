@@ -12,6 +12,7 @@
 import argparse
 import json
 import logging
+from pathlib import Path
 
 import os
 import sys
@@ -31,7 +32,7 @@ from visualize_image import visualize_one_slice_in_3d_image
 
 
 def main():
-    parser = argparse.ArgumentParser(description="PyTorch Object Detection Training")
+    parser = argparse.ArgumentParser(description="PyTorch Latent Diffusion Model Training")
     parser.add_argument(
         "-e",
         "--environment-file",

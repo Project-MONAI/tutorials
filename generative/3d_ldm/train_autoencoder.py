@@ -31,7 +31,7 @@ from visualize_image import visualize_one_slice_in_3d_image
 
 
 def main():
-    parser = argparse.ArgumentParser(description="PyTorch Object Detection Training")
+    parser = argparse.ArgumentParser(description="PyTorch VAE-GAN training")
     parser.add_argument(
         "-e",
         "--environment-file",

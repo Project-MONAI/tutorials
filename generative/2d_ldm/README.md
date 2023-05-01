@@ -81,6 +81,11 @@ torchrun \
 
 With eight DGX1V 32G GPUs, it took around 55 hours to train 1000 epochs.
 
+An example reconstruction result is shown below:
+<p align="center">
+  <img src="./figs/recon.png" alt="Autoencoder reconstruction result")
+</p>
+
 #### [3.2 2D Latent Diffusion Training](./train_diffusion.py)
 The training script uses the batch size and patch size defined in the configuration files. If you have a different GPU memory size, you should adjust the `"batch_size"` and `"patch_size"` parameters in the `"diffusion_train"` to match your GPU. Note that the `"patch_size"` needs to be divisible by 16 and no larger than 256.
 

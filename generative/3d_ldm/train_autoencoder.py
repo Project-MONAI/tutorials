@@ -95,7 +95,7 @@ def main():
         cache=1.0,
         download=args.download_data,
         size_divisible=size_divisible,
-        amp=False
+        amp=False,
     )
 
     # Step 2: Define Autoencoder KL network and discriminator

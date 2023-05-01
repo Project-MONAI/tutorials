@@ -95,6 +95,7 @@ def main():
         cache=1.0,
         download=args.download_data,
         size_divisible=size_divisible,
+        amp=False
     )
 
     # Step 2: Define Autoencoder KL network and discriminator
@@ -230,7 +231,7 @@ def main():
                     tensorboard_writer.add_scalar("train_real_loss_iter", loss_d_real, total_step)
 
         # validation
-        if (epoch + 1) % val_interval == 0:
+        if epoch % val_interval == 0:
             autoencoder.eval()
             val_recon_epoch_loss = 0
             for step, batch in enumerate(val_loader):
@@ -272,12 +273,12 @@ def main():
                     tensorboard_writer.add_image(
                         "val_img_" + str(axis),
                         visualize_one_slice_in_3d_image(images[0, 0, ...], axis).transpose([2, 1, 0]),
-                        epoch + 1,
+                        epoch,
                     )
                     tensorboard_writer.add_image(
                         "val_recon_" + str(axis),
                         visualize_one_slice_in_3d_image(reconstruction[0, 0, ...], axis).transpose([2, 1, 0]),
-                        epoch + 1,
+                        epoch,
                     )
 
 

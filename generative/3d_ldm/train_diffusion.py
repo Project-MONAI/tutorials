@@ -88,6 +88,7 @@ def main():
         world_size=world_size,
         cache=1.0,
         size_divisible=size_divisible,
+        amp=True
     )
 
     # initialize tensorboard writer
@@ -214,7 +215,7 @@ def main():
                 tensorboard_writer.add_scalar("train_diffusion_loss_iter", loss, total_step)
 
         # validation
-        if (epoch + 1) % val_interval == 0:
+        if epoch % val_interval == 0:
             autoencoder.eval()
             unet.eval()
             val_recon_epoch_loss = 0
@@ -267,7 +268,7 @@ def main():
                             print("Save trained latent diffusion model to", trained_diffusion_path)
 
                         # visualize synthesized image
-                        if (epoch + 1) % (50 * val_interval) == 0:  # time cost of synthesizing images is large
+                        if (epoch) % (50 * val_interval) == 0:  # time cost of synthesizing images is large
                             synthetic_images = inferer.sample(
                                 input_noise=noise[0:1, ...],
                                 autoencoder_model=inferer_autoencoder,
@@ -280,7 +281,7 @@ def main():
                                     visualize_one_slice_in_3d_image(synthetic_images[0, 0, ...], axis).transpose(
                                         [2, 1, 0]
                                     ),
-                                    epoch + 1,
+                                    epoch,
                                 )
 
 

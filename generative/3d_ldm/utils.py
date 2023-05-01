@@ -45,7 +45,16 @@ def setup_ddp(rank, world_size):
 
 
 def prepare_dataloader(
-    args, batch_size, patch_size, randcrop=True, rank=0, world_size=1, cache=1.0, download=False, size_divisible=16, amp=False
+    args,
+    batch_size,
+    patch_size,
+    randcrop=True,
+    rank=0,
+    world_size=1,
+    cache=1.0,
+    download=False,
+    size_divisible=16,
+    amp=False,
 ):
     ddp_bool = world_size > 1
     channel = args.channel  # 0 = Flair, 1 = T1
@@ -73,7 +82,7 @@ def prepare_dataloader(
             Spacingd(keys=["image"], pixdim=args.spacing, mode=("bilinear")),
             train_crop_transform,
             ScaleIntensityRangePercentilesd(keys="image", lower=0, upper=99.5, b_min=0, b_max=1),
-            EnsureTyped(keys="image", dtype=compute_dtype)
+            EnsureTyped(keys="image", dtype=compute_dtype),
         ]
     )
     val_transforms = Compose(
@@ -87,7 +96,7 @@ def prepare_dataloader(
             Spacingd(keys=["image"], pixdim=args.spacing, mode=("bilinear")),
             CenterSpatialCropd(keys=["image"], roi_size=val_patch_size),
             ScaleIntensityRangePercentilesd(keys="image", lower=0, upper=99.5, b_min=0, b_max=1),
-            EnsureTyped(keys="image", dtype=compute_dtype)
+            EnsureTyped(keys="image", dtype=compute_dtype),
         ]
     )
     train_ds = DecathlonDataset(

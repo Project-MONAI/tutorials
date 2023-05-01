@@ -88,7 +88,7 @@ def main():
         world_size=world_size,
         cache=1.0,
         size_divisible=size_divisible,
-        amp=True
+        amp=True,
     )
 
     # initialize tensorboard writer

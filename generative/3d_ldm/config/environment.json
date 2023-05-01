@@ -1,7 +1,7 @@
 {
-    "data_base_dir": "/workspace/dataset",
-    "model_dir": "/workspace/trained_weights/diffusion_3d",
-    "tfevent_path": "/workspace/tfevent/diffusion_3d",
-    "output_dir": "/workspace/output",
-    "resume_ckpt": true
+    "data_base_dir": "./dataset",
+    "model_dir": "./trained_weights/diffusion_3d",
+    "tfevent_path": "./tfevent/diffusion_3d",
+    "output_dir": "./output",
+    "resume_ckpt": false
 }

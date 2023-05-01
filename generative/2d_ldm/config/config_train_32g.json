@@ -42,7 +42,7 @@
         "in_channels": "@latent_channels",
         "out_channels": "@latent_channels",
         "num_channels":[224, 448, 672, 896],
-        "attention_levels":[false, true, true, true], 
+        "attention_levels":[false, true, true, true],
         "num_head_channels":[0, 32, 32, 32],
         "num_res_blocks": 2
     },

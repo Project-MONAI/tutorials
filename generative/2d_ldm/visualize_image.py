@@ -40,6 +40,7 @@ def visualize_2d_image(image):
     draw_img = np.stack([draw_img, draw_img, draw_img], axis=-1)
     return draw_img
 
+
 def visualize_one_slice_in_3d_image(image, axis: int = 2):
     """
     Prepare a 2D image slice from a 3D image for visualization.

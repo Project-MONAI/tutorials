@@ -26,7 +26,7 @@ from torch.cuda.amp import GradScaler, autocast
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
 
-from utils import collate_brats2d_batch, define_instance, prepare_brats2d_dataloader, setup_ddp
+from utils import define_instance, prepare_brats2d_dataloader, setup_ddp
 from visualize_image import visualize_2d_image
 
 
@@ -44,7 +44,9 @@ def main():
         default="./config/config_train_48g.json",
         help="config json file that stores hyper-parameters",
     )
-    parser.add_argument("-g", "--gpus", default=1, type=int, help="number of gpus per node")
+    parser.add_argument(
+        "-g", "--gpus", default=1, type=int, help="number of gpus per node"
+    )
     args = parser.parse_args()
 
     # Step 0: configuration
@@ -77,7 +79,11 @@ def main():
     set_determinism(42)
 
     # Step 1: set data loader
-    size_divisible = 2 ** (len(args.autoencoder_def["num_channels"]) + len(args.diffusion_def["num_channels"]) - 2)
+    size_divisible = 2 ** (
+        len(args.autoencoder_def["num_channels"])
+        + len(args.diffusion_def["num_channels"])
+        - 2
+    )
     train_loader, val_loader = prepare_brats2d_dataloader(
         args,
         args.diffusion_train["batch_size"],
@@ -123,7 +129,9 @@ def main():
                 print(f"Latent feature shape {z.shape}")
                 tensorboard_writer.add_image(
                     "train_img",
-                    visualize_2d_image(check_data["image"][0, 0, ...]).transpose([2, 1, 0]),
+                    visualize_2d_image(check_data["image"][0, 0, ...]).transpose(
+                        [2, 1, 0]
+                    ),
                     1,
                 )
                 print(f"Scaling factor set to {1/torch.std(z)}")
@@ -138,8 +146,13 @@ def main():
     if args.resume_ckpt:
         map_location = {"cuda:%d" % 0: "cuda:%d" % rank}
         try:
-            unet.load_state_dict(torch.load(trained_diffusion_path, map_location=map_location))
-            print(f"Rank {rank}: Load trained diffusion model from", trained_diffusion_path)
+            unet.load_state_dict(
+                torch.load(trained_diffusion_path, map_location=map_location)
+            )
+            print(
+                f"Rank {rank}: Load trained diffusion model from",
+                trained_diffusion_path,
+            )
         except:
             print(f"Rank {rank}: Train diffusion model from scratch.")
 
@@ -151,15 +164,28 @@ def main():
     )
 
     if ddp_bool:
-        autoencoder = DDP(autoencoder, device_ids=[device], output_device=rank, find_unused_parameters=True)
-        unet = DDP(unet, device_ids=[device], output_device=rank, find_unused_parameters=True)
+        autoencoder = DDP(
+            autoencoder,
+            device_ids=[device],
+            output_device=rank,
+            find_unused_parameters=True,
+        )
+        unet = DDP(
+            unet, device_ids=[device], output_device=rank, find_unused_parameters=True
+        )
 
     # We define the inferer using the scale factor:
     inferer = LatentDiffusionInferer(scheduler, scale_factor=scale_factor)
 
     # Step 3: training config
-    optimizer_diff = torch.optim.Adam(params=unet.parameters(), lr=args.diffusion_train["lr"] * world_size)
-    lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer_diff, milestones=[100, 1000], gamma=0.1)
+    optimizer_diff = torch.optim.Adam(
+        params=unet.parameters(), lr=args.diffusion_train["lr"] * world_size
+    )
+    lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
+        optimizer_diff,
+        milestones=args.diffusion_train["lr_scheduler_milestones"],
+        gamma=0.1,
+    )
 
     # Step 4: training
     n_epochs = args.diffusion_train["n_epochs"]
@@ -177,7 +203,8 @@ def main():
             train_loader.sampler.set_epoch(epoch)
             val_loader.sampler.set_epoch(epoch)
         for step, batch in enumerate(train_loader):
-            images = collate_brats2d_batch(batch, train_bool=True).to(device)
+            images = images.to(device)
+            print(images.shape)
             optimizer_diff.zero_grad(set_to_none=True)
 
             with autocast(enabled=True):
@@ -187,7 +214,10 @@ def main():
 
                 # Create timesteps
                 timesteps = torch.randint(
-                    0, inferer.scheduler.num_train_timesteps, (images.shape[0],), device=images.device
+                    0,
+                    inferer.scheduler.num_train_timesteps,
+                    (images.shape[0],),
+                    device=images.device,
                 ).long()
 
                 # Get model prediction
@@ -212,7 +242,9 @@ def main():
             # write train loss for each batch into tensorboard
             if rank == 0:
                 total_step += 1
-                tensorboard_writer.add_scalar("train_diffusion_loss_iter", loss, total_step)
+                tensorboard_writer.add_scalar(
+                    "train_diffusion_loss_iter", loss, total_step
+                )
 
         # validation
         if (epoch) % val_interval == 0:
@@ -223,12 +255,15 @@ def main():
                 with autocast(enabled=True):
                     # compute val loss
                     for step, batch in enumerate(val_loader):
-                        images = collate_brats2d_batch(batch, train_bool=False, sample_axis=args.sample_axis).to(device)
+                        images = batch["image"].to(device)
                         noise_shape = [images.shape[0]] + list(z.shape[1:])
                         noise = torch.randn(noise_shape, dtype=images.dtype).to(device)
 
                         timesteps = torch.randint(
-                            0, inferer.scheduler.num_train_timesteps, (images.shape[0],), device=images.device
+                            0,
+                            inferer.scheduler.num_train_timesteps,
+                            (images.shape[0],),
+                            device=images.device,
                         ).long()
 
                         # Get model prediction
@@ -249,26 +284,42 @@ def main():
 
                     # write val loss and save best model
                     if rank == 0:
-                        tensorboard_writer.add_scalar("val_diffusion_loss", val_recon_epoch_loss, epoch + 1)
-                        print(f"Epoch {epoch} val_diffusion_loss: {val_recon_epoch_loss}")
+                        tensorboard_writer.add_scalar(
+                            "val_diffusion_loss", val_recon_epoch_loss, epoch + 1
+                        )
+                        print(
+                            f"Epoch {epoch} val_diffusion_loss: {val_recon_epoch_loss}"
+                        )
                         # save last model
                         if ddp_bool:
-                            torch.save(unet.module.state_dict(), trained_diffusion_path_last)
+                            torch.save(
+                                unet.module.state_dict(), trained_diffusion_path_last
+                            )
                         else:
                             torch.save(unet.state_dict(), trained_diffusion_path_last)
 
                         # save best model
-                        if val_recon_epoch_loss < best_val_recon_epoch_loss and rank == 0:
+                        if (
+                            val_recon_epoch_loss < best_val_recon_epoch_loss
+                            and rank == 0
+                        ):
                             best_val_recon_epoch_loss = val_recon_epoch_loss
                             if ddp_bool:
-                                torch.save(unet.module.state_dict(), trained_diffusion_path)
+                                torch.save(
+                                    unet.module.state_dict(), trained_diffusion_path
+                                )
                             else:
                                 torch.save(unet.state_dict(), trained_diffusion_path)
                             print("Got best val noise pred loss.")
-                            print("Save trained latent diffusion model to", trained_diffusion_path)
+                            print(
+                                "Save trained latent diffusion model to",
+                                trained_diffusion_path,
+                            )
 
                         # visualize synthesized image
-                        if (epoch) % (val_interval) == 0:  # time cost of synthesizing images is large
+                        if (epoch) % (
+                            val_interval
+                        ) == 0:  # time cost of synthesizing images is large
                             synthetic_images = inferer.sample(
                                 input_noise=noise[0:1, ...],
                                 autoencoder_model=inferer_autoencoder,
@@ -277,7 +328,9 @@ def main():
                             )
                             tensorboard_writer.add_image(
                                 "val_diff_synimg",
-                                visualize_2d_image(synthetic_images[0, 0, ...]).transpose([2, 1, 0]),
+                                visualize_2d_image(
+                                    synthetic_images[0, 0, ...]
+                                ).transpose([2, 1, 0]),
                                 epoch,
                             )
 

@@ -38,7 +38,11 @@ def setup_ddp(rank, world_size):
     print(f"Running DDP diffusion example on rank {rank}/world_size {world_size}.")
     print(f"Initing to IP {os.environ['MASTER_ADDR']}")
     dist.init_process_group(
-        backend="nccl", init_method="env://", timeout=timedelta(seconds=36000), rank=rank, world_size=world_size
+        backend="nccl",
+        init_method="env://",
+        timeout=timedelta(seconds=36000),
+        rank=rank,
+        world_size=world_size,
     )  # gloo, nccl
     dist.barrier()
     device = torch.device(f"cuda:{rank}")
@@ -83,7 +87,10 @@ def prepare_brats2d_dataloader(
 
     if randcrop:
         train_crop_transform = RandSpatialCropSamplesd(
-            keys=["image"], roi_size=train_patch_size, random_size=False, num_samples=batch_size
+            keys=["image"],
+            roi_size=train_patch_size,
+            random_size=False,
+            num_samples=batch_size,
         )
     else:
         train_crop_transform = CenterSpatialCropd(keys=["image"], roi_size=val_patch_size)
@@ -120,7 +127,7 @@ def prepare_brats2d_dataloader(
             CenterSpatialCropd(keys=["image"], roi_size=val_patch_size),
             DivisiblePadd(keys=["image"], k=size_divisible_3d),
             ScaleIntensityRangePercentilesd(keys="image", lower=0, upper=100.0, b_min=-1, b_max=1),
-            SplitDimd(keys=["image"], dim=1 + sample_axis, keepdim=False),
+            SplitDimd(keys=["image"], dim=1 + sample_axis, keepdim=False, list_output=True),
             EnsureTyped(keys="image", dtype=compute_dtype),
         ]
     )
@@ -152,9 +159,21 @@ def prepare_brats2d_dataloader(
         val_sampler = None
 
     train_loader = DataLoader(
-        train_ds, batch_size=1, shuffle=(not ddp_bool), num_workers=0, pin_memory=False, sampler=train_sampler
+        train_ds,
+        batch_size=1,
+        shuffle=(not ddp_bool),
+        num_workers=0,
+        pin_memory=False,
+        sampler=train_sampler,
     )
-    val_loader = DataLoader(val_ds, batch_size=1, shuffle=False, num_workers=0, pin_memory=False, sampler=val_sampler)
+    val_loader = DataLoader(
+        val_ds,
+        batch_size=1,
+        shuffle=False,
+        num_workers=0,
+        pin_memory=False,
+        sampler=val_sampler,
+    )
     if rank == 0:
         print(f'Image shape {train_ds[0][0]["image"].shape}')
     return train_loader, val_loader
@@ -166,18 +185,9 @@ def define_instance(args, instance_def_key):
     return parser.get_parsed_content(instance_def_key, instantiate=True)
 
 
-def collate_brats2d_batch(batch, train_bool=True, sample_axis=2):
-    if train_bool:
-        images = torch.stack([batch_data_i for batch_data_i in batch["image"]], dim=0)
-    else:
-        images = torch.cat(torch.split(batch["image"], split_size_or_sections=1, dim=sample_axis + 2), dim=0).squeeze(
-            sample_axis + 2
-        )
-    return images
-
-
 def KL_loss(z_mu, z_sigma):
     kl_loss = 0.5 * torch.sum(
-        z_mu.pow(2) + z_sigma.pow(2) - torch.log(z_sigma.pow(2)) - 1, dim=list(range(1, len(z_sigma.shape)))
+        z_mu.pow(2) + z_sigma.pow(2) - torch.log(z_sigma.pow(2)) - 1,
+        dim=list(range(1, len(z_sigma.shape))),
     )
     return torch.sum(kl_loss) / kl_loss.shape[0]

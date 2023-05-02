@@ -29,11 +29,11 @@
     "autoencoder_train": {
         "batch_size": 26,
         "patch_size": [240,240],
-        "lr": 5e-5,
+        "lr": 2e-5,
         "perceptual_weight": 1.0,
         "kl_weight": 1e-6,
         "recon_loss": "l1",
-        "n_epochs": 1000,
+        "n_epochs": 1500,
         "val_interval": 1
     },
     "diffusion_def": {

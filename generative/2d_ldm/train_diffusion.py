@@ -75,7 +75,7 @@ def main():
     for k, v in config_dict.items():
         setattr(args, k, v)
 
-    directory = os.environ.get("MONAI_DATA_DIRECTORY")
+    os.environ.get("MONAI_DATA_DIRECTORY")
     set_determinism(42)
 
     # Step 1: set data loader
@@ -197,7 +197,6 @@ def main():
 
     for epoch in range(n_epochs):
         unet.train()
-        epoch_loss = 0
         lr_scheduler.step()
         if ddp_bool:
             train_loader.sampler.set_epoch(epoch)

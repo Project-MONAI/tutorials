@@ -82,10 +82,10 @@ def main():
         setattr(args, k, v)
 
     set_determinism(42)
-    directory = os.environ.get("MONAI_DATA_DIRECTORY")
+    os.environ.get("MONAI_DATA_DIRECTORY")
 
     # Step 1: set data loader
-    size_divisible = 2 ** (len(args.autoencoder_def["num_channels"]) - 1)
+    2 ** (len(args.autoencoder_def["num_channels"]) - 1)
     train_loader, val_loader = prepare_brats2d_dataloader(
         args,
         args.autoencoder_train["batch_size"],
@@ -94,7 +94,7 @@ def main():
         randcrop=True,
         rank=rank,
         world_size=world_size,
-        cache=0.0,
+        cache=1.0,
         download=args.download_data,
     )
 
@@ -196,8 +196,6 @@ def main():
     autoencoder_warm_up_n_epochs = 5
     n_epochs = args.autoencoder_train["n_epochs"]
     val_interval = args.autoencoder_train["val_interval"]
-    intermediary_images = []
-    n_example_images = 4
     best_val_recon_epoch_loss = 100.0
     total_step = 0
 

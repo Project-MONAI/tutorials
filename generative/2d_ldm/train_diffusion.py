@@ -204,8 +204,7 @@ def main():
             train_loader.sampler.set_epoch(epoch)
             val_loader.sampler.set_epoch(epoch)
         for step, batch in enumerate(train_loader):
-            images = images.to(device)
-            print(images.shape)
+            images = batch["image"].to(device)
             optimizer_diff.zero_grad(set_to_none=True)
 
             with autocast(enabled=True):

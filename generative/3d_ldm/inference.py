@@ -65,7 +65,6 @@ def main():
     for k, v in config_dict.items():
         setattr(args, k, v)
 
-    os.environ.get("MONAI_DATA_DIRECTORY")
     set_determinism(42)
 
     # load trained networks

@@ -22,7 +22,7 @@ The data can be automatically downloaded from [Medical Decathlon](http://medical
 
 Disclaimer: We are not the host of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the dataset! We acknowledge the National Cancer Institute and the Foundation for the National Institutes of Health, and their critical role in the creation of the free publicly available LIDC/IDRI Database used in this study.
 
-### 2 Installation
+### 2. Installation
 ```
 pip install lpips
 pip install git+https://github.com/Project-MONAI/GenerativeModels.git#egg=Generative
@@ -89,7 +89,7 @@ The training script uses the batch size and patch size defined in the configurat
 
 To train with single 32G GPU, please run:
 ```bash
-python3 train_diffusion.py -c ./config/config_train_32g.json -e ./config/environment.json -g 1
+python train_diffusion.py -c ./config/config_train_32g.json -e ./config/environment.json -g 1
 ```
 
 The training script also enables multi-GPU training. For instance, if you are using eight 32G GPUs, you can run the training script with the following command:

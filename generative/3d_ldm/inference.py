@@ -12,14 +12,13 @@
 import argparse
 import json
 import logging
-from datetime import datetime
-import nibabel as nib
-from pathlib import Path
-
 import os
 import sys
-import numpy as np
+from datetime import datetime
+from pathlib import Path
 
+import nibabel as nib
+import numpy as np
 import torch
 from generative.inferers import LatentDiffusionInferer
 from generative.networks.schedulers import DDPMScheduler
@@ -66,7 +65,7 @@ def main():
     for k, v in config_dict.items():
         setattr(args, k, v)
 
-    directory = os.environ.get("MONAI_DATA_DIRECTORY")
+    os.environ.get("MONAI_DATA_DIRECTORY")
     set_determinism(42)
 
     # load trained networks

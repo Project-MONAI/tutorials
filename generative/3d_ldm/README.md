@@ -14,11 +14,11 @@ This network is designed as a demonstration to showcase the training process for
 
 ### 1. Data
 
-The dataset we are experimenting with in this example is BraTS 2018 data (https://www.med.upenn.edu/sbia/brats2018.html).
+The dataset we are experimenting with in this example is BraTS 2016 and 2017 data.
 
-BraTS 2018 is a public dataset of brain MR images. Using these images, the goal is to generate images that look similar to the images in BraTS 2018 dataset.
+BraTS is a public dataset of brain MR images. Using these images, the goal is to generate images that look similar to the images in BraTS 2016 and 2017 dataset.
 
-The data can be automatically downloaded at the beginning of training.
+The data can be automatically downloaded from [Medical Decathlon](http://medicaldecathlon.com/) at the beginning of training.
 
 Disclaimer: We are not the host of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the dataset! We acknowledge the National Cancer Institute and the Foundation for the National Institutes of Health, and their critical role in the creation of the free publicly available LIDC/IDRI Database used in this study.
 

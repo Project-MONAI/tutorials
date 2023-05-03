@@ -1,0 +1,61 @@
+{
+	"channel": 0,
+    "spacing": [1.1, 1.1, 1.1],
+    "spatial_dims": 3,
+    "image_channels": 1,
+    "latent_channels": 8,
+    "autoencoder_def": {
+        "_target_": "generative.networks.nets.AutoencoderKL",
+        "spatial_dims": "@spatial_dims",
+        "in_channels": "$@image_channels",
+        "out_channels": "@image_channels",
+        "latent_channels": "@latent_channels",
+        "num_channels": [
+            64,
+            128,
+            256
+        ],
+        "num_res_blocks": 2,
+        "norm_num_groups": 32,
+        "norm_eps": 1e-06,
+        "attention_levels": [
+            false,
+            false,
+            false
+        ],
+        "with_encoder_nonlocal_attn": false,
+        "with_decoder_nonlocal_attn": false
+    },
+    "autoencoder_train": {
+        "batch_size": 1,
+        "patch_size": [112,128,80],
+        "lr": 5e-6,
+        "perceptual_weight": 0.001,
+        "kl_weight": 1e-7,
+        "recon_loss": "l1",
+        "n_epochs": 1000,
+        "val_interval": 10
+    },
+    "diffusion_def": {
+        "_target_": "generative.networks.nets.DiffusionModelUNet",
+        "spatial_dims": "@spatial_dims",
+        "in_channels": "@latent_channels",
+        "out_channels": "@latent_channels",
+        "num_channels":[256, 256, 512],
+        "attention_levels":[false, true, true],
+        "num_head_channels":[0, 64, 64],
+        "num_res_blocks": 2
+    },
+    "diffusion_train": {
+        "batch_size": 2,
+        "patch_size": [144,176,112],
+        "lr": 5e-6,
+        "n_epochs": 10000,
+        "val_interval": 2
+    },
+    "NoiseScheduler": {
+        "num_train_timesteps": 1000,
+        "beta_start": 0.0015,
+        "beta_end": 0.0195
+    }
+}

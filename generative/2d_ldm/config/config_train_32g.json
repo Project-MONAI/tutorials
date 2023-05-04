@@ -29,11 +29,11 @@
     "autoencoder_train": {
         "batch_size": 26,
         "patch_size": [240,240],
-        "lr": 2e-5,
+        "lr": 5e-5,
         "perceptual_weight": 1.0,
         "kl_weight": 1e-6,
         "recon_loss": "l1",
-        "n_epochs": 1500,
+        "n_epochs": 1000,
         "val_interval": 1
     },
     "diffusion_def": {
@@ -41,17 +41,18 @@
         "spatial_dims": "@spatial_dims",
         "in_channels": "@latent_channels",
         "out_channels": "@latent_channels",
-        "num_channels":[224, 448, 672, 896],
-        "attention_levels":[false, true, true, true],
+        "num_channels":[32, 64, 128, 256],
+        "attention_levels":[false, true, true, true], 
         "num_head_channels":[0, 32, 32, 32],
         "num_res_blocks": 2
     },
     "diffusion_train": {
-        "batch_size": 28,
+        "batch_size": 80,
         "patch_size": [256,256],
         "lr": 1e-5,
-        "n_epochs": 500,
-        "val_interval": 2
+        "n_epochs": 1500,
+        "val_interval": 2,
+        "lr_scheduler_milestones": [1000]
     },
     "NoiseScheduler": {
         "num_train_timesteps": 1000,

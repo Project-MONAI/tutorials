@@ -1,5 +1,5 @@
 {
-	"channel": 0,
+    "channel": 0,
     "spacing": [1.1, 1.1, 1.1],
     "spatial_dims": 3,
     "image_channels": 1,

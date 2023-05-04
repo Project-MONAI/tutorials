@@ -23,19 +23,8 @@ The data can be automatically downloaded from [Medical Decathlon](http://medical
 Disclaimer: We are not the host of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the dataset! We acknowledge the National Cancer Institute and the Foundation for the National Institutes of Health, and their critical role in the creation of the free publicly available LIDC/IDRI Database used in this study.
 
 ### 2. Installation
-```
-pip install lpips
-pip install git+https://github.com/Project-MONAI/GenerativeModels.git#egg=Generative
-```
+Please the [Installation of MONAI Generative Model](../README.md)
 
-Or install it from source:
-```
-pip install lpips
-git clone https://github.com/Project-MONAI/GenerativeModels.git
-cd GenerativeModels/
-python setup.py install
-cd ..
-```
 ### 3. Run the example
 
 #### [3.1 3D Autoencoder Training](./train_autoencoder.py)

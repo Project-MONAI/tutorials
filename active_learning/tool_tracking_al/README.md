@@ -23,7 +23,7 @@ Reference:
 ### 2. Active Learning Hyper-parameters
 
 Active learning iterations: 6 \
-Monet-Carlo simulations: 10 \
+Monte-Carlo simulations: 10 \
 Initial training pool: 15 \
 Queries per active iteration: 15 
 
@@ -39,7 +39,7 @@ Loss: DiceLoss
 
 ![al_robotool_results](../../figures/al_robotool_results.png)
 
-**Plot some uncertainty figures and show the main result** (WIP)
+It can be observed that active learning strategy can lead to higher performance with lesser usage of annotated data
 
 ### References 
 

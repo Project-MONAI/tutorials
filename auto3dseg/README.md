@@ -100,24 +100,24 @@ To ensure equitable comparisons, we adhere to the original methodology employed 
 
 <div align="center">
 
-| Algorithm |    GPU    | GPU Numbers | Model Training Time (Hours) | GPU Utilization Rate |
-|:---------:|:---------:|:-----------:|:---------------------------:|:--------------------:|
-|   DiNTS   | 80GB A100 |      1      |             19.0            |          92%         |
-|   DiNTS   | 80GB A100 |      8      |             2.5             |          92%         |
-|   DiNTS   | 80GB A100 |      16     |             1.5             |          89%         |
-|   DiNTS   | 80GB A100 |      32     |             0.9             |          84%         |
-| SegResNet | 80GB A100 |      1      |             13.8            |          92%         |
-| SegResNet | 80GB A100 |      8      |             2.8             |          91%         |
-| SegResNet | 80GB A100 |      16     |             1.5             |          89%         |
-| SegResNet | 80GB A100 |      32     |             0.8             |          88%         |
-| SwinUNETR | 80GB A100 |      1      |             15.6            |          95%         |
-| SwinUNETR | 80GB A100 |      8      |             2.2             |          94%         |
-| SwinUNETR | 80GB A100 |      16     |             1.0             |          93%         |
-| SwinUNETR | 80GB A100 |      32     |             0.6             |          91%         |
+|    Algorithm   |    GPU    | GPU Numbers | Model Training Time (Hours) | GPU Utilization Rate |
+|:--------------:|:---------:|:-----------:|:---------------------------:|:--------------------:|
+|      DiNTS     | 80GB A100 |      1      |             19.0            |          92%         |
+|      DiNTS     | 80GB A100 |      8      |             2.5             |          92%         |
+|      DiNTS     | 80GB A100 |      16     |             1.5             |          89%         |
+|      DiNTS     | 80GB A100 |      32     |             0.9             |          84%         |
+| SegResNet (3D) | 80GB A100 |      1      |             13.8            |          92%         |
+| SegResNet (3D) | 80GB A100 |      8      |             2.8             |          91%         |
+| SegResNet (3D) | 80GB A100 |      16     |             1.5             |          89%         |
+| SegResNet (3D) | 80GB A100 |      32     |             0.8             |          88%         |
+|    SwinUNETR   | 80GB A100 |      1      |             15.6            |          95%         |
+|    SwinUNETR   | 80GB A100 |      8      |             2.2             |          94%         |
+|    SwinUNETR   | 80GB A100 |      16     |             1.0             |          93%         |
+|    SwinUNETR   | 80GB A100 |      32     |             0.6             |          91%         |
 
 </div>
 
-The table illustrates that when GPU numbers exceed or equal to 8, multi-node training is executed with 8 GPUs allocated per node. As demonstrated by the results, employing a larger number of GPUs significantly diminishes the model training duration. However, there is a minor decrease in GPU utilization rate, which can be attributed to the increased communication costs associated with a greater number of GPUs.
+The table illustrates that when GPU number exceeds or is equal to 8, multi-node training is executed with 8 GPUs allocated per node. As demonstrated by the results, employing a larger number of GPUs significantly diminishes the model training duration. However, there is a minor decrease in GPU utilization rate, which can be attributed to the increased communication costs associated with a greater number of GPUs.
 
 ## GPU utilization optimization
 

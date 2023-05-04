@@ -80,7 +80,6 @@ def main():
         setattr(args, k, v)
 
     set_determinism(42)
-    os.environ.get("MONAI_DATA_DIRECTORY")
 
     # Step 1: set data loader
     2 ** (len(args.autoencoder_def["num_channels"]) - 1)

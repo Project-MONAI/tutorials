@@ -80,7 +80,7 @@ The training script uses the batch size and patch size defined in the configurat
 
 To train with single 32G GPU, please run:
 ```bash
-python3 train_diffusion.py -c ./config/config_train_32g.json -e ./config/environment.json -g 1
+python train_diffusion.py -c ./config/config_train_32g.json -e ./config/environment.json -g 1
 ```
 
 The training script also enables multi-GPU training. For instance, if you are using eight 32G GPUs, you can run the training script with the following command:

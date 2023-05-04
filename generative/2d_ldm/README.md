@@ -29,8 +29,7 @@ Please the [Installation of MONAI Generative Model](../README.md)
 
 #### [3.1 2D Autoencoder Training](./train_autoencoder.py)
 
-The network configuration files are located in [./config/config_train_32g.json](./config/config_train_32g.json) for 32G GPU.
-You can modify the hyperparameters in these files to suit your requirements.
+The network configuration files are located in [./config/config_train_32g.json](./config/config_train_32g.json) for 32G GPU and [./config/config_train_16g.json](./config/config_train_16g.json) for 16G GPU. You can modify the hyperparameters in these files to suit your requirements.
 
 The training script uses the batch size and patch size defined in the configuration files. If you have a different GPU memory size, you should adjust the `"batch_size"` and `"patch_size"` parameters in the `"autoencoder_train"` to match your GPU. Note that the `"patch_size"` needs to be divisible by 4.
 

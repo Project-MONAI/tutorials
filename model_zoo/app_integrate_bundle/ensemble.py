@@ -138,7 +138,7 @@ class EnsembleTrainTask:
             _network.load_state_dict(torch.load(self.bundle_path + f"/models/model_fold{i}.pt", map_location=device))
             networks.append(_network)
 
-        evaluator = EnsembleEvaluator(
+        inference_workflow.evaluator = EnsembleEvaluator(
             device=device,
             val_data_loader=inference_workflow.dataloader,
             pred_keys=["pred"] * args.n_splits,
@@ -146,7 +146,8 @@ class EnsembleTrainTask:
             inferer=inference_workflow.inferer,
             postprocessing=_postprocessing,
         )
-        evaluator.run()
+        inference_workflow.run()
+        inference_workflow.finalize()
         logger.info("Inference Finished....")
 
     def __call__(self, args, datalist, test_datalist=None):
@@ -155,7 +156,7 @@ class EnsembleTrainTask:
             logger.warning("Ignore dataset dir as there is no dataset dir exists")
             return
 
-        train_ds, val_ds = self._partition_datalist(datalist[:3], n_splits=args.n_splits)
+        train_ds, val_ds = self._partition_datalist(datalist[:7], n_splits=args.n_splits)
         fold = 0
         for _train_ds, _val_ds in zip(train_ds, val_ds):
             max_epochs = args.epochs
@@ -169,14 +170,6 @@ class EnsembleTrainTask:
 
             device = self._device(args.device)
             logger.info(f"Using device: {device}")
-
-            self.train_workflow.bundle_root = self.bundle_path
-            self.train_workflow.max_epochs = max_epochs
-            self.train_workflow.train_dataset_data = _train_ds
-            self.train_workflow.val_dataset_data = _val_ds
-            self.train_workflow.dataset_dir = dataset_dir
-            self.train_workflow.device = device
-            self.train_workflow.initialize()
 
             if multi_gpu:
                 train_datalist_path = os.path.join(self.bundle_path, "configs", f"train_datalist_fold{fold}.json")
@@ -227,6 +220,14 @@ class EnsembleTrainTask:
                 ]
                 self.run_command(cmd, env)
             else:
+                self.train_workflow.bundle_root = self.bundle_path
+                self.train_workflow.max_epochs = max_epochs
+                self.train_workflow.train_dataset_data = _train_ds
+                self.train_workflow.val_dataset_data = _val_ds
+                self.train_workflow.dataset_dir = dataset_dir
+                self.train_workflow.device = device
+
+                self.train_workflow.initialize()
                 self.train_workflow.run()
                 self.train_workflow.finalize()
 

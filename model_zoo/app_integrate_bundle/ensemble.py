@@ -155,7 +155,7 @@ class EnsembleTrainTask:
             logger.warning("Ignore dataset dir as there is no dataset dir exists")
             return
 
-        train_ds, val_ds = self._partition_datalist(datalist, n_splits=args.n_splits)
+        train_ds, val_ds = self._partition_datalist(datalist[:3], n_splits=args.n_splits)
         fold = 0
         for _train_ds, _val_ds in zip(train_ds, val_ds):
             max_epochs = args.epochs
@@ -228,6 +228,7 @@ class EnsembleTrainTask:
                 self.run_command(cmd, env)
             else:
                 self.train_workflow.run()
+                self.train_workflow.finalize()
 
             _model_path = f"{self.bundle_path}/models/model.pt"
             os.rename(_model_path, f"{self.bundle_path}/models/model_fold{fold}.pt")

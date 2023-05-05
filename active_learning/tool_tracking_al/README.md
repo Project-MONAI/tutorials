@@ -27,7 +27,7 @@ Reference:
 Active learning iterations: 6 \
 Monte-Carlo simulations: 10 \
 Initial training pool: 15 \
-Queries per active iteration: 15 
+Queries per active iteration: 15
 
 ### 3. Training Hyper-parameters
 
@@ -43,7 +43,7 @@ Loss: DiceLoss
 
 It can be observed that active learning strategy can lead to higher performance with lesser usage of annotated data
 
-### References 
+### References
 
 If you find the tutorial helpful in your work, please support us by citing the following works:
 

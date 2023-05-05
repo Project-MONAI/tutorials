@@ -106,13 +106,13 @@ python inference.py -c ./config/config_train_32g.json -e ./config/environment.js
 
 An example output is shown below.
 <p align="center">
-  <img src="./figs/syn_0.jpeg" width="23%" >
+  <img src="./figs/syn_0.jpeg" width="20%" >
 &nbsp; &nbsp; &nbsp; &nbsp;
-  <img src="./figs/syn_1.jpeg" width="23%" >
+  <img src="./figs/syn_1.jpeg" width="20%" >
 &nbsp; &nbsp; &nbsp; &nbsp;
-  <img src="./figs/syn_2.jpeg" width="23%" >
+  <img src="./figs/syn_2.jpeg" width="20%" >
 &nbsp; &nbsp; &nbsp; &nbsp;
-  <img src="./figs/syn_3.jpeg" width="23%" >
+  <img src="./figs/syn_3.jpeg" width="20%" >
 </p>
 
 ### 4. Questions and bugs

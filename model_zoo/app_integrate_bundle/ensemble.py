@@ -15,9 +15,10 @@ import os
 import argparse
 import subprocess
 
-import monai.bundle
 import torch
-from monai.bundle import ConfigParser
+from monai.transforms import Compose
+from monai.transforms.post.dictionary import MeanEnsembled, VoteEnsembled
+from monai.bundle import ConfigWorkflow
 from monai.engines import EnsembleEvaluator
 from monai.utils import optional_import
 
@@ -31,18 +32,6 @@ class Const:
     INFERENCE_CONFIGS = ("inference.json", "inference.yaml")
     LOGGING_CONFIG = "logging.conf"
     METADATA_JSON = "metadata.json"
-
-    KEY_DEVICE = "device"
-    KEY_BUNDLE_ROOT = "bundle_root"
-    KEY_NETWORK = "network"
-    KEY_NETWORK_DEF = "network_def"
-    KEY_DATASET_DIR = "dataset_dir"
-    KEY_TRAIN_TRAINER_MAX_EPOCHS = "train#trainer#max_epochs"
-    KEY_TRAIN_DATASET_DATA = "train#dataset#data"
-    KEY_VALIDATE_DATASET_DATA = "validate#dataset#data"
-    KEY_INFERENCE_DATASET_DATA = "dataset#data"
-    KEY_MODEL_PYTORCH = "validate#handlers#-1#key_metric_filename"
-    KEY_INFERENCE_POSTPROCESSING = "postprocessing"
 
 
 class EnsembleTrainTask:
@@ -82,13 +71,15 @@ class EnsembleTrainTask:
 
         self.bundle_path = path
         self.bundle_config_path = os.path.join(path, "configs", config_paths[0])
-
-        self.bundle_config = ConfigParser()
-        self.bundle_config.read_config(self.bundle_config_path)
-        self.bundle_config.update({Const.KEY_BUNDLE_ROOT: self.bundle_path})
-
         self.bundle_metadata_path = os.path.join(path, "configs", Const.METADATA_JSON)
         self.bundle_logging_path = os.path.join(path, "configs", Const.LOGGING_CONFIG)
+
+        self.train_workflow = ConfigWorkflow(
+            config_file=self.bundle_config_path,
+            meta_file=self.bundle_metadata_path,
+            logging_file=self.bundle_logging_path,
+            workflow="train",
+        )
 
     def _partition_datalist(self, datalist, n_splits=5, shuffle=False):
         logger.info(f"Total Records in Dataset: {len(datalist)}")
@@ -119,54 +110,55 @@ class EnsembleTrainTask:
         logger.info(f"Total Records in Test Dataset: {len(test_datalist)}")
 
         bundle_inference_config_path = os.path.join(self.bundle_path, "configs", inference_config_paths[0])
-        bundle_inference_config = ConfigParser()
-        bundle_inference_config.read_config(bundle_inference_config_path)
-        bundle_inference_config.update({Const.KEY_BUNDLE_ROOT: self.bundle_path})
-        bundle_inference_config.update({Const.KEY_INFERENCE_DATASET_DATA: test_datalist})
+        inference_workflow = ConfigWorkflow(
+            config_file=bundle_inference_config_path,
+            meta_file=None,
+            logging_file=None,
+            workflow="inference",
+        )
+        inference_workflow.dataset_data = test_datalist
+        # this application has an additional requirement for the bundle workflow to provide the property dataloader
+        inference_workflow.add_property(name="dataloader", required=True, config_id="dataloader")
+        inference_workflow.initialize()
 
         # update postprocessing with mean ensemble or vote ensemble
-        post_transform = bundle_inference_config.config["postprocessing"]
-        ensemble_transform = {
-            "_target_": f"{ensemble}Ensembled",
-            "keys": ["pred", "pred", "pred", "pred", "pred"],
-            "output_key": "pred",
-        }
+        _ensemble_transform = MeanEnsembled if ensemble == "Mean" else VoteEnsembled
+        ensemble_transform = _ensemble_transform(keys=["pred"] * args.n_splits, output_key="pred")
         if ensemble == "Mean":
-            post_transform["transforms"].insert(0, ensemble_transform)
+            _postprocessing = Compose((ensemble_transform, inference_workflow.postprocessing))
         elif ensemble == "Vote":
-            post_transform["transforms"].insert(-1, ensemble_transform)
+            _postprocessing = Compose((inference_workflow.postprocessing, ensemble_transform))
         else:
             raise NotImplementedError
-        bundle_inference_config.update({Const.KEY_INFERENCE_POSTPROCESSING: post_transform})
 
         # update network weights
-        _networks = [bundle_inference_config.get_parsed_content("network")] * 5
         networks = []
-        for i, _network in enumerate(_networks):
-            _network.load_state_dict(torch.load(self.bundle_path + f"/models/model{i}.pt"))
+        for i in range(args.n_splits):
+            _network = inference_workflow.network_def.to(device)
+            _network.load_state_dict(torch.load(self.bundle_path + f"/models/model_fold{i}.pt", map_location=device))
             networks.append(_network)
 
-        evaluator = EnsembleEvaluator(
+        inference_workflow.evaluator = EnsembleEvaluator(
             device=device,
-            val_data_loader=bundle_inference_config.get_parsed_content("dataloader"),
-            pred_keys=["pred", "pred", "pred", "pred", "pred"],
+            val_data_loader=inference_workflow.dataloader,
+            pred_keys=["pred"] * args.n_splits,
             networks=networks,
-            inferer=bundle_inference_config.get_parsed_content("inferer"),
-            postprocessing=bundle_inference_config.get_parsed_content("postprocessing"),
+            inferer=inference_workflow.inferer,
+            postprocessing=_postprocessing,
         )
-        evaluator.run()
+        inference_workflow.run()
+        inference_workflow.finalize()
         logger.info("Inference Finished....")
 
     def __call__(self, args, datalist, test_datalist=None):
         dataset_dir = args.dataset_dir
         if dataset_dir is None:
-            logger.warning(f"Ignore dataset dir as there is no dataset dir exists")
+            logger.warning("Ignore dataset dir as there is no dataset dir exists")
             return
 
-        train_ds, val_ds = self._partition_datalist(datalist, n_splits=args.n_splits)
+        train_ds, val_ds = self._partition_datalist(datalist[:7], n_splits=args.n_splits)
         fold = 0
         for _train_ds, _val_ds in zip(train_ds, val_ds):
-            model_pytorch = f"model{fold}.pt"
             max_epochs = args.epochs
             multi_gpu = args.multi_gpu
             multi_gpu = multi_gpu if torch.cuda.device_count() > 1 else False
@@ -179,17 +171,14 @@ class EnsembleTrainTask:
             device = self._device(args.device)
             logger.info(f"Using device: {device}")
 
-            overrides = {
-                Const.KEY_BUNDLE_ROOT: self.bundle_path,
-                Const.KEY_TRAIN_TRAINER_MAX_EPOCHS: max_epochs,
-                Const.KEY_TRAIN_DATASET_DATA: _train_ds,
-                Const.KEY_VALIDATE_DATASET_DATA: _val_ds,
-                Const.KEY_DATASET_DIR: dataset_dir,
-                Const.KEY_MODEL_PYTORCH: model_pytorch,
-                Const.KEY_DEVICE: device,
-            }
-
             if multi_gpu:
+                train_datalist_path = os.path.join(self.bundle_path, "configs", f"train_datalist_fold{fold}.json")
+                val_datalist_path = os.path.join(self.bundle_path, "configs", f"val_datalist_fold{fold}.json")
+                with open(train_datalist_path, "w") as f:
+                    json.dump(_train_ds, f)
+                with open(val_datalist_path, "w") as f:
+                    json.dump(_val_ds, f)
+
                 config_paths = [
                     c for c in Const.MULTI_GPU_CONFIGS if os.path.exists(os.path.join(self.bundle_path, "configs", c))
                 ]
@@ -199,12 +188,7 @@ class EnsembleTrainTask:
                     )
                     return
 
-                train_path = os.path.join(self.bundle_path, "configs", f"train_multigpu_fold{fold}.json")
                 multi_gpu_train_path = os.path.join(self.bundle_path, "configs", config_paths[0])
-                for k, v in overrides.items():
-                    if k != Const.KEY_DEVICE:
-                        self.bundle_config.set(v, k)
-                ConfigParser.export_config_file(self.bundle_config.config, train_path, indent=2)
 
                 env = os.environ.copy()
                 env["CUDA_VISIBLE_DEVICES"] = ",".join([str(g) for g in gpus])
@@ -220,21 +204,37 @@ class EnsembleTrainTask:
                     "--meta_file",
                     self.bundle_metadata_path,
                     "--config_file",
-                    f"['{train_path}','{multi_gpu_train_path}']",
+                    f"['{self.bundle_config_path}','{multi_gpu_train_path}']",
                     "--logging_file",
                     self.bundle_logging_path,
+                    "--bundle_root",
+                    self.bundle_path,
+                    "--epochs",
+                    str(max_epochs),
+                    "--dataset_dir",
+                    dataset_dir,
+                    "--train#dataset#data",
+                    f"%{train_datalist_path}",
+                    "--validate#dataset#data",
+                    f"%{val_datalist_path}",
                 ]
                 self.run_command(cmd, env)
             else:
-                monai.bundle.run(
-                    meta_file=self.bundle_metadata_path,
-                    config_file=self.bundle_config_path,
-                    logging_file=self.bundle_logging_path,
-                    **overrides,
-                )
-            fold += 1
+                self.train_workflow.bundle_root = self.bundle_path
+                self.train_workflow.max_epochs = max_epochs
+                self.train_workflow.train_dataset_data = _train_ds
+                self.train_workflow.val_dataset_data = _val_ds
+                self.train_workflow.dataset_dir = dataset_dir
+                self.train_workflow.device = device
 
-            logger.info(f"Fold{fold} Training Finished....")
+                self.train_workflow.initialize()
+                self.train_workflow.run()
+                self.train_workflow.finalize()
+
+            _model_path = f"{self.bundle_path}/models/model.pt"
+            os.rename(_model_path, f"{self.bundle_path}/models/model_fold{fold}.pt")
+            logger.info(f"Fold {fold} Training Finished....")
+            fold += 1
 
         if test_datalist is not None:
             device = self._device(args.device)

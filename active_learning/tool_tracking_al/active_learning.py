@@ -161,7 +161,7 @@ def main():
     ).to(device)
 
     loss_function = DiceLoss(include_background=False, softmax=True, to_onehot_y=True)
-    optimizer = torch.optim.Adam(network.parameters(), 1e-4)
+    optimizer = torch.optim.Adam(network.parameters(), args.lr)
 
     # Get the metrics
     dice_metric = DiceMetric(include_background=False, reduction="mean")

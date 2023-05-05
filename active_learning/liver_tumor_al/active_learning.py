@@ -19,13 +19,12 @@ import random
 import numpy as np
 import torch
 import pickle
-import time
 import matplotlib.pyplot as plt
 
 from monai.networks.nets import UNet
 from monai.networks.layers import Norm
-from monai.losses.dice import DiceCELoss, DiceLoss
-from monai.metrics import DiceMetric, compute_meandice
+from monai.losses.dice import DiceCELoss
+from monai.metrics import DiceMetric
 from monai.inferers import sliding_window_inference
 from monai.utils import set_determinism
 from monai.data import DataLoader, CacheDataset, Dataset, decollate_batch
@@ -314,8 +313,6 @@ def main():
         unl_ds = Dataset(
             data=unl_d, transform=unl_transforms)
         unl_loader = DataLoader(unl_ds, batch_size=1)
-        #TODO Have 2 separate loaders for unlabeled data, keep one cached as it will be used for training.
-        # For the uncertainty generation keep it uncached so the RAM is not eaten up
 
         # Calculation of Epochs based on steps
         max_epochs = np.int(args.steps / (np.ceil(len(train_d) / args.batch_size)))

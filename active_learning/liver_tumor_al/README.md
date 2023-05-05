@@ -1,6 +1,6 @@
 # Active Learning Simulation Tutorial For Liver & Tumor Segmentation
 
-Active learning (AL) is a machine learning framework that can serve as a data selection engine given an unlabeled pool of data. Active learning provides uncertainty estimation capabilities for trained deep learning models, in brief the models are able to assess about which predictions they are under or over confident. Based on the confidence the most relevant data for annotation can be selected. Thereafter annotation the labeled data is added to training pool of data for the model.
+Active learning (AL) is a machine learning framework that can serve as a data selection engine given an unlabeled pool of data. Active learning provides uncertainty estimation capabilities for trained deep learning models. In brief the models are able to assess about which predictions they are under or over confident. Based on the confidence the most relevant data for annotation can be selected. Thereafter annotation the labeled data is added to training pool of data for the model.
 
 This tutorial provides a toy example of active learning for liver and tumor segmentation from 3D CT volumes. Exploratory notebooks on how to visualize uncertainty/confidence of model as provided as well.
 
@@ -10,9 +10,9 @@ This tutorial provides a toy example of active learning for liver and tumor segm
 
 2.) To just launch the active learning script with 'variance' acquisition function, launch the code with the below command: `python active_learning.py --base_dir /to/be/defined --data_root /to/be/defined --json_path /to/be/defined --seed 3840 --active_iters 6 --dropout_ratio 0.2 --mc_number 10 --initial_pool 5 --queries 5 --strategy variance --steps 2000 --val_interval 5 --batch_size 1 --val_batch_size 1 --lr 1e-4`
 
-3.) For executing the active learning acquisition functions of random, variance and the full dataset baseline, execute the ./runner.sh
+3.) For executing the active learning acquisition functions of random, variance and the full dataset baseline, execute the ./runner.sh after defining the required paths. DATA_ROOT, JSON_PATH and LOG_DIR need to be defined.
 
-4.) Once all script finish running, to analyze results, launch the jupyter notebook results_uncertainty.ipynb. The second part particularly will visualize the below shown plot in the results. The first part of the notebook is an exploration of uncertainty spatial maps.
+4.) Once all scripts finish running, to analyze results, launch the jupyter notebook results_uncertainty.ipynb. The second part particularly will visualize the below shown plot in the results. The first part of the notebook is an exploration of uncertainty spatial maps.
 
 ### 1. Data
 
@@ -41,8 +41,9 @@ Loss: DiceCELoss
 
 ### 4. Results & Discussion 
 
-Put a plot here
+![al_liver](../../figures/al_liver_tumor.png)
 
+It can be observed that active learning strategy can lead to higher performance with lesser usage of annotated data
 References:
 
 If you find the tutorial helpful in your work, please support us by citing the following works:

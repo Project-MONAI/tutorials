@@ -25,7 +25,6 @@ from monai.utils import first, set_determinism
 from torch.cuda.amp import GradScaler, autocast
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
-
 from utils import define_instance, prepare_brats2d_dataloader, setup_ddp
 from visualize_image import visualize_2d_image
 

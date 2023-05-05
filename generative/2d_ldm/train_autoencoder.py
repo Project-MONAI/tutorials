@@ -24,7 +24,6 @@ from monai.utils import set_determinism
 from torch.nn import L1Loss, MSELoss
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
-
 from utils import KL_loss, define_instance, prepare_brats2d_dataloader, setup_ddp
 from visualize_image import visualize_2d_image
 
@@ -82,7 +81,7 @@ def main():
     set_determinism(42)
 
     # Step 1: set data loader
-    2 ** (len(args.autoencoder_def["num_channels"]) - 1)
+    size_divisible = 2 ** (len(args.autoencoder_def["num_channels"]) - 1)
     train_loader, val_loader = prepare_brats2d_dataloader(
         args,
         args.autoencoder_train["batch_size"],
@@ -93,6 +92,7 @@ def main():
         world_size=world_size,
         cache=1.0,
         download=args.download_data,
+        size_divisible=size_divisible,
     )
 
     # Step 2: Define Autoencoder KL network and discriminator

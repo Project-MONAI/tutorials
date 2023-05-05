@@ -12,20 +12,18 @@
 import argparse
 import json
 import logging
-from datetime import datetime
-from pathlib import Path
-from PIL import Image
-
 import os
 import sys
-import numpy as np
+from datetime import datetime
+from pathlib import Path
 
+import numpy as np
 import torch
 from generative.inferers import LatentDiffusionInferer
 from generative.networks.schedulers import DDPMScheduler
 from monai.config import print_config
 from monai.utils import set_determinism
-
+from PIL import Image
 from utils import define_instance
 from visualize_image import visualize_2d_image
 

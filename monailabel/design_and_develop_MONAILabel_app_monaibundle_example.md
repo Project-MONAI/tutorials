@@ -263,72 +263,30 @@ class EpistemicScoring(ScoringMethod):
 A MONAI Label app needs a module to tie together inference, training, and image selection. And provide the end-user with a seamless simultaneous model training and annotation experience.
 In this section, we provide details of `monaibundle` app's `main.py`.
 
-#### 1.4.1 Load bundle from local or NGC/Model Zoo
+#### 1.4.1 Load bundle
 
-In the main class of the `monaibundle` app, the first step is to load the bundle from local bundle directories. The initialization step identifies the availability of the provided bundle.
-Then added to the group of models. This process allows users to load customized bundles or fetch new bundles from model-zoo.
+In the main class of the `monaibundle` app, the first step is to load the bundle from bundle directories. The initialization step identifies the availability of the provided bundle. The get_bundle_models function returns the directories of the local or downloaded bundles.
 
 <pre style="background: #f4f4f4; border: 1px solid #ddd; border-left: 3px solid #02a3a3; line-height: 1.6; padding: 1.5em;">
 class MyApp(MONAILabelApp):
     def __init__(self, app_dir, studies, conf):
-        self.model_dir = os.path.join(app_dir, "model")
-
-        zoo_info = requests.get(conf.get("zoo_info", MONAI_ZOO_INFO)).json()
-        zoo_source = conf.get("zoo_source", MONAI_ZOO_SOURCE)
-        zoo_repo = conf.get("zoo_repo", MONAI_ZOO_REPO)
-
-        available = {k.replace(".zip", ""): v for k, v in zoo_info.items()}
-        models = conf.get("models")
-        if not models:
-            print("")
-            print("---------------------------------------------------------------------------------------")
-            print("Provide --conf models <name>")
-            print("Following are the available models.  You can pass comma (,) separated names to pass multiple")
-            print("    -c models {}".format("\n    -c models ".join(available.keys())))
-            print("---------------------------------------------------------------------------------------")
-            print("")
-            exit(-1)
-
-        models = models.split(",")
-        models = [m.strip() for m in models]
-        invalid = [m for m in models if not available.get(m) and not os.path.isdir(os.path.join(self.model_dir, m))]
-
-        if invalid:
-            print("")
-            print("---------------------------------------------------------------------------------------")
-            print(f"Invalid Model(s) are provided: {invalid}")
-            print("Following are the available models.  You can pass comma (,) separated names to pass multiple")
-            print("    -c models {}".format("\n    -c models ".join(available.keys())))
-            print(f"Or provide valid local bundle directories under: {self.model_dir}")
-            print("---------------------------------------------------------------------------------------")
-            print("")
-            exit(-1)
-        self.models: Dict[str, str] = {}
-
-        for k in models:
-            v = available.get(k)
-            p = os.path.join(self.model_dir, k)
-            if not v:
-                logger.info(f"+++ Adding Bundle from Local: {k} => {p}")
-            else:
-                logger.info(f"+++ Adding Bundle from Zoo: {k} => {v} => {p}")
-                if not os.path.exists(p):
-                    download(name=k, bundle_dir=self.model_dir, source=zoo_source, repo=zoo_repo)
-                    e = os.path.join(self.model_dir, re.sub(r"_v.*.zip", "", f"{k}.zip"))
-                    if os.path.isdir(e):
-                        shutil.move(e, p)
-            sys.path.append(p)
-
-            self.models[k] = p
-
-        logger.info(f"+++ Using Models: {list(self.models.keys())}")
+        self.models = get_bundle_models(app_dir, conf)
+        # Add Epistemic model for scoring
+        self.epistemic_models = (
+            get_bundle_models(app_dir, conf, conf_key="epistemic_model") if conf.get("epistemic_model") else None
+        )
+        if self.epistemic_models:
+            # Get epistemic parameters
+            self.epistemic_max_samples = int(conf.get("epistemic_max_samples", "0"))
+            self.epistemic_simulation_size = int(conf.get("epistemic_simulation_size", "5"))
+            self.epistemic_dropout = float(conf.get("epistemic_dropout", "0.2"))
 
         super().__init__(
             app_dir=app_dir,
             studies=studies,
             conf=conf,
-            name=f"MONAILabel - Zoo/Bundle ({monailabel.__version__})",
-            description="DeepLearning models provided via MONAI Zoo/Bundle",
+            name=f"MONAILabel - Bundle ({monailabel.__version__})",
+            description="DeepLearning models provided via Bundle",
             version=monailabel.__version__,
         )
 </pre>

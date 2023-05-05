@@ -1,5 +1,5 @@
 modality:
 - T2
 - ADC
-datalist: "/home/Data/MSD/test/dataset.json"
+datalist: "./msd_task05_prostate_folds.json"
 dataroot: "/home/Data/MSD/test/Task05_Prostate"

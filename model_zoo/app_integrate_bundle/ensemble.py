@@ -116,6 +116,9 @@ class EnsembleTrainTask:
             logging_file=None,
             workflow="inference",
         )
+        inference_workflow.dataset_data = test_datalist
+        # this application has an additional requirement for the bundle workflow to provide the property dataloader
+        inference_workflow.add_property(name="dataloader", required=True, config_id="dataloader")
         inference_workflow.initialize()
 
         # update postprocessing with mean ensemble or vote ensemble
@@ -127,15 +130,6 @@ class EnsembleTrainTask:
             _postprocessing = Compose((inference_workflow.postprocessing, ensemble_transform))
         else:
             raise NotImplementedError
-
-        # update the preprocessing with the instantiated one to avoid re-instantiating
-        inference_workflow.preprocessing = inference_workflow.preprocessing
-        inference_workflow.postprocessing = _postprocessing
-        inference_workflow.dataset_data = test_datalist
-        # this application has an additional requirement for the bundle workflow to provide the property dataloader
-        inference_workflow.add_property(name="dataloader", required=True, config_id="dataloader")
-
-        inference_workflow.initialize()
 
         # update network weights
         networks = []
@@ -150,7 +144,7 @@ class EnsembleTrainTask:
             pred_keys=["pred"] * args.n_splits,
             networks=networks,
             inferer=inference_workflow.inferer,
-            postprocessing=inference_workflow.postprocessing,
+            postprocessing=_postprocessing,
         )
         evaluator.run()
         logger.info("Inference Finished....")

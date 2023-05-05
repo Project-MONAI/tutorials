@@ -518,7 +518,7 @@ def parse_arguments():
     parser.add_argument("--amp", action="store_true", help="activate amp")
     parser.add_argument("--novograd", action="store_true", help="activate novograd optimizer")
     parser.add_argument("--cos", action="store_true", help="activate cosine annealing")
-    parser.add_argument("--pretrain", action="store_true", help="activate Imagenet weights")
+    parser.add_argument("--no-pretrain", action="store_false", dest="pretrain", help="deactivate Imagenet weights")
     parser.add_argument("--benchmark", action="store_true", help="activate Imagenet weights")
 
     parser.add_argument("--no-save", action="store_true", help="save model at each epoch")
@@ -527,7 +527,7 @@ def parse_arguments():
     parser.add_argument("--optimized", action="store_true", help="use optimized parameters")
     parser.add_argument("-b", "--backend", type=str, dest="backend", help="backend for transforms")
 
-    parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")
+    parser.add_argument("--cpu", type=int, default=1, dest="num_workers", help="number of workers")
     parser.add_argument("--gpu", type=str, default="0", dest="gpu", help="which gpu to use")
 
     args = parser.parse_args()

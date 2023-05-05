@@ -141,7 +141,7 @@ class EnsembleTrainTask:
         networks = []
         for i in range(args.n_splits):
             _network = inference_workflow.network_def.to(device)
-            _network.load_state_dict(torch.load(self.bundle_path + f"/models/model_fold{i+1}.pt", map_location=device))
+            _network.load_state_dict(torch.load(self.bundle_path + f"/models/model_fold{i}.pt", map_location=device))
             networks.append(_network)
 
         evaluator = EnsembleEvaluator(
@@ -235,10 +235,10 @@ class EnsembleTrainTask:
             else:
                 self.train_workflow.run()
 
-            fold += 1
             _model_path = f"{self.bundle_path}/models/model.pt"
             os.rename(_model_path, f"{self.bundle_path}/models/model_fold{fold}.pt")
             logger.info(f"Fold {fold} Training Finished....")
+            fold += 1
 
         if test_datalist is not None:
             device = self._device(args.device)

@@ -40,7 +40,7 @@ json_files directory for the dataset. They correspond to having a different numb
 
 ### 2. Pretrained SwinUNETR Weights
 
-The entire SwinUNETR model including encoder and decoder was trained end-to-end using self-supervised learning techniques as outlined in [1]. 
+The entire SwinUNETR model including encoder and decoder was trained end-to-end using self-supervised learning techniques as outlined in [1].
 
 ### 3. Finetuning SwinUNETR with BTCV Experiment Hyper-parameters
 

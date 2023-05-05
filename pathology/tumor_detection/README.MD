@@ -9,7 +9,7 @@ Here we use a classification model to classify small batches extracted from very
 The model is based on ResNet18 with the last fully connected layer replaced by a 1x1 convolution layer.
 
 ## Pre-trained weights
-A pre-trained encoder weights would benefit the model training. In this tutorial, we initialized the model with pre-trained weights on the [ImageNet dataset](https://ieeexplore.ieee.org/document/5206848). You could using `--no-pretrain` to deactivate ImageNet weights.
+A pre-trained encoder weights would be beneficial for the model training. In this tutorial, you can use `--pretrain` to activate the pre-trained weights on the [ImageNet dataset](https://ieeexplore.ieee.org/document/5206848).
 
 Each user is responsible for checking the content of models/datasets and the applicable licenses and determining if suitable for the intended use.
 The license for the pre-trained model used in examples is different than MONAI license. Please check the source where these weights are obtained from.

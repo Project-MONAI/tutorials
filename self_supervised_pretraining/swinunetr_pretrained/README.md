@@ -6,7 +6,7 @@ Benchmark on BTCV with using the pre-trained weights as compared to random initi
 
 ### Steps to run the tutorial
 1. Download the dataset [BTCV](https://www.synapse.org/#!Synapse:syn3193805/wiki/217789) (More detail is provided in the Data section)
-2. Download the pretrained SwinUNETR weights on the 50,000 3D volumes from the following link. More information about the dataset and training is provided below
+2. Download the pretrained SwinUNETR weights on the 50,000 3D volumes from the following [link](https://github.com/Project-MONAI/MONAI-extra-test-data/releases/download/0.8.1/ssl_pretrained_weights.pth). More information about the dataset and training is provided below
 3. Modify the paths for pretrained_path, data_root, json_path & logdir in swinunetr_finetune.ipynb
 4. Run the 'swinunetr_finetune.ipynb'
 
@@ -60,6 +60,10 @@ Loss Function: DiceCELoss
 | 7                | 30%          | 6            | 71.22                  | 72.43                  |
 | 12               | 50%          | 6            | 79.39                  | 79.94                  |
 | 24               | 100%         | 6            | 82.63                  | 82.64                  |
+
+On complete execution of the jupyter notebook the below example training and validation curves are expected. The below plot is with 10% of BTCV data.
+
+![swinunetr_finetune](../../figures/swinunetr_finetune_init_3.png)
 
 ### Tutorial Usage Citation
 

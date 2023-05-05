@@ -119,19 +119,20 @@ class EnsembleTrainTask:
         inference_workflow.initialize()
 
         # update postprocessing with mean ensemble or vote ensemble
-        raw_postprocessing = inference_workflow.postprocessing.transforms
         _ensemble_transform = MeanEnsembled if ensemble == "Mean" else VoteEnsembled
         ensemble_transform = _ensemble_transform(keys=["pred"] * args.n_splits, output_key="pred")
         if ensemble == "Mean":
-            _postprocessing = Compose((ensemble_transform, *raw_postprocessing))
+            _postprocessing = Compose((ensemble_transform, inference_workflow.postprocessing))
         elif ensemble == "Vote":
-            _postprocessing = Compose((*raw_postprocessing, ensemble_transform))
+            _postprocessing = Compose((inference_workflow.postprocessing, ensemble_transform))
         else:
             raise NotImplementedError
 
+        # update the preprocessing with the instantiated one to avoid re-instantiating
         inference_workflow.preprocessing = inference_workflow.preprocessing
         inference_workflow.postprocessing = _postprocessing
         inference_workflow.dataset_data = test_datalist
+        # this application has an additional requirement for the bundle workflow to provide the property dataloader
         inference_workflow.add_property(name="dataloader", required=True, config_id="dataloader")
 
         inference_workflow.initialize()
@@ -140,7 +141,7 @@ class EnsembleTrainTask:
         networks = []
         for i in range(args.n_splits):
             _network = inference_workflow.network_def.to(device)
-            _network.load_state_dict(torch.load(self.bundle_path + f"/models/model_fold{i}.pt", map_location=device))
+            _network.load_state_dict(torch.load(self.bundle_path + f"/models/model_fold{i+1}.pt", map_location=device))
             networks.append(_network)
 
         evaluator = EnsembleEvaluator(

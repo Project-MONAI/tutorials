@@ -35,18 +35,6 @@ class Const:
     LOGGING_CONFIG = "logging.conf"
     METADATA_JSON = "metadata.json"
 
-    KEY_DEVICE = "device"
-    KEY_BUNDLE_ROOT = "bundle_root"
-    KEY_NETWORK = "network"
-    KEY_NETWORK_DEF = "network_def"
-    KEY_DATASET_DIR = "dataset_dir"
-    KEY_TRAIN_TRAINER_MAX_EPOCHS = "train#trainer#max_epochs"
-    KEY_TRAIN_DATASET_DATA = "train#dataset#data"
-    KEY_VALIDATE_DATASET_DATA = "validate#dataset#data"
-    KEY_INFERENCE_DATASET_DATA = "dataset#data"
-    KEY_MODEL_PYTORCH = "validate#handlers#-1#key_metric_filename"
-    KEY_INFERENCE_POSTPROCESSING = "postprocessing"
-
 
 class EnsembleTrainTask:
     """
@@ -130,17 +118,25 @@ class EnsembleTrainTask:
             logging_file=None,
             workflow="inference",
         )
-
         inference_workflow.initialize()
+
         # update postprocessing with mean ensemble or vote ensemble
+        raw_postprocessing = inference_workflow.postprocessing.transforms
         _ensemble_transform = MeanEnsembled if ensemble == "Mean" else VoteEnsembled
         ensemble_transform = _ensemble_transform(keys=["pred"] * args.n_splits, output_key="pred")
         if ensemble == "Mean":
-            _postprocessing = Compose([ensemble_transform, inference_workflow.postprocessing])
+            _postprocessing = Compose((ensemble_transform, *raw_postprocessing))
         elif ensemble == "Vote":
-            _postprocessing = Compose([inference_workflow.postprocessing, ensemble_transform])
+            _postprocessing = Compose((*raw_postprocessing, ensemble_transform))
         else:
             raise NotImplementedError
+
+        inference_workflow.preprocessing = inference_workflow.preprocessing
+        inference_workflow.postprocessing = _postprocessing
+        inference_workflow.dataset_data = test_datalist
+        inference_workflow.add_property(name="dataloader", required=True, config_id="dataloader")
+
+        inference_workflow.initialize()
 
         # update network weights
         networks = []
@@ -149,20 +145,13 @@ class EnsembleTrainTask:
             _network.load_state_dict(torch.load(self.bundle_path + f"/models/model_fold{i}.pt", map_location=device))
             networks.append(_network)
 
-        # temporarily
-        _dataset = Dataset(data=test_datalist, transform=inference_workflow.preprocessing)
-        _dataloader = DataLoader(dataset=_dataset, batch_size=1, shuffle=False, num_workers=4)
-        # inference_workflow.dataset_data = test_datalist
-        # inference_workflow.initialize()
-        # _dataloader = DataLoader(dataset=inference_workflow.dataset, batch_size=1, shuffle=False, num_workers=4)
-
         evaluator = EnsembleEvaluator(
             device=device,
-            val_data_loader=_dataloader,
+            val_data_loader=inference_workflow.dataloader,
             pred_keys=["pred"] * args.n_splits,
             networks=networks,
             inferer=inference_workflow.inferer,
-            postprocessing=_postprocessing,
+            postprocessing=inference_workflow.postprocessing,
         )
         evaluator.run()
         logger.info("Inference Finished....")
@@ -197,6 +186,13 @@ class EnsembleTrainTask:
             self.train_workflow.initialize()
 
             if multi_gpu:
+                train_datalist_path = os.path.join(self.bundle_path, "configs", f"train_datalist_fold{fold}.json")
+                val_datalist_path = os.path.join(self.bundle_path, "configs", f"val_datalist_fold{fold}.json")
+                with open(train_datalist_path, "w") as f:
+                    json.dump(_train_ds, f)
+                with open(val_datalist_path, "w") as f:
+                    json.dump(_val_ds, f)
+
                 config_paths = [
                     c for c in Const.MULTI_GPU_CONFIGS if os.path.exists(os.path.join(self.bundle_path, "configs", c))
                 ]
@@ -211,17 +207,31 @@ class EnsembleTrainTask:
                 env = os.environ.copy()
                 env["CUDA_VISIBLE_DEVICES"] = ",".join([str(g) for g in gpus])
                 logger.info(f"Using CUDA_VISIBLE_DEVICES: {env['CUDA_VISIBLE_DEVICES']}")
-                cmd = (
-                    f"torchrun --standalone --nnodes=1 --nproc_per_node={len(gpus)}"
-                    + f" -m monai.bundle run --meta_file {self.bundle_metadata_path}"
-                    + f" --config_file ['{self.bundle_config_path}','{multi_gpu_train_path}']"
-                    + f" --logging_file {self.bundle_logging_path}"
-                    + f" --bundle_root {self.bundle_path}"
-                    + f" --max_epochs {max_epochs}"
-                    + f" --train#dataset#data {_train_ds}"
-                    + f" --validate#dataset#data {_val_ds}"
-                    + f" --dataset_dir {dataset_dir}"
-                )
+                cmd = [
+                    "torchrun",
+                    "--standalone",
+                    "--nnodes=1",
+                    f"--nproc_per_node={len(gpus)}",
+                    "-m",
+                    "monai.bundle",
+                    "run",
+                    "--meta_file",
+                    self.bundle_metadata_path,
+                    "--config_file",
+                    f"['{self.bundle_config_path}','{multi_gpu_train_path}']",
+                    "--logging_file",
+                    self.bundle_logging_path,
+                    "--bundle_root",
+                    self.bundle_path,
+                    "--epochs",
+                    str(max_epochs),
+                    "--dataset_dir",
+                    dataset_dir,
+                    "--train#dataset#data",
+                    f"%{train_datalist_path}",
+                    "--validate#dataset#data",
+                    f"%{val_datalist_path}",
+                ]
                 self.run_command(cmd, env)
             else:
                 self.train_workflow.run()

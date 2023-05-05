@@ -1,34 +1,34 @@
 # Pre-trained SwinUNETR Backbone on ~50,000 3D Volumes
 
-This tutorial is an example of how to use the latest set of SwinUNETR pre-trained weights. The pre-training was done using multiple public datasets with over ~58,000 3D CT and MR volumes.
+This tutorial is an example of how to use the latest set of SwinUNETR pre-trained weights. The pre-training was done using multiple public datasets with over ~50,000 3D CT and MR volumes.
 
 Benchmark on BTCV with using the pre-trained weights as compared to random initialization shows promising gains in terms of accuracy/performance.
 
 ### Steps to run the tutorial
 1. Download the dataset [BTCV](https://www.synapse.org/#!Synapse:syn3193805/wiki/217789) (More detail is provided in the Data section)
 2. Download the pretrained SwinUNETR weights on the 50,000 3D volumes from the following link. More information about the dataset and training is provided below
-3. Modify the paths for pretrained_checkpoint, data_root, json_path & logdir in ssl_train.ipynb
+3. Modify the paths for pretrained_path, data_root, json_path & logdir in swinunetr_finetune.ipynb
 4. Run the 'swinunetr_finetune.ipynb'
 
 ### 1. Data
 Pre-training Dataset: Datasets from multiple sources has been used. Below is a list of all the different datasets that were utilized for training the SwinUNETR network architecture:
 
-| Dataset Name            | Source          | Body Region            |
-|-------------------------|-----------------|------------------------|
-| Aomic-1000              | Open Neuro      |                        |
-| QTIM                    | Open Neuro      |                        |
-| Brats 2021              | Brats Challenge |                        |
-| LUNA 16                 | LUNA Challenge  |                        |
-| NLST                    | TCIA            |                        |
-| Duke Breast Cancer MR   | TCIA            |                        |
-| Acrin Breast MR         | TCIA            |                        |
-| Prostate MR             | TCIA            |                        |
-| Stony Brook Chest CT    | TCIA            |                        |
-| Upenn GBM               | TCIA            |                        |
-| LIDC                    | TCIA            |                        |
-| Covid-19                | TCIA            |                        |
-| Colonography Trials     | TCIA            |                        |
-| Head and Neck Carcinoma | TCIA            |                        |
+| Dataset Name            | Source          | No. Data |
+|-------------------------|-----------------|----------|
+| Aomic-1000              | Open Neuro      | ~2700    |
+| QTIM                    | Open Neuro      | ~1350    |
+| Brats 2021              | Brats Challenge | ~5000    |
+| LUNA 16                 | LUNA Challenge  | ~900     |
+| NLST                    | TCIA            | ~33500   |
+| Duke Breast Cancer MR   | TCIA            | ~5000    |
+| Acrin Breast MR         | TCIA            | ~7000    |
+| Prostate MR             | TCIA            | ~900     |
+| Stony Brook Chest CT    | TCIA            | ~2700    |
+| Upenn GBM               | TCIA            | ~2700    |
+| LIDC                    | TCIA            | ~500     |
+| Covid-19                | TCIA            | ~700     |
+| Colonography Trials     | TCIA            | ~1600    |
+| Head and Neck Carcinoma | TCIA            | ~1300    |
 
 
 Fine-tuning Dataset: The dataset from Beyond the Cranial Vault Challenge
@@ -36,7 +36,7 @@ Fine-tuning Dataset: The dataset from Beyond the Cranial Vault Challenge
 2015 hosted at MICCAI, was used as a fully supervised fine-tuning task on the pre-trained weights. The dataset
 consists of 30 3D Volumes with annotated labels of up to 13 different organs [2]. There are 3 JSON files provided in the
 json_files directory for the dataset. They correspond to having a different number of training volumes ranging from
-6, 12 and 24. All 3 JSON files have the same validation split.
+3, 5, 7, 12 and 24. All 5 JSON files have the same validation split.
 
 ### 2. Pretrained SwinUNETR Weights
 
@@ -48,16 +48,18 @@ Training Hyper-parameters for Fine-tuning BTCV task : \
 Number of Steps: 30000 \
 Validation Frequency: 100 steps \
 Batch Size: 1 3D Volume (4 samples are drawn per 3D volume) \
-Learning Rate: 1e-4 \
+Learning Rate: 4e-4 \
 Loss Function: DiceCELoss
 
 ### 5. Results of the Fine-tuning vs Random Initialization on BTCV
 
-| Training Volumes      | Validation Volumes | Random Init Dice score | Pre-trained Dice Score | Relative Performance Improvement |
-| ----------------      | ----------------   |------------------------|------------------------| ----------------        |
-| 6      | 6 | ~                      | 71.50                  | ~ |
-| 12      | 6 | ~                      | ~                      | ~ |
-| 24      | 6 | ~                      | ~                      | ~ |
+| Training Volumes | % of Dataset | Validation Volumes | Random Init Dice score | Pre-trained Dice Score |
+|------------------|--------------|--------------|------------------------|------------------------|
+| 3                | 10%          | 6            | 58.29                  | 60.47                  |
+| 5                | 20%          | 6            | 67.46                  | 68.25                  |
+| 7                | 30%          | 6            | 71.22                  | 72.43                  |
+| 12               | 50%          | 6            | 79.39                  | 79.94                  |
+| 24               | 100%         | 6            | 82.63                  | 82.64                  |
 
 ### Tutorial Usage Citation
 

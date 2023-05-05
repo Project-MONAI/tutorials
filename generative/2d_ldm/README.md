@@ -23,7 +23,7 @@ The data can be automatically downloaded from [Medical Decathlon](http://medical
 Disclaimer: We are not the host of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the dataset! We acknowledge the National Cancer Institute and the Foundation for the National Institutes of Health, and their critical role in the creation of the free publicly available LIDC/IDRI Database used in this study.
 
 ### 2. Installation
-Please the [Installation of MONAI Generative Model](../README.md)
+Please refer to the [Installation of MONAI Generative Model](../README.md)
 
 ### 3. Run the example
 
@@ -106,11 +106,13 @@ python inference.py -c ./config/config_train_32g.json -e ./config/environment.js
 
 An example output is shown below.
 <p align="center">
-  <img src="./figs/syn_axial.png" width="30%" >
+  <img src="./figs/syn_0.png" width="23%" >
 &nbsp; &nbsp; &nbsp; &nbsp;
-  <img src="./figs/syn_sag.png" width="30%" >
+  <img src="./figs/syn_1.png" width="23%" >
 &nbsp; &nbsp; &nbsp; &nbsp;
-  <img src="./figs/syn_cor.png" width="30%" >
+  <img src="./figs/syn_2.png" width="23%" >
+&nbsp; &nbsp; &nbsp; &nbsp;
+  <img src="./figs/syn_3.png" width="23%" >
 </p>
 
 ### 4. Questions and bugs

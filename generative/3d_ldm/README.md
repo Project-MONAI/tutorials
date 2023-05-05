@@ -23,7 +23,7 @@ The data can be automatically downloaded from [Medical Decathlon](http://medical
 Disclaimer: We are not the host of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the dataset! We acknowledge the National Cancer Institute and the Foundation for the National Institutes of Health, and their critical role in the creation of the free publicly available LIDC/IDRI Database used in this study.
 
 ### 2. Installation
-Please the [Installation of MONAI Generative Model](../README.md)
+Please refer to the [Installation of MONAI Generative Model](../README.md)
 
 ### 3. Run the example
 

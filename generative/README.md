@@ -18,8 +18,8 @@ python setup.py install
 cd ..
 ```
 
-## [Brats 3D latent diffusion model](./3d_ldm)
+## [Brats 3D latent diffusion model](./3d_ldm/README.md)
 Example shows the use cases of training and validating a 3D Latent Diffusion Model on Brats 2016&2017 data.
 
-## [Brats 2D latent diffusion model](./2d_ldm)
+## [Brats 2D latent diffusion model](./2d_ldm/README.md)
 Example shows the use cases of training and validating a 2D Latent Diffusion Model on axial slices from Brats 2016&2017 data.

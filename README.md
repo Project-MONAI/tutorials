@@ -300,3 +300,10 @@ This tutorial shows how to construct a training workflow of self-supervised lear
 
 ##### [self_supervised_pretraining_based_finetuning](./self_supervised_pretraining/ssl_finetune.ipynb)
 This tutorial shows how to utilize pre-trained weights from the self-supervised learning framework where unlabeled data is utilized. This tutorial shows how to train a model of multi-class 3D segmentation using pretrained weights.
+
+#### [Generative Model](./generative)
+##### [3D latent diffusion model](./generative/3d_ldm)
+This tutorial shows the use cases of training and validating a 3D Latent Diffusion Model.
+
+##### [2D latent diffusion model](./generative/2d_ldm)
+This tutorial shows the use cases of training and validating a 2D Latent Diffusion Model.

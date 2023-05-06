@@ -92,6 +92,33 @@ Each module of **Auto3DSeg** in different steps can be individually used for dif
 - Step 4: [Hyper-parameter optimization](docs/hpo.md)
 - Step 5: [Model ensemble](docs/ensemble.md)
 
+## Performance Benchmarking
+
+The subsequent section presents the benchmarking outcomes of the Auto3DSeg algorithms concerning computational efficiency. Dataset [TotalSegmentator](https://github.com/wasserth/TotalSegmentator) has been selected for demonstration purposes, as it is among the largest publicly available 3D medical image datasets, containing over 1,000 CT images and their corresponding 104 foreground classes of segmentation annotations. This dataset features a substantial variations in field-of-view and organ/bone shapes.
+
+To ensure equitable comparisons, we adhere to the original methodology employed in TotalSegmentator, dividing the 104 foreground classes into five segments and utilizing one segment, comprised of [17 foreground classes](https://github.com/wasserth/TotalSegmentator/blob/bc9092164e6025a185473026613f38a4177e7a09/totalsegmentator/map_to_binary.py#L398-L417), for model training. We have provided numerical results for **each fold** in a 5-fold cross-validation of three algorithms (DiNTS, 3D SegResNet, SwinUNETR). It is important to note that, for this particular dataset, 2D SegResNet is not employed in the model training process due to the data spacing distribution and the internal algorithm selection logic we utilize. The GPU utilization and memory usage are assessed utilizing the widely recognized [DCGM](https://developer.nvidia.com/dcgm) library.
+
+<div align="center">
+
+|    Algorithm   |    GPU    | GPU Numbers | Model Training Time (Hours) | GPU Utilization Rate |
+|:--------------:|:---------:|:-----------:|:---------------------------:|:--------------------:|
+|      DiNTS     | 80GB A100 |      1      |             19.0            |          92%         |
+|      DiNTS     | 80GB A100 |      8      |             2.5             |          92%         |
+|      DiNTS     | 80GB A100 |      16     |             1.5             |          89%         |
+|      DiNTS     | 80GB A100 |      32     |             0.9             |          84%         |
+| SegResNet (3D) | 80GB A100 |      1      |             13.8            |          92%         |
+| SegResNet (3D) | 80GB A100 |      8      |             2.8             |          91%         |
+| SegResNet (3D) | 80GB A100 |      16     |             1.5             |          89%         |
+| SegResNet (3D) | 80GB A100 |      32     |             0.8             |          88%         |
+|    SwinUNETR   | 80GB A100 |      1      |             15.6            |          95%         |
+|    SwinUNETR   | 80GB A100 |      8      |             2.2             |          94%         |
+|    SwinUNETR   | 80GB A100 |      16     |             1.0             |          93%         |
+|    SwinUNETR   | 80GB A100 |      32     |             0.6             |          91%         |
+
+</div>
+
+The table illustrates that when GPU number exceeds or is equal to 8, multi-node training is executed with 8 GPUs allocated per node. As demonstrated by the results, employing a larger number of GPUs significantly diminishes the model training duration. However, there is a minor decrease in GPU utilization rate, which can be attributed to the increased communication costs associated with a greater number of GPUs.
+
 ## GPU utilization optimization
 
 Given the variety of GPU devices users have, we provide an automated way to optimize the GPU utilization (e.g., memory usage) of algorithms in Auto3DSeg.

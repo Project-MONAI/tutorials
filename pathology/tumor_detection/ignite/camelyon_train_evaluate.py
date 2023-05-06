@@ -269,7 +269,7 @@ def main():
     parser.add_argument("--no-novograd", action="store_false", dest="novograd", help="deactivate novograd optimizer")
     parser.add_argument("--pretrain", action="store_true", dest="pretrain", help="activate Imagenet weights")
 
-    parser.add_argument("--cpu", type=int, default=1, dest="num_workers", help="number of workers")
+    parser.add_argument("--cpu", type=int, default=2, dest="num_workers", help="number of workers")
     parser.add_argument("--gpu", type=str, default="0", dest="gpu", help="which gpu to use")
 
     args = parser.parse_args()

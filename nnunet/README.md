@@ -81,6 +81,26 @@ Once the minimum input information is provided, the user can use the following c
 python -m monai.apps.nnunet nnUNetV2Runner run --input_config='./input.yaml'
 ```
 
+For experiment and debugging purposes, users may want to set the number of epochs of training in the nnU-Net pipeline.
+Our integration offers an optional argument `trainer_class_name` to specify the number of epochs as below:
+
+```bash
+python -m monai.apps.nnunet nnUNetV2Runner run --input_config='./input.yaml' --trainer_class_name nnUNetTrainer_1epoch
+```
+
+The supported `trainer_class_name` are:
+- nnUNetTrainer (default)
+- nnUNetTrainer_1epoch
+- nnUNetTrainer_5epoch
+- nnUNetTrainer_10epoch
+- nnUNetTrainer_20epoch
+- nnUNetTrainer_50epoch
+- nnUNetTrainer_100epoch
+- nnUNetTrainer_250epoch
+- nnUNetTrainer_2000epoch
+- nnUNetTrainer_4000epoch
+- nnUNetTrainer_8000epoch
+
 ### Run nnU-Net modules using ```nnUNetV2Runner```
 
 ```nnUNetV2Runner``` offers the one-stop API to execute the pipeline, as well as the APIs to access the underlying components of nnU-Net V2. Below is the command for different components.
@@ -103,16 +123,14 @@ python -m monai.apps.nnunet nnUNetV2Runner train_single_model --input_config "./
     --config "3d_fullres" \
     --fold 0
 
-## [component] multi-gpu training for all 20 models
-export CUDA_VISIBLE_DEVICES=0,1 # optional
-python -m monai.apps.nnunet nnUNetV2Runner train --input_config "./input.yaml" --num_gpus 2
+## [component] multi-gpu training for all 20 models with GPU 0 and 1
+python -m monai.apps.nnunet nnUNetV2Runner train --input_config "./input.yaml" --device_ids 0,1
 
 ## [component] multi-gpu training for a single model
-export CUDA_VISIBLE_DEVICES=0,1 # optional
 python -m monai.apps.nnunet nnUNetV2Runner train_single_model --input_config "./input.yaml" \
     --config "3d_fullres" \
     --fold 0 \
-    --num_gpus 2
+    --gpu_id 0,1
 
 ## [component] find best configuration
 python -m monai.apps.nnunet nnUNetV2Runner find_best_configuration --input_config "./input.yaml"

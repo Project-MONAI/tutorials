@@ -39,7 +39,7 @@ Learning Rate: 1
 Optimizer: Adam
 Loss: DiceCELoss
 
-### 4. Results & Discussion 
+### 4. Results & Discussion
 
 ![al_liver](../../figures/al_liver_tumor.png)
 

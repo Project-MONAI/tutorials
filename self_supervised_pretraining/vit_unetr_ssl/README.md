@@ -73,7 +73,7 @@ volume. Two augmented views of the same 3D patch are generated for the contrasti
 the two augmented views closer to each other if the views are generated from the same patch, if not then it tries to
 maximize the disagreement. The CL offers this functionality on a mini-batch.
 
-![SSL_overview](../figures/SSL_Overview_Figure.png)
+![SSL_overview](../../figures/SSL_Overview_Figure.png)
 
 The augmentations mutate the 3D patch in various ways, the primary task of the network is to reconstruct
 the original image. The different augmentations used are classical techniques such as in-painting [1], out-painting [1]
@@ -85,7 +85,7 @@ by the reconstruction loss as a dynamic weight itself.
 The below example image depicts the usage of the augmentation pipeline where two augmented views are drawn of the same
 3D patch:
 
-![SSL_augs](../figures/SSL_Different_Augviews.png)
+![SSL_augs](../../figures/SSL_Different_Augviews.png)
 
 Multiple axial slices of a 96x96x96 patch are shown before the augmentation (Ref Original Patch in the above figure).
 Augmented Views 1 & 2 are different augmentations generated via the transforms on the same cubic patch. The objective
@@ -114,7 +114,7 @@ Loss Function: L1
 Contrastive Loss Temperature: 0.005
 
 Training Hyper-parameters for Fine-tuning BTCV task (All settings have been kept consistent with prior
-[UNETR 3D Segmentation tutorial](../3d_segmentation/unetr_btcv_segmentation_3d.ipynb): \
+[UNETR 3D Segmentation tutorial](../../3d_segmentation/unetr_btcv_segmentation_3d.ipynb): \
 Number of Steps: 30000 \
 Validation Frequency: 100 steps \
 Batch Size: 1 3D Volume (4 samples are drawn per 3D volume) \
@@ -123,7 +123,7 @@ Loss Function: DiceCELoss
 
 ### 4. Training & Validation Curves for pre-training SSL
 
-![image](../figures/ssl_pretrain_losses.png)
+![image](../../figures/ssl_pretrain_losses.png)
 
 L1 error reported for training and validation when performing the SSL training. Please note the contrastive loss is not
 L1.

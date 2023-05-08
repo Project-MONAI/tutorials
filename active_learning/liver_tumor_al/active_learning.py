@@ -9,7 +9,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Import Statements
 import argparse
 import copy
 import logging
@@ -169,7 +168,7 @@ def main():
     network.to(device)
 
     dice_loss_function = DiceCELoss(to_onehot_y=True, softmax=True)
-    optimizer = torch.optim.Adam(network.parameters(), 1e-4)
+    optimizer = torch.optim.Adam(network.parameters(), args.lr)
 
     dice_metric = DiceMetric(include_background=False, reduction="mean")
 
@@ -609,8 +608,6 @@ def main():
         # Update New Json path
         new_json_path = new_json_file_path
         print('Active Iteration {} Completed'.format(active_iter))
-
-    return None
 
 if __name__=="__main__":
     main()

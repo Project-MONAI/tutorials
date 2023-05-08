@@ -1,6 +1,6 @@
 # Active Learning Simulation Tutorial For Liver & Tumor Segmentation
 
-Active learning (AL) is a machine learning framework that can serve as a data selection engine given an unlabeled pool of data. Active learning provides uncertainty estimation capabilities for trained deep learning models. In brief the models are able to assess about which predictions they are under or over confident. Based on the confidence the most relevant data for annotation can be selected. Thereafter annotation the labeled data is added to training pool of data for the model.
+Active learning (AL) is a machine learning framework that can serve as a data selection engine given an unlabeled pool of data. Active learning provides uncertainty estimation capabilities for trained deep learning models. In brief the models are able to assess which predictions they are under or over confident. Based on the confidence the most relevant data for annotation can be selected. Thereafter annotation of the labeled data is added to the training pool of data for the model.
 
 This tutorial provides a toy example of active learning for liver and tumor segmentation from 3D CT volumes. Exploratory notebooks on how to visualize uncertainty/confidence of model as provided as well.
 
@@ -12,11 +12,11 @@ This tutorial provides a toy example of active learning for liver and tumor segm
 
 3.) For executing the active learning acquisition functions of random, variance and the full dataset baseline, execute the ./runner.sh after defining the required paths. DATA_ROOT, JSON_PATH and LOG_DIR need to be defined.
 
-4.) Once all scripts finish running, to analyze results, launch the jupyter notebook results_uncertainty.ipynb. The second part particularly will visualize the below shown plot in the results. The first part of the notebook is an exploration of uncertainty spatial maps.
+4.) Once all scripts finish running, to analyze results, launch the jupyter notebook [results_uncertainty_analysis.ipynb](results_uncertainty_analysis.ipynb). The second part particularly will visualize the below shown plot in the results. The first part of the notebook is an exploration of uncertainty spatial maps.
 
 ### 1. Data
 
-[MSD Liver & Tumor dataset](http://medicaldecathlon.com/#tasks) [Antonelli et. al 2022] has been used for the purpose of this tutorial. The dataset consists of 131 labeled 3D CT volumes where the liver and tumor have been annotated as separate classes and the remainder of the image is treated as the background.
+[MSD Liver & Tumor dataset](http://medicaldecathlon.com/#tasks) [1] has been used for the purpose of this tutorial. The dataset consists of 131 labeled 3D CT volumes where the liver and tumor have been annotated as separate classes and the remainder of the image is treated as the background.
 
 For purpose of experimentation the data was split into 93 volumes for unlabeled/training, 26 volumes for validation and 12 for testing. Please note the validation and testing sets were kept consistent for all active iterations.
 
@@ -44,7 +44,6 @@ Loss: DiceCELoss
 ![al_liver](../../figures/al_liver_tumor.png)
 
 It can be observed that active learning strategy can lead to higher performance with lesser usage of annotated data
-References:
 
 If you find the tutorial helpful in your work, please support us by citing the following works:
 

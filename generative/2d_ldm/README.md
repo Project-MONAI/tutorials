@@ -1,5 +1,5 @@
-# 3D Latent Diffusion Example
-This folder contains an example for training and validating a 3D Latent Diffusion Model on Brats data. The example includes support for multi-GPU training with distributed data parallelism based on a [tutorial designed for using single GPU](https://github.com/Project-MONAI/GenerativeModels/blob/main/tutorials/generative/3d_ldm/3d_ldm_tutorial.ipynb).
+# 2D Latent Diffusion Example
+This folder contains an example for training and validating a 2D Latent Diffusion Model on Brats axial slices. The example includes support for multi-GPU training with distributed data parallelism.
 
 The workflow of the Latent Diffusion Model is depicted in the figure below. It begins by training an autoencoder in pixel space to encode images into latent features. Following that, it trains a diffusion model in the latent space to denoise the noisy latent features. During inference, it first generates latent features from random noise by applying multiple denoising steps using the trained diffusion model. Finally, it decodes the denoised latent features into images using the trained autoencoder.
 <p align="center">
@@ -27,13 +27,9 @@ Please refer to the [Installation of MONAI Generative Model](../README.md)
 
 ### 3. Run the example
 
-#### [3.1 3D Autoencoder Training](./train_autoencoder.py)
+#### [3.1 2D Autoencoder Training](./train_autoencoder.py)
 
-The network configuration files are located in [./config/config_train_32g.json](./config/config_train_32g.json) for 32G GPU
-and [./config/config_train_16g.json](./config/config_train_16g.json) for 16G GPU.
-You can modify the hyperparameters in these files to suit your requirements.
-
-The training script resamples the brain images based on the voxel spacing specified in the `"spacing"` field of the configuration files. For instance, `"spacing": [1.1, 1.1, 1.1]` resamples the images to a resolution of 1.1x1.1x1.1 mm. If you have a GPU with larger memory, you may consider changing the `"spacing"` field to `"spacing": [1.0, 1.0, 1.0]`.
+The network configuration files are located in [./config/config_train_32g.json](./config/config_train_32g.json) for 32G GPU and [./config/config_train_16g.json](./config/config_train_16g.json) for 16G GPU. You can modify the hyperparameters in these files to suit your requirements.
 
 The training script uses the batch size and patch size defined in the configuration files. If you have a different GPU memory size, you should adjust the `"batch_size"` and `"patch_size"` parameters in the `"autoencoder_train"` to match your GPU. Note that the `"patch_size"` needs to be divisible by 4.
 
@@ -71,10 +67,15 @@ torchrun \
   <img src="./figs/val_recon.png" alt="autoencoder validation curve" width="45%" >
 </p>
 
-With eight DGX1V 32G GPUs, it took around 55 hours to train 1000 epochs.
+With eight DGX1V 32G GPUs, it took around 34 hours to train 1000 epochs.
 
-#### [3.2 3D Latent Diffusion Training](./train_diffusion.py)
-The training script uses the batch size and patch size defined in the configuration files. If you have a different GPU memory size, you should adjust the `"batch_size"` and `"patch_size"` parameters in the `"diffusion_train"` to match your GPU. Note that the `"patch_size"` needs to be divisible by 16.
+An example reconstruction result is shown below:
+<p align="center">
+  <img src="./figs/recon.png" alt="Autoencoder reconstruction result")
+</p>
+
+#### [3.2 2D Latent Diffusion Training](./train_diffusion.py)
+The training script uses the batch size and patch size defined in the configuration files. If you have a different GPU memory size, you should adjust the `"batch_size"` and `"patch_size"` parameters in the `"diffusion_train"` to match your GPU. Note that the `"patch_size"` needs to be divisible by 16 and no larger than 256.
 
 To train with single 32G GPU, please run:
 ```bash
@@ -105,11 +106,13 @@ python inference.py -c ./config/config_train_32g.json -e ./config/environment.js
 
 An example output is shown below.
 <p align="center">
-  <img src="./figs/syn_axial.png" width="30%" >
+  <img src="./figs/syn_0.jpeg" width="20%" >
 &nbsp; &nbsp; &nbsp; &nbsp;
-  <img src="./figs/syn_sag.png" width="30%" >
+  <img src="./figs/syn_1.jpeg" width="20%" >
 &nbsp; &nbsp; &nbsp; &nbsp;
-  <img src="./figs/syn_cor.png" width="30%" >
+  <img src="./figs/syn_2.jpeg" width="20%" >
+&nbsp; &nbsp; &nbsp; &nbsp;
+  <img src="./figs/syn_3.jpeg" width="20%" >
 </p>
 
 ### 4. Questions and bugs

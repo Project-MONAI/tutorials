@@ -124,7 +124,7 @@ python -m monai.apps.nnunet nnUNetV2Runner train_single_model --input_config "./
     --fold 0
 
 ## [component] multi-gpu training for all 20 models with GPU 0 and 1
-python -m monai.apps.nnunet nnUNetV2Runner train --input_config "./input.yaml" --device_ids 0,1
+python -m monai.apps.nnunet nnUNetV2Runner train --input_config "./input.yaml" --gpu_id_for_all 0,1
 
 ## [component] multi-gpu training for a single model
 python -m monai.apps.nnunet nnUNetV2Runner train_single_model --input_config "./input.yaml" \

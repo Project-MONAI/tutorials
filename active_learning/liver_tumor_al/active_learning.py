@@ -392,8 +392,6 @@ def main():
 
         # Model training ends for a single active iteration
 
-        # Beginning Acquisition Strategy function
-        print('Prepping to run inference on unlabeled pool of data')
         print('Loading the final set of trained weights for running inference')
         prev_best_ckpt = os.path.join(active_model_dir, 'model.pt')
 
@@ -438,6 +436,9 @@ def main():
         with open(pickle_f_path, 'wb') as handle:
             pickle.dump(all_metric_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
         handle.close()
+
+        # Beginning Acquisition Strategy function
+        print('Prepping to run inference on unlabeled pool of data')
 
         # Please note that the model is being put to 'train' mode explicitly for Monte-Carlo simulations
         network.train()

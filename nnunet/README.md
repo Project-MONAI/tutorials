@@ -50,7 +50,7 @@ The installation instruction is described [here](docs/install.md).
 
 ### Dataset and Datalist Preparation
 
-The user needs to provide a data list (".json" file) for the new task and data root. In general, a valid data list needs to follow the format of the ones in [Medical Segmentation Decathlon](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2).
+The user needs to provide a data list (".json" file) for the new task and data root. In general, a valid data list needs to follow the format of the ones in [Medical Segmentation Decathlon (MSD)](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2).
 
 In [this tutorial](../auto3dseg/notebooks/msd_datalist_generator.ipynb), we provided example steps to download the [MSD Spleen dataset](http://medicaldecathlon.com) and prepare a datalist.
 Below we assume the dataset is downloaded to `/workspace/data/Task09_Spleen` and the datalist is in the current directory.
@@ -153,7 +153,7 @@ python -m monai.apps.nnunet nnUNetV2Runner train_single_model --input_config "./
     --gpu_id 0,1
 ```
 
-We offer an alternative API for constructing datasets from [MSD challenges](http://medicaldecathlon.com/) to meet requirements of nnU-Net, as reference in the provided [link](https://github.com/MIC-DKFZ/nnUNet/blob/master/documentation/dataset_format.md#how-to-use-decathlon-datasets).
+We offer an alternative API for constructing datasets from [MSD challenge](http://medicaldecathlon.com/) to meet requirements of nnU-Net, as reference in the provided [link](https://github.com/MIC-DKFZ/nnUNet/blob/master/documentation/dataset_format.md#how-to-use-decathlon-datasets).
 
 ```bash
 ## [component] converting msd datasets

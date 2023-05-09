@@ -70,9 +70,10 @@ Note: For multi-modal inputs, please check the [Frequently Asked Questions secti
 Users can also set values of directory variables as options in "input.yaml" if any directory needs to be specified.
 
 ```
-nnunet_preprocessed: "./work_dir/nnUNet_preprocessed" # optional
-nnunet_raw: "./work_dir/nnUNet_raw_data_base" # optional
-nnunet_results: "./work_dir/nnUNet_trained_models" # optional
+dataset_name_or_id: 1 # task-specific integer index (optional)
+nnunet_preprocessed: "./work_dir/nnUNet_preprocessed" # directory for storing pre-processed data (optional)
+nnunet_raw: "./work_dir/nnUNet_raw_data_base" # directory for storing formated raw data (optional)
+nnunet_results: "./work_dir/nnUNet_trained_models" # diretory for storing trained model checkpoints (optional)
 ```
 
 Once the minimum input information is provided, the user can use the following commands to start the process of the entire nnU-Net pipeline automatically (from model training to model ensemble).

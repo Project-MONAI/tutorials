@@ -110,9 +110,6 @@ The supported `trainer_class_name` are:
 ## [component] convert dataset
 python -m monai.apps.nnunet nnUNetV2Runner convert_dataset --input_config "./input.yaml"
 
-## [component] converting msd datasets
-python -m monai.apps.nnunet nnUNetV2Runner convert_msd_dataset --input_config "./input.yaml" --data_dir "/workspace/data/Task09_Spleen"
-
 ## [component] experiment planning and data pre-processing
 python -m monai.apps.nnunet nnUNetV2Runner plan_and_process --input_config "./input.yaml"
 
@@ -124,14 +121,8 @@ python -m monai.apps.nnunet nnUNetV2Runner train_single_model --input_config "./
     --config "3d_fullres" \
     --fold 0
 
-## [component] multi-gpu training for all 20 models with GPU 0 and 1
+## [component] distributed training of 20 models utilizing specified GPU devices 0 and 1
 python -m monai.apps.nnunet nnUNetV2Runner train --input_config "./input.yaml" --gpu_id_for_all 0,1
-
-## [component] multi-gpu training for a single model
-python -m monai.apps.nnunet nnUNetV2Runner train_single_model --input_config "./input.yaml" \
-    --config "3d_fullres" \
-    --fold 0 \
-    --gpu_id 0,1
 
 ## [component] find best configuration
 python -m monai.apps.nnunet nnUNetV2Runner find_best_configuration --input_config "./input.yaml"
@@ -150,7 +141,23 @@ python -m monai.apps.nnunet nnUNetV2Runner predict_ensemble_postprocessing --inp
 ## [component] post-processing only
 python -m monai.apps.nnunet nnUNetV2Runner predict_ensemble_postprocessing --input_config "./input.yaml" \
 	--run_predict false --run_ensemble false
+```
 
+For utilizing PyTorch DDP in multi-GPU training, the subsequent command is offered to facilitate the training of a singlular model on a specific fold:
+
+```bash
+## [component] multi-gpu training for a single model
+python -m monai.apps.nnunet nnUNetV2Runner train_single_model --input_config "./input.yaml" \
+    --config "3d_fullres" \
+    --fold 0 \
+    --gpu_id 0,1
+```
+
+We offer an alternative API for constructing datasets from [MSD challenges](http://medicaldecathlon.com/) to meet requirements of nnU-Net, as reference in the provided link.
+
+```bash
+## [component] converting msd datasets
+python -m monai.apps.nnunet nnUNetV2Runner convert_msd_dataset --input_config "./input.yaml" --data_dir "/workspace/data/Task09_Spleen"
 ```
 
 ## FAQ

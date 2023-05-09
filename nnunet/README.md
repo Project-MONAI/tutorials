@@ -153,7 +153,7 @@ python -m monai.apps.nnunet nnUNetV2Runner train_single_model --input_config "./
     --gpu_id 0,1
 ```
 
-We offer an alternative API for constructing datasets from [MSD challenges](http://medicaldecathlon.com/) to meet requirements of nnU-Net, as reference in the provided link.
+We offer an alternative API for constructing datasets from [MSD challenges](http://medicaldecathlon.com/) to meet requirements of nnU-Net, as reference in the provided [link](https://github.com/MIC-DKFZ/nnUNet/blob/master/documentation/dataset_format.md#how-to-use-decathlon-datasets).
 
 ```bash
 ## [component] converting msd datasets

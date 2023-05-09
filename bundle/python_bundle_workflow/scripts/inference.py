@@ -98,7 +98,10 @@ class InferenceWorkflow(BundleWorkflow):
                 value = getattr(self, f"get_{name}")()
             except AttributeError:
                 if property[BundleProperty.REQUIRED]:
-                    raise ValueError(f"unsupported property '{name}' is required in the bundle properties.")
+                    raise ValueError(
+                        f"unsupported property '{name}' is required in the bundle properties,"
+                        f"need to implement a method 'get_{name}' to provide the property."
+                    )
             self._props[name] = value
         return value
 

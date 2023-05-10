@@ -12,7 +12,6 @@
 import logging
 import os
 import sys
-import tempfile
 from glob import glob
 
 import nibabel as nib
@@ -96,27 +95,26 @@ class InferenceWorkflow(BundleWorkflow):
             self._props[name] = value
         else:
             try:
-                value = self.__getattribute__(f"_{name}")
+                value = getattr(self, f"get_{name}")()
             except AttributeError:
                 if property[BundleProperty.REQUIRED]:
-                    raise ValueError(f"unsupported property '{name}' is required in the bundle properties.")
+                    raise ValueError(
+                        f"unsupported property '{name}' is required in the bundle properties,"
+                        f"need to implement a method 'get_{name}' to provide the property."
+                    )
             self._props[name] = value
         return value
 
-    @property
-    def _bundle_root(self):
+    def get_bundle_root(self):
         return "."
 
-    @property
-    def _device(self):
+    def get_device(self):
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    @property
-    def _dataset_dir(self):
+    def get_dataset_dir(self):
         return "."
 
-    @property
-    def _network_def(self):
+    def get_network_def(self):
         return UNet(
             spatial_dims=3,
             in_channels=1,
@@ -126,8 +124,7 @@ class InferenceWorkflow(BundleWorkflow):
             num_res_units=2,
         )
 
-    @property
-    def _evaluator(self):
+    def get_evaluator(self):
         return SupervisedEvaluator(
             device=self.device,
             val_data_loader=DataLoader(self.dataset, batch_size=1, num_workers=4),
@@ -140,33 +137,28 @@ class InferenceWorkflow(BundleWorkflow):
             amp=True,
         )
 
-    @property
-    def _handlers(self):
+    def get_handlers(self):
         return [
             # use the logger "eval_log" defined at the beginning of this program
             StatsHandler(name="eval_log", output_transform=lambda x: None),
-            CheckpointLoader(load_path=self.bundle_root + "/models/model.pt", load_dict={"net": self._network_def}),
+            CheckpointLoader(load_path=self.bundle_root + "/models/model.pt", load_dict={"net": self.network_def}),
         ]
 
-    @property
-    def _dataset(self):
+    def get_dataset(self):
         return Dataset(
-            data=self._dataset_data,
+            data=self.dataset_data,
             transform=self.preprocessing,
         )
 
-    @property
-    def _dataset_data(self):
+    def get_dataset_data(self):
         images = sorted(glob(os.path.join(self.dataset_dir, "img*.nii.gz")))
         segs = sorted(glob(os.path.join(self.dataset_dir, "seg*.nii.gz")))
         return [{"image": img, "label": seg} for img, seg in zip(images, segs)]
 
-    @property
-    def _inferer(self):
+    def get_inferer(self):
         return SlidingWindowInferer(roi_size=(96, 96, 96), sw_batch_size=4, overlap=0.5)
 
-    @property
-    def _preprocessing(self):
+    def get_preprocessing(self):
         return Compose(
             [
                 LoadImaged(keys=["image", "label"]),
@@ -175,8 +167,7 @@ class InferenceWorkflow(BundleWorkflow):
             ]
         )
 
-    @property
-    def _postprocessing(self):
+    def get_postprocessing(self):
         return Compose(
             [
                 Activationsd(keys="pred", sigmoid=True),
@@ -186,6 +177,5 @@ class InferenceWorkflow(BundleWorkflow):
             ]
         )
 
-    @property
-    def _key_metric(self):
+    def get_key_metric(self):
         return {"val_mean_dice": MeanDice(include_background=True, output_transform=from_engine(["pred", "label"]))}

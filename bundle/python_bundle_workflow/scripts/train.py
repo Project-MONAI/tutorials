@@ -110,27 +110,26 @@ class TrainWorkflow(BundleWorkflow):
             self._props[name] = value
         else:
             try:
-                value = self.__getattribute__(f"_{name}")
+                value = getattr(self, f"get_{name}")()
             except AttributeError:
                 if property[BundleProperty.REQUIRED]:
-                    raise ValueError(f"unsupported property '{name}' is required in the bundle properties.")
+                    raise ValueError(
+                        f"unsupported property '{name}' is required in the bundle properties,"
+                        f"need to implement a method 'get_{name}' to provide the property."
+                    )
             self._props[name] = value
         return value
 
-    @property
-    def _bundle_root(self):
+    def get_bundle_root(self):
         return "."
 
-    @property
-    def _device(self):
+    def get_device(self):
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    @property
-    def _dataset_dir(self):
+    def get_dataset_dir(self):
         return "."
 
-    @property
-    def _network(self):
+    def get_network(self):
         return UNet(
             spatial_dims=3,
             in_channels=1,
@@ -140,16 +139,13 @@ class TrainWorkflow(BundleWorkflow):
             num_res_units=2,
         ).to(self.device)
 
-    @property
-    def _loss(self):
+    def get_loss(self):
         return DiceLoss(sigmoid=True)
 
-    @property
-    def _optimizer(self):
+    def get_optimizer(self):
         return torch.optim.Adam(self.network.parameters(), 1e-3)
 
-    @property
-    def _trainer(self):
+    def get_trainer(self):
         return SupervisedTrainer(
             device=self.device,
             max_epochs=self.max_epochs,
@@ -164,26 +160,21 @@ class TrainWorkflow(BundleWorkflow):
             amp=True,
         )
 
-    @property
-    def _max_epochs(self):
+    def get_max_epochs(self):
         return 5
 
-    @property
-    def _train_dataset(self):
+    def get_train_dataset(self):
         return CacheDataset(data=self.train_dataset_data, transform=self.train_preprocessing, cache_rate=0.5)
 
-    @property
-    def _train_dataset_data(self):
+    def get_train_dataset_data(self):
         images = sorted(glob(os.path.join(self.dataset_dir, "img*.nii.gz")))
         segs = sorted(glob(os.path.join(self.dataset_dir, "seg*.nii.gz")))
         return [{"image": img, "label": seg} for img, seg in zip(images[:20], segs[:20])]
 
-    @property
-    def _train_inferer(self):
+    def get_train_inferer(self):
         return SimpleInferer()
 
-    @property
-    def _train_handlers(self):
+    def get_train_handlers(self):
         return [
             ValidationHandler(validator=self.evaluator, interval=self.val_interval, epoch_level=True),
             # use the logger "train_log" defined at the beginning of this program
@@ -194,8 +185,7 @@ class TrainWorkflow(BundleWorkflow):
             ),
         ]
 
-    @property
-    def _train_preprocessing(self):
+    def get_train_preprocessing(self):
         return Compose(
             [
                 LoadImaged(keys=["image", "label"]),
@@ -213,8 +203,7 @@ class TrainWorkflow(BundleWorkflow):
             ]
         )
 
-    @property
-    def _train_postprocessing(self):
+    def get_train_postprocessing(self):
         return Compose(
             [
                 Activationsd(keys="pred", sigmoid=True),
@@ -223,12 +212,10 @@ class TrainWorkflow(BundleWorkflow):
             ]
         )
 
-    @property
-    def _train_key_metric(self):
+    def get_train_key_metric(self):
         return ({"train_acc": Accuracy(output_transform=from_engine(["pred", "label"]))},)
 
-    @property
-    def _evaluator(self):
+    def get_evaluator(self):
         return SupervisedEvaluator(
             device=self.device,
             val_data_loader=DataLoader(self.val_dataset, batch_size=1, num_workers=4),
@@ -241,12 +228,10 @@ class TrainWorkflow(BundleWorkflow):
             amp=True,
         )
 
-    @property
-    def _val_interval(self):
+    def get_val_interval(self):
         return 2
 
-    @property
-    def _val_handlers(self):
+    def get_val_handlers(self):
         return [
             # use the logger "train_log" defined at the beginning of this program
             StatsHandler(name="train_log", output_transform=lambda x: None),
@@ -258,22 +243,18 @@ class TrainWorkflow(BundleWorkflow):
             ),
         ]
 
-    @property
-    def _val_dataset(self):
+    def get_val_dataset(self):
         return CacheDataset(data=self.val_dataset_data, transform=self.val_preprocessing, cache_rate=1.0)
 
-    @property
-    def _val_dataset_data(self):
+    def get_val_dataset_data(self):
         images = sorted(glob(os.path.join(self.dataset_dir, "img*.nii.gz")))
         segs = sorted(glob(os.path.join(self.dataset_dir, "seg*.nii.gz")))
         return [{"image": img, "label": seg} for img, seg in zip(images[-20:], segs[-20:])]
 
-    @property
-    def _val_inferer(self):
+    def get_val_inferer(self):
         return SlidingWindowInferer(roi_size=(96, 96, 96), sw_batch_size=4, overlap=0.5)
 
-    @property
-    def _val_preprocessing(self):
+    def get_val_preprocessing(self):
         return Compose(
             [
                 LoadImaged(keys=["image", "label"]),
@@ -282,8 +263,7 @@ class TrainWorkflow(BundleWorkflow):
             ]
         )
 
-    @property
-    def _val_postprocessing(self):
+    def get_val_postprocessing(self):
         return Compose(
             [
                 Activationsd(keys="pred", sigmoid=True),
@@ -292,6 +272,5 @@ class TrainWorkflow(BundleWorkflow):
             ]
         )
 
-    @property
-    def _val_key_metric(self):
+    def get_val_key_metric(self):
         return {"val_mean_dice": MeanDice(include_background=True, output_transform=from_engine(["pred", "label"]))}

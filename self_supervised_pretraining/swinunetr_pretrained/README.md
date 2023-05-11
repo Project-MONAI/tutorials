@@ -6,9 +6,8 @@ Benchmark on BTCV with using the pre-trained weights as compared to random initi
 
 ### Steps to run the tutorial
 1. Download the dataset [BTCV](https://www.synapse.org/#!Synapse:syn3193805/wiki/217789) (More detail is provided in the Data section)
-2. Download the pretrained SwinUNETR weights on the 50,000 3D volumes from the following [link](https://github.com/Project-MONAI/MONAI-extra-test-data/releases/download/0.8.1/ssl_pretrained_weights.pth). More information about the dataset and training is provided below
-3. Modify the paths for pretrained_path, data_root, json_path & logdir in swinunetr_finetune.ipynb
-4. Run the 'swinunetr_finetune.ipynb'
+1. Modify the paths for pretrained_path, data_root, json_path & logdir in [swinunetr_finetune.ipynb](swinunetr_finetune.ipynb)
+1. Run the [swinunetr_finetune.ipynb](swinunetr_finetune.ipynb)
 
 ### 1. Data
 Pre-training Dataset: Datasets from multiple sources has been used. Below is a list of all the different datasets that were utilized for training the SwinUNETR network architecture:

@@ -18,7 +18,7 @@ The dataset we are experimenting with in this example is BraTS 2016 and 2017 dat
 
 BraTS is a public dataset of brain MR images. Using these images, the goal is to generate images that look similar to the images in BraTS 2016 and 2017 dataset.
 
-The data can be automatically downloaded from [Medical Decathlon](http://medicaldecathlon.com/). The Brats data will be downloaded from [Medical Decathlon](http://medicaldecathlon.com/) and extracted to `$data_base_dir`. You will see a subfolder `Task01_BrainTumour` under `$data_base_dir`. By default, you will see `./Task01_BrainTumour`.
+The data can be automatically downloaded from [Medical Decathlon](http://medicaldecathlon.com/). The Brats data will be downloaded from [Medical Decathlon](http://medicaldecathlon.com/) and extracted to `$data_base_dir` in [./config/environment.json](./config/environment.json). You will see a subfolder `Task01_BrainTumour` under `$data_base_dir`. By default, you will see `./Task01_BrainTumour`.
 
 ```bash
 python download_data.py -e ./config/environment.json

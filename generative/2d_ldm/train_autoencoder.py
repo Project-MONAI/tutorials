@@ -42,12 +42,6 @@ def main():
         default="./config/config_train_32g.json",
         help="config json file that stores hyper-parameters",
     )
-    parser.add_argument(
-        "--download_data",
-        default=False,
-        action="store_true",
-        help="whether to download Brats data before training",
-    )
     parser.add_argument("-g", "--gpus", default=1, type=int, help="number of gpus per node")
     args = parser.parse_args()
 
@@ -91,7 +85,7 @@ def main():
         rank=rank,
         world_size=world_size,
         cache=1.0,
-        download=args.download_data,
+        download=False,
         size_divisible=size_divisible,
     )
 

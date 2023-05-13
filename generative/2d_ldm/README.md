@@ -21,7 +21,7 @@ BraTS is a public dataset of brain MR images. Using these images, the goal is to
 The data can be automatically downloaded from [Medical Decathlon](http://medicaldecathlon.com/). The Brats data will be downloaded from [Medical Decathlon](http://medicaldecathlon.com/) and extracted to `$data_base_dir` in [./config/environment.json](./config/environment.json). You will see a subfolder `Task01_BrainTumour` under `$data_base_dir`. By default, you will see `./Task01_BrainTumour`.
 
 ```bash
-python download_data.py -e ./config/environment.json
+python download_brats_data.py -e ./config/environment.json
 ```
 
 Disclaimer: We are not the host of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the dataset!

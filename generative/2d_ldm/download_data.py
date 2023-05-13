@@ -14,10 +14,9 @@ import json
 import logging
 import sys
 
-import torch
 from monai.config import print_config
 from monai.utils import set_determinism
-from utils import prepare_brats2d_dataloader
+from monai.apps import DecathlonDataset
 
 
 def main():
@@ -28,47 +27,36 @@ def main():
         default="./config/environment.json",
         help="environment json file that stores environment path",
     )
-    parser.add_argument(
-        "-c",
-        "--config-file",
-        default="./config/config_train_32g.json",
-        help="config json file that stores hyper-parameters",
-    )
     args = parser.parse_args()
 
     # Step 0: configuration
-    rank = 0
-    world_size = 1
-    device = 0
-
-    torch.cuda.set_device(device)
-    print(f"Using {device}")
-
     print_config()
 
     env_dict = json.load(open(args.environment_file, "r"))
-    config_dict = json.load(open(args.config_file, "r"))
 
     for k, v in env_dict.items():
-        setattr(args, k, v)
-    for k, v in config_dict.items():
         setattr(args, k, v)
 
     set_determinism(42)
 
     # Step 1: set data loader
-    size_divisible = 2 ** (len(args.autoencoder_def["num_channels"]) - 1)
-    train_loader, val_loader = prepare_brats2d_dataloader(
-        args,
-        args.autoencoder_train["batch_size"],
-        args.autoencoder_train["patch_size"],
-        sample_axis=args.sample_axis,
-        randcrop=True,
-        rank=rank,
-        world_size=world_size,
-        cache=0.0,
-        download=True,
-        size_divisible=size_divisible,
+    train_ds = DecathlonDataset(
+        root_dir=args.data_base_dir,
+        task="Task01_BrainTumour",
+        section="training",  # validation
+        cache_rate=0.0,  # you may need a few Gb of RAM... Set to 0 otherwise
+        num_workers=8,
+        download=True,  # Set download to True if the dataset hasnt been downloaded yet
+        seed=0,
+    )
+    val_ds = DecathlonDataset(
+        root_dir=args.data_base_dir,
+        task="Task01_BrainTumour",
+        section="validation",  # validation
+        cache_rate=0.0,  # you may need a few Gb of RAM... Set to 0 otherwise
+        num_workers=8,
+        download=True,  # Set download to True if the dataset hasnt been downloaded yet
+        seed=0,
     )
 
 

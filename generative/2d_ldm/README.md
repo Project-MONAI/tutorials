@@ -21,7 +21,7 @@ BraTS is a public dataset of brain MR images. Using these images, the goal is to
 The data can be automatically downloaded from [Medical Decathlon](http://medicaldecathlon.com/). The Brats data will be downloaded from [Medical Decathlon](http://medicaldecathlon.com/) and extracted to `$data_base_dir`. You will see a subfolder `Task01_BrainTumour` under `$data_base_dir`. By default, you will see `./Task01_BrainTumour`.
 
 ```bash
-python download_data.py -c ./config/config_train_32g.json -e ./config/environment.json
+python download_data.py -e ./config/environment.json
 ```
 
 Disclaimer: We are not the host of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the dataset! We acknowledge the National Cancer Institute and the Foundation for the National Institutes of Health, and their critical role in the creation of the free publicly available LIDC/IDRI Database used in this study.

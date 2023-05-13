@@ -24,7 +24,7 @@ The data can be automatically downloaded from [Medical Decathlon](http://medical
 python download_data.py -e ./config/environment.json
 ```
 
-Disclaimer: We are not the host of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the dataset!.
+Disclaimer: We are not the host of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the dataset!
 
 ### 2. Installation
 Please refer to the [Installation of MONAI Generative Model](../README.md)

@@ -18,9 +18,13 @@ The dataset we are experimenting with in this example is BraTS 2016 and 2017 dat
 
 BraTS is a public dataset of brain MR images. Using these images, the goal is to generate images that look similar to the images in BraTS 2016 and 2017 dataset.
 
-The data can be automatically downloaded from [Medical Decathlon](http://medicaldecathlon.com/) at the beginning of training.
+The data can be downloaded from [Medical Decathlon](http://medicaldecathlon.com/). By running the following command, the Brats data will be downloaded from [Medical Decathlon](http://medicaldecathlon.com/) and extracted to `$data_base_dir` in [./config/environment.json](./config/environment.json). You will see a subfolder `Task01_BrainTumour` under `$data_base_dir`. By default, you will see `./dataset/Task01_BrainTumour`.
 
-Disclaimer: We are not the host of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the dataset! We acknowledge the National Cancer Institute and the Foundation for the National Institutes of Health, and their critical role in the creation of the free publicly available LIDC/IDRI Database used in this study.
+```bash
+python download_brats_data.py -e ./config/environment.json
+```
+
+Disclaimer: We are not the host of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the dataset!
 
 ### 2. Installation
 Please refer to the [Installation of MONAI Generative Model](../README.md)
@@ -45,12 +49,8 @@ Before you start training, please set the path in [./config/environment.json](./
 - `"resume_ckpt"`: whether to resume training from existing checkpoints.
 - `"data_base_dir"`: where you store the Brats dataset.
 
-If the Brats dataset is not downloaded, please add `--download_data` in training command, the Brats data will be downloaded from [Medical Decathlon](http://medicaldecathlon.com/) and extracted to `$data_base_dir`. You will see a subfolder `Task01_BrainTumour` under `$data_base_dir`. By default, you will see `./Task01_BrainTumour`
-For example, this command is for running the training script with one 32G gpu.
-```bash
-python train_autoencoder.py -c ./config/config_train_32g.json -e ./config/environment.json -g 1 --download_data
-```
-If `$data_base_dir/Task01_BrainTumour` already exists, you may omit the downloading.
+Below is the the training command for single GPU.
+
 ```bash
 python train_autoencoder.py -c ./config/config_train_32g.json -e ./config/environment.json -g 1
 ```

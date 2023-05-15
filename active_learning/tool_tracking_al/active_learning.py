@@ -156,6 +156,7 @@ def main():
         backbone="efficientnet-b0",
         pretrained=True,
         is_pad=False,
+        dropout=args.dropout_ratio,
     ).to(device)
 
     loss_function = DiceLoss(include_background=False, softmax=True, to_onehot_y=True)

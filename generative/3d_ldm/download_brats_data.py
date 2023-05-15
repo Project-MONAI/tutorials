@@ -12,11 +12,13 @@
 import argparse
 import json
 import logging
+import os
+import shutil
 import sys
+import tempfile
 
+from monai.apps import download_and_extract
 from monai.config import print_config
-from monai.utils import set_determinism
-from monai.apps import DecathlonDataset
 
 
 def main():
@@ -37,27 +39,19 @@ def main():
     for k, v in env_dict.items():
         setattr(args, k, v)
 
-    set_determinism(42)
-
     # Step 1: set data loader
-    train_ds = DecathlonDataset(
-        root_dir=args.data_base_dir,
-        task="Task01_BrainTumour",
-        section="training",  # validation
-        cache_rate=0.0,  # you may need a few Gb of RAM... Set to 0 otherwise
-        num_workers=8,
-        download=True,  # Set download to True if the dataset hasnt been downloaded yet
-        seed=0,
-    )
-    val_ds = DecathlonDataset(
-        root_dir=args.data_base_dir,
-        task="Task01_BrainTumour",
-        section="validation",  # validation
-        cache_rate=0.0,  # you may need a few Gb of RAM... Set to 0 otherwise
-        num_workers=8,
-        download=True,  # Set download to True if the dataset hasnt been downloaded yet
-        seed=0,
-    )
+    directory = os.environ.get("MONAI_DATA_DIRECTORY")
+    root_dir = tempfile.mkdtemp() if directory is None else directory
+
+    msd_task = "Task01_BrainTumour"
+    resource = "https://msd-for-monai.s3-us-west-2.amazonaws.com/" + msd_task + ".tar"
+    compressed_file = os.path.join(root_dir, msd_task + ".tar")
+
+    os.makedirs(args.data_base_dir, exist_ok=True)
+    download_and_extract(resource, compressed_file, args.data_base_dir)
+
+    if directory is None:
+        shutil.rmtree(root_dir)
 
 
 if __name__ == "__main__":

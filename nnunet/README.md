@@ -53,7 +53,10 @@ The installation instruction is described [here](docs/install.md).
 The user needs to provide a data list (".json" file) for the new task and data root. In general, a valid data list needs to follow the format of the ones in [Medical Segmentation Decathlon (MSD)](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2).
 
 In [this tutorial](../auto3dseg/notebooks/msd_datalist_generator.ipynb), we provided example steps to download the [MSD Spleen dataset](http://medicaldecathlon.com) and prepare a datalist.
-Below we assume the dataset is downloaded to `/workspace/data/Task09_Spleen` and the datalist is in the current directory.
+Below we assume the dataset is downloaded to `/workspace/data/Task09_Spleen` and the datalist is in the current directory,
+if `/workspace/data` is set as the value of the global environment variable `MONAI_DATA_DIRECTORY`.
+The user may find the dataset downloaded in a different location.
+Also, with Docker, the user may mount their data folders when they run the container by using the `-v ` arguments, e.g. `-v <user data folder>:/workspace/data`.
 
 ### Run with Minimal Input using ```nnUNetV2Runner```
 
@@ -106,43 +109,84 @@ The supported `trainer_class_name` are:
 
 ```nnUNetV2Runner``` offers the one-stop API to execute the pipeline, as well as the APIs to access the underlying components of nnU-Net V2. Below is the command for different components.
 
-```bash
-## [component] convert dataset
+#### Convert dataset
+Prepare the data to meet nnU-Net requirements, e.g. generation of dataset JSON file and dataset copy:
+
+```
 python -m monai.apps.nnunet nnUNetV2Runner convert_dataset --input_config "./input.yaml"
+```
 
-## [component] experiment planning and data pre-processing
+#### Experiment planning and data pre-processing
+Perform fingerprint extraction, experiment planning, and preprocessing before the training:
+
+```
 python -m monai.apps.nnunet nnUNetV2Runner plan_and_process --input_config "./input.yaml"
+```
 
-## [component] use all available GPU(s) to train all 20 models
+Some nnU-Net APIs used::
+- nnunetv2.experiment_planning.plan_and_preprocess_api.extract_fingerprints
+- nnunetv2.experiment_planning.plan_and_preprocess_api.plan_experiments
+- nnunetv2.experiment_planning.plan_and_preprocess_api.preprocess
+
+
+#### Training
+Train the networks with different configurations:
+
+```
+## use all available GPU(s) to train all 20 models
 python -m monai.apps.nnunet nnUNetV2Runner train --input_config "./input.yaml"
 
-## [component] use all available GPU(s) to train a single model
+## use all available GPU(s) to train a single model
 python -m monai.apps.nnunet nnUNetV2Runner train_single_model --input_config "./input.yaml" \
     --config "3d_fullres" \
     --fold 0
 
-## [component] distributed training of 20 models utilizing specified GPU devices 0 and 1
+## distributed training of 20 models utilizing specified GPU devices 0 and 1
 python -m monai.apps.nnunet nnUNetV2Runner train --input_config "./input.yaml" --gpu_id_for_all 0,1
+```
 
-## [component] find best configuration
+Some nnU-Net APIs used::
+- nnunetv2.training.dataloading.utils.unpack_dataset
+- nnunetv2.run.run_training.run_training
+
+#### Find best configuration
+Find the best model configurations for ensemble:
+
+```
 python -m monai.apps.nnunet nnUNetV2Runner find_best_configuration --input_config "./input.yaml"
+```
 
-## [component] predict, ensemble, and postprocessing
+Some nnU-Net APIs used::
+- from nnunetv2.evaluation.find_best_configuration.dumb_trainer_config_plans_to_trained_models_dict
+- from nnunetv2.evaluation.find_best_configuration.find_best_configuration
+
+#### Predict, ensemble, and postprocessing
+
+```
 python -m monai.apps.nnunet nnUNetV2Runner predict_ensemble_postprocessing --input_config "./input.yaml"
+```
 
-## [component] predict only
+Optionally, user can also run each separate step:
+
+```
+## predict only
 python -m monai.apps.nnunet nnUNetV2Runner predict_ensemble_postprocessing --input_config "./input.yaml" \
 	--run_ensemble false --run_postprocessing false
 
-## [component] ensemble only
+## ensemble only
 python -m monai.apps.nnunet nnUNetV2Runner predict_ensemble_postprocessing --input_config "./input.yaml" \
 	--run_predict false --run_postprocessing false
 
-## [component] post-processing only
+## post-processing only
 python -m monai.apps.nnunet nnUNetV2Runner predict_ensemble_postprocessing --input_config "./input.yaml" \
 	--run_predict false --run_ensemble false
 ```
+Some nnU-Net APIs used::
+- nnunetv2.inference.predict_from_raw_data.predict_from_raw_data
+- nnunetv2.ensembling.ensemble.ensemble_folders
+- nnunetv2.postprocessing.remove_connected_components.apply_postprocessing_to_folder
 
+#### Other notes
 For utilizing PyTorch DDP in multi-GPU training, the subsequent command is offered to facilitate the training of a singlular model on a specific fold:
 
 ```bash

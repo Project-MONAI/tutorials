@@ -39,7 +39,7 @@ def main():
     parser.add_argument(
         "-c",
         "--config-file",
-        default="./config/config_train_48g.json",
+        default="./config/config_train_32g.json",
         help="config json file that stores hyper-parameters",
     )
     parser.add_argument(

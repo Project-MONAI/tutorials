@@ -131,6 +131,7 @@ def prepare_brats2d_dataloader(
             EnsureTyped(keys="image", dtype=compute_dtype),
         ]
     )
+    os.makedirs(args.data_base_dir, exist_ok=True)
     train_ds = DecathlonDataset(
         root_dir=args.data_base_dir,
         task="Task01_BrainTumour",

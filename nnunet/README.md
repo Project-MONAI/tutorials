@@ -50,7 +50,7 @@ The installation instruction is described [here](docs/install.md).
 
 ### Dataset and Datalist Preparation
 
-The user needs to provide a data list (".json" file) for the new task and data root. In general, a valid data list needs to follow the format of the ones in [Medical Segmentation Decathlon](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2).
+The user needs to provide a data list (".json" file) for the new task and data root. In general, a valid data list needs to follow the format of the ones in [Medical Segmentation Decathlon (MSD)](https://drive.google.com/drive/folders/1HqEgzS8BV2c7xYNrZdEAnrHk7osJJ--2).
 
 In [this tutorial](../auto3dseg/notebooks/msd_datalist_generator.ipynb), we provided example steps to download the [MSD Spleen dataset](http://medicaldecathlon.com) and prepare a datalist.
 Below we assume the dataset is downloaded to `/workspace/data/Task09_Spleen` and the datalist is in the current directory.
@@ -70,9 +70,10 @@ Note: For multi-modal inputs, please check the [Frequently Asked Questions secti
 Users can also set values of directory variables as options in "input.yaml" if any directory needs to be specified.
 
 ```
-nnunet_preprocessed: "./work_dir/nnUNet_preprocessed" # optional
-nnunet_raw: "./work_dir/nnUNet_raw_data_base" # optional
-nnunet_results: "./work_dir/nnUNet_trained_models" # optional
+dataset_name_or_id: 1 # task-specific integer index (optional)
+nnunet_preprocessed: "./work_dir/nnUNet_preprocessed" # directory for storing pre-processed data (optional)
+nnunet_raw: "./work_dir/nnUNet_raw_data_base" # directory for storing formated raw data (optional)
+nnunet_results: "./work_dir/nnUNet_trained_models" # diretory for storing trained model checkpoints (optional)
 ```
 
 Once the minimum input information is provided, the user can use the following commands to start the process of the entire nnU-Net pipeline automatically (from model training to model ensemble).
@@ -109,9 +110,6 @@ The supported `trainer_class_name` are:
 ## [component] convert dataset
 python -m monai.apps.nnunet nnUNetV2Runner convert_dataset --input_config "./input.yaml"
 
-## [component] converting msd datasets
-python -m monai.apps.nnunet nnUNetV2Runner convert_msd_dataset --input_config "./input.yaml" --data_dir "/workspace/data/Task09_Spleen"
-
 ## [component] experiment planning and data pre-processing
 python -m monai.apps.nnunet nnUNetV2Runner plan_and_process --input_config "./input.yaml"
 
@@ -123,14 +121,8 @@ python -m monai.apps.nnunet nnUNetV2Runner train_single_model --input_config "./
     --config "3d_fullres" \
     --fold 0
 
-## [component] multi-gpu training for all 20 models with GPU 0 and 1
-python -m monai.apps.nnunet nnUNetV2Runner train --input_config "./input.yaml" --device_ids 0,1
-
-## [component] multi-gpu training for a single model
-python -m monai.apps.nnunet nnUNetV2Runner train_single_model --input_config "./input.yaml" \
-    --config "3d_fullres" \
-    --fold 0 \
-    --gpu_id 0,1
+## [component] distributed training of 20 models utilizing specified GPU devices 0 and 1
+python -m monai.apps.nnunet nnUNetV2Runner train --input_config "./input.yaml" --gpu_id_for_all 0,1
 
 ## [component] find best configuration
 python -m monai.apps.nnunet nnUNetV2Runner find_best_configuration --input_config "./input.yaml"
@@ -149,7 +141,23 @@ python -m monai.apps.nnunet nnUNetV2Runner predict_ensemble_postprocessing --inp
 ## [component] post-processing only
 python -m monai.apps.nnunet nnUNetV2Runner predict_ensemble_postprocessing --input_config "./input.yaml" \
 	--run_predict false --run_ensemble false
+```
 
+For utilizing PyTorch DDP in multi-GPU training, the subsequent command is offered to facilitate the training of a singlular model on a specific fold:
+
+```bash
+## [component] multi-gpu training for a single model
+python -m monai.apps.nnunet nnUNetV2Runner train_single_model --input_config "./input.yaml" \
+    --config "3d_fullres" \
+    --fold 0 \
+    --gpu_id 0,1
+```
+
+We offer an alternative API for constructing datasets from [MSD challenge](http://medicaldecathlon.com/) to meet requirements of nnU-Net, as reference in the provided [link](https://github.com/MIC-DKFZ/nnUNet/blob/master/documentation/dataset_format.md#how-to-use-decathlon-datasets).
+
+```bash
+## [component] converting msd datasets
+python -m monai.apps.nnunet nnUNetV2Runner convert_msd_dataset --input_config "./input.yaml" --data_dir "/workspace/data/Task09_Spleen"
 ```
 
 ## FAQ

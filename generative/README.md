@@ -6,7 +6,7 @@ The examples are designed as demonstration to showcase the training process for 
 ## Installation
 ```
 pip install lpips
-pip install monai-generative==0.2.1
+pip install monai-generative==0.2.2
 ```
 
 ## [Brats 3D latent diffusion model](./3d_ldm/README.md)

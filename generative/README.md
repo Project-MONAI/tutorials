@@ -6,16 +6,7 @@ The examples are designed as demonstration to showcase the training process for 
 ## Installation
 ```
 pip install lpips
-pip install git+https://github.com/Project-MONAI/GenerativeModels.git@0.2.0
-```
-
-Or install it from source:
-```
-pip install lpips
-git clone https://github.com/Project-MONAI/GenerativeModels.git
-cd GenerativeModels/
-python setup.py install
-cd ..
+pip install monai-generative==0.2.2
 ```
 
 ## [Brats 3D latent diffusion model](./3d_ldm/README.md)

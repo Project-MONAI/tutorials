@@ -270,14 +270,13 @@ For example:
 ```py
 train_transforms = [
     LoadImaged(...),
-    AddChanneld(...),
+    EnsureChannelFirstd(...),
     Orientationd(...),
     Spacingd(...),
     ScaleIntensityRanged(...),
     CropForegroundd(...),
     FgBgToIndicesd(...),
-    EnsureTyped(..., data_type="tensor"),
-    ToDeviced(..., device="cuda:0"),
+    EnsureTyped(..., device="cuda:0"),
     RandCropByPosNegLabeld(...),
 ]
 dataset = CacheDataset(..., transform=train_trans)

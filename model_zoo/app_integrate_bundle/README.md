@@ -84,15 +84,20 @@ python ensemble.py --bundle_root bundle_root_path --dataset_dir data_root_path
 ## **How to integrate Bundle in your own application**
 ### Get component from bundle
 ```
-from monai.bundle import ConfigParser
+from monai.bundle import ConfigWorkflow
 
-bundle_config = ConfigParser()
-bundle_config.read_config(bundle_config_path)
-postprocessing = bundle_config.get_parsed_content("postprocessing")
+train_workflow = ConfigWorkflow(
+    config_file=bundle_config_path,
+    meta_file=bundle_metadata_path,
+    logging_file=bundle_logging_path,
+    workflow="train",
+)
+train_workflow.initialize()
+postprocessing = train_workflow.train_postprocessing
 ```
 ### Use component in your pipeline
 ```
-# Notice that the `postprocessing` got from `get_parsed_content` is instantiated.
+# Notice that the `postprocessing` got from `train_workflow` is instantiated.
 
 evaluator = SupervisedEvaluator(
             device=device,
@@ -104,10 +109,8 @@ evaluator = SupervisedEvaluator(
 ```
 ### Update component with your own args
 ```
-# change the value of `softmax` in `Activationsd` to False
-
-update_key = "postprocessing#transforms#0#softmax"
-bundle_config.update({update_key: False})
+# update `max_epochs` in workflow
+train_workflow.max_epochs = max_epochs
 ```
 
 ## Questions and bugs

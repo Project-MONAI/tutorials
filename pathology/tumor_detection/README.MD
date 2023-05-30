@@ -8,6 +8,12 @@ Here we use a classification model to classify small batches extracted from very
 
 The model is based on ResNet18 with the last fully connected layer replaced by a 1x1 convolution layer.
 
+## Pre-trained weights
+A pre-trained encoder weights would be beneficial for the model training. In this tutorial, you can use `--pretrain` to activate the pre-trained weights on the [ImageNet dataset](https://ieeexplore.ieee.org/document/5206848).
+
+Each user is responsible for checking the content of models/datasets and the applicable licenses and determining if suitable for the intended use.
+The license for the pre-trained model used in examples is different than MONAI license. Please check the source where these weights are obtained from.
+
 ## Data
 
 All the data used to train and validate this model is from the [Camelyon-16 Challenge](https://camelyon16.grand-challenge.org/). You can download all the images for the "CAMELYON16" data set from various sources listed [here](https://camelyon17.grand-challenge.org/Data/).

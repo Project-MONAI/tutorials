@@ -527,7 +527,7 @@ def parse_arguments():
     parser.add_argument("--optimized", action="store_true", help="use optimized parameters")
     parser.add_argument("-b", "--backend", type=str, dest="backend", help="backend for transforms")
 
-    parser.add_argument("--cpu", type=int, default=8, dest="num_workers", help="number of workers")
+    parser.add_argument("--cpu", type=int, default=2, dest="num_workers", help="number of workers")
     parser.add_argument("--gpu", type=str, default="0", dest="gpu", help="which gpu to use")
 
     args = parser.parse_args()

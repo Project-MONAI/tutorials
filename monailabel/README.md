@@ -28,7 +28,7 @@ Each tutorial provides MONAI Label plugin installation steps associated with the
 - **Pathology App**:
   - Viewer: [QuPath](https://qupath.github.io/) | Datastore: Local | Task: Segmentation
     - [MONAILabel: Nuclei Segmentation with QuPath](monailabel_pathology_nuclei_segmentation_QuPath.ipynb) Nuclei segmentation with QuPath setup and Nuclick models.
-    - [MONAILabel: HoVerNet Nuclei Classification and Segmentation](monailabel_pathology_HoVerNet_QuPath.ipynb.ipynb) Nuclei classification and segmentation with QuPath.
+    - [MONAILabel: HoVerNet Nuclei Classification and Segmentation](monailabel_pathology_HoVerNet_QuPath.ipynb) Nuclei classification and segmentation with QuPath.
 - **Endoscopy App**:
   - Viewer: [CVAT](https://github.com/opencv/cvat) | Datastore: Local | Task: Segmentation
     - [MONAILabel: Tooltracking with CVAT](monailabel_endoscopy_cvat_tooltracking.ipynb): Surgical tool segmentation with CVAT/Nuclio setup.

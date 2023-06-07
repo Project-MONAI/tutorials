@@ -40,7 +40,7 @@ def main():
     parser.add_argument(
         "-c",
         "--config-file",
-        default="./config/config_train_48g.json",
+        default="./config/config_train_32g.json",
         help="config json file that stores hyper-parameters",
     )
     parser.add_argument("-g", "--gpus", default=1, type=int, help="number of gpus per node")
@@ -148,7 +148,7 @@ def main():
 
     scheduler = DDPMScheduler(
         num_train_timesteps=args.NoiseScheduler["num_train_timesteps"],
-        beta_schedule="scaled_linear",
+        schedule="scaled_linear_beta",
         beta_start=args.NoiseScheduler["beta_start"],
         beta_end=args.NoiseScheduler["beta_end"],
     )

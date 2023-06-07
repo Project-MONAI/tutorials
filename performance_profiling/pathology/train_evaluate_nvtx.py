@@ -477,6 +477,9 @@ def main(cfg):
     # Save final metrics
     metric_summary["train_time_per_epoch"] = total_train_time / cfg["n_epochs"]
     metric_summary["total_time"] = t_end - t_start
+
+    # The type of the value in hparam_dict can only be one of bool, string, float, int, or None.
+    cfg["grid_shape"] = str(cfg["grid_shape"])
     writer.add_hparams(hparam_dict=cfg, metric_dict=metric_summary, run_name=log_dir)
     writer.close()
     logging.info(f"Metric Summary: {metric_summary}")

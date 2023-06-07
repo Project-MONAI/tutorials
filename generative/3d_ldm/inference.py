@@ -78,7 +78,7 @@ def main():
 
     scheduler = DDPMScheduler(
         num_train_timesteps=args.NoiseScheduler["num_train_timesteps"],
-        beta_schedule="scaled_linear",
+        schedule="scaled_linear_beta",
         beta_start=args.NoiseScheduler["beta_start"],
         beta_end=args.NoiseScheduler["beta_end"],
     )

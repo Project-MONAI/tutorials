@@ -23,7 +23,7 @@ localhost:5555 points to the nv-host-engine in localhost. `<port>` has a default
 
 ## Quick start
 
-fter the docker is up for about 2-3 minutes, the user can use `curl` to get the GPU information on the "host-ip" machine `curl <host-ip>:<port>/metrics`
+After the docker is up for about 2-3 minutes, the user can use `curl` to get the GPU information on the "host-ip" machine `curl <host-ip>:<port>/metrics`
 
 To use it in a container, the user can create a `log.sh` to start logging infinitely:
 ```

@@ -205,6 +205,8 @@ This notebook is a quick demo for devices, run the Ignite trainer engine on CPU,
 Demonstrates the use of the `ThreadBuffer` class used to generate data batches during training in a separate thread.
 ##### [transform_speed](./acceleration/transform_speed.ipynb)
 Illustrate reading NIfTI files and test speed of different transforms on different devices.
+##### [TensorRT_inference_acceleration](./acceleration/TensorRT_inference_acceleration.ipynb)
+This notebook shows how to use TensorRT to accelerate the model and achieve a better inference latency.
 
 #### <ins>**Model Zoo**</ins>
 ##### [easy_integrate_bundle](./model_zoo/app_integrate_bundle)
@@ -214,7 +216,7 @@ This tutorial shows a straightforward ensemble application to instruct users on 
 ##### [video segmentation](./computer_assisted_intervention/video_seg.ipynb)
 This tutorial shows how to train a surgical tool segmentation model to locate tools in a given image. In addition, it also builds an example pipeline of an end-to-end video tool segmentation, with video input and video output.
 ##### [endoscopic inbody classification](./computer_assisted_intervention/endoscopic_inbody_classification.ipynb)
-Tutorial to show the pipeline of fine tuning an endoscopic inbody classification model based on a corresponding pretrained bundle in monai model zoo.
+Tutorial to show the pipeline of fine tuning an endoscopic inbody classification model based on a corresponding pretrained bundle.
 
 #### <ins>**Modules**</ins>
 ##### [bundle](./bundle)
@@ -293,8 +295,15 @@ This tutorial shows several visualization approaches for 3D image during transfo
 This folder shows how to run the comprehensive Auto3DSeg pipeline with minimal inputs and customize the Auto3Dseg modules to meet different user requirements.
 
 #### <ins>**Self-Supervised Learning**</ins>
-##### [self_supervised_pretraining](./self_supervised_pretraining/ssl_train.ipynb)
+##### [self_supervised_pretraining](self_supervised_pretraining/vit_unetr_ssl/ssl_train.ipynb)
 This tutorial shows how to construct a training workflow of self-supervised learning where unlabeled data is utilized. The tutorial shows how to train a model on TCIA dataset of unlabeled Covid-19 cases.
 
-##### [self_supervised_pretraining_based_finetuning](./self_supervised_pretraining/ssl_finetune.ipynb)
+##### [self_supervised_pretraining_based_finetuning](self_supervised_pretraining/vit_unetr_ssl/ssl_finetune.ipynb)
 This tutorial shows how to utilize pre-trained weights from the self-supervised learning framework where unlabeled data is utilized. This tutorial shows how to train a model of multi-class 3D segmentation using pretrained weights.
+
+#### [Generative Model](./generative)
+##### [3D latent diffusion model](./generative/3d_ldm)
+This tutorial shows the use cases of training and validating a 3D Latent Diffusion Model.
+
+##### [2D latent diffusion model](./generative/2d_ldm)
+This tutorial shows the use cases of training and validating a 2D Latent Diffusion Model.

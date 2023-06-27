@@ -10,6 +10,7 @@ python -m scripts.inference run \
   --config_file "['configs/data_loading.json','configs/net_inferer.yaml','configs/post_processing.json']" \
   --ckpt_path <path_to_checkpoint>
 ```
+Before running above command, please check the script first and modify `datalist` and `output_dir` according to the actual paths.
 
 Parse the config file content in Python and overriding the default values, using the entry point defined in `scrips/train_demo.py`.
 ```bash

@@ -13,7 +13,7 @@
     + [HTTP vs. gRPC vs. shared memory](#http-vs-grpc-vs-shared-memory)
     + [Pre/Post-processing on GPU vs. CPU](#pre-post-processing-on-gpu-vs-cpu)
 
-## overview
+## Overview
 
 This example is to implement a 3D medical imaging AI inference pipeline using the model and transforms of MONAI, and deploy the pipeline using Triton. the goal of it is to test the influence brought by different features of MONAI and Triton to medical imaging AI inference performance.
 
@@ -23,7 +23,7 @@ In this repository, I will try following features:
 
 Before starting, I highly recommand you to read the the following two links to get familiar with the basic features of Triton python backend and MONAI:
 - https://github.com/triton-inference-server/python_backend
-- https://github.com/Project-MONAI/tutorials/blob/main/acceleration/fast_model_training_guide.md
+- [Tutorial fast_model_training_guide](../acceleration/fast_model_training_guide.md)
 
 ## Prepare the model repository
 The full pipeline is as below:

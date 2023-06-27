@@ -1,5 +1,5 @@
 default_language_version:
-  python: python3.8
+  python: python3.9
 
 ci:
   autofix_prs: true
@@ -23,7 +23,7 @@ repos:
       - id: detect-private-key
 
   - repo: https://github.com/psf/black
-    rev: "22.12.0"
+    rev: "23.3.0"
     hooks:
       - id: black
       - id: black-jupyter

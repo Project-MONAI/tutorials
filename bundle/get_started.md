@@ -22,10 +22,14 @@ You can find the usage examples of MONAI bundle key features and syntax in this 
 - Override config content at runtime.
 - Hybrid programming with config and python code.
 
-## Download dataset
+## Download bundle and dataset
 
-Downloads and extracts the dataset for this example.
-The dataset comes from http://medicaldecathlon.com/.
+Download the `spleen_ct_segmentation` bundle for this example.
+```shell
+python -m monai.bundle download --name spleen_ct_segmentation --bundle_dir "./"
+```
+
+The dataset for this example comes from http://medicaldecathlon.com/.
 Here specify a directory with the `MONAI_DATA_DIRECTORY` environment variable to save downloaded dataset and outputs, if no environment, save to the temorary directory.
 
 ```python
@@ -46,7 +50,7 @@ if not os.path.exists(data_dir):
 
 ## Define train config - Set imports and input / output environments
 
-Now let's start to define the config file for a regular training task. MONAI bundle support both `JSON` and `YAML` format, here we use `JSON` as the example. the [whole config for training](spleen_segmentation/configs/train.json) is available and can be a reference.
+Now let's start to define the config file for a regular training task. MONAI bundle support both `JSON` and `YAML` format, here we use `JSON` as the example. After downloading the bundle, the train config file in `spleen_ct_segmentation/configs/train.json` is available for reference.
 
 According to the predefined syntax of MONAI bundle, `$` indicates an expression to evaluate and `@` refers to another object in the config content. For more details about the syntax in bundle config, please check: https://docs.monai.io/en/latest/config_syntax.html.
 
@@ -56,7 +60,7 @@ For the first step, import `os` and `glob` to use in the `python expressions` (s
 
 The `dataset_dir` in the config is the directory of downloaded dataset. Please check the `root_dir` and update this accordingly when you are writing your config.
 
-Note that the `imports` are only used to execute the `python expressions`, and already imported `monai`, `numpy`, `np`, `torch` internally as these are mininum dependencies of MONAI.
+Note that the `imports` are only used to execute the `python expressions`, and already imported `monai`, `numpy`, `np`, `torch` internally as these are minimum dependencies of MONAI.
 
 ```json
 {
@@ -121,7 +125,7 @@ Define optimizer and loss function, for MONAI classes, we can use the class name
 
 Define `transforms` and `dataset`, `dataloader` to generate training data for network.
 
-To make the config stucture clear, here we split the `train` and `validate` related components into 2 sections:
+To make the config structure clear, here we split the `train` and `validate` related components into 2 sections:
 ```json
 "train": {...},
 "validate": {...}
@@ -183,7 +187,7 @@ The composed transforms are for preprocessing.
 
 The train and validation image file names are organized into a list of dictionaries.
 
-Here we use `dataset` instance as 1 argument of `dataloader` by the `@` syntax, and please note that `"#"` in the reference id are interpreted as special characters to go one level further into the nested config structures. For example: `"dataset": "@train#dataset"`.
+Here we use `dataset` instance as 1 argument of `dataloader` by the `@` syntax, and please note that `"#"` in the reference id is interpreted as special characters to go one level further into the nested config structures. For example: `"dataset": "@train#dataset"`.
 
 ```json
 "dataset": {
@@ -243,7 +247,7 @@ Here we use `SimpleInferer` to execute `forward()` computation for the network a
 
 ## Define train config - Define Accuracy metric for training data to avoid over-fitting
 
-Here we define the `Accuracy` metric to compute on training data to help check whether the converge is expected and avoid over-fitting. Note that it's not validation step during the training.
+Here we define the `Accuracy` metric to compute on training data to help check whether the converge is expected and avoid over-fitting. Note that it's not a validation step during the training.
 
 ```json
 "key_metric": {
@@ -283,7 +287,7 @@ Usually we need to execute validation for every N epochs during training to veri
 
 Here we don't define the `validate` section step by step as it's similar to the `train` section, please refer to the full training config of the spleen bundle example.
 
-Just show an example of `macro text replacement` to simplify the config content and avoid duplicated text. Please note that it's just token text replacement of the config content, not refer to the instantiated python objects.
+Just show an example of `macro text replacement` to simplify the config content and avoid duplicated text. Please note that it's just a token text replacement of the config content, not referring to the instantiated python objects.
 
 ```json
 "validate": {
@@ -305,24 +309,32 @@ Just show an example of `macro text replacement` to simplify the config content 
 
 We can define a `metadata` file in the bundle, which contains the metadata information relating to the model, including what the shape and format of inputs and outputs are, what the meaning of the outputs are, what type of model is present, and other information. The structure is a dictionary containing a defined set of keys with additional user-specified keys.
 
-A typical [metadata example](spleen_segmentation/configs/metadata.json) is available.
+After downloading the bundle, a typical metadata example in `spleen_ct_segmentation/configs/metadata.json` is available for reference.
 
 ## Execute training with bundle script - `run`
 
-There are several predefined scripts in MONAI bundle module, here we leverage the `run` script and specify the ID of trainer in the config.
+There are several predefined scripts in the MONAI bundle module, here we leverage the `run` script.
 
-Just define the entry point expressions in the config to execute in order, and specify the `runner_id` in CLI script.
+We can define the following three sections:
+
+"run" determines the section of the expected config expression to run.
+"initialize" determines the section of the expected config expression to initialize before running.
+"finalize" determines the section of the expected config expression to finalize after running.
+
+In this example, only "initialize" and "run" are utilized:
 
 ```json
-"training": [
+"initialize": [
     "$monai.utils.set_determinism(seed=123)",
-    "$setattr(torch.backends.cudnn, 'benchmark', True)",
+    "$setattr(torch.backends.cudnn, 'benchmark', True)"
+],
+"run": [
     "$@train#trainer.run()"
 ]
 ```
 
 ```shell
-python -m monai.bundle run training --config_file configs/train.json
+python -m monai.bundle run --config_file configs/train.json
 ```
 
 ## Execute training with bundle script - Override config at runtime
@@ -331,18 +343,18 @@ To override some config items at runtime, users can specify the target `id` and 
 
 Please note that "#" and "$" may be meaningful syntax for some `shell` and `CLI` tools, so may need to add escape character or quotes for them in the command line, like: `"\$torch.device('cuda:1')"`. For more details: https://github.com/google/python-fire/blob/v0.4.0/fire/parser.py#L60.
 ```shell
-python -m monai.bundle run training --config_file configs/train.json --device "\$torch.device('cuda:1')"
+python -m monai.bundle run --config_file configs/train.json --device "\$torch.device('cuda:1')"
 ```
 Override content from another config file.
 ```shell
-python -m monai.bundle run training --config_file configs/train.json --network "%configs/test.json#network"
+python -m monai.bundle run --config_file configs/train.json --network "%configs/inference.json#network"
 ```
 
 ## Execute other bundle scripts
 
 Besides `run`, there are also many other scripts for bundle functionalities. All the scripts are available at: https://docs.monai.io/en/latest/bundle.html#scripts.
 
-Here is some typical examples:
+Here are some typical examples:
 
 1. Initialize a bundle directory based on the template and pretrained checkpoint weights.
 ```shell
@@ -359,17 +371,11 @@ python -m monai.bundle ckpt_export network --filepath <export path> --ckpt_file 
 python -m monai.bundle verify_metadata --meta_file <meta path>
 ```
 
-4. Verify the input and output data shape and data type of network defined in the metadata. It will test with fake Tensor data according to the required data shape in `metadata`.
+4. Verify the input and output data shape and data type of the network defined in the metadata. It will test with fake Tensor data according to the required data shape in `metadata`.
 ```shell
 python -m monai.bundle verify_net_in_out network --meta_file <metadata path> --config_file <config path>
 ```
 The acceptable data shape in the metadata can support `"*"` for any size, or use an expression with Python mathematical operators and one character variables to represent dependence on an unknown quantity, for example, `"2**p"` represents a size which must be a power of 2, `"2**p*n"` must be a multiple of a power of 2. `"spatial_shape": [ "32 * n", "2 ** p * n", "*"]`.
-
-
-5. Download a bundle from Github release or URL.
-```shell
-python -m monai.bundle download --name <bundle_name> --version "0.1.0" --bundle_dir "./"
-```
 
 ## Hybrid programming with config and python code
 

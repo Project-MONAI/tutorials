@@ -93,7 +93,6 @@ def main():
     # Ignite trainer expects batch=(img, label) and returns output=loss at every iteration,
     # user can add output_transform to return other values, like: y_pred, y, etc.
     def prepare_batch(batch, device=None, non_blocking=False):
-
         return _prepare_batch((batch["img"], batch["label"]), device, non_blocking)
 
     trainer = create_supervised_trainer(net, opt, loss, device, False, prepare_batch=prepare_batch)

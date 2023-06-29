@@ -36,7 +36,7 @@ class HecktorCropNeckRegion(CropForegroundd):
         super().__init__(keys=keys, source_key=source_key, allow_missing_keys=allow_missing_keys, **kwargs)
         self.box_size = box_size
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         d = dict(data)
 
         im_pet = d["image2"][0]

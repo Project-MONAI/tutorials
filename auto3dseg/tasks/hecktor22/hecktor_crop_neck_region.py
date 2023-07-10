@@ -36,8 +36,7 @@ class HecktorCropNeckRegion(CropForegroundd):
         super().__init__(keys=keys, source_key=source_key, allow_missing_keys=allow_missing_keys, **kwargs)
         self.box_size = box_size
 
-    def __call__(self, data):
-
+    def __call__(self, data, **kwargs):
         d = dict(data)
 
         im_pet = d["image2"][0]
@@ -50,7 +49,9 @@ class HecktorCropNeckRegion(CropForegroundd):
 
         box_start, box_end = self.extract_roi(im_pet=im_pet, box_size=box_size)
 
-        if "label" in d and "label" in self.keys:
+        use_label = "label" in d and "label" in self.keys and (d["image"].shape[1:] == d["label"].shape[1:])
+
+        if use_label:
             # if label mask is available, let's check if the cropped region includes all foreground
             before_sum = d["label"].sum().item()
             after_sum = (
@@ -83,13 +84,13 @@ class HecktorCropNeckRegion(CropForegroundd):
         d[self.end_coord_key] = box_end
 
         for key, m in self.key_iterator(d, self.mode):
-            self.push_transform(d, key, extra_info={"box_start": box_start, "box_end": box_end})
+            if key == "label" and not use_label:
+                continue
             d[key] = self.cropper.crop_pad(img=d[key], box_start=box_start, box_end=box_end, mode=m)
 
         return d
 
     def extract_roi(self, im_pet, box_size):
-
         crop_len = int(0.75 * im_pet.shape[2])
         im = im_pet[..., crop_len:]
 

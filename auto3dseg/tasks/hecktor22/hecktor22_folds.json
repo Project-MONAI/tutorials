@@ -4,6 +4,41 @@
             "image": "imagesTr/CHUP-049__CT.nii.gz",
             "image2": "imagesTr/CHUP-049__PT.nii.gz",
             "fold": 0
+        },
+        {
+            "image": "imagesTr/CHUP-034__CT.nii.gz",
+            "image2": "imagesTr/CHUP-034__PT.nii.gz",
+            "fold": 0
+        },
+        {
+            "image": "imagesTr/CHUS-089__CT.nii.gz",
+            "image2": "imagesTr/CHUS-089__PT.nii.gz",
+            "fold": 0
+        },
+        {
+            "image": "imagesTr/CHUP-061__CT.nii.gz",
+            "image2": "imagesTr/CHUP-061__PT.nii.gz",
+            "fold": 0
+        },
+        {
+            "image": "imagesTr/CHUP-010__CT.nii.gz",
+            "image2": "imagesTr/CHUP-010__PT.nii.gz",
+            "fold": 0
+        },
+        {
+            "image": "imagesTr/HGJ-013__CT.nii.gz",
+            "image2": "imagesTr/HGJ-013__PT.nii.gz",
+            "fold": 0
+        },
+        {
+            "image": "imagesTr/CHUM-040__CT.nii.gz",
+            "image2": "imagesTr/CHUM-040__PT.nii.gz",
+            "fold": 0
+        },
+        {
+            "image": "imagesTr/HGJ-062__CT.nii.gz",
+            "image2": "imagesTr/HGJ-062__PT.nii.gz",
+            "fold": 0
         }
     ],
     "training": [

@@ -3,6 +3,14 @@
         "trainer": {
             "id": "train#trainer",
             "handlers": "train#handlers"
+        },
+        "validator": {
+            "id": "validate#evaluator",
+            "handlers": "validate#handlers"
+        },
+        "evaluator": {
+            "id": "evaluator",
+            "handlers": "handlers"
         }
     },
     "configs": {
@@ -20,7 +28,25 @@
             "epoch_log": true,
             "tag_name": "train_loss",
             "output_transform": "$monai.handlers.from_engine(['loss'], first=True)",
-            "experiment_param": "${'backbone':'unet', 'norm':'Batch'}"
+            "experiment_param": "${'backbone':'unet', 'norm':'Batch'}",
+            "close_on_complete": true
+        },
+        "validator": {
+            "_target_": "MLFlowHandler",
+            "_disabled_": "@is_not_rank0",
+            "tracking_uri": "@tracking_uri",
+            "experiment_name": "@experiment_name",
+            "run_name": "@run_name",
+            "iteration_log": false
+        },
+        "evaluator": {
+            "_target_": "MLFlowHandler",
+            "_disabled_": "@is_not_rank0",
+            "tracking_uri": "@tracking_uri",
+            "experiment_name": "@experiment_name",
+            "run_name": "@run_name",
+            "iteration_log": false,
+            "close_on_complete": true
         }
     }
 }

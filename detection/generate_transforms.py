@@ -37,6 +37,7 @@ from monai.apps.detection.transforms.dictionary import (
     RandRotateBox90d,
     RandZoomBoxd,
     ConvertBoxModed,
+    StandardizeEmptyBoxd,
 )
 
 
@@ -70,7 +71,6 @@ def generate_detection_train_transform(
     Return:
         training transform for detection
     """
-    amp = True
     if amp:
         compute_dtype = torch.float16
     else:
@@ -82,6 +82,7 @@ def generate_detection_train_transform(
             EnsureChannelFirstd(keys=[image_key]),
             EnsureTyped(keys=[image_key, box_key], dtype=torch.float32),
             EnsureTyped(keys=[label_key], dtype=torch.long),
+            StandardizeEmptyBoxd(box_keys=[box_key], box_ref_image_keys=image_key),
             Orientationd(keys=[image_key], axcodes="RAS"),
             intensity_transform,
             EnsureTyped(keys=[image_key], dtype=torch.float16),
@@ -216,7 +217,6 @@ def generate_detection_val_transform(
     Return:
         validation transform for detection
     """
-    amp = True
     if amp:
         compute_dtype = torch.float16
     else:
@@ -228,6 +228,7 @@ def generate_detection_val_transform(
             EnsureChannelFirstd(keys=[image_key]),
             EnsureTyped(keys=[image_key, box_key], dtype=torch.float32),
             EnsureTyped(keys=[label_key], dtype=torch.long),
+            StandardizeEmptyBoxd(box_keys=[box_key], box_ref_image_keys=image_key),
             Orientationd(keys=[image_key], axcodes="RAS"),
             intensity_transform,
             ConvertBoxToStandardModed(box_keys=[box_key], mode=gt_box_mode),
@@ -272,7 +273,6 @@ def generate_detection_inference_transform(
     Return:
         validation transform for detection
     """
-    amp = True
     if amp:
         compute_dtype = torch.float16
     else:

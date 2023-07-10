@@ -91,4 +91,4 @@ And the profiling result is
 
 As shown, the gaps caused by slow CPU augmentation are successfully removed.
 
-Another profiling example for radiology image analysis can be found in the following [link](https://github.com/Project-MONAI/tutorials/blob/main/performance_profiling/pathology/profiling_train_base_nvtx.md).
+Another profiling example for radiology image analysis can be found in the following [link](../../performance_profiling/radiology/profiling_train_base_nvtx.md).

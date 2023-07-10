@@ -13,10 +13,11 @@ extra_modalities: {image2 : pet}    # a second modality
 custom_data_transforms:
   - key: after_resample_transforms
     path: '.'
-    transform: {_target_: hecktor_crop_neck_region.HecktorCropNeckRegion}
+    transform: {_target_: hecktor_crop_neck_region.HecktorCropNeckRegion, box_size: [200, 200, 310]}
 
 # indicate the new avg image size (to correctly determine amount of caching required)
-image_size: [200, 200, 310]
+image_size_mm_90: [200, 200, 310]
+resample_resolution: [1, 1, 1]
 
 # update the random crop size (for training) to be slightly smaller, since the automatically
 # determined size was based on the whole image

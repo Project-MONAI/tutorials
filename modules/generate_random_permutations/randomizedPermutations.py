@@ -118,7 +118,6 @@ class AugmentData(object):
 
 
 def main():
-
     image_dir = "./exampleImages"
     image_file_list = glob.glob(image_dir + "/*.png")
     output_size = (400, 400)

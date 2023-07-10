@@ -24,3 +24,8 @@ This notebook is a quick demo for devices, run the Ignite trainer engine on CPU,
 Demonstrates the use of the `ThreadBuffer` class used to generate data batches during training in a separate thread.
 #### [transform_speed](./transform_speed.ipynb)
 Illustrate reading NIfTI files and test speed of different transforms on different devices.
+#### [TensorRT_inference_acceleration](./TensorRT_inference_acceleration.ipynb)
+This notebook shows how to use TensorRT to accelerate the model and achieve a better inference latency.
+
+#### [Tutorials for resource monitoring](./monitoring/README.md)
+Information about how to set up and apply existing tools to monitor the computing resources.

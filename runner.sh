@@ -70,6 +70,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" lazy_resampling_com
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" TensorRT_inference_acceleration.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" lazy_resampling_benchmark.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" modular_patch_inferer.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" GDS_dataset.ipynb)
 
 # Execution of the notebook in these folders / with the filename cannot be automated
 skip_run_papermill=()
@@ -107,6 +108,7 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*transform_visualization*)  # ht
 skip_run_papermill=("${skip_run_papermill[@]}" .*TensorRT_inference_acceleration*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*mednist_classifier_ray*)  # https://github.com/Project-MONAI/tutorials/issues/1307
 skip_run_papermill=("${skip_run_papermill[@]}" .*TorchIO_MONAI_PyTorch_Lightning*)  # https://github.com/Project-MONAI/tutorials/issues/1324
+skip_run_papermill=("${skip_run_papermill[@]}" .*GDS_dataset*)  # https://github.com/Project-MONAI/tutorials/issues/1324
 
 # output formatting
 separator=""

@@ -248,11 +248,14 @@ def main():
                             timesteps=timesteps,
                         )
                         val_loss = F.mse_loss(noise_pred.float(), noise.float())
-                        val_recon_epoch_loss += val_loss.item()
+                        val_recon_epoch_loss += val_loss
                     val_recon_epoch_loss = val_recon_epoch_loss / (step + 1)
+
                     if ddp_bool:
                         dist.barrier()
                         dist.all_reduce(val_recon_epoch_loss, op=torch.distributed.ReduceOp.AVG)
+
+                    val_recon_epoch_loss = val_recon_epoch_loss.item()
 
                     # write val loss and save best model
                     if rank == 0:

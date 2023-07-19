@@ -100,8 +100,6 @@ The example shows the flexibility of MONAI modules in a PyTorch-based program:
 - 3D UNet, Dice loss function, Mean Dice metric for 3D segmentation task.
 - Sliding window inference.
 - Deterministic training for reproducibility.
-##### [unet_segmentation_3d_catalyst](./3d_segmentation/unet_segmentation_3d_catalyst.ipynb)
-This notebook shows how MONAI may be used in conjunction with the [Catalyst](https://github.com/catalyst-team/catalyst) framework.
 ##### [unet_segmentation_3d_ignite](./3d_segmentation/unet_segmentation_3d_ignite.ipynb)
 This notebook is an end-to-end training & evaluation example of 3D segmentation based on synthetic dataset.
 The example is a PyTorch Ignite program and shows several key features of MONAI, especially with medical domain specific transforms and event handlers for profiling (logging, TensorBoard, MLFlow, etc.).

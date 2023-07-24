@@ -126,6 +126,11 @@ def main():
                 )
                 print(f"Scaling factor set to {1/torch.std(z)}")
     scale_factor = 1 / torch.std(z)
+    print(f"Rank {rank}: local scale_factor: {scale_factor}")
+    if ddp_bool:
+        dist.barrier()
+        dist.all_reduce(scale_factor, op=torch.distributed.ReduceOp.AVG)
+    print(f"Rank {rank}: final scale_factor -> {scale_factor}")
 
     # Define Diffusion Model
     unet = define_instance(args, "diffusion_def").to(device)
@@ -261,8 +266,14 @@ def main():
                             timesteps=timesteps,
                         )
                         val_loss = F.mse_loss(noise_pred.float(), noise.float())
-                        val_recon_epoch_loss += val_loss.item()
+                        val_recon_epoch_loss += val_loss
                     val_recon_epoch_loss = val_recon_epoch_loss / (step + 1)
+
+                    if ddp_bool:
+                        dist.barrier()
+                        dist.all_reduce(val_recon_epoch_loss, op=torch.distributed.ReduceOp.AVG)
+
+                    val_recon_epoch_loss = val_recon_epoch_loss.item()
 
                     # write val loss and save best model
                     if rank == 0:

@@ -29,7 +29,6 @@ Pre-training Dataset: Datasets from multiple sources has been used. Below is a l
 | Colonography Trials     | TCIA            | ~1600    |
 | Head and Neck Carcinoma | TCIA            | ~1300    |
 
-
 Fine-tuning Dataset: The dataset from Beyond the Cranial Vault Challenge
 [(BTCV)](https://www.synapse.org/#!Synapse:syn3193805/wiki/217789)
 2015 hosted at MICCAI, was used as a fully supervised fine-tuning task on the pre-trained weights. The dataset
@@ -68,7 +67,17 @@ On complete execution of the jupyter notebook the below example training and val
 
 If you found the tutorial to be helpful in your work please support us by citing the below reference:
 
-1.) Tang, Yucheng, Dong Yang, Wenqi Li, Holger R. Roth, Bennett Landman, Daguang Xu, Vishwesh Nath, and Ali Hatamizadeh. "Self-supervised pre-training of swin transformers for 3d medical image analysis." In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pp. 20730-20740. 2022.
+1.) Valanarasu JM, Tang Y, Yang D, Xu Z, Zhao C, Li W, Patel VM, Landman B, Xu D, He Y, Nath V. Disruptive Autoencoders: Leveraging Low-level features for 3D Medical Image Pre-training. arXiv preprint arXiv:2307.16896. 2023 Jul 31.
+
+Bibtex: `@article{valanarasu2023disruptive,
+  title={Disruptive Autoencoders: Leveraging Low-level features for 3D Medical Image Pre-training},
+  author={Valanarasu, Jeya Maria Jose and Tang, Yucheng and Yang, Dong and Xu, Ziyue and Zhao, Can and Li, Wenqi and Patel, Vishal M and Landman, Bennett and Xu, Daguang and He, Yufan and others},
+  journal={arXiv preprint arXiv:2307.16896},
+  year={2023}
+}
+`
+
+2.) Tang, Y., Yang, D., Li, W., Roth, H.R., Landman, B., Xu, D., Nath, V. and Hatamizadeh, A., 2022. Self-supervised pre-training of swin transformers for 3d medical image analysis. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (pp. 20730-20740).
 
 Bibtex: `@inproceedings{tang2022self,
   title={Self-supervised pre-training of swin transformers for 3d medical image analysis},
@@ -79,5 +88,15 @@ Bibtex: `@inproceedings{tang2022self,
 }
 `
 
-2.) Tang, Yucheng, et al. "High-resolution 3D abdominal segmentation with random patch network fusion."
-Medical Image Analysis 69 (2021): 101894.
+3.) Tang, Y., Gao, R., Lee, H.H., Han, S., Chen, Y., Gao, D., Nath, V., Bermudez, C., Savona, M.R., Abramson, R.G. and Bao, S., 2021. High-resolution 3D abdominal segmentation with random patch network fusion. Medical image analysis, 69, p.101894.
+
+Bibtex: `@article{tang2021high,
+  title={High-resolution 3D abdominal segmentation with random patch network fusion},
+  author={Tang, Yucheng and Gao, Riqiang and Lee, Ho Hin and Han, Shizhong and Chen, Yunqiang and Gao, Dashan and Nath, Vishwesh and Bermudez, Camilo and Savona, Michael R and Abramson, Richard G and others},
+  journal={Medical image analysis},
+  volume={69},
+  pages={101894},
+  year={2021},
+  publisher={Elsevier}
+}
+`

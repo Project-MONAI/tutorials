@@ -100,8 +100,6 @@ The example shows the flexibility of MONAI modules in a PyTorch-based program:
 - 3D UNet, Dice loss function, Mean Dice metric for 3D segmentation task.
 - Sliding window inference.
 - Deterministic training for reproducibility.
-##### [unet_segmentation_3d_catalyst](./3d_segmentation/unet_segmentation_3d_catalyst.ipynb)
-This notebook shows how MONAI may be used in conjunction with the [Catalyst](https://github.com/catalyst-team/catalyst) framework.
 ##### [unet_segmentation_3d_ignite](./3d_segmentation/unet_segmentation_3d_ignite.ipynb)
 This notebook is an end-to-end training & evaluation example of 3D segmentation based on synthetic dataset.
 The example is a PyTorch Ignite program and shows several key features of MONAI, especially with medical domain specific transforms and event handlers for profiling (logging, TensorBoard, MLFlow, etc.).
@@ -277,7 +275,7 @@ This notebook shows how to quickly set up training workflow based on `MedNISTDat
 This notebook shows how to load the TCIA data with CSVDataset from CSV file and extract information for TCIA data to fetch DICOM images based on REST API.
 ##### [transforms_demo_2d](./modules/transforms_demo_2d.ipynb)
 This notebook demonstrates the image transformations on histology images using
-##### [UNet_input_size_constrains](./modules/UNet_input_size_constrains.ipynb)
+##### [UNet_input_size_constraints](./modules/UNet_input_size_constraints.ipynb)
 This tutorial shows how to determine a reasonable spatial size of the input data for MONAI UNet, which not only supports residual units, but also can use more hyperparameters (like `strides`, `kernel_size` and `up_kernel_size`) than the basic UNet implementation.
 ##### [TorchIO, MONAI, PyTorch Lightning](./modules/TorchIO_MONAI_PyTorch_Lightning.ipynb)
 This notebook demonstrates how the three libraries from the official PyTorch Ecosystem can be used together to segment the hippocampus on brain MRIs from the Medical Segmentation Decathlon.
@@ -285,8 +283,6 @@ This notebook demonstrates how the three libraries from the official PyTorch Eco
 This tutorial uses the MedNIST scan (or alternatively the MNIST) dataset to demonstrate MONAI's variational autoencoder class.
 ##### [interpretability](./modules/interpretability)
 Tutorials in this folder demonstrate model visualisation and interpretability features of MONAI. Currently, it consists of class activation mapping and occlusion sensitivity for 3D classification model visualisations and analysis.
-##### [Transfer learning with MMAR](./modules/transfer_mmar.ipynb)
-This tutorial demonstrates a transfer learning pipeline from a pretrained model in [Clara Train's Medical Model Archive format](https://docs.nvidia.com/clara/clara-train-sdk/pt/mmar.html).  The notebook also shows the use of LMDB-based dataset.
 
 ##### [Transform visualization](./modules/transform_visualization.ipynb)
 This tutorial shows several visualization approaches for 3D image during transform augmentation.

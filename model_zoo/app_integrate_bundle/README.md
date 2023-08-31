@@ -83,17 +83,18 @@ python ensemble.py --bundle_root bundle_root_path --dataset_dir data_root_path
 
 ## **How to integrate Bundle in your own application**
 ### Get component from bundle
+Check all supported properties in https://github.com/Project-MONAI/MONAI/blob/dev/monai/bundle/properties.py.
 ```
-from monai.bundle import ConfigWorkflow
+from monai.bundle import create_workflow
 
-train_workflow = ConfigWorkflow(
-    config_file=bundle_config_path,
-    meta_file=bundle_metadata_path,
-    logging_file=bundle_logging_path,
-    workflow="train",
-)
-train_workflow.initialize()
+train_workflow = create_workflow(config_file=bundle_config_path, workflow_type="train")
+
+# get train postprocessing
 postprocessing = train_workflow.train_postprocessing
+
+# get meta information
+version = train_workflow.version
+description = train_workflow.description
 ```
 ### Use component in your pipeline
 ```
@@ -108,9 +109,25 @@ evaluator = SupervisedEvaluator(
         )
 ```
 ### Update component with your own args
+
+- If the component you want to replace is listed [here](https://github.com/Project-MONAI/MONAI/blob/dev/monai/bundle/properties.py), you can replace it directly as below:
 ```
 # update `max_epochs` in workflow
 train_workflow.max_epochs = max_epochs
+
+# must execute 'initialize' again after changing the content
+train_workflow.initialize()
+print(train_workflow.max_epochs)
+```
+- Otherwise, you can override the components when you create the workflow.
+```
+override = {
+            "network": "$@network_def.to(@device)",
+            "dataset#_target_": "Dataset",
+            "dataset#data": [{"image": filename}],
+            "postprocessing#transforms#2#output_postfix": "seg",
+        }
+train_workflow = create_workflow(config_file=bundle_config_path, workflow_type="train", **override)
 ```
 
 ## Questions and bugs

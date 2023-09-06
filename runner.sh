@@ -110,7 +110,6 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*TensorRT_inference_acceleration
 skip_run_papermill=("${skip_run_papermill[@]}" .*mednist_classifier_ray*)  # https://github.com/Project-MONAI/tutorials/issues/1307
 skip_run_papermill=("${skip_run_papermill[@]}" .*TorchIO_MONAI_PyTorch_Lightning*)  # https://github.com/Project-MONAI/tutorials/issues/1324
 skip_run_papermill=("${skip_run_papermill[@]}" .*GDS_dataset*)  # https://github.com/Project-MONAI/tutorials/issues/1324
-skip_run_papermill=("${skip_run_papermill[@]}" .*pythonic_bundle_access*)
 
 # output formatting
 separator=""

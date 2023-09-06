@@ -18,7 +18,7 @@ import subprocess
 import torch
 from monai.transforms import Compose
 from monai.transforms.post.dictionary import MeanEnsembled, VoteEnsembled
-from monai.bundle import ConfigWorkflow
+from monai.bundle import create_workflow
 from monai.engines import EnsembleEvaluator
 from monai.utils import optional_import
 
@@ -74,12 +74,7 @@ class EnsembleTrainTask:
         self.bundle_metadata_path = os.path.join(path, "configs", Const.METADATA_JSON)
         self.bundle_logging_path = os.path.join(path, "configs", Const.LOGGING_CONFIG)
 
-        self.train_workflow = ConfigWorkflow(
-            config_file=self.bundle_config_path,
-            meta_file=self.bundle_metadata_path,
-            logging_file=self.bundle_logging_path,
-            workflow="train",
-        )
+        self.train_workflow = create_workflow(config_file=self.bundle_config_path, workflow_type="train")
 
     def _partition_datalist(self, datalist, n_splits=5, shuffle=False):
         logger.info(f"Total Records in Dataset: {len(datalist)}")
@@ -110,12 +105,7 @@ class EnsembleTrainTask:
         logger.info(f"Total Records in Test Dataset: {len(test_datalist)}")
 
         bundle_inference_config_path = os.path.join(self.bundle_path, "configs", inference_config_paths[0])
-        inference_workflow = ConfigWorkflow(
-            config_file=bundle_inference_config_path,
-            meta_file=None,
-            logging_file=None,
-            workflow="inference",
-        )
+        inference_workflow = create_workflow(config_file=bundle_inference_config_path, workflow_type="inference")
         inference_workflow.dataset_data = test_datalist
         # this application has an additional requirement for the bundle workflow to provide the property dataloader
         inference_workflow.add_property(name="dataloader", required=True, config_id="dataloader")

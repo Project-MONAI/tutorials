@@ -12,7 +12,8 @@ Start the tutorial notebooks on constructing bundles:
 
 1. [Bundle Introduction](./01_bundle_intro.ipynb): create a very simple bundle from scratch.
 2. [MedNIST Classification](./02_mednist_classification.ipynb): train a network using the bundle for doing a real task.
-
+3. [MedNIST Classification With Best Practices](./03_mednist_classification_v2.ipynb): do the same again but better.
+4. [Integrating Existing Code](./04_integrating_code.ipynb): discussion on how to integrate existing, possible non-MONAI, code into a bundle.
 More advanced topics are covered in this directory:
 
 * [Further Features](./further_features.md): covers more advanced features and uses of configs, command usage, and

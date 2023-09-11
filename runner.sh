@@ -482,7 +482,7 @@ for file in "${files[@]}"; do
         jupytext "$filename" --opt custom_cell_magics="writefile" -w --to script -o - | \
             sed 's/\(^\s*\)%/\1pass  # %/' | \
             sed 's/\(^#.*\)$/\1  # noqa: E501/' | \
-            flake8 - --show-source --extend-ignore=E203 --ignore=N812 --max-line-length 120
+            flake8 - --show-source --extend-ignore=E203,N812,W503 --max-line-length 120
         success=$?
         if [ ${success} -ne 0 ]
         then

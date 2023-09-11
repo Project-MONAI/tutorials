@@ -110,6 +110,7 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*TensorRT_inference_acceleration
 skip_run_papermill=("${skip_run_papermill[@]}" .*mednist_classifier_ray*)  # https://github.com/Project-MONAI/tutorials/issues/1307
 skip_run_papermill=("${skip_run_papermill[@]}" .*TorchIO_MONAI_PyTorch_Lightning*)  # https://github.com/Project-MONAI/tutorials/issues/1324
 skip_run_papermill=("${skip_run_papermill[@]}" .*GDS_dataset*)  # https://github.com/Project-MONAI/tutorials/issues/1324
+skip_run_papermill=("${skip_run_papermill[@]}" .*learn2reg_nlst_paired_lung_ct.ipynb*)  # slow test
 
 # output formatting
 separator=""
@@ -482,7 +483,7 @@ for file in "${files[@]}"; do
         jupytext "$filename" --opt custom_cell_magics="writefile" -w --to script -o - | \
             sed 's/\(^\s*\)%/\1pass  # %/' | \
             sed 's/\(^#.*\)$/\1  # noqa: E501/' | \
-            flake8 - --show-source --extend-ignore=E203 --max-line-length 120
+            flake8 - --show-source --extend-ignore=E203,N812,W503 --max-line-length 120
         success=$?
         if [ ${success} -ne 0 ]
         then

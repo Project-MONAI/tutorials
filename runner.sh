@@ -110,6 +110,7 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*TensorRT_inference_acceleration
 skip_run_papermill=("${skip_run_papermill[@]}" .*mednist_classifier_ray*)  # https://github.com/Project-MONAI/tutorials/issues/1307
 skip_run_papermill=("${skip_run_papermill[@]}" .*TorchIO_MONAI_PyTorch_Lightning*)  # https://github.com/Project-MONAI/tutorials/issues/1324
 skip_run_papermill=("${skip_run_papermill[@]}" .*GDS_dataset*)  # https://github.com/Project-MONAI/tutorials/issues/1324
+skip_run_papermill=("${skip_run_papermill[@]}" .*learn2reg_nlst_paired_lung_ct.ipynb*)  # slow test
 
 # output formatting
 separator=""

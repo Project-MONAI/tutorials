@@ -72,6 +72,10 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" TensorRT_inference_
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" lazy_resampling_benchmark.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" modular_patch_inferer.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" GDS_dataset.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 01_bundle_intro.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 02_mednist_classification.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 03_mednist_classification_v2.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 04_integrating_code.ipynb)
 
 # Execution of the notebook in these folders / with the filename cannot be automated
 skip_run_papermill=()
@@ -111,6 +115,10 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*mednist_classifier_ray*)  # htt
 skip_run_papermill=("${skip_run_papermill[@]}" .*TorchIO_MONAI_PyTorch_Lightning*)  # https://github.com/Project-MONAI/tutorials/issues/1324
 skip_run_papermill=("${skip_run_papermill[@]}" .*GDS_dataset*)  # https://github.com/Project-MONAI/tutorials/issues/1324
 skip_run_papermill=("${skip_run_papermill[@]}" .*learn2reg_nlst_paired_lung_ct.ipynb*)  # slow test
+skip_run_papermill=("${skip_run_papermill[@]}" .*01_bundle_intro.ipynb*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*02_mednist_classification.ipynb*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*03_mednist_classification_v2.ipynb*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*04_integrating_code.ipynb*)
 
 # output formatting
 separator=""

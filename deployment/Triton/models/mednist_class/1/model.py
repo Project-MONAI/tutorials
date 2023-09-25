@@ -53,7 +53,7 @@ from monai.inferers.inferer import SimpleInferer
 from monai.transforms import Compose
 from monai.transforms import (
     Activations,
-    AddChannel,
+    EnsureChannelFirst,
     AsDiscrete,
     CropForeground,
     CastToType,
@@ -121,8 +121,8 @@ class TritonPythonModel:
             [
                 LoadImage(reader="PILReader", image_only=True, dtype=np.float32),
                 ScaleIntensity(),
-                AddChannel(),
-                AddChannel(),
+                EnsureChannelFirst(channel_dim="no_channel"),
+                EnsureChannelFirst(channel_dim="no_channel"),
                 ToTensor(),
                 Lambda(func=lambda x: x.to(device=self.inference_device)),
             ]

@@ -61,7 +61,7 @@ from torch.nn.parallel import DistributedDataParallel
 import monai
 from monai.data import DataLoader, Dataset, create_test_image_3d, DistributedSampler
 from monai.transforms import (
-    AsChannelFirstd,
+    EnsureChannelFirstd,
     Compose,
     LoadImaged,
     RandCropByPosNegLabeld,
@@ -99,7 +99,7 @@ def train(args):
     train_transforms = Compose(
         [
             LoadImaged(keys=["img", "seg"]),
-            AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
+            EnsureChannelFirstd(keys=["img", "seg"], channel_dim=-1),
             ScaleIntensityd(keys="img"),
             RandCropByPosNegLabeld(
                 keys=["img", "seg"], label_key="seg", spatial_size=[96, 96, 96], pos=1, neg=1, num_samples=4

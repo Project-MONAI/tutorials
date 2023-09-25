@@ -38,7 +38,7 @@ from monai.handlers import (
 from monai.inferers import SimpleInferer, SlidingWindowInferer
 from monai.transforms import (
     Activationsd,
-    AsChannelFirstd,
+    EnsureChannelFirstd,
     AsDiscreted,
     Compose,
     KeepLargestConnectedComponentd,
@@ -74,7 +74,7 @@ def main(tempdir):
     train_transforms = Compose(
         [
             LoadImaged(keys=["image", "label"]),
-            AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
+            EnsureChannelFirstd(keys=["image", "label"], channel_dim=-1),
             ScaleIntensityd(keys="image"),
             RandCropByPosNegLabeld(
                 keys=["image", "label"], label_key="label", spatial_size=[96, 96, 96], pos=1, neg=1, num_samples=4
@@ -86,7 +86,7 @@ def main(tempdir):
     val_transforms = Compose(
         [
             LoadImaged(keys=["image", "label"]),
-            AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
+            EnsureChannelFirstd(keys=["image", "label"], channel_dim=-1),
             ScaleIntensityd(keys="image"),
             EnsureTyped(keys=["image", "label"]),
         ]

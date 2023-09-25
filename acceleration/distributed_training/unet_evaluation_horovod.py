@@ -56,7 +56,15 @@ import monai
 from monai.data import DataLoader, Dataset, create_test_image_3d, decollate_batch
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
-from monai.transforms import Activations, EnsureChannelFirstd, AsDiscrete, Compose, LoadImaged, ScaleIntensityd, EnsureType
+from monai.transforms import (
+    Activations,
+    EnsureChannelFirstd,
+    AsDiscrete,
+    Compose,
+    LoadImaged,
+    ScaleIntensityd,
+    EnsureType,
+)
 
 
 def evaluate(args):

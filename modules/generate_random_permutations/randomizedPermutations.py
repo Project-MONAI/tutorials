@@ -36,10 +36,17 @@ class Dataset(torch.utils.data.Dataset):
     def __init__(self, image_file_list, transforms, shuffle_transforms=1):
         self.image_file_list = image_file_list
         if shuffle_transforms:
-            transform_list = [LoadImage(image_only=True), EnsureChannelFirst(channel_dim="no_channel"), Resize((299, 299))] + shuffle(transforms)
+            transform_list = [
+                LoadImage(image_only=True),
+                EnsureChannelFirst(channel_dim="no_channel"),
+                Resize((299, 299)),
+            ] + shuffle(transforms)
             self.transform = Compose(transpose_list)
         else:
-            self.transform = Compose([LoadImage(image_only=True), EnsureChannelFirst(channel_dim="no_channel"), Resize((299, 299))] + transforms)
+            self.transform = Compose(
+                [LoadImage(image_only=True), EnsureChannelFirst(channel_dim="no_channel"), Resize((299, 299))]
+                + transforms
+            )
 
     def __len__(self):
         return len(self.image_file_list)

@@ -20,7 +20,7 @@ from torch.utils.data import DataLoader
 
 from monai.data import CacheDataset, create_test_image_3d, list_data_collate
 from monai.transforms import (
-    AsChannelFirstd,
+    EnsureChannelFirstd,
     Compose,
     LoadImaged,
     RandCropByPosNegLabeld,
@@ -48,7 +48,7 @@ class MonaiTrainOpener(tools.Opener):
         transforms = Compose(
             [
                 LoadImaged(keys=["img", "seg"]),
-                AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
+                EnsureChannelFirstd(keys=["img", "seg"], channel_dim=-1),
                 ScaleIntensityd(keys="img"),
                 RandCropByPosNegLabeld(
                     keys=["img", "seg"], label_key="seg", spatial_size=[96, 96, 96], pos=1, neg=1, num_samples=4

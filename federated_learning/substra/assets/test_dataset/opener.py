@@ -20,7 +20,7 @@ import substratools as tools
 from torch.utils.data import DataLoader
 
 from monai.data import CacheDataset, NiftiSaver, create_test_image_3d, list_data_collate
-from monai.transforms import AsChannelFirstd, Compose, LoadImaged, ScaleIntensityd, ToTensord
+from monai.transforms import EnsureChannelFirstd, Compose, LoadImaged, ScaleIntensityd, ToTensord
 
 
 class MonaiTestOpener(tools.Opener):
@@ -42,7 +42,7 @@ class MonaiTestOpener(tools.Opener):
         transforms = Compose(
             [
                 LoadImaged(keys=["img", "seg"]),
-                AsChannelFirstd(keys=["img", "seg"], channel_dim=-1),
+                EnsureChannelFirstd(keys=["img", "seg"], channel_dim=-1),
                 ScaleIntensityd(keys="img"),
                 ToTensord(keys=["img", "seg"]),
             ]
@@ -84,7 +84,7 @@ class MonaiTestOpener(tools.Opener):
         transforms = Compose(
             [
                 LoadImaged(keys=["seg"]),
-                AsChannelFirstd(keys=["seg"], channel_dim=-1),
+                EnsureChannelFirstd(keys=["seg"], channel_dim=-1),
                 ToTensord(keys=["seg"]),
             ]
         )

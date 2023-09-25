@@ -47,7 +47,7 @@ from monai.networks.layers import Norm
 from monai.networks.nets import BasicUNet, UNet
 from monai.transforms import (
     Activationsd,
-    AddChanneld,
+    EnsureChannelFirstd,
     AsDiscreted,
     Compose,
     EnsureTyped,
@@ -91,7 +91,7 @@ def get_network(network, channels, dimensions):
 def get_pre_transforms(roi_size, model_size, dimensions):
     t = [
         LoadImaged(keys=("image", "label")),
-        AddChanneld(keys=("image", "label")),
+        EnsureChannelFirstd(keys=("image", "label"), channel_dim="no_channel"),
         SpatialCropForegroundd(keys=("image", "label"), source_key="label", spatial_size=roi_size),
         Resized(keys=("image", "label"), spatial_size=model_size, mode=("area", "nearest")),
         NormalizeIntensityd(keys="image", subtrahend=208.0, divisor=388.0),

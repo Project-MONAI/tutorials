@@ -28,7 +28,7 @@ from monai.handlers import CheckpointLoader, MeanDice, StatsHandler, from_engine
 from monai.inferers import SlidingWindowInferer
 from monai.transforms import (
     Activationsd,
-    AsChannelFirstd,
+    EnsureChannelFirstd,
     AsDiscreted,
     Compose,
     KeepLargestConnectedComponentd,
@@ -65,7 +65,7 @@ def main(tempdir):
     val_transforms = Compose(
         [
             LoadImaged(keys=["image", "label"]),
-            AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
+            EnsureChannelFirstd(keys=["image", "label"], channel_dim=-1),
             ScaleIntensityd(keys="image"),
             EnsureTyped(keys=["image", "label"]),
         ]

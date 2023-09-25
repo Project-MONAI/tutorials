@@ -73,7 +73,7 @@ from monai.handlers import CheckpointSaver, LrScheduleHandler, StatsHandler, fro
 from monai.inferers import SimpleInferer
 from monai.transforms import (
     Activationsd,
-    AsChannelFirstd,
+    EnsureChannelFirstd,
     AsDiscreted,
     Compose,
     KeepLargestConnectedComponentd,
@@ -111,7 +111,7 @@ def train(args):
     train_transforms = Compose(
         [
             LoadImaged(keys=["image", "label"]),
-            AsChannelFirstd(keys=["image", "label"], channel_dim=-1),
+            EnsureChannelFirstd(keys=["image", "label"], channel_dim=-1),
             ScaleIntensityd(keys="image"),
             RandCropByPosNegLabeld(
                 keys=["image", "label"], label_key="label", spatial_size=[96, 96, 96], pos=1, neg=1, num_samples=4

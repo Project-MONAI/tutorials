@@ -32,7 +32,7 @@ import numpy as np
 import skimage.measure as measure
 from monai.data import write_nifti
 from monai.transforms import (
-    AddChanneld,
+    EnsureChannelFirstd,
     BoundingRect,
     LoadImaged,
     RandWeightedCropd,
@@ -76,7 +76,7 @@ for name in data_names:
         e = [bb[0, 1] + 16, bb[0, 3] + 16, bb[0, 5] + 16]
 
         # generate lesion patches based on the bounding boxes
-        data_out = AddChanneld(keys)(data)
+        data_out = EnsureChannelFirstd(keys, channel_dim="no_channel")(data)
         data_out = SpatialCropd(keys, roi_start=s, roi_end=e)(data_out)
         resize = Resized(keys, patch_size, mode=("trilinear", "nearest"))
         data_out = resize(data_out)
@@ -87,7 +87,7 @@ for name in data_names:
         write_nifti(data_out["label"][0], file_name=label_out)
 
         # generate random negative samples
-        rand_data_out = AddChanneld(keys)(data)
+        rand_data_out = EnsureChannelFirstd(keys, channel_dim="no_channel")(data)
         rand_data_out["inv_label"] = rand_data_out["label"] == 0  # non-lesion sampling map
         rand_crop = RandWeightedCropd(keys, "inv_label", patch_size, num_samples=3)
         rand_data_out = rand_crop(rand_data_out)

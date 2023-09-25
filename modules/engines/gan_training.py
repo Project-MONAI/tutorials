@@ -37,7 +37,7 @@ from monai.handlers import CheckpointSaver, StatsHandler
 from monai.networks import normal_init
 from monai.networks.nets import Discriminator, Generator
 from monai.transforms import (
-    AddChannelD,
+    EnsureChannelFirstD,
     Compose,
     LoadImageD,
     RandFlipD,
@@ -68,7 +68,7 @@ def main():
     train_transforms = Compose(
         [
             LoadImageD(keys=["hand"]),
-            AddChannelD(keys=["hand"]),
+            EnsureChannelFirstD(keys=["hand"], channel_dim="no_channel"),
             ScaleIntensityD(keys=["hand"]),
             RandRotateD(keys=["hand"], range_x=np.pi / 12, prob=0.5, keep_size=True),
             RandFlipD(keys=["hand"], spatial_axis=0, prob=0.5),

@@ -119,6 +119,11 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*01_bundle_intro.ipynb*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*02_mednist_classification.ipynb*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*03_mednist_classification_v2.ipynb*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*04_integrating_code.ipynb*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*hovernet_torch.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
+skip_run_papermill=("${skip_run_papermill[@]}" .*nuclei_classification_training_notebook.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
+skip_run_papermill=("${skip_run_papermill[@]}" .*nuclick_training_notebook.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
+skip_run_papermill=("${skip_run_papermill[@]}" .*nuclei_classification_infer.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
+skip_run_papermill=("${skip_run_papermill[@]}" .*nuclick_infer.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
 
 # output formatting
 separator=""

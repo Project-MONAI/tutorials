@@ -17,19 +17,15 @@ import random
 from monai.data import DataLoader
 from monai.transforms.transform import Transform
 from monai.transforms import (
-    Affine,
     LoadImage,
     Rotate,
     NormalizeIntensity,
-    Transpose,
     Compose,
     Resize,
-    AsChannelFirst,
-    AsChannelLast,
     ScaleIntensity,
     RandFlip,
     Rotate90,
-    AddChannel,
+    EnsureChannelFirst,
     GaussianSmooth,
     AdjustContrast,
 )
@@ -40,10 +36,17 @@ class Dataset(torch.utils.data.Dataset):
     def __init__(self, image_file_list, transforms, shuffle_transforms=1):
         self.image_file_list = image_file_list
         if shuffle_transforms:
-            transform_list = [LoadImage(image_only=True), AddChannel(), Resize((299, 299))] + shuffle(transforms)
+            transform_list = [
+                LoadImage(image_only=True),
+                EnsureChannelFirst(channel_dim="no_channel"),
+                Resize((299, 299)),
+            ] + shuffle(transforms)
             self.transform = Compose(transpose_list)
         else:
-            self.transform = Compose([LoadImage(image_only=True), AddChannel(), Resize((299, 299))] + transforms)
+            self.transform = Compose(
+                [LoadImage(image_only=True), EnsureChannelFirst(channel_dim="no_channel"), Resize((299, 299))]
+                + transforms
+            )
 
     def __len__(self):
         return len(self.image_file_list)
@@ -129,7 +132,7 @@ def main():
     # for _batch_data in train_dataloader:
     # 	img = _batch_data[0]
 
-    image_loading_transforms = [LoadImage(image_only=True), AddChannel()]
+    image_loading_transforms = [LoadImage(image_only=True), EnsureChannelFirst(channel_dim="no_channel")]
     augmentation_dict = {"rotate": 3, "flip": 2, "rotate90": 1, "intensityGaussian": 2, "adjustContrast": 2}
 
     img = AugmentData(image_loading_transforms=image_loading_transforms, augmentation_dict=augmentation_dict)(

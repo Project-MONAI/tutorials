@@ -281,7 +281,7 @@ train_transforms = [
 ]
 dataset = CacheDataset(..., transform=train_trans)
 ```
-Here we convert to PyTorch `Tensor` with `EnsureTyped` transform and move data to GPU with `ToDeviced` transform. `CacheDataset` caches the transform results until `ToDeviced`, so it is in GPU memory. Then in every epoch, the program fetches cached data from GPU memory and only execute the random transform `RandCropByPosNegLabeld` on GPU directly.
+Here we convert to PyTorch `Tensor` and move data to GPU with `EnsureTyped` transform. `CacheDataset` caches the transform results until `EnsureTyped`, so it is in GPU memory. Then in every epoch, the program fetches cached data from GPU memory and only execute the random transform `RandCropByPosNegLabeld` on GPU directly.
 GPU caching example is available at [Spleen fast training tutorial](fast_training_tutorial.ipynb).
 
 ## Leveraging multi-GPU distributed training

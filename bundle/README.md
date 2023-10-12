@@ -36,4 +36,3 @@ Other tutorials and resources within MONAI on other bundle topics can be found h
 
 * [MONAI Deploy App SDK](https://github.com/Project-MONAI/monai-deploy-app-sdk/tree/main/notebooks/tutorials) including bundle tutorials
 * [MONAI Label Bundle App](https://github.com/Project-MONAI/MONAILabel/tree/main/sample-apps/monaibundle)
-* 

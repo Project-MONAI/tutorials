@@ -31,3 +31,8 @@ instantiate necessary components with python program and execute the inference.
 
 * [python bundle workflow](./python_bundle_workflow): step-by-step tutorial examples show how to develop a bundle
 training or inference workflow in Python instead of JSON / YAML configs.
+
+Other tutorials and resources within MONAI on other bundle topics can be found here:
+
+* [MONAI Deploy App SDK](https://github.com/Project-MONAI/monai-deploy-app-sdk/tree/main/notebooks/tutorials) including bundle tutorials
+* [MONAI Label Bundle App](https://github.com/Project-MONAI/MONAILabel/tree/main/sample-apps/monaibundle)

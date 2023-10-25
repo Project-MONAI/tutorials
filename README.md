@@ -146,6 +146,9 @@ An example of experiment management with [Aim](https://aimstack.io/aim-monai-tut
 An example of experiment management with [MLFlow](https://www.mlflow.org/docs/latest/tracking.html), using 3D spleen segmentation as an example.
 ##### [MONAI bundle integrates MLFlow](./experiment_management/bundle_integrate_mlflow.ipynb)
 An example shows how to easily enable and customize the MLFlow for experiment management in MONAI bundle.
+##### [ClearML](./experiment_management/unet_segmentation_3d_ignite_clearml.ipynb)
+An example of experiment management with [ClearML](https://clear.ml/docs/latest/docs/), using 3D Segmentation with UNet as an example.
+
 
 #### <ins>**Federated Learning**</ins>
 ##### [NVFlare](./federated_learning/nvflare)

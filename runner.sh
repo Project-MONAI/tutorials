@@ -124,6 +124,7 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*nuclei_classification_training_
 skip_run_papermill=("${skip_run_papermill[@]}" .*nuclick_training_notebook.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
 skip_run_papermill=("${skip_run_papermill[@]}" .*nuclei_classification_infer.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
 skip_run_papermill=("${skip_run_papermill[@]}" .*nuclick_infer.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
+skip_run_papermill=("${skip_run_papermill[@]}" .*05_spleen_segmentation_lightning.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1550
 
 # output formatting
 separator=""

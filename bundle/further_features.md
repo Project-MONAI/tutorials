@@ -1,5 +1,5 @@
 
-# Get started to MONAI bundle
+# Further Features of MONAI Bundles
 
 A MONAI bundle usually includes the stored weights of a model, TorchScript model, JSON files which include configs and metadata about the model, information for constructing training, inference, and post-processing transform sequences, plain-text description, legal information, and other data the model creator wishes to include.
 

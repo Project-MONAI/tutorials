@@ -118,6 +118,9 @@ This notebook shows a quick demo for learning based affine registration of `64 x
 ##### [3D registration using paired lung CT](./3d_registration/paired_lung_ct.ipynb)
 This tutorial shows how to use MONAI to register lung CT volumes acquired at different time points for a single patient.
 
+##### [3D registration using unpaired brain MR](./3d_registration/learn2reg_oasis_unpaired_brain_mr.ipynb)
+This tutorial shows how to get started on using the general-purpose registration framework `VoxelMorph` offered in MONAI to register unpaired brain MR volumes.
+
 ##### [DeepAtlas](./deep_atlas/deep_atlas_tutorial.ipynb)
 This tutorial demonstrates the use of MONAI for training of registration and segmentation models _together_. The DeepAtlas approach, in which the two models serve as a source of weakly supervised learning for each other, is useful in situations where one has many unlabeled images and just a few images with segmentation labels. The notebook works with 3D images from the OASIS-1 brain MRI dataset.
 
@@ -200,8 +203,6 @@ This notebook compares the performance of `Dataset`, `CacheDataset` and `Persist
 ##### [fast_training_tutorial](./acceleration/fast_training_tutorial.ipynb)
 This tutorial compares the training performance of pure PyTorch program and optimized program in MONAI based on NVIDIA GPU device and latest CUDA library.
 The optimization methods mainly include: `AMP`, `CacheDataset`, `GPU transforms`, `ThreadDataLoader`, `DiceCELoss` and `SGD`.
-##### [multi_gpu_test](./acceleration/multi_gpu_test.ipynb)
-This notebook is a quick demo for devices, run the Ignite trainer engine on CPU, GPU and multiple GPUs.
 ##### [threadbuffer_performance](./acceleration/threadbuffer_performance.ipynb)
 Demonstrates the use of the `ThreadBuffer` class used to generate data batches during training in a separate thread.
 ##### [transform_speed](./acceleration/transform_speed.ipynb)

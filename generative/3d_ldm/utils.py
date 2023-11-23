@@ -19,7 +19,6 @@ from monai.apps import DecathlonDataset
 from monai.bundle import ConfigParser
 from monai.data import DataLoader
 from monai.transforms import (
-    AddChanneld,
     CenterSpatialCropd,
     Compose,
     EnsureChannelFirstd,
@@ -76,7 +75,7 @@ def prepare_dataloader(
             LoadImaged(keys=["image"]),
             EnsureChannelFirstd(keys=["image"]),
             Lambdad(keys="image", func=lambda x: x[channel, :, :, :]),
-            AddChanneld(keys=["image"]),
+            EnsureChannelFirstd(keys=["image"], channel_dim="no_channel"),
             EnsureTyped(keys=["image"]),
             Orientationd(keys=["image"], axcodes="RAS"),
             Spacingd(keys=["image"], pixdim=args.spacing, mode=("bilinear")),
@@ -90,7 +89,7 @@ def prepare_dataloader(
             LoadImaged(keys=["image"]),
             EnsureChannelFirstd(keys=["image"]),
             Lambdad(keys="image", func=lambda x: x[channel, :, :, :]),
-            AddChanneld(keys=["image"]),
+            EnsureChannelFirstd(keys=["image"], channel_dim="no_channel"),
             EnsureTyped(keys=["image"]),
             Orientationd(keys=["image"], axcodes="RAS"),
             Spacingd(keys=["image"], pixdim=args.spacing, mode=("bilinear")),

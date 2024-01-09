@@ -1,9 +1,6 @@
 
 # KiTS23 
 
-TODO
-
-
 The KiTS dataset is from MICCAI 2023 challenge **[The 2023 Kidney and Kidney Tumor Segmentation Challenge (KiTS23)](https://kits-challenge.org/kits23/)**. The solution described here won the 1st place in the KiTS challenge [(NVAUTO team)](https://kits-challenge.org/kits23/#kits23-official-results):
 
 Andriy Myronenko, Dong Yang, Yufan He and Daguang Xu: "Automated 3D Segmentation of Kidneys and Tumors in MICCAI KiTS 2023 Challenge". In MICCAI (2023). [arXiv](https://arxiv.org/abs/2310.04110)
@@ -25,9 +22,8 @@ The KiTS tutorial is only supported for **SegResNet** algo, Auto3DSeg runs a ful
 The Auto3DSeg can be run using a config **input.yaml**
 
 ```bash
-python -m monai.apps.auto3dseg AutoRunner run --input='./input.yaml' --algos='segresnet'
+python -m monai.apps.auto3dseg AutoRunner run --input=./input.yaml --algos=segresnet
 ```
-
 
 ## Validation performance: NVIDIA DGX-1 (8x V100 32G)
 

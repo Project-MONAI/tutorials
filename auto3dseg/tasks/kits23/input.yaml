@@ -9,10 +9,20 @@ class_names:                        # names for tensorboard, and label index gro
   - { name: tumor, index: [2] }
 
 # use final sigmoid activation (instead of the default softmax), since KiTS regions are overlapping (multi-label segmentation)
-# this is optional to set, the system auto-detect overlapping labels.
+# this is optional to set, the system auto-detects overlapping labels automatically.
 sigmoid: true 
 
 
-roi_size: [192, 192, 192]
+# the config below is optional, but it explicitly sets params as it was used during KiTS23 challenge
+# otherwise, the defaults are (auto_scale_allowed is True) and the system will attempt to guess these settings according to the available GPU (e.g. make batch size larger) 
+auto_scale_allowed: false
+batch_size: 1
+roi_size: [256, 256, 256]
+num_epochs: 600
+resample: true
+resample_resolution: [0.78125, 0.78125, 0.78125]
+loss: {_target_: DiceLoss}
+
+
 
 

@@ -1,7 +1,7 @@
 
 # BRATS23
 
-The BRATS23 dataset is from MICCAI 2023 challenge **[The International Brain Tumor Segmentation 2023 (BraTS23)](https://www.synapse.org/brats)**, which includes several 5 tumor segmentation sub-challenges: Adult Glioma, Metastases, Meningioma, Pediatric, Sub-saharan african. Each sub-challenge includes its own large datasets, with each case consisting of 4 brain MRIs (T1, T1c, T2, FLAIR). The solution described here won the 1st place in the Metastasis, Meningioma and Sub-saharan african tumor segmentation challenges, and got 2nd place in the remaining Glioma (adult) and Pediatric glioma challenges. 
+The BRATS23 dataset is from MICCAI 2023 challenge **[The International Brain Tumor Segmentation 2023 (BraTS23)](https://www.synapse.org/brats)**, which includes 5 tumor segmentation sub-challenges: Adult Glioma, Metastases, Meningioma, Pediatric, Sub-saharan african. Each sub-challenge includes its own large dataset, where each case consists of 4 brain MRIs (T1, T1c, T2, FLAIR). The solution described here won the 1st place in the Metastasis, Meningioma and Sub-saharan african tumor segmentation challenges, and got 2nd place in the remaining Glioma (adult) and Pediatric glioma sub-challenges. 
 
 Andriy Myronenko, Dong Yang, Yufan He and Daguang Xu: "Auto3DSeg for Brain Turmor Segmentation from 3D MRI in BraTS 2023 Challenge". In MICCAI (2023). [arXiv](https://arxiv.org/)
 

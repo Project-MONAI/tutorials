@@ -1,0 +1,12 @@
+# brats21 input params
+
+modality: MRI
+dataroot: /data/brats23
+datalist: brats23_gli_folds.json
+
+class_names:
+- { "name": "wt", "index": [1,2,3] }
+- { "name": "tc", "index": [1,3] }
+- { "name": "et", "index": [3] }
+
+sigmoid: true

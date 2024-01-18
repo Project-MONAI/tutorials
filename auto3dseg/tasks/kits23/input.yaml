@@ -19,7 +19,7 @@ auto_scale_allowed: false
 num_epochs: 600
 resample: true
 resample_resolution: [0.78125, 0.78125, 0.78125] 
-# roi_size: [256, 256, 256]
+roi_size: [256, 256, 256]
 # roi_size: [336, 336, 336]
 # loss: {_target_: DiceLoss}
 # batch_size: 1

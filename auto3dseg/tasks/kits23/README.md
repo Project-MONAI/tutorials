@@ -40,7 +40,7 @@ If you prefer to run the same thing from code (which will allow more customizati
 python example.py
 ```
 ```python
-# example.py file
+# example.py file content
 
 from monai.apps.auto3dseg import AutoRunner
 
@@ -52,15 +52,120 @@ if __name__ == '__main__':
   main()
 ```
 
+### Running from the code (more options)
+
+AutoRunner class of Auto3DSeg is very flexible, and accepts parameters in various forms. For example instead of providing yaml file location (input.yaml) we can provide a dictionary directly, e.g.
+
+```bash
+python example2.py
+```
+```python
+# example2.py file content
+
+from monai.apps.auto3dseg import AutoRunner
+
+def main():
+
+    input_dict = {
+      "modality" : "CT",
+      "dataroot" : "/data/kits23",
+      "datalist" : "kits23_folds.json",
+      "sigmoid" : True,
+      "class_names":[
+          { "name": "kidney_and_mass", "index": [1,2,3] },
+          { "name": "mass", "index": [2,3] },
+          { "name": "tumor", "index": [2] } 
+       ]
+    }
+    runner = AutoRunner(input=input_dict, algos = 'segresnet')
+    runner.set_num_fold(1) # to train only 1 fold (instead of 5)
+    runner.run()
+
+if __name__ == '__main__':
+  main()
+```
+
+The dictonary form of the input config is equivalent to the input.yaml. Notice, here we also added "runner.set_num_fold(1)" to train only 1 fold. By default the system determines number of fold based on the datalist.json file, which is 5 folds in this case, and train 5 models using cross-validation. However one can train only 1 model (fold0), which is much faster if only 1 output model is sufficient.
+
+ ### Input.yaml options
+
+ Regardless if you prefer to use the yaml file form or an exmplicit dictionary config form, you can add many options manually to override the automatic defaults. For example consider the following input.yaml file.
+```yaml
+# input2.yaml file content example with more options
+
+# KiTS23 Auto3DSeg user input
+
+modality: CT                        
+dataroot: /data/kits23              
+datalist: kits23_folds.json         
+class_names:                       
+  - { name: kidney_and_mass, index: [1,2,3] }
+  - { name: mass, index: [2,3] }
+  - { name: tumor, index: [2] }
+sigmoid: true 
+
+# additional options (OPTIONAL)
+auto_scale_allowed: false         # disable auto scaling of some parameters to your GPU
+num_epochs: 600                   # manually set number of training epochs to 600 (otherwise it's determined automatically)
+resample: true                    # explicitelly set to resample images to the resample_resolution (for KiTS it's already auto-detected to resample)
+resample_resolution: [0.78125, 0.78125, 0.78125] #set the resample resolution manually (the automated default here is 0.78x0.78x1)
+roi_size: [336, 336, 336]         # set the cropping ROI size (for this large ROI, you may need a GPU with >40GB capacity), try smaller for your GPU
+loss: {_target_: DiceLoss}        # change loss to be pure Dice (default is DiceCELoss)
+batch_size: 1                     # batch size is automatically determined according to your GPU, but you can manually set it
+augment_mode: ct_ax_1             # change the default augmentation transform sequence to an alternative (with only inplane/axial spatial rotations and scaling)
+
+```
+Here we added more optional options to manually fine-tune the performance.   The full list of the available options to manually set can be observed [here](https://github.com/Project-MONAI/research-contributions/blob/main/auto3dseg/algorithm_templates/segresnet/configs/hyper_parameters.yaml)
+ 
+ ### Input.yaml options and AutoRunner options combined
+
+In the previous sections, we showed how to manually provide various input config options related to **training**.  In the same file, once can also add AutoRunner related options, consider the following input3.yaml config
+```yaml
+# input2.yaml file content example with more options
+
+# KiTS23 Auto3DSeg user input
+
+modality: CT                        
+dataroot: /data/kits23              
+datalist: kits23_folds.json         
+class_names:                       
+  - { name: kidney_and_mass, index: [1,2,3] }
+  - { name: mass, index: [2,3] }
+  - { name: tumor, index: [2] }
+sigmoid: true 
+
+# additional options (OPTIONAL)
+num_epochs: 600                   # manually set number of training epochs to 600 (otherwise it's determined automatically)
+
+# additional AutoRunner options (OPTIONAL)
+algos: segresnet
+num_fold: 1
+ensemble: false 
+work_dir: tmp/tutorial_kits23
+
+```
+Here we indicated to use only "segresnet" algo, and only 1 fold training, skip ensembling (since we train 1 model anyway), and change the default working directory. We can then run it simply as
+```bash
+python -m monai.apps.auto3dseg AutoRunner run --input=./input3.yaml 
+```
+One may prefer this format, if they want to put all options in a single file, instead of having training options vs AutoRunner options separatelly. The end results will be the same.
+
+ ### Command line options overrides
+
+ Finally,  the command line form (one-liner) accepts arbitrary number of command line extra options (which will override the ones in the input.yaml file), for instance:
+ ```bash
+python -m monai.apps.auto3dseg AutoRunner run --input=./input3.yaml --work_dir=tmp/another --dataroot=/myown/kits/location --num_epochs=10
+```
+here the "work_dir", "dataroot", "num_epochs" options will override any defaults or any input.yaml provided options.
+
 ## Validation performance: NVIDIA DGX-1 (8x V100 32G)
 
-The validation results can be obtained by running the training script with MONAI 1.3.0 on NVIDIA DGX-1 with (8x V100 32GB) GPUs. The results below are in terms of average dice.
+Training on on 8 GPU V100 32GB DGX machine, one can expect to get an average Dice of 0.87-0.88 (for fold 0). The higher end accuracy is obrained if you set the ROI size to larger (e.g. roi_size: [336, 336, 336]), but
+this requires a large memory GPU device (such as A10 or A100). Alternatively you can experiment with training longer, e.g. by setting num_epochs=1200 (which will take longer). 
 
+## Difference with 1st place KiTS23 solution
 
-| | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Avg |
-|:------:|:------:|:------:|:------:|:------:|:------:|:---:|
-| SegResNet | 0.8997 | 0.8739 | 0.8923 |0.8911 | 0.8892 |0.88924 |
-
+The example here is based on the 1st place KiTS23 solution [1], with the main differences beeing in [1] the training was done in 2 stages: first the apriximate Kidney region was detected (by training a model to segment the foreground), second an enseble of models were trained to segment the 3 KiTS subregions using the "Kidney subregion". In this tutorial, we train to segment KiTS subregions directly on the full image for simplicity (which gives a slightly lower average dice, ~1\%). Another difference is that in [1] and ensemble of several models were trained which included both segresnet and dints models, where as in this tutorial we focus only on segresnet.  
 
 ## Data
 

@@ -1,9 +1,9 @@
 
-# KiTS23 
+# KiTS23
 
 <img align="right" src="./kits23_example.png" width=30%>
 
-This tutorial shows how to use Auto3DSeg with KiTS 2023 dataset from the MICCAI 2023 challenge **[The 2023 Kidney and Kidney Tumor Segmentation Challenge (KiTS23)](https://kits-challenge.org/kits23/)**. 
+This tutorial shows how to use Auto3DSeg with KiTS 2023 dataset from the MICCAI 2023 challenge **[The 2023 Kidney and Kidney Tumor Segmentation Challenge (KiTS23)](https://kits-challenge.org/kits23/)**.
 The example is based on the 1st place solution in the KiTS challenge [(NVAUTO team)](https://kits-challenge.org/kits23/#kits23-official-results):
 
 Andriy Myronenko, Dong Yang, Yufan He and Daguang Xu: "Automated 3D Segmentation of Kidneys and Tumors in MICCAI KiTS 2023 Challenge". In MICCAI (2023). [arXiv](https://arxiv.org/abs/2310.04110)
@@ -11,12 +11,12 @@ Andriy Myronenko, Dong Yang, Yufan He and Daguang Xu: "Automated 3D Segmentation
 
 ## Task overview
 
-The task is to segment kidneys, tumors and cysts from 3D CTs. The dataset contains 489 cases with resolutions ranging between 0.39x0.39x0.5 and 1x1x5 mm. 
-Please download the KiTS23 [dataset](https://kits-challenge.org/kits23/#) and place it in the "/data/kits23" folder to follow this tutorial. 
+The task is to segment kidneys, tumors and cysts from 3D CTs. The dataset contains 489 cases with resolutions ranging between 0.39x0.39x0.5 and 1x1x5 mm.
+Please download the KiTS23 [dataset](https://kits-challenge.org/kits23/#) and place it in the "/data/kits23" folder to follow this tutorial.
 
 ## Auto3DSeg
 
-With Auto3DSeg most segmentation parameters are automatically determined.  In this tutorial, we start from a basic automated example, then show how different options can be adjusted if necessary.  We use only the  **SegResNet** algo here for simplicity, which is a training recipe based on the [segresnet](https://docs.monai.io/en/latest/networks.html#segresnetds). 
+With Auto3DSeg most segmentation parameters are automatically determined.  In this tutorial, we start from a basic automated example, then show how different options can be adjusted if necessary.  We use only the  **SegResNet** algo here for simplicity, which is a training recipe based on the [segresnet](https://docs.monai.io/en/latest/networks.html#segresnetds).
 
 
 ### Running based on the input config (one-liner)
@@ -27,15 +27,15 @@ The Auto3DSeg can be run using a config **input.yaml**
 python -m monai.apps.auto3dseg AutoRunner run --input=./input.yaml --algos=segresnet
 ```
 
-This one line of code will run the full training workflow, including data analysis, multi-fold training, ensembling. The system will adjust parameters based on the data and your available GPU (or multi-GPU) hardware configuration. 
-Here we explicitly specified to use only segresnet algo, for other possible parameters of the AutoRunner please see the [monai docs](https://github.com/Project-MONAI/MONAI/blob/main/monai/apps/auto3dseg/auto_runner.py). 
+This one line of code will run the full training workflow, including data analysis, multi-fold training, ensembling. The system will adjust parameters based on the data and your available GPU (or multi-GPU) hardware configuration.
+Here we explicitly specified to use only segresnet algo, for other possible parameters of the AutoRunner please see the [monai docs](https://github.com/Project-MONAI/MONAI/blob/main/monai/apps/auto3dseg/auto_runner.py).
 
 The [input.yaml](./input.yaml) describes the dataset (KiTS23) task, and must include at least 3 mandatory fields: modality (CT), dataset location (here it's /data/kits23) and the dataset manifest json file [kits23_folds.json](./kits23_folds.json).
 Other parameters can be also added to the input.yaml config.   For KiTS23 dataset specifically, we include the "class_names" key to indicate label grouping for the 3 output classes that KiTS23 challenge requires (which is something specific for the KiTS task)
 
 ### Running from the code
 
-If you prefer running from the code (which will allow more customizations), you can create a python file "example.py" and simply run it as 
+If you prefer running from the code (which will allow more customizations), you can create a python file "example.py" and simply run it as
 ```bash
 python example.py
 ```
@@ -75,7 +75,7 @@ def main():
       "class_names":[
           { "name": "kidney_and_mass", "index": [1,2,3] },
           { "name": "mass", "index": [2,3] },
-          { "name": "tumor", "index": [2] } 
+          { "name": "tumor", "index": [2] }
        ]
     }
     runner = AutoRunner(input=input_dict, algos = 'segresnet')
@@ -96,14 +96,14 @@ The dictionary form of the input config is equivalent to the input.yaml. Notice,
 
 # KiTS23 Auto3DSeg user input
 
-modality: CT                        
-dataroot: /data/kits23              
-datalist: kits23_folds.json         
-class_names:                       
+modality: CT
+dataroot: /data/kits23
+datalist: kits23_folds.json
+class_names:
   - { name: kidney_and_mass, index: [1,2,3] }
   - { name: mass, index: [2,3] }
   - { name: tumor, index: [2] }
-sigmoid: true 
+sigmoid: true
 
 # additional options (OPTIONAL)
 auto_scale_allowed: false         # disable auto scaling of some parameters to your GPU
@@ -116,8 +116,8 @@ batch_size: 1                     # batch size is automatically determined accor
 augment_mode: ct_ax_1             # change the default augmentation transform sequence to an alternative (with only inplane/axial spatial rotations and scaling)
 
 ```
-Here we added more optional options to manually fine-tune the performance.   The full list of the available "self-explanatory" options can be found [here](https://github.com/Project-MONAI/research-contributions/blob/main/auto3dseg/algorithm_templates/segresnet/configs/hyper_parameters.yaml). 
- 
+Here we added more optional options to manually fine-tune the performance.   The full list of the available "self-explanatory" options can be found [here](https://github.com/Project-MONAI/research-contributions/blob/main/auto3dseg/algorithm_templates/segresnet/configs/hyper_parameters.yaml).
+
  ### Input.yaml options and AutoRunner options combined
 
 In the previous sections, we showed how to manually provide various input config options related to **training**.  In the same file, one can also add AutoRunner related options, consider the following input3.yaml config
@@ -126,14 +126,14 @@ In the previous sections, we showed how to manually provide various input config
 
 # KiTS23 Auto3DSeg user input
 
-modality: CT                        
-dataroot: /data/kits23              
-datalist: kits23_folds.json         
-class_names:                       
+modality: CT
+dataroot: /data/kits23
+datalist: kits23_folds.json
+class_names:
   - { name: kidney_and_mass, index: [1,2,3] }
   - { name: mass, index: [2,3] }
   - { name: tumor, index: [2] }
-sigmoid: true 
+sigmoid: true
 
 # additional options (OPTIONAL)
 num_epochs: 600                   # manually set number of training epochs to 600 (otherwise it's determined automatically)
@@ -141,13 +141,13 @@ num_epochs: 600                   # manually set number of training epochs to 60
 # additional AutoRunner options (OPTIONAL)
 algos: segresnet
 num_fold: 1
-ensemble: false 
+ensemble: false
 work_dir: tmp/tutorial_kits23
 
 ```
 Here we indicated to use only "segresnet" algo, and only 1 fold training, skip ensembling (since we train 1 model anyway), and change the default working directory. We can run it as
 ```bash
-python -m monai.apps.auto3dseg AutoRunner run --input=./input3.yaml 
+python -m monai.apps.auto3dseg AutoRunner run --input=./input3.yaml
 ```
 One may prefer this format, if they want to put all options in a single file, instead of having training options vs AutoRunner options separatelly. The end results will be the same.
 
@@ -160,21 +160,21 @@ python -m monai.apps.auto3dseg AutoRunner run --input=./input3.yaml --work_dir=t
 here the "work_dir", "dataroot", "num_epochs" options will override any defaults or any input.yaml provided options.
 
  ### KiTS 2023 specific options
- 
+
 All the configurations here include some KiTS 2023 specific options below
-```yaml     
-class_names:                       
+```yaml
+class_names:
   - { name: kidney_and_mass, index: [1,2,3] }
   - { name: mass, index: [2,3] }
   - { name: tumor, index: [2] }
-sigmoid: true 
+sigmoid: true
 
 ```
-In KiTS 2023 challenge, the task is to segment 3 specific subregions: a) the first one must include all labels (kidneys, tumors, cysts) b) the second one is a union of tumors and cysts b) the third one is a tumor only region. 
-Thus the "class_names" options indicates which label indices to merge together to create these 3 subregions. The "name" keys are used in Tensorboard for convenience (you can use your own names). 
+In KiTS 2023 challenge, the task is to segment 3 specific subregions: a) the first one must include all labels (kidneys, tumors, cysts) b) the second one is a union of tumors and cysts b) the third one is a tumor only region.
+Thus the "class_names" options indicates which label indices to merge together to create these 3 subregions. The "name" keys are used in Tensorboard for convenience (you can use your own names).
 Since, the 3 sub-regions are overlapping the segmentation task is a multi-label task, where each voxel can potentially be assigned to several regions. A common formulation of such task is to use the final network activation a "sigmoid", instead of the default "softmax" for mutually exclusive label classes. The config options "sigmoid: true" explicitly indicates that we are going to use the final sigmoid activation (for the multi-label segmentation). Strictly speaking it's not necessary to add this option here, the system will automatically figure it out after inspecting "class_names" having the overlapping indices.
 
-Experimentally, you can remove these configs (class_names and sigmoid) completely to try a traditional segmentation (multi-class), to segment 3 mutually exclusive regions: a) kidneys without tumors or cysts b) tumors c) cysts. Generally, this is the default workflow for multi-organ segmentation (with non-overlaping classes). This sub-region grouping is just something specific for the KiTS 2023 challenge.    
+Experimentally, you can remove these configs (class_names and sigmoid) completely to try a traditional segmentation (multi-class), to segment 3 mutually exclusive regions: a) kidneys without tumors or cysts b) tumors c) cysts. Generally, this is the default workflow for multi-organ segmentation (with non-overlaping classes). This sub-region grouping is just something specific for the KiTS 2023 challenge.
 
  ### Auto3DSeg code location
 
@@ -205,11 +205,11 @@ python -m monai.apps.auto3dseg AutoRunner run --input=./input.yaml --algos=segre
 ## Validation performance: NVIDIA DGX-1 (8x V100 32G)
 
 Training this KiTS 2023 example on on 8 GPU V100 32GB DGX machine, one can expect to get an average Dice of 0.87-0.88 (for fold 0). The higher end of the accuracy range is obtained if you set the ROI size to larger (e.g. roi_size: [336, 336, 336]), but
-this requires a large memory GPU device (such as Nvidia A100). Alternatively you can experiment with training longer, e.g. by setting num_epochs=1200. 
+this requires a large memory GPU device (such as Nvidia A100). Alternatively you can experiment with training longer, e.g. by setting num_epochs=1200.
 
 ## Differences with 1st place KiTS23 solution
 
-The tutorial here is to demonstrate how to use Auto3DSeg in general, with various examples for KiTS23 dataset. It is based on the 1st place KiTS23 solution [1], with the main differences being in [1] the training was done in 2 stages: first the approximate Kidney region was detected (by training a model to segment the foreground), second an ensemble of models were trained to segment the 3 KiTS subregions using the "Kidney subregion" cropped CTs. In this tutorial, we train to segment KiTS subregions directly on the full CT for simplicity (which gives a slightly lower average dice, ~1\%). Another difference is that in [1], the ensemble of several models were trained which included both Segresnet and DiNTS models, whereas in this tutorial we focus only on Segresnet.  
+The tutorial here is to demonstrate how to use Auto3DSeg in general, with various examples for KiTS23 dataset. It is based on the 1st place KiTS23 solution [1], with the main differences being in [1] the training was done in 2 stages: first the approximate Kidney region was detected (by training a model to segment the foreground), second an ensemble of models were trained to segment the 3 KiTS subregions using the "Kidney subregion" cropped CTs. In this tutorial, we train to segment KiTS subregions directly on the full CT for simplicity (which gives a slightly lower average dice, ~1\%). Another difference is that in [1], the ensemble of several models were trained which included both Segresnet and DiNTS models, whereas in this tutorial we focus only on Segresnet.
 
 ## Data
 
@@ -223,4 +223,3 @@ The KiTS23 challenge dataset [2,3] can be downloaded from [here](https://kits-ch
 [2] Heller, N., Isensee, F., Maier-Hein, K.H., Hou, X., Xie, C., Li, F., Nan, Y., Mu, G., Lin, Z., Han, M., et al.: The state of the art in kidney and kidney tumor segmentation in contrast-enhanced ct imaging: Results of the kits19 challenge. Medical Image Analysis 67, 101821 (2021)
 
 [3] Heller, N., Wood, A., Isensee, F., Radsch, T., Tejpaul, R., Papanikolopoulos, N.,Weight, C.: The 2023 kidney and kidney tumor segmentation challenge, https://kits-challenge.org/kits23/
-

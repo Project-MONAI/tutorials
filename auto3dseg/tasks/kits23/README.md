@@ -122,7 +122,7 @@ Here we added more optional options to manually fine-tune the performance.   The
 
 In the previous sections, we showed how to manually provide various input config options related to **training**.  In the same file, one can also add AutoRunner related options, consider the following input3.yaml config
 ```yaml
-# input2.yaml file content example with more options
+# input3.yaml file content example with more options
 
 # KiTS23 Auto3DSeg user input
 
@@ -145,7 +145,7 @@ ensemble: false
 work_dir: tmp/tutorial_kits23
 
 ```
-Here we indicated to use only "segresnet" algo, and only 1 fold training, skip ensembling (since we train 1 model anyway), and change the default working directory. We can then run it simply as
+Here we indicated to use only "segresnet" algo, and only 1 fold training, skip ensembling (since we train 1 model anyway), and change the default working directory. We can run it as
 ```bash
 python -m monai.apps.auto3dseg AutoRunner run --input=./input3.yaml 
 ```
@@ -179,12 +179,12 @@ Experimentally, you can remove these configs (class_names and sigmoid) completel
  ### Auto3DSeg code location
 
 Advanced users may want to further build up upon Auto3DSeg code.  Currently the codebase is split in 2 repos: The high level AutoRunner related code is a part of [MONAI core](https://github.com/Project-MONAI/MONAI) and the algo specific code (including segresnet algo code) is part of the [MONAI research contributions](https://github.com/Project-MONAI/research-contributions/tree/main/auto3dseg/algorithm_templates/). Generally, if you would like to use your own network or different augmentation transforms, you would want to modify the segresnet algo code.  Currently, the easiest way to do it is to
- - clone the github repo of MONAI research contributions https://github.com/Project-MONAI/research-contributions or just download the [algorithm_templates folder](https://github.com/Project-MONAI/research-contributions/tree/main/auto3dseg/algorithm_templates)
+ - clone the github repo of MONAI research contributions https://github.com/Project-MONAI/research-contributions or just download the [algorithm_templates](https://github.com/Project-MONAI/research-contributions/tree/main/auto3dseg/algorithm_templates) folder.
  - modify the algo related code, e.g. segmenter.py under segresnet algo
  - point AutoRunner to use your own algorithm_templates folder by setting the "templates_path_or_url" config option
 
 ```python
-# example.py file content with custom algo templates code
+# example4.py file content with custom algo templates code
 
 from monai.apps.auto3dseg import AutoRunner
 
@@ -195,7 +195,7 @@ def main():
 if __name__ == '__main__':
   main()
 ```
-or
+or a one-liner comman line:
 ```bash
 python -m monai.apps.auto3dseg AutoRunner run --input=./input.yaml --algos=segresnet --templates_path_or_url=/your/location/algorithm_templates
 ```
@@ -205,11 +205,11 @@ python -m monai.apps.auto3dseg AutoRunner run --input=./input.yaml --algos=segre
 ## Validation performance: NVIDIA DGX-1 (8x V100 32G)
 
 Training this KiTS 2023 example on on 8 GPU V100 32GB DGX machine, one can expect to get an average Dice of 0.87-0.88 (for fold 0). The higher end of the accuracy range is obtained if you set the ROI size to larger (e.g. roi_size: [336, 336, 336]), but
-this requires a large memory GPU device (such as A10 or A100). Alternatively you can experiment with training longer, e.g. by setting num_epochs=1200. 
+this requires a large memory GPU device (such as Nvidia A100). Alternatively you can experiment with training longer, e.g. by setting num_epochs=1200. 
 
 ## Differences with 1st place KiTS23 solution
 
-The example here is based on the 1st place KiTS23 solution [1], with the main differences being in [1] the training was done in 2 stages: first the approximate Kidney region was detected (by training a model to segment the foreground), second an ensemble of models were trained to segment the 3 KiTS subregions using the "Kidney subregion" cropped CTs. In this tutorial, we train to segment KiTS subregions directly on the full CT for simplicity (which gives a slightly lower average dice, ~1\%). Another difference is that in [1], the ensemble of several models were trained which included both segresnet and dints models, whereas in this tutorial we focus only on segresnet.  
+The tutorial here is to demonstrate how to use Auto3DSeg in general, with various examples for KiTS23 dataset. It is based on the 1st place KiTS23 solution [1], with the main differences being in [1] the training was done in 2 stages: first the approximate Kidney region was detected (by training a model to segment the foreground), second an ensemble of models were trained to segment the 3 KiTS subregions using the "Kidney subregion" cropped CTs. In this tutorial, we train to segment KiTS subregions directly on the full CT for simplicity (which gives a slightly lower average dice, ~1\%). Another difference is that in [1], the ensemble of several models were trained which included both Segresnet and DiNTS models, whereas in this tutorial we focus only on Segresnet.  
 
 ## Data
 

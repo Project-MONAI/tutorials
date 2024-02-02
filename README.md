@@ -237,6 +237,8 @@ Tutorial that demonstrates how monai `SlidingWindowInferer` can be used when a 3
 This tutorial uses the MedNIST hand CT scan dataset to demonstrate MONAI's autoencoder class. The autoencoder is used with an identity encode/decode (i.e., what you put in is what you should get back), as well as demonstrating its usage for de-blurring and de-noising.
 ##### [batch_output_transform](./modules/batch_output_transform.ipynb)
 Tutorial to explain and show how to set `batch_transform` and `output_transform` of handlers to work with MONAI engines.
+##### [bending_energy_diffusion_loss_notes](./modules/bending_energy_diffusion_loss_notes.ipynb)
+This notebook demonstrates when and how to compute normalized bending energy and diffusion loss.
 ##### [compute_metric](./modules/compute_metric.py)
 Example shows how to compute metrics from saved predictions and labels with PyTorch multi-processing support.
 ##### [csv_datasets](./modules/csv_datasets.ipynb)

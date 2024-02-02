@@ -76,6 +76,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 01_bundle_intro.ipy
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 02_mednist_classification.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 03_mednist_classification_v2.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 04_integrating_code.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" bending_energy_diffusion_loss_notes.ipynb)
 
 # Execution of the notebook in these folders / with the filename cannot be automated
 skip_run_papermill=()

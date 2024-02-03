@@ -14,3 +14,7 @@ Example shows the use cases of training and validating a 3D Latent Diffusion Mod
 
 ## [Brats 2D latent diffusion model](./2d_ldm/README.md)
 Example shows the use cases of training and validating a 2D Latent Diffusion Model on axial slices from Brats 2016&2017 data.
+
+## [SURE-Based Robust MRI Reconstruction with Diffusion Models (SMRD)](./sure_smrd/README.md)
+Example shows the use case of inference with a pre-trained score function while taking into account available measurements,
+using the SURE-Based Robust MRI Reconstruction with Diffusion Models (SMRD) method.

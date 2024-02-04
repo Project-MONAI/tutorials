@@ -11,6 +11,7 @@
 
 import torch.nn as nn
 
+
 class EMAHelper(object):
     def __init__(self, mu=0.999):
         self.mu = mu
@@ -28,7 +29,7 @@ class EMAHelper(object):
             module = module.module
         for name, param in module.named_parameters():
             if param.requires_grad:
-                self.shadow[name].data = (1. - self.mu) * param.data + self.mu * self.shadow[name].data
+                self.shadow[name].data = (1.0 - self.mu) * param.data + self.mu * self.shadow[name].data
 
     def ema(self, module):
         if isinstance(module, nn.DataParallel):

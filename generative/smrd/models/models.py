@@ -14,6 +14,7 @@ from mutils import get_sigmas
 from .layers import *
 from .normalization import get_normalization
 
+
 class UNet(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -23,7 +24,7 @@ class UNet(nn.Module):
         self.ngf = ngf = config.model.ngf
         self.num_classes = config.model.num_classes
         self.act = act = get_act(config)
-        self.register_buffer('sigmas', get_sigmas(config))
+        self.register_buffer("sigmas", get_sigmas(config))
         self.config = config
 
         self.begin_conv = nn.Conv2d(config.data.channels, ngf, 3, stride=1, padding=1)
@@ -31,46 +32,50 @@ class UNet(nn.Module):
 
         self.end_conv = nn.Conv2d(ngf, config.data.channels, 3, stride=1, padding=1)
 
-        self.res1 = nn.ModuleList([
-            ResidualBlock(self.ngf, self.ngf, resample=None, act=act,
-                          normalization=self.norm),
-            ResidualBlock(self.ngf, self.ngf, resample=None, act=act,
-                          normalization=self.norm)]
+        self.res1 = nn.ModuleList(
+            [
+                ResidualBlock(self.ngf, self.ngf, resample=None, act=act, normalization=self.norm),
+                ResidualBlock(self.ngf, self.ngf, resample=None, act=act, normalization=self.norm),
+            ]
         )
 
-        self.res2 = nn.ModuleList([
-            ResidualBlock(self.ngf, 2 * self.ngf, resample='down', act=act,
-                          normalization=self.norm),
-            ResidualBlock(2 * self.ngf, 2 * self.ngf, resample=None, act=act,
-                          normalization=self.norm)]
+        self.res2 = nn.ModuleList(
+            [
+                ResidualBlock(self.ngf, 2 * self.ngf, resample="down", act=act, normalization=self.norm),
+                ResidualBlock(2 * self.ngf, 2 * self.ngf, resample=None, act=act, normalization=self.norm),
+            ]
         )
 
-        self.res3 = nn.ModuleList([
-            ResidualBlock(2 * self.ngf, 2 * self.ngf, resample='down', act=act,
-                          normalization=self.norm),
-            ResidualBlock(2 * self.ngf, 2 * self.ngf, resample=None, act=act,
-                          normalization=self.norm)]
+        self.res3 = nn.ModuleList(
+            [
+                ResidualBlock(2 * self.ngf, 2 * self.ngf, resample="down", act=act, normalization=self.norm),
+                ResidualBlock(2 * self.ngf, 2 * self.ngf, resample=None, act=act, normalization=self.norm),
+            ]
         )
 
-        self.res31 = nn.ModuleList([
-            ResidualBlock(2 * self.ngf, 2 * self.ngf, resample='down', act=act,
-                          normalization=self.norm),
-            ResidualBlock(2 * self.ngf, 2 * self.ngf, resample=None, act=act,
-                          normalization=self.norm)]
+        self.res31 = nn.ModuleList(
+            [
+                ResidualBlock(2 * self.ngf, 2 * self.ngf, resample="down", act=act, normalization=self.norm),
+                ResidualBlock(2 * self.ngf, 2 * self.ngf, resample=None, act=act, normalization=self.norm),
+            ]
         )
 
-        self.res4 = nn.ModuleList([
-            ResidualBlock(2 * self.ngf, 4 * self.ngf, resample='down', act=act,
-                          normalization=self.norm, dilation=2),
-            ResidualBlock(4 * self.ngf, 4 * self.ngf, resample=None, act=act,
-                          normalization=self.norm, dilation=2)]
+        self.res4 = nn.ModuleList(
+            [
+                ResidualBlock(
+                    2 * self.ngf, 4 * self.ngf, resample="down", act=act, normalization=self.norm, dilation=2
+                ),
+                ResidualBlock(4 * self.ngf, 4 * self.ngf, resample=None, act=act, normalization=self.norm, dilation=2),
+            ]
         )
 
-        self.res5 = nn.ModuleList([
-            ResidualBlock(4 * self.ngf, 4 * self.ngf, resample='down', act=act,
-                          normalization=self.norm, dilation=4),
-            ResidualBlock(4 * self.ngf, 4 * self.ngf, resample=None, act=act,
-                          normalization=self.norm, dilation=4)]
+        self.res5 = nn.ModuleList(
+            [
+                ResidualBlock(
+                    4 * self.ngf, 4 * self.ngf, resample="down", act=act, normalization=self.norm, dilation=4
+                ),
+                ResidualBlock(4 * self.ngf, 4 * self.ngf, resample=None, act=act, normalization=self.norm, dilation=4),
+            ]
         )
 
         self.refine1 = RefineBlock([4 * self.ngf], 4 * self.ngf, act=act, start=True)
@@ -87,7 +92,7 @@ class UNet(nn.Module):
 
     def forward(self, x, y):
         if not self.logit_transform and not self.rescaled:
-            h = 2 * x - 1.
+            h = 2 * x - 1.0
         else:
             h = x
 

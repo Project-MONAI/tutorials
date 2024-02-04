@@ -17,26 +17,29 @@ from functools import partial
 
 
 def get_act(config):
-    if config.model.nonlinearity.lower() == 'elu':
+    if config.model.nonlinearity.lower() == "elu":
         return nn.ELU()
-    elif config.model.nonlinearity.lower() == 'relu':
+    elif config.model.nonlinearity.lower() == "relu":
         return nn.ReLU()
-    elif config.model.nonlinearity.lower() == 'lrelu':
+    elif config.model.nonlinearity.lower() == "lrelu":
         return nn.LeakyReLU(negative_slope=0.2)
-    elif config.model.nonlinearity.lower() == 'swish':
+    elif config.model.nonlinearity.lower() == "swish":
+
         def swish(x):
             return x * torch.sigmoid(x)
+
         return swish
     else:
-        raise NotImplementedError('activation function does not exist!')
+        raise NotImplementedError("activation function does not exist!")
+
 
 def spectral_norm(layer, n_iters=1):
     return torch.nn.utils.spectral_norm(layer, n_power_iterations=n_iters)
 
+
 def conv1x1(in_planes, out_planes, stride=1, bias=True, spec_norm=False):
     "1x1 convolution"
-    conv = nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride,
-                     padding=0, bias=bias)
+    conv = nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, padding=0, bias=bias)
     if spec_norm:
         conv = spectral_norm(conv)
     return conv
@@ -44,8 +47,7 @@ def conv1x1(in_planes, out_planes, stride=1, bias=True, spec_norm=False):
 
 def conv3x3(in_planes, out_planes, stride=1, bias=True, spec_norm=False):
     "3x3 convolution with padding"
-    conv = nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
-                     padding=1, bias=bias)
+    conv = nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=bias)
     if spec_norm:
         conv = spectral_norm(conv)
 
@@ -53,8 +55,7 @@ def conv3x3(in_planes, out_planes, stride=1, bias=True, spec_norm=False):
 
 
 def stride_conv3x3(in_planes, out_planes, kernel_size, bias=True, spec_norm=False):
-    conv = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=2,
-                     padding=kernel_size // 2, bias=bias)
+    conv = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=2, padding=kernel_size // 2, bias=bias)
     if spec_norm:
         conv = spectral_norm(conv)
     return conv
@@ -66,6 +67,7 @@ def dilated_conv3x3(in_planes, out_planes, dilation, bias=True, spec_norm=False)
         conv = spectral_norm(conv)
 
     return conv
+
 
 class CRPBlock(nn.Module):
     def __init__(self, features, n_stages, act=nn.ReLU(), maxpool=True, spec_norm=False):
@@ -123,8 +125,11 @@ class RCUBlock(nn.Module):
 
         for i in range(n_blocks):
             for j in range(n_stages):
-                setattr(self, '{}_{}_conv'.format(i + 1, j + 1), conv3x3(features, features, stride=1, bias=False,
-                                                                         spec_norm=spec_norm))
+                setattr(
+                    self,
+                    "{}_{}_conv".format(i + 1, j + 1),
+                    conv3x3(features, features, stride=1, bias=False, spec_norm=spec_norm),
+                )
 
         self.stride = 1
         self.n_blocks = n_blocks
@@ -136,7 +141,7 @@ class RCUBlock(nn.Module):
             residual = x
             for j in range(self.n_stages):
                 x = self.act(x)
-                x = getattr(self, '{}_{}_conv'.format(i + 1, j + 1))(x)
+                x = getattr(self, "{}_{}_conv".format(i + 1, j + 1))(x)
 
             x += residual
         return x
@@ -148,9 +153,12 @@ class CondRCUBlock(nn.Module):
 
         for i in range(n_blocks):
             for j in range(n_stages):
-                setattr(self, '{}_{}_norm'.format(i + 1, j + 1), normalizer(features, num_classes, bias=True))
-                setattr(self, '{}_{}_conv'.format(i + 1, j + 1),
-                        conv3x3(features, features, stride=1, bias=False, spec_norm=spec_norm))
+                setattr(self, "{}_{}_norm".format(i + 1, j + 1), normalizer(features, num_classes, bias=True))
+                setattr(
+                    self,
+                    "{}_{}_conv".format(i + 1, j + 1),
+                    conv3x3(features, features, stride=1, bias=False, spec_norm=spec_norm),
+                )
 
         self.stride = 1
         self.n_blocks = n_blocks
@@ -162,9 +170,9 @@ class CondRCUBlock(nn.Module):
         for i in range(self.n_blocks):
             residual = x
             for j in range(self.n_stages):
-                x = getattr(self, '{}_{}_norm'.format(i + 1, j + 1))(x, y)
+                x = getattr(self, "{}_{}_norm".format(i + 1, j + 1))(x, y)
                 x = self.act(x)
-                x = getattr(self, '{}_{}_conv'.format(i + 1, j + 1))(x)
+                x = getattr(self, "{}_{}_conv".format(i + 1, j + 1))(x)
 
             x += residual
         return x
@@ -187,7 +195,7 @@ class MSFBlock(nn.Module):
         sums = torch.zeros(xs[0].shape[0], self.features, *shape, device=xs[0].device)
         for i in range(len(self.convs)):
             h = self.convs[i](xs[i])
-            h = F.interpolate(h, size=shape, mode='bilinear', align_corners=True)
+            h = F.interpolate(h, size=shape, mode="bilinear", align_corners=True)
             sums += h
         return sums
 
@@ -214,7 +222,7 @@ class CondMSFBlock(nn.Module):
         for i in range(len(self.convs)):
             h = self.norms[i](xs[i], y)
             h = self.convs[i](h)
-            h = F.interpolate(h, size=shape, mode='bilinear', align_corners=True)
+            h = F.interpolate(h, size=shape, mode="bilinear", align_corners=True)
             sums += h
         return sums
 
@@ -228,9 +236,7 @@ class RefineBlock(nn.Module):
 
         self.adapt_convs = nn.ModuleList()
         for i in range(n_blocks):
-            self.adapt_convs.append(
-                RCUBlock(in_planes[i], 2, 2, act, spec_norm=spec_norm)
-            )
+            self.adapt_convs.append(RCUBlock(in_planes[i], 2, 2, act, spec_norm=spec_norm))
 
         self.output_convs = RCUBlock(features, 3 if end else 1, 2, act, spec_norm=spec_norm)
 
@@ -257,9 +263,10 @@ class RefineBlock(nn.Module):
         return h
 
 
-
 class CondRefineBlock(nn.Module):
-    def __init__(self, in_planes, features, num_classes, normalizer, act=nn.ReLU(), start=False, end=False, spec_norm=False):
+    def __init__(
+        self, in_planes, features, num_classes, normalizer, act=nn.ReLU(), start=False, end=False, spec_norm=False
+    ):
         super().__init__()
 
         assert isinstance(in_planes, tuple) or isinstance(in_planes, list)
@@ -267,11 +274,11 @@ class CondRefineBlock(nn.Module):
 
         self.adapt_convs = nn.ModuleList()
         for i in range(n_blocks):
-            self.adapt_convs.append(
-                CondRCUBlock(in_planes[i], 2, 2, num_classes, normalizer, act, spec_norm=spec_norm)
-            )
+            self.adapt_convs.append(CondRCUBlock(in_planes[i], 2, 2, num_classes, normalizer, act, spec_norm=spec_norm))
 
-        self.output_convs = CondRCUBlock(features, 3 if end else 1, 2, num_classes, normalizer, act, spec_norm=spec_norm)
+        self.output_convs = CondRCUBlock(
+            features, 3 if end else 1, 2, num_classes, normalizer, act, spec_norm=spec_norm
+        )
 
         if not start:
             self.msf = CondMSFBlock(in_planes, features, num_classes, normalizer, spec_norm=spec_norm)
@@ -309,16 +316,14 @@ class ConvMeanPool(nn.Module):
             if spec_norm:
                 conv = spectral_norm(conv)
 
-            self.conv = nn.Sequential(
-                nn.ZeroPad2d((1, 0, 1, 0)),
-                conv
-            )
-        self.avg = nn.AvgPool2d( kernel_size=2 )
+            self.conv = nn.Sequential(nn.ZeroPad2d((1, 0, 1, 0)), conv)
+        self.avg = nn.AvgPool2d(kernel_size=2)
 
     def forward(self, inputs):
         output = self.conv(inputs)
-        output = self.avg( output )
+        output = self.avg(output)
         return output
+
 
 class MeanPoolConv(nn.Module):
     def __init__(self, input_dim, output_dim, kernel_size=3, biases=True, spec_norm=False):
@@ -329,8 +334,10 @@ class MeanPoolConv(nn.Module):
 
     def forward(self, inputs):
         output = inputs
-        output = sum([output[:, :, ::2, ::2], output[:, :, 1::2, ::2],
-                      output[:, :, ::2, 1::2], output[:, :, 1::2, 1::2]]) / 4.
+        output = (
+            sum([output[:, :, ::2, ::2], output[:, :, 1::2, ::2], output[:, :, ::2, 1::2], output[:, :, 1::2, 1::2]])
+            / 4.0
+        )
         return self.conv(output)
 
 
@@ -350,15 +357,25 @@ class UpsampleConv(nn.Module):
 
 
 class ConditionalResidualBlock(nn.Module):
-    def __init__(self, input_dim, output_dim, num_classes, resample=None, act=nn.ELU(),
-                 normalization=ConditionalBatchNorm2d, adjust_padding=False, dilation=None, spec_norm=False):
+    def __init__(
+        self,
+        input_dim,
+        output_dim,
+        num_classes,
+        resample=None,
+        act=nn.ELU(),
+        normalization=ConditionalBatchNorm2d,
+        adjust_padding=False,
+        dilation=None,
+        spec_norm=False,
+    ):
         super().__init__()
         self.non_linearity = act
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.resample = resample
         self.normalization = normalization
-        if resample == 'down':
+        if resample == "down":
             if dilation is not None:
                 self.conv1 = dilated_conv3x3(input_dim, input_dim, dilation=dilation, spec_norm=spec_norm)
                 self.normalize2 = normalization(input_dim, num_classes)
@@ -382,13 +399,12 @@ class ConditionalResidualBlock(nn.Module):
                 self.normalize2 = normalization(output_dim, num_classes)
                 self.conv2 = conv3x3(output_dim, output_dim, spec_norm=spec_norm)
         else:
-            raise Exception('invalid resample value')
+            raise Exception("invalid resample value")
 
         if output_dim != input_dim or resample is not None:
             self.shortcut = conv_shortcut(input_dim, output_dim)
 
         self.normalize1 = normalization(input_dim, num_classes)
-
 
     def forward(self, x, y):
         output = self.normalize1(x, y)
@@ -407,15 +423,24 @@ class ConditionalResidualBlock(nn.Module):
 
 
 class ResidualBlock(nn.Module):
-    def __init__(self, input_dim, output_dim, resample=None, act=nn.ELU(),
-                 normalization=nn.BatchNorm2d, adjust_padding=False, dilation=None, spec_norm=False):
+    def __init__(
+        self,
+        input_dim,
+        output_dim,
+        resample=None,
+        act=nn.ELU(),
+        normalization=nn.BatchNorm2d,
+        adjust_padding=False,
+        dilation=None,
+        spec_norm=False,
+    ):
         super().__init__()
         self.non_linearity = act
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.resample = resample
         self.normalization = normalization
-        if resample == 'down':
+        if resample == "down":
             if dilation is not None:
                 self.conv1 = dilated_conv3x3(input_dim, input_dim, dilation=dilation, spec_norm=spec_norm)
                 self.normalize2 = normalization(input_dim)
@@ -440,13 +465,12 @@ class ResidualBlock(nn.Module):
                 self.normalize2 = normalization(output_dim)
                 self.conv2 = conv3x3(output_dim, output_dim, spec_norm=spec_norm)
         else:
-            raise Exception('invalid resample value')
+            raise Exception("invalid resample value")
 
         if output_dim != input_dim or resample is not None:
             self.shortcut = conv_shortcut(input_dim, output_dim)
 
         self.normalize1 = normalization(input_dim)
-
 
     def forward(self, x):
         output = self.normalize1(x)

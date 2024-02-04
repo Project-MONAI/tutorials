@@ -39,7 +39,7 @@ lambda_lr: 0.2
 init_lambda_update: 1154
 last_lambda_update: 1655
 
-## Lambda 
+## Lambda
 lambda_init: 2.0
 lambda_end: 2.0
 lambda_func: learnable
@@ -131,4 +131,3 @@ langevin_config:
       beta1: 0.9
       amsgrad: false
       eps: 0.001
-

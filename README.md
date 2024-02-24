@@ -311,5 +311,5 @@ This tutorial shows the use cases of training and validating a 3D Latent Diffusi
 This tutorial shows the use cases of training and validating a 2D Latent Diffusion Model.
 
 ##### [SURE-Based Robust MRI Reconstruction with Diffusion Models (SMRD)](./generative/smrd)
-Example shows the use case of inference with a pre-trained score function while taking into account available measurements,
+This example shows the use case of inference with a pre-trained score function while taking into account available measurements,
 using the SURE-Based Robust MRI Reconstruction with Diffusion Models (SMRD) method.

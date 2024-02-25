@@ -11,8 +11,8 @@
 
 import os
 from collections import OrderedDict
-from typing import Optional
 from pathlib import Path
+import argparse
 
 import numpy as np
 import glob
@@ -21,7 +21,6 @@ import torch
 import torch.fft as torch_fft
 from torch import nn
 import torchvision
-import torch.distributed as dist
 
 
 def dict2namespace(config: dict):
@@ -111,6 +110,17 @@ def unnormalize(gen_img, estimated_mvue):
     scaling = torch.quantile(estimated_mvue.abs(), 0.99)
     return gen_img / scaling
 
+def ifft(x):
+    x = torch_fft.ifftshift(x, dim=(-2, -1))
+    x = torch_fft.ifft2(x, dim=(-2, -1), norm="ortho")
+    x = torch_fft.fftshift(x, dim=(-2, -1))
+    return x
+
+def fft(x):
+    x = torch_fft.fftshift(x, dim=(-2, -1))
+    x = torch_fft.fft2(x, dim=(-2, -1), norm="ortho")
+    x = torch_fft.ifftshift(x, dim=(-2, -1))
+    return x
 
 # Multicoil forward operator for MRI
 class MulticoilForwardMRI(nn.Module):
@@ -119,35 +129,20 @@ class MulticoilForwardMRI(nn.Module):
         super(MulticoilForwardMRI, self).__init__()
         return
 
-    # Centered, orthogonal ifft in torch >= 1.7
-    def _ifft(self, x):
-        x = torch_fft.ifftshift(x, dim=(-2, -1))
-        x = torch_fft.ifft2(x, dim=(-2, -1), norm="ortho")
-        x = torch_fft.fftshift(x, dim=(-2, -1))
-        return x
-
-    # Centered, orthogonal fft in torch >= 1.7
-    def _fft(self, x):
-        x = torch_fft.fftshift(x, dim=(-2, -1))
-        x = torch_fft.fft2(x, dim=(-2, -1), norm="ortho")
-        x = torch_fft.ifftshift(x, dim=(-2, -1))
-        return x
-
-    """
-    Inputs:
-     - image = [B, H, W] torch.complex64/128    in image domain
-     - maps  = [B, C, H, W] torch.complex64/128 in image domain
-     - mask  = [B, W] torch.complex64/128 w/    binary values
-    Outputs:
-     - ksp_coils = [B, C, H, W] torch.complex64/128 in kspace domain
-    """
-
     def forward(self, image, maps, mask):
+        """
+        Inputs:
+        - image = [B, H, W] torch.complex64/128    in image domain
+        - maps  = [B, C, H, W] torch.complex64/128 in image domain
+        - mask  = [B, W] torch.complex64/128 w/    binary values
+        Outputs:
+        - ksp_coils = [B, C, H, W] torch.complex64/128 in kspace domain
+        """
         # Broadcast pointwise multiply
         coils = image[:, None] * maps
 
         # Convert to k-space data
-        ksp_coils = self._fft(coils)
+        ksp_coils = fft(coils)
 
         if self.orientation == "vertical":
             # Mask k-space phase encode lines

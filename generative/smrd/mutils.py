@@ -110,17 +110,20 @@ def unnormalize(gen_img, estimated_mvue):
     scaling = torch.quantile(estimated_mvue.abs(), 0.99)
     return gen_img / scaling
 
+
 def ifft(x):
     x = torch_fft.ifftshift(x, dim=(-2, -1))
     x = torch_fft.ifft2(x, dim=(-2, -1), norm="ortho")
     x = torch_fft.fftshift(x, dim=(-2, -1))
     return x
 
+
 def fft(x):
     x = torch_fft.fftshift(x, dim=(-2, -1))
     x = torch_fft.fft2(x, dim=(-2, -1), norm="ortho")
     x = torch_fft.ifftshift(x, dim=(-2, -1))
     return x
+
 
 # Multicoil forward operator for MRI
 class MulticoilForwardMRI(nn.Module):

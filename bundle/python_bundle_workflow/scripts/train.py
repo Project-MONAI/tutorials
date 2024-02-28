@@ -72,7 +72,6 @@ class TrainWorkflow(BundleWorkflow):
 
         # define buckets to store the generated properties and set properties
         self._props = {}
-        self._set_props = {}
         self.dataset_dir = dataset_dir
 
         # besides the predefined properties, this bundle workflow can also provide `network`, `loss`, `optimizer`
@@ -91,7 +90,7 @@ class TrainWorkflow(BundleWorkflow):
         set_determinism(None)
 
     def _set_property(self, name, property, value):
-        self._set_props[name] = value
+        self._props[name] = value
 
     def _get_property(self, name, property):
         """
@@ -105,9 +104,6 @@ class TrainWorkflow(BundleWorkflow):
         value = None
         if name in self._props:
             value = self._props[name]
-        elif name in self._set_props:
-            value = self._set_props[name]
-            self._props[name] = value
         else:
             try:
                 value = getattr(self, f"get_{name}")()

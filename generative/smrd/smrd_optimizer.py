@@ -35,6 +35,7 @@ from mutils import (
 
 import matplotlib.pyplot as plt
 
+
 def _dict2namespace(config):
     namespace = argparse.Namespace()
     for key, value in config.items():
@@ -44,6 +45,7 @@ def _dict2namespace(config):
             new_value = value
         setattr(namespace, key, new_value)
     return namespace
+
 
 def denoise_cg_step(
     x,
@@ -69,8 +71,8 @@ def denoise_cg_step(
     # More specifically, solve the equation (A^H A + lambda_t I) x = x_zf + lambda_t * x_update
     # where A is the linear operator (in this case, 2D FFT), and x is the reconstructed image
     x_update = cg_solve_fn(
-        x = torch.view_as_complex(x_zf.permute(0, 2, 3, 1)),
-        y = torch.view_as_complex((x_zf + lambda_t.clone() * x_update).permute(0, 2, 3, 1)),
+        x=torch.view_as_complex(x_zf.permute(0, 2, 3, 1)),
+        y=torch.view_as_complex((x_zf + lambda_t.clone() * x_update).permute(0, 2, 3, 1)),
     )
     x_update = torch.view_as_real(x_update).permute(0, -1, 1, 2)
     return x_update
@@ -186,17 +188,17 @@ class SMRDOptimizer(torch.nn.Module):
 
                         # Below, we will define the linear operator, theorectically, we can
                         # write it as a matrix, and apply it to the input: Ax = y
-                        # where A could be a concatenation of several linear oprations (eg. 2D FFT), 
+                        # where A could be a concatenation of several linear oprations (eg. 2D FFT),
                         # x is the input, and y is the output.
                         # However, in practice, we don't need to compute the matrix A, since usually
-                        # the dimension of the matrix is too large to be stored in memory, and it's 
+                        # the dimension of the matrix is too large to be stored in memory, and it's
                         # not efficient to compute the inverse of A. Instead, we can use the
                         # conjugate gradient method to solve the equation Ax = y, without explicitly
                         # computing the matrix A. The conjugate gradient method is an iterative method to solve the equation
 
                         # The linear operator here is the solution to the following optimization problem:
                         # min_x ||Ax - y||^2 + lambda_t * ||x - x_update ||^2
-                        # where A is a 2D FFT, y is the given measurement in the spectral domain, 
+                        # where A is a 2D FFT, y is the given measurement in the spectral domain,
                         # x_update is the 'hallucinated' image from the generative model, and x is the
                         # reconstructed image in the spatial domain. lambda_t is a hyperparameter that controls
                         # the trade-off between the data fidelity (first) term and the regularization (second) term.
@@ -205,7 +207,7 @@ class SMRDOptimizer(torch.nn.Module):
                         # where A^H is the conjugate transpose of A, and I is the identity matrix.
                         # The above equation can be solved using the conjugate gradient method, without explicitly
                         # computing the matrix A.
-                        
+
                         # linear operator: A^H A + lambda_t I
                         def model_normal(m, estimated_mvue=estimated_mvue, lamda_applied=lamda_applied):
                             out = normalize(torch.view_as_real(m).permute(0, -1, 1, 2), estimated_mvue)
@@ -215,6 +217,7 @@ class SMRDOptimizer(torch.nn.Module):
                             out = out + lamda_applied.clone() * torch.view_as_real(m).permute(0, -1, 1, 2)
                             out = torch.view_as_complex(out.permute(0, 2, 3, 1))
                             return out
+
                         cg_solve = ConjugateGradient(model_normal, self.config["num_cg_iter"])
 
                         meas = forward_operator(samples)  # H x hat t, ref = y
@@ -243,7 +246,7 @@ class SMRDOptimizer(torch.nn.Module):
                         metrics = [step_size, (meas - ref).norm(), (p_grad).abs().mean(), (p_grad).abs().max()]
                         update_pbar_desc(pbar, metrics, pbar_labels)
 
-                        #>>>> Compute the SURE loss
+                        # >>>> Compute the SURE loss
                         # create perturbed input for monte-carlo SURE
                         # Line 5-6 in Algo.1
                         sureloss = SURELoss(
@@ -252,7 +255,7 @@ class SMRDOptimizer(torch.nn.Module):
                         )
 
                         # denoise step function with conjugate gradient
-                        # the output of this function is the denoised image 
+                        # the output of this function is the denoised image
                         # This function corresponds to x_{t+1} = h(x_t, \lambda_t) in line 4 of Algo.1 in the paper.
                         # it involves applying the generative model and conjugate gradient
                         # update in sequence. It output a denoised image that confines to the sparse measurement
@@ -266,7 +269,7 @@ class SMRDOptimizer(torch.nn.Module):
                             lambda_t=lamda_applied.clone(),
                             x_zf=zf,
                             cg_solve_fn=cg_solve,
-                            )
+                        )
 
                         # apply the SURE loss function
                         sure_loss = sureloss(
@@ -277,7 +280,7 @@ class SMRDOptimizer(torch.nn.Module):
                             complex_input=True,
                         )
                         # --Line 5-6 in Algo.1
-                        #<<<< Compute the SURE loss
+                        # <<<< Compute the SURE loss
 
                         sures.append(sure_loss.detach().cpu().numpy())
                         gt_l2_loss = complex_diff_abs_loss(samples, mvue.squeeze(1))
@@ -301,10 +304,11 @@ class SMRDOptimizer(torch.nn.Module):
                     if self.config.early_stop == "stop":
                         # EARLY STOPPING USING SURE LOSS
                         # check the self-validation loss for early stopping
-                        if len(sures) > 3 * window_size \
-                            and c > 3 * window_size \
-                            and np.mean(sures[-window_size:]) > np.mean(sures[-2 * window_size : -window_size]):
-
+                        if (
+                            len(sures) > 3 * window_size
+                            and c > 3 * window_size
+                            and np.mean(sures[-window_size:]) > np.mean(sures[-2 * window_size : -window_size])
+                        ):
                             print("\nAutomatic early stopping activated.")
                             return normalize(samples, estimated_mvue)
                     else:

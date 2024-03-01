@@ -71,6 +71,7 @@ class InferenceWorkflow(BundleWorkflow):
         pass
 
     def _set_property(self, name, property, value):
+        # stores user-reset initialized objects that should not be re-initialized.
         self._set_props[name] = value
 
     def _get_property(self, name, property):

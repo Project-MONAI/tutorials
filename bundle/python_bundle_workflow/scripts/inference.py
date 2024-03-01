@@ -67,7 +67,7 @@ class InferenceWorkflow(BundleWorkflow):
         self.dataset_dir = dataset_dir
 
     def initialize(self):
-        pass
+        self.props = {}
 
     def run(self):
         self.evaluator.run()

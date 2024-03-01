@@ -82,6 +82,7 @@ class TrainWorkflow(BundleWorkflow):
 
     def initialize(self):
         set_determinism(0)
+        self.props = {}
 
     def run(self):
         self.trainer.run()

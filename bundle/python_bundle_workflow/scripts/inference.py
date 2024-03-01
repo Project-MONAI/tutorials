@@ -63,6 +63,7 @@ class InferenceWorkflow(BundleWorkflow):
             nib.save(n, os.path.join(dataset_dir, f"seg{i:d}.nii.gz"))
 
         self._props = {}
+        self._set_props = {}
         self.dataset_dir = dataset_dir
 
     def initialize(self):
@@ -75,7 +76,7 @@ class InferenceWorkflow(BundleWorkflow):
         pass
 
     def _set_property(self, name, property, value):
-        self._props[name] = value
+        self._set_props[name] = value
 
     def _get_property(self, name, property):
         """
@@ -89,6 +90,9 @@ class InferenceWorkflow(BundleWorkflow):
         value = None
         if name in self._props:
             value = self._props[name]
+        elif name in self._set_props:
+            value = self._set_props[name]
+            self._props[name] = value
         else:
             try:
                 value = getattr(self, f"get_{name}")()

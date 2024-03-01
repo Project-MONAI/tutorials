@@ -72,7 +72,7 @@ class TrainWorkflow(BundleWorkflow):
         # set root log level to INFO and init a train logger, will be used in `StatsHandler`
         logging.basicConfig(stream=sys.stdout, level=logging.INFO)
         get_logger("train_log")
-        
+
         # create a temporary directory and 40 random image, mask pairs
         prepare_data(dataset_dir=dataset_dir)
 

@@ -109,11 +109,11 @@ class TrainWorkflow(BundleWorkflow):
 
         """
         value = None
-        if name in self._props:
-            value = self._props[name]
-        elif name in self._set_props:
+        if name in self._set_props:
             value = self._set_props[name]
             self._props[name] = value
+        elif name in self._props:
+            value = self._props[name]
         else:
             try:
                 value = getattr(self, f"get_{name}")()

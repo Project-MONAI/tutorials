@@ -79,6 +79,7 @@ class TrainWorkflow(BundleWorkflow):
         # define buckets to store the generated properties and set properties
         self._props = {}
         self._set_props = {}
+        self.dataset_dir = dataset_dir
 
         # besides the predefined properties, this bundle workflow can also provide `network`, `loss`, `optimizer`
         self.add_property(name="network", required=True, desc="network for the training.")
@@ -133,7 +134,7 @@ class TrainWorkflow(BundleWorkflow):
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     def get_dataset_dir(self):
-        return "./train"
+        return self.dataset_dir
 
     def get_network(self):
         return UNet(

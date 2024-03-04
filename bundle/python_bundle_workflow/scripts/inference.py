@@ -108,7 +108,7 @@ class InferenceWorkflow(BundleWorkflow):
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     def get_dataset_dir(self):
-        return "./infer"
+        return self.dataset_dir
 
     def get_network_def(self):
         return UNet(

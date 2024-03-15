@@ -137,7 +137,6 @@ def main(args):
         data_list_file_path=json_path, is_segmentation=False, data_list_key="validation", base_dir=data_root
     )
 
-
     print("Total training data are {} and validation data are {}".format(len(train_list), len(val_list)))
 
     train_dataset = CacheDataset(data=train_list, transform=train_transforms, cache_rate=1.0, num_workers=4)
@@ -186,7 +185,7 @@ def main(args):
     optimizer = torch.optim.Adam(model.parameters(), lr=args.base_lr)
 
     model = torch.nn.parallel.DistributedDataParallel(
-        model, device_ids=[int(os.environ['LOCAL_RANK'])], broadcast_buffers=False, find_unused_parameters=True
+        model, device_ids=[int(os.environ["LOCAL_RANK"])], broadcast_buffers=False, find_unused_parameters=True
     )
     model_without_ddp = model.module
 

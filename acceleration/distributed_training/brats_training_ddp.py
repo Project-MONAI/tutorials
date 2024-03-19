@@ -159,7 +159,7 @@ class BratsCacheDataset(DecathlonDataset):
 
 def main_worker(args):
     # disable logging for processes except 0 on every node
-    if int(os.environ['LOCAL_RANK']) != 0:
+    if int(os.environ["LOCAL_RANK"]) != 0:
         f = open(os.devnull, "w")
         sys.stdout = sys.stderr = f
     if not os.path.exists(args.dir):

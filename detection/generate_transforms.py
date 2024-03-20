@@ -78,7 +78,7 @@ def generate_detection_train_transform(
 
     train_transforms = Compose(
         [
-            LoadImaged(keys=[image_key], meta_key_postfix="meta_dict"),
+            LoadImaged(keys=[image_key], image_only=False, meta_key_postfix="meta_dict"),
             EnsureChannelFirstd(keys=[image_key]),
             EnsureTyped(keys=[image_key, box_key], dtype=torch.float32),
             EnsureTyped(keys=[label_key], dtype=torch.long),
@@ -224,7 +224,7 @@ def generate_detection_val_transform(
 
     val_transforms = Compose(
         [
-            LoadImaged(keys=[image_key], meta_key_postfix="meta_dict"),
+            LoadImaged(keys=[image_key], image_only=False, meta_key_postfix="meta_dict"),
             EnsureChannelFirstd(keys=[image_key]),
             EnsureTyped(keys=[image_key, box_key], dtype=torch.float32),
             EnsureTyped(keys=[label_key], dtype=torch.long),
@@ -280,7 +280,7 @@ def generate_detection_inference_transform(
 
     test_transforms = Compose(
         [
-            LoadImaged(keys=[image_key], meta_key_postfix="meta_dict"),
+            LoadImaged(keys=[image_key], image_only=False, meta_key_postfix="meta_dict"),
             EnsureChannelFirstd(keys=[image_key]),
             EnsureTyped(keys=[image_key], dtype=torch.float32),
             Orientationd(keys=[image_key], axcodes="RAS"),

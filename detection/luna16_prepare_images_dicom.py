@@ -63,6 +63,7 @@ def main():
         [
             LoadImaged(
                 keys=["image"],
+                image_only=False,
                 meta_key_postfix="meta_dict",
                 reader="itkreader",
                 affine_lps_to_ras=True,

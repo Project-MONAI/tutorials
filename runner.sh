@@ -563,7 +563,7 @@ for file in "${files[@]}"; do
             unset PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
         fi
 
-        cmd=$(echo "papermill ${papermill_opt} --progress-bar -k ${kernelspec}")
+        cmd=$(echo "papermill ${papermill_opt} --progress-bar --log-output -k ${kernelspec}")
         echo "$cmd"
         time out=$(echo "$notebook" | eval "$cmd")
         success=$?

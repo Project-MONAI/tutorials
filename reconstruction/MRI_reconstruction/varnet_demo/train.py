@@ -106,7 +106,7 @@ def trainer(args):
 
     train_transforms = Compose(
         [
-            LoadImaged(keys=["kspace"], reader=FastMRIReader, dtype=np.complex64),
+            LoadImaged(keys=["kspace"], reader=FastMRIReader, image_only=False, dtype=np.complex64),
             # user can also add other random transforms but remember to disable randomness for val_transforms
             ExtractDataKeyFromMetaKeyd(keys=["reconstruction_rss", "mask"], meta_key="kspace_meta_dict"),
             MaskTransform,

@@ -67,8 +67,6 @@ def parse_option():
         metavar="PATH",
         help="root of output folder, the full path is <output>/<model_name>/<tag> (default: output)",
     )
-    # Distributed Training
-    parser.add_argument("--local_rank", type=int, help="local rank for DistributedDataParallel")
 
     # DL Training Hyper-parameters
     parser.add_argument("--epochs", default=100, type=int, help="number of epochs")
@@ -139,10 +137,6 @@ def main(args):
         data_list_file_path=json_path, is_segmentation=False, data_list_key="validation", base_dir=data_root
     )
 
-    # TODO Delete the below print statements
-    print("List of training samples: {}".format(train_list))
-    print("List of validation samples: {}".format(val_list))
-
     print("Total training data are {} and validation data are {}".format(len(train_list), len(val_list)))
 
     train_dataset = CacheDataset(data=train_list, transform=train_transforms, cache_rate=1.0, num_workers=4)
@@ -191,7 +185,7 @@ def main(args):
     optimizer = torch.optim.Adam(model.parameters(), lr=args.base_lr)
 
     model = torch.nn.parallel.DistributedDataParallel(
-        model, device_ids=[args.local_rank], broadcast_buffers=False, find_unused_parameters=True
+        model, device_ids=[int(os.environ["LOCAL_RANK"])], broadcast_buffers=False, find_unused_parameters=True
     )
     model_without_ddp = model.module
 
@@ -340,7 +334,7 @@ if __name__ == "__main__":
     else:
         rank = -1
         world_size = -1
-    torch.cuda.set_device(args.local_rank)
+    torch.cuda.set_device(rank)
     torch.distributed.init_process_group(backend="nccl", init_method="env://", world_size=world_size, rank=rank)
     torch.distributed.barrier()
 

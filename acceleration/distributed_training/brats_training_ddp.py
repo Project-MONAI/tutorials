@@ -22,31 +22,28 @@ If you do not have enough GPU memory, you can try to decrease the input paramete
 
 Main steps to set up the distributed training:
 
-- Execute `torch.distributed.launch` to create processes on every node for every GPU.
+- Execute `torchrun` to create processes on every node for every GPU.
   It receives parameters as below:
   `--nproc_per_node=NUM_GPUS_PER_NODE`
   `--nnodes=NUM_NODES`
-  `--node_rank=INDEX_CURRENT_NODE`
   `--master_addr="localhost"`
   `--master_port=1234`
-  For more details, refer to https://github.com/pytorch/pytorch/blob/master/torch/distributed/launch.py.
+  For more details, refer to https://github.com/pytorch/pytorch/blob/master/torch/distributed/run.py.
   Alternatively, we can also use `torch.multiprocessing.spawn` to start program, but it that case, need to handle
   all the above parameters and compute `rank` manually, then set to `init_process_group`, etc.
-  `torch.distributed.launch` is even more efficient than `torch.multiprocessing.spawn` during training.
+  `torchrun` is even more efficient than `torch.multiprocessing.spawn` during training.
 - Use `init_process_group` to initialize every process, every GPU runs in a separate process with unique rank.
-  Here we use `NVIDIA NCCL` as the backend and must set `init_method="env://"` if use `torch.distributed.launch`.
+  Here we use `NVIDIA NCCL` as the backend and must set `init_method="env://"` if use `torchrun`.
 - Wrap the model with `DistributedDataParallel` after moving to expected device.
 - Partition dataset before training, so every rank process will only handle its own data partition.
 
 Note:
-    `torch.distributed.launch` will launch `nnodes * nproc_per_node = world_size` processes in total.
+    `torchrun` will launch `nnodes * nproc_per_node = world_size` processes in total.
     Suggest setting exactly the same software environment for every node, especially `PyTorch`, `nccl`, etc.
     A good practice is to use the same MONAI docker image for all nodes directly.
     Example script to execute this program on every node:
-    python -m torch.distributed.launch --nproc_per_node=NUM_GPUS_PER_NODE
-           --nnodes=NUM_NODES --node_rank=INDEX_CURRENT_NODE
-           --master_addr="localhost" --master_port=1234
-           brats_training_ddp.py -d DIR_OF_TESTDATA
+    python -m torchrun --nproc_per_node=NUM_GPUS_PER_NODE --nnodes=NUM_NODES
+        --master_addr="localhost" --master_port=1234 brats_training_ddp.py -d DIR_OF_TESTDATA
 
     This example was tested with [Ubuntu 16.04/20.04], [NCCL 2.6.3].
 
@@ -162,7 +159,7 @@ class BratsCacheDataset(DecathlonDataset):
 
 def main_worker(args):
     # disable logging for processes except 0 on every node
-    if args.local_rank != 0:
+    if int(os.environ["LOCAL_RANK"]) != 0:
         f = open(os.devnull, "w")
         sys.stdout = sys.stderr = f
     if not os.path.exists(args.dir):
@@ -170,7 +167,7 @@ def main_worker(args):
 
     # initialize the distributed training process, every GPU runs in a process
     dist.init_process_group(backend="nccl", init_method="env://")
-    device = torch.device(f"cuda:{args.local_rank}")
+    device = torch.device(f"cuda:{os.environ['LOCAL_RANK']}")
     torch.cuda.set_device(device)
     # use amp to accelerate training
     scaler = torch.cuda.amp.GradScaler()
@@ -364,8 +361,6 @@ def evaluate(model, val_loader, dice_metric, dice_metric_batch, post_trans):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--dir", default="./testdata", type=str, help="directory of Brain Tumor dataset")
-    # must parse the command-line argument: ``--local_rank=LOCAL_PROCESS_RANK``, which will be provided by DDP
-    parser.add_argument("--local_rank", type=int, help="node rank for distributed training")
     parser.add_argument("--epochs", default=300, type=int, metavar="N", help="number of total epochs to run")
     parser.add_argument("--lr", default=1e-4, type=float, help="learning rate")
     parser.add_argument("-b", "--batch_size", default=1, type=int, help="mini-batch size of every GPU")
@@ -388,12 +383,9 @@ def main():
     main_worker(args=args)
 
 
-# usage example(refer to https://github.com/pytorch/pytorch/blob/master/torch/distributed/launch.py):
+# usage example(refer to https://github.com/pytorch/pytorch/blob/main/torch/distributed/run.py):
 
-# python -m torch.distributed.launch --nproc_per_node=NUM_GPUS_PER_NODE
-#        --nnodes=NUM_NODES --node_rank=INDEX_CURRENT_NODE
-#        --master_addr="localhost" --master_port=1234
-#        brats_training_ddp.py -d DIR_OF_TESTDATA
+# torchrun --nproc_per_node=NUM_GPUS_PER_NODE --nnodes=NUM_NODES brats_training_ddp.py -d DIR_OF_TESTDATA
 
 if __name__ == "__main__":
     main()

@@ -77,6 +77,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 02_mednist_classifi
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 03_mednist_classification_v2.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 04_integrating_code.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" bending_energy_diffusion_loss_notes.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" SMRD.ipynb)
 
 # Execution of the notebook in these folders / with the filename cannot be automated
 skip_run_papermill=()
@@ -126,6 +127,7 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*nuclick_training_notebook.ipynb
 skip_run_papermill=("${skip_run_papermill[@]}" .*nuclei_classification_infer.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
 skip_run_papermill=("${skip_run_papermill[@]}" .*nuclick_infer.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
 skip_run_papermill=("${skip_run_papermill[@]}" .*unet_segmentation_3d_ignite_clearml.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1555
+skip_run_papermill=("${skip_run_papermill[@]}" .*SMRD.ipynb*)  # slow generation steps (~10 min on A6000)
 
 # output formatting
 separator=""

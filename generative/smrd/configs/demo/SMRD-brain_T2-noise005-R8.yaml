@@ -1,0 +1,133 @@
+user: csgm-mri-langevin
+model_type: ncsnv2
+seed: 42
+device: cuda
+batch_size: 1
+repeat: 1
+
+# The pre-trained NCSNV2 checkpoint
+gen_ckpt: checkpoints/mri-unet-smrd.pth
+
+## weights of different losses
+mse: 5.
+
+## start from different noise level of langevin
+start_iter: 1155
+
+# can be decreased for super-resolution
+image_size:
+  - 384
+  - 384
+
+## files
+input_dir: ./datasets/brain_T2/
+maps_dir: ./datasets/brain_T2_maps/
+anatomy: brain
+
+early_stop: stop
+
+## Acceleration
+R: 8
+pattern: equispaced
+exp_names: 0
+orientation: vertical
+
+## SMRD hyperparameters
+num_cg_iter: 5
+window_size: 160
+lambda_lr: 0.2
+init_lambda_update: 1154
+last_lambda_update: 1655
+
+## Lambda
+lambda_init: 2.0
+lambda_end: 2.0
+lambda_func: learnable
+
+exp_name: admm-learn-sure_brain_noise_005_R8
+learning_loss: SURE
+
+## Input noise
+noise_std: 0.005
+
+
+# logging
+save_latent: false
+save_images: true
+save_dataloader_every: 1000000
+save_iter: 100
+
+debug: false
+world_size: 1
+multiprocessing: false
+port: 12345
+
+langevin_config:
+    training:
+      batch_size: 4
+      n_epochs: 500000
+      n_iters: 320001
+      snapshot_freq: 10000
+      snapshot_sampling: true
+      anneal_power: 2
+      log_all_sigmas: false
+
+    sampling:
+      batch_size: 4
+      data_init: false
+      step_lr: 5e-5
+      n_steps_each: 4
+      ckpt_id: 5000
+      final_only: true
+      fid: false
+      denoise: true
+      num_samples4fid: 10000
+      inpainting: false
+      interpolation: false
+      n_interpolations: 8
+
+    fast_fid:
+      batch_size: 1000
+      num_samples: 1000
+      step_lr: 0.0000009
+      n_steps_each: 3
+      begin_ckpt: 100000
+      end_ckpt: 80000
+      verbose: false
+      ensemble: false
+
+    test:
+      begin_ckpt: 5000
+      end_ckpt: 80000
+      batch_size: 100
+
+    data:
+      dataset: "mri-mvue"
+      image_size: 384
+      channels: 2
+      logit_transform: false
+      uniform_dequantization: false
+      gaussian_dequantization: false
+      random_flip: false
+      rescaled: false
+      num_workers: 8
+
+    model:
+      sigma_begin: 232
+      num_classes: 2311
+      ema: true
+      ema_rate: 0.999
+      spec_norm: false
+      sigma_dist: geometric
+      sigma_end: 0.0066
+      normalization: InstanceNorm++
+      nonlinearity: elu
+      ngf: 128
+
+    optim:
+      weight_decay: 0.000
+      optimizer: "Adam"
+      lr: 0.0001
+      beta1: 0.9
+      amsgrad: false
+      eps: 0.001

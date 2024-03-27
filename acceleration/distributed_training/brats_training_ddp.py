@@ -28,7 +28,7 @@ Main steps to set up the distributed training:
   `--nnodes=NUM_NODES`
   `--master_addr="localhost"`
   `--master_port=1234`
-  For more details, refer to https://github.com/pytorch/pytorch/blob/master/torch/distributed/run.py.
+  For more details, refer to https://github.com/pytorch/pytorch/blob/main/torch/distributed/run.py.
   Alternatively, we can also use `torch.multiprocessing.spawn` to start program, but it that case, need to handle
   all the above parameters and compute `rank` manually, then set to `init_process_group`, etc.
   `torchrun` is even more efficient than `torch.multiprocessing.spawn` during training.
@@ -42,7 +42,7 @@ Note:
     Suggest setting exactly the same software environment for every node, especially `PyTorch`, `nccl`, etc.
     A good practice is to use the same MONAI docker image for all nodes directly.
     Example script to execute this program on every node:
-    python -m torchrun --nproc_per_node=NUM_GPUS_PER_NODE --nnodes=NUM_NODES
+    torchrun --nproc_per_node=NUM_GPUS_PER_NODE --nnodes=NUM_NODES
         --master_addr="localhost" --master_port=1234 brats_training_ddp.py -d DIR_OF_TESTDATA
 
     This example was tested with [Ubuntu 16.04/20.04], [NCCL 2.6.3].

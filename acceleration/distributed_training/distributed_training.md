@@ -12,11 +12,11 @@ root_dir="/path/to/your/directory"  # Change this to your desired directory
 
 ## Multi-GPU Training
 
-Users can set your `NUM_GPUS_PER_NODE`, `NUM_NODES`, `INDEX_CURRENT_NODE`, as well as `DIR_OF_TESTDATA` for the directory of the test dataset.
+Users can set your `NUM_GPUS_PER_NODE`, `NUM_NODES`, `INDEX_CURRENT_NODE`, as well as `DIR_OF_DATA` for the directory of the test dataset.
 Then users can execute the following command to start multi-GPU model training:
 
 ```
-torchrun --nproc_per_node=NUM_GPUS_PER_NODE --nnodes=NUM_NODES brats_training_ddp.py -d DIR_OF_TESTDATA
+torchrun --nproc_per_node=NUM_GPUS_PER_NODE --nnodes=NUM_NODES brats_training_ddp.py -d DIR_OF_DATA
 ```
 
 ## Multi-Node Training

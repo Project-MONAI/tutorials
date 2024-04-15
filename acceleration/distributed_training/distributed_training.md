@@ -1,6 +1,14 @@
 ## Data Preparation
 
 Users need to download the dataset Task01_BrainTumour from the MICCAI challenge [Medical Segmentation Decathlon](http://medicaldecathlon.com/) for the following examples.
+- Define the directory where to download and extract the dataset
+```
+root_dir="/path/to/your/directory"  # Change this to your desired directory
+```
+- Download and extract in one line if the directory doesn't exist
+```
+[ ! -d "${root_dir}/Task01_BrainTumour" ] && mkdir -p "${root_dir}/Task01_BrainTumour" && wget -qO- "https://msd-for-monai.s3-us-west-2.amazonaws.com/Task01_BrainTumour.tar" | tar -xv -C "${root_dir}"
+```
 
 ## Multi-GPU Training
 

@@ -4,7 +4,7 @@ It also has notebooks to run inference over trained (monai-zoo) model.
 
 ### 1. Data
 
-Training these model requires data. Some public available datasets which are used in the examples can be downloaded from [ConSeP](https://warwick.ac.uk/fac/cross_fac/tia/data/hovernet).
+Training these model requires data. The datasets used in the examples are from [CoNSeP](https://warwick.ac.uk/fac/cross_fac/tia/data/HoVerNet/). Each user is responsible for checking the content of datasets and the applicable licenses and determining if suitable for the intended use.
 
 ### 2. Questions and bugs
 

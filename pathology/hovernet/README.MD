@@ -8,7 +8,7 @@ It also has torch version notebooks to run training and evaluation.
 
 ### 1. Data
 
-CoNSeP datasets which are used in the examples can be downloaded from <https://warwick.ac.uk/fac/cross_fac/tia/data/HoVerNet/>.
+CoNSeP datasets which are used in the examples are from <https://warwick.ac.uk/fac/cross_fac/tia/data/HoVerNet/>.
 
 - First download CoNSeP dataset to `DATA_ROOT` (default is `"/workspace/Data/Pathology/CoNSeP"`).
 - Run `python prepare_patches.py` to prepare patches from images.

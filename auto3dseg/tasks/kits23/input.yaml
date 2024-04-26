@@ -1,0 +1,26 @@
+# KiTS23 Auto3DSeg user input
+
+modality: CT                        # primary modality
+dataroot: /data/kits23              # dataset location
+datalist: kits23_folds.json         # a list of filenames
+class_names:                        # names for tensorboard, and label index grouping specific for KiTS data
+  - { name: kidney_and_mass, index: [1,2,3] }
+  - { name: mass, index: [2,3] }
+  - { name: tumor, index: [2] }
+
+# OPTIONAL
+# use final sigmoid activation (instead of the default softmax), since KiTS regions are overlapping (multi-label segmentation)
+# this is optional to set, the system auto-detects overlapping labels automatically.
+sigmoid: true
+
+# the config below is optional, but it explicitly sets params as it was used during KiTS23 challenge
+# otherwise, the defaults are used, auto_scale_allowed is True and the system will attempt to guess these settings according to the available GPU (e.g. make batch size larger)
+auto_scale_allowed: false
+num_epochs: 600
+resample: true
+resample_resolution: [0.78125, 0.78125, 0.78125]
+roi_size: [256, 256, 256]
+# roi_size: [336, 336, 336]
+# loss: {_target_: DiceLoss}
+# batch_size: 1
+# augment_mode: ct_ax_1

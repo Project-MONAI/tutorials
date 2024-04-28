@@ -92,15 +92,15 @@ python -m monai.apps.nnunet nnUNetV2Runner run --input_config='./input.yaml' --t
 The supported `trainer_class_name` are:
 - nnUNetTrainer (default)
 - nnUNetTrainer_1epoch
-- nnUNetTrainer_5epoch
-- nnUNetTrainer_10epoch
-- nnUNetTrainer_20epoch
-- nnUNetTrainer_50epoch
-- nnUNetTrainer_100epoch
-- nnUNetTrainer_250epoch
-- nnUNetTrainer_2000epoch
-- nnUNetTrainer_4000epoch
-- nnUNetTrainer_8000epoch
+- nnUNetTrainer_5epochs
+- nnUNetTrainer_10epochs
+- nnUNetTrainer_20epochs
+- nnUNetTrainer_50epochs
+- nnUNetTrainer_100epochs
+- nnUNetTrainer_250epochs
+- nnUNetTrainer_2000epochs
+- nnUNetTrainer_4000epochs
+- nnUNetTrainer_8000epochs
 
 ### Run nnU-Net modules using ```nnUNetV2Runner```
 

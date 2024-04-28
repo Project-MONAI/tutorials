@@ -14,6 +14,7 @@ Start the tutorial notebooks on constructing bundles:
 2. [MedNIST Classification](./02_mednist_classification.ipynb): train a network using the bundle for doing a real task.
 3. [MedNIST Classification With Best Practices](./03_mednist_classification_v2.ipynb): do the same again but better.
 4. [Integrating Existing Code](./04_integrating_code.ipynb): discussion on how to integrate existing, possible non-MONAI, code into a bundle.
+5. [Spleen Segmentation using Pytorch Lightning](./05_spleen_segmentation_lightning.ipynb): train a segmentation network using MONAI bundle and Pytorch Lightning.
 
 More advanced topics are covered in this directory:
 
@@ -31,3 +32,8 @@ instantiate necessary components with python program and execute the inference.
 
 * [python bundle workflow](./python_bundle_workflow): step-by-step tutorial examples show how to develop a bundle
 training or inference workflow in Python instead of JSON / YAML configs.
+
+Other tutorials and resources within MONAI on other bundle topics can be found here:
+
+* [MONAI Deploy App SDK](https://github.com/Project-MONAI/monai-deploy-app-sdk/tree/main/notebooks/tutorials) including bundle tutorials
+* [MONAI Label Bundle App](https://github.com/Project-MONAI/MONAILabel/tree/main/sample-apps/monaibundle)

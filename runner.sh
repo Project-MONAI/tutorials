@@ -76,6 +76,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 01_bundle_intro.ipy
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 02_mednist_classification.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 03_mednist_classification_v2.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 04_integrating_code.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" bending_energy_diffusion_loss_notes.ipynb)
 
 # Execution of the notebook in these folders / with the filename cannot be automated
 skip_run_papermill=()
@@ -119,6 +120,12 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*01_bundle_intro.ipynb*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*02_mednist_classification.ipynb*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*03_mednist_classification_v2.ipynb*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*04_integrating_code.ipynb*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*hovernet_torch.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
+skip_run_papermill=("${skip_run_papermill[@]}" .*nuclei_classification_training_notebook.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
+skip_run_papermill=("${skip_run_papermill[@]}" .*nuclick_training_notebook.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
+skip_run_papermill=("${skip_run_papermill[@]}" .*nuclei_classification_infer.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
+skip_run_papermill=("${skip_run_papermill[@]}" .*nuclick_infer.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
+skip_run_papermill=("${skip_run_papermill[@]}" .*unet_segmentation_3d_ignite_clearml.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1555
 
 # output formatting
 separator=""
@@ -556,7 +563,7 @@ for file in "${files[@]}"; do
             unset PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
         fi
 
-        cmd=$(echo "papermill ${papermill_opt} --progress-bar -k ${kernelspec}")
+        cmd=$(echo "papermill ${papermill_opt} --progress-bar --log-output -k ${kernelspec}")
         echo "$cmd"
         time out=$(echo "$notebook" | eval "$cmd")
         success=$?

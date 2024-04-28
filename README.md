@@ -118,6 +118,9 @@ This notebook shows a quick demo for learning based affine registration of `64 x
 ##### [3D registration using paired lung CT](./3d_registration/paired_lung_ct.ipynb)
 This tutorial shows how to use MONAI to register lung CT volumes acquired at different time points for a single patient.
 
+##### [3D registration using unpaired brain MR](./3d_registration/learn2reg_oasis_unpaired_brain_mr.ipynb)
+This tutorial shows how to get started on using the general-purpose registration framework `VoxelMorph` offered in MONAI to register unpaired brain MR volumes.
+
 ##### [DeepAtlas](./deep_atlas/deep_atlas_tutorial.ipynb)
 This tutorial demonstrates the use of MONAI for training of registration and segmentation models _together_. The DeepAtlas approach, in which the two models serve as a source of weakly supervised learning for each other, is useful in situations where one has many unlabeled images and just a few images with segmentation labels. The notebook works with 3D images from the OASIS-1 brain MRI dataset.
 
@@ -146,6 +149,9 @@ An example of experiment management with [Aim](https://aimstack.io/aim-monai-tut
 An example of experiment management with [MLFlow](https://www.mlflow.org/docs/latest/tracking.html), using 3D spleen segmentation as an example.
 ##### [MONAI bundle integrates MLFlow](./experiment_management/bundle_integrate_mlflow.ipynb)
 An example shows how to easily enable and customize the MLFlow for experiment management in MONAI bundle.
+##### [ClearML](./experiment_management/unet_segmentation_3d_ignite_clearml.ipynb)
+An example of experiment management with [ClearML](https://clear.ml/docs/latest/docs/), using 3D Segmentation with UNet as an example.
+
 
 #### <ins>**Federated Learning**</ins>
 ##### [NVFlare](./federated_learning/nvflare)
@@ -231,6 +237,8 @@ Tutorial that demonstrates how monai `SlidingWindowInferer` can be used when a 3
 This tutorial uses the MedNIST hand CT scan dataset to demonstrate MONAI's autoencoder class. The autoencoder is used with an identity encode/decode (i.e., what you put in is what you should get back), as well as demonstrating its usage for de-blurring and de-noising.
 ##### [batch_output_transform](./modules/batch_output_transform.ipynb)
 Tutorial to explain and show how to set `batch_transform` and `output_transform` of handlers to work with MONAI engines.
+##### [bending_energy_diffusion_loss_notes](./modules/bending_energy_diffusion_loss_notes.ipynb)
+This notebook demonstrates when and how to compute normalized bending energy and diffusion loss.
 ##### [compute_metric](./modules/compute_metric.py)
 Example shows how to compute metrics from saved predictions and labels with PyTorch multi-processing support.
 ##### [csv_datasets](./modules/csv_datasets.ipynb)

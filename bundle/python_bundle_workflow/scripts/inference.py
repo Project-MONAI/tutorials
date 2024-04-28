@@ -38,6 +38,7 @@ from monai.transforms import (
     ScaleIntensityd,
 )
 from monai.utils import BundleProperty
+from scripts.train import prepare_data
 
 
 class InferenceWorkflow(BundleWorkflow):
@@ -46,7 +47,7 @@ class InferenceWorkflow(BundleWorkflow):
 
     """
 
-    def __init__(self, dataset_dir: str = "."):
+    def __init__(self, dataset_dir: str = "./infer"):
         super().__init__(workflow="inference")
         print_config()
         # set root log level to INFO and init a evaluation logger, will be used in `StatsHandler`
@@ -54,20 +55,14 @@ class InferenceWorkflow(BundleWorkflow):
         get_logger("eval_log")
 
         # create a temporary directory and 40 random image, mask pairs
-        print(f"generating synthetic data to {dataset_dir} (this may take a while)")
-        for i in range(5):
-            im, seg = create_test_image_3d(128, 128, 128, num_seg_classes=1, channel_dim=-1)
-            n = nib.Nifti1Image(im, np.eye(4))
-            nib.save(n, os.path.join(dataset_dir, f"img{i:d}.nii.gz"))
-            n = nib.Nifti1Image(seg, np.eye(4))
-            nib.save(n, os.path.join(dataset_dir, f"seg{i:d}.nii.gz"))
+        prepare_data(dataset_dir=dataset_dir)
 
         self._props = {}
         self._set_props = {}
         self.dataset_dir = dataset_dir
 
     def initialize(self):
-        self.props = {}
+        self._props = {}
 
     def run(self):
         self.evaluator.run()
@@ -76,6 +71,7 @@ class InferenceWorkflow(BundleWorkflow):
         pass
 
     def _set_property(self, name, property, value):
+        # stores user-reset initialized objects that should not be re-initialized.
         self._set_props[name] = value
 
     def _get_property(self, name, property):
@@ -88,11 +84,11 @@ class InferenceWorkflow(BundleWorkflow):
 
         """
         value = None
-        if name in self._props:
-            value = self._props[name]
-        elif name in self._set_props:
+        if name in self._set_props:
             value = self._set_props[name]
             self._props[name] = value
+        elif name in self._props:
+            value = self._props[name]
         else:
             try:
                 value = getattr(self, f"get_{name}")()
@@ -112,7 +108,7 @@ class InferenceWorkflow(BundleWorkflow):
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     def get_dataset_dir(self):
-        return "."
+        return self.dataset_dir
 
     def get_network_def(self):
         return UNet(

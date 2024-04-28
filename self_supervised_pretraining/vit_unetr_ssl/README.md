@@ -144,7 +144,7 @@ At the time of creation of this tutorial, the below additional dependencies are 
 To begin training with 2 GPU's please see the below example command for execution of the SSL multi-gpu training
 script:
 
-`CUDA_VISIBLE_DEVICES=0,1 python -m torch.distributed.launch --nproc_per_node=2 mgpu_ssl_train.py --batch_size=8 --epochs=500 --base_lr=2e-4 --logdir_path=/to/be/defined --output=/to/be/defined --data_root=/to/be/defined --json_path=/to/be/defined`
+`CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node=2 mgpu_ssl_train.py --batch_size=8 --epochs=500 --base_lr=2e-4 --logdir_path=/to/be/defined --output=/to/be/defined --data_root=/to/be/defined --json_path=/to/be/defined`
 
 It can be configured to launch on more GPU's by adding the relevant `CUDA Device` ID in `CUDA_VISIBLE_DEVICES`
 and increasing the total count of GPU's `--nproc_per_node`

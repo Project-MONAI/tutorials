@@ -54,7 +54,7 @@ We provide [a two-minute example](notebooks/auto3dseg_hello_world.ipynb) for use
 
 ## A "Real-World" Example
 
-To further demonstrate the capabilities of **Auto3DSeg**, [here](tasks/instance22) is the detailed performance of the algorithm in **Auto3DSeg**, which won 2nd place in the MICCAI 2022 challenge** [INSTANCE22: The 2022 Intracranial Hemorrhage Segmentation Challenge on Non-Contrast Head CT (NCCT)](https://instance.grand-challenge.org/)**
+To further demonstrate the capabilities of **Auto3DSeg**, [here](./tasks/instance22/README.md) is the detailed performance of the algorithm in **Auto3DSeg**, which won 2nd place in the MICCAI 2022 challenge **[INSTANCE22: The 2022 Intracranial Hemorrhage Segmentation Challenge on Non-Contrast Head CT (NCCT)](https://instance.grand-challenge.org/)**
 
 ## Reference Python APIs for Auto3DSeg
 

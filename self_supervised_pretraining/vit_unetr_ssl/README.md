@@ -29,12 +29,27 @@ If this dataset is being used in your work,  please use 1 as a reference. A JSON
 which contains the training and validation splits that were used for the training. The JSON file can be found in the
 json_files directory of the self-supervised training tutorial.
 
+The dataset format needs to be redefined using the following commands:
+```
+cd /workspace/datasets/tcia/
+mv */*/*.nii.gz ./data/
+```
+
 Fine-tuning Dataset: The dataset from Beyond the Cranial Vault Challenge
 [(BTCV)](https://www.synapse.org/#!Synapse:syn3193805/wiki/217789)
 2015 hosted at MICCAI, was used as a fully supervised fine-tuning task on the pre-trained weights. The dataset
 consists of 30 3D Volumes with annotated labels of up to 13 different organs [2]. There are 3 JSON files provided in the
 json_files directory for the dataset. They correspond to having a different number of training volumes ranging from
 6, 12 and 24. All 3 JSON files have the same validation split.
+
+The dataset format needs to be redefined using the following commands:
+```
+unzip RawData.zip
+mv RawData/Training/img/ RawData/imagesTr
+mv RawData/Training/label/ RawData/labelsTr
+mv RawData/Testing/img/ RawData/imagesTs
+```
+
 
 References:
 

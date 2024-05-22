@@ -41,6 +41,8 @@ def main():
 
     # Step 1: set data loader
     directory = os.environ.get("MONAI_DATA_DIRECTORY")
+    if directory is not None:
+        os.makedirs(directory, exist_ok=True)
     root_dir = tempfile.mkdtemp() if directory is None else directory
 
     msd_task = "Task01_BrainTumour"

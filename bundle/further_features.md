@@ -41,6 +41,8 @@ resource = "https://msd-for-monai.s3-us-west-2.amazonaws.com/Task09_Spleen.tar"
 md5 = "410d4a301da4e5b2f6f86ec3ddba524e"
 
 directory = os.environ.get("MONAI_DATA_DIRECTORY")
+if directory is not None:
+    os.makedirs(directory, exist_ok=True)
 root_dir = tempfile.mkdtemp() if directory is None else directory
 compressed_file = os.path.join(root_dir, "Task09_Spleen.tar")
 data_dir = os.path.join(root_dir, "Task09_Spleen")

@@ -21,7 +21,6 @@ import sys
 from glob import glob
 
 import torch
-import numpy as np
 
 import monai
 from monai.engines.utils import default_make_latent as make_latent

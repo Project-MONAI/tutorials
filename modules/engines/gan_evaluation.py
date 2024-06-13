@@ -31,13 +31,14 @@ from monai.data.image_writer import PILWriter
 
 def save_generator_fakes(run_folder, g_output_tensor):
     writer_obj = PILWriter(output_dtype=np.uint8)
-    
+
     for i, image in enumerate(g_output_tensor):
         filename = f"gen-fake-{i}.png"
         save_path = os.path.join(run_folder, filename)
         img_array = monai.transforms.utils.rescale_array(image[0].cpu().data.numpy())
         writer_obj.set_data_array(img_array, channel_dim=None)
         writer_obj.write(save_path, format="PNG")
+
 
 def main():
     monai.config.print_config()

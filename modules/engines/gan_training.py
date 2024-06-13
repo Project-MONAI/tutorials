@@ -196,7 +196,7 @@ def main():
     fakes = gen_net(test_latents)
 
     writer_obj = PILWriter(output_dtype=np.uint8)
-    
+
     for i, image in enumerate(fakes):
         filename = f"gen-fake-final-{i}.png"
         save_path = os.path.join(run_dir, filename)

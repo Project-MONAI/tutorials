@@ -4,4 +4,4 @@
 How to run the 3D regression tutorial.
 --------------------------------------
 
-TODO Finish
+Running this notebook is straightforward.  It works well in Colab.

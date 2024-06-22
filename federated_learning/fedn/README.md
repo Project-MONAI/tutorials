@@ -8,5 +8,5 @@ The FEDn framework supports researchers with its robust [open-source SDK](https:
 # Getting Started
 
 
-For a step-by-step example guide, click [here](https://github.com/scaleoutsystems/fedn/tree/master/examples/monai-2D-mednist>). 
+For a step-by-step example guide, click [here](https://github.com/scaleoutsystems/fedn/tree/master/examples/monai-2D-mednist). 
 

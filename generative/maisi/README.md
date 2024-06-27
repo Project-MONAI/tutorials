@@ -38,6 +38,7 @@ An example output is shown below.
 </p>
 
 ### 3. Training example
+Training data preparation can be found in [./data/README.md](./data/README.md)
 
 #### [3.1 3D Autoencoder Training](./train_autoencoder.py)
 

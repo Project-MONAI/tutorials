@@ -76,6 +76,10 @@ The examples are PyTorch Ignite programs and have both dictionary-based and arra
 Training and evaluation examples of 3D classification based on DenseNet3D and [IXI dataset](https://brain-development.org/ixi-dataset).
 The examples are standard PyTorch programs and have both dictionary-based and array-based transformation versions.
 
+#### <ins>**3D regression**</ins>
+##### [densenet_training_array.ipynb](./3d_regression/densenet_training_array.ipynb)
+Training and evaluation examples of 3D regression based on DenseNet3D and [IXI dataset](https://brain-development.org/ixi-dataset).
+
 #### <ins>**3D segmentation**</ins>
 ##### [ignite examples](./3d_segmentation/ignite)
 Training and evaluation examples of 3D segmentation based on UNet3D and synthetic dataset.

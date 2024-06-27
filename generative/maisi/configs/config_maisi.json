@@ -28,7 +28,7 @@
         64
     ],
     "autoencoder_def": {
-        "_target_": "custom_network_tp.AutoencoderKLCKModified_TP",
+        "_target_": "autoencoderkl_maisi.AutoencoderKlMaisi",
         "spatial_dims": "@spatial_dims",
         "in_channels": "@image_channels",
         "out_channels": "@image_channels",
@@ -154,7 +154,7 @@
         "beta_end": 0.0195,
         "schedule": "scaled_linear_beta",
         "clip_sample": false
-    },
+    },   
     "mask_generation_noise_scheduler": {
         "_target_": "generative.networks.schedulers.DDPMScheduler",
         "num_train_timesteps": 1000,

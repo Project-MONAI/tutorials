@@ -196,12 +196,7 @@ def augmentation_tumor_lung(pt_nda):
 
     tumor_szie = torch.sum(real_l_volume_)
     ###########################
-    #     print(volume.shape,real_l_volume_.shape)
-    #     print(tumor_szie)
-
     # before move lung tumor maks, full the original location by lung labels
-    """tmp = volume[(volume * real_l_volume_).nonzero(as_tuple=True)].view(-1)
-    """
     new_real_l_volume_ = dilate3d(real_l_volume_.squeeze(0), erosion=3)
     new_real_l_volume_ = new_real_l_volume_.unsqueeze(0)
     new_real_l_volume_[real_l_volume_ > 0] = 0
@@ -316,9 +311,6 @@ def augmentation_tumor_colon(pt_nda):
     ###########################
     # before move tumor maks, full the original location by organ labels
     volume[real_l_volume_.bool()] = 62
-    #     erode_volume = erode3d((volume==62).squeeze(0), erosion=5).to(torch.uint8)
-    #     centers = compute_center_of_mass_along_z(erode_volume)
-    #     break
     ###########################
     if tumor_szie > 0:
         # get organ mask
@@ -328,10 +320,7 @@ def augmentation_tumor_colon(pt_nda):
         #         cnt = 0
         cnt = 0
         while True:
-            #             threshold = 0.75 #if cnt < 20 else 0.5
             threshold = 0.8
-            #             random.shuffle(centers)
-            #             center = centers[0]
             real_l_volume = real_l_volume_
             if cnt < 20:
                 # random distor mask
@@ -342,24 +331,6 @@ def augmentation_tumor_colon(pt_nda):
             else:
                 no_aug += 1
                 break
-
-            #             else:
-            #                 real_l_volume = torch.zeros_like(real_l_volume)
-            #                 x1,x2,y1,y2,z1,z2 = extract_bboxes(distored_mask.squeeze(0).to(torch.uint8))
-            #                 distored_mask_center = ((x2-x1)//2, (y2-y1)//2, (z2-z1)//2)
-
-            #                 mask_w, mask_h, mask_d = x2-x1, y2-y1, z2-z1
-
-            #                 new_x1, new_x2 = center[0]-mask_w//2, center[0]+int(math.ceil(mask_w/2))
-            #                 new_y1, new_y2 = center[1]-mask_h//2, center[1]+int(math.ceil(mask_h/2))
-            #                 new_z1, new_z2 = center[2]-mask_d//2, center[2]+int(math.ceil(mask_d/2))
-            #                 if new_x1<0 or new_y1<0 or new_z1<0 or x1<0 or y1<0 or z1<0:
-            #                     continue
-            #                 if new_x2>511 or new_y2>511 or new_z2>511 or x2>511 or y2>511 or z2>511:
-            #                     continue
-
-            #                 real_l_volume[:,new_x1:new_x2+1, new_y1:new_y2+1, new_z1:new_z2+1]  = distored_mask[:,x1:x2+1, y1:y2+1, z1:z2+1]
-            #                 print(torch.sum(real_l_volume))
 
             real_l_volume = real_l_volume * organ_mask
             print(torch.sum(real_l_volume), "|", tumor_szie * threshold)

@@ -52,7 +52,6 @@ def ldm_conditional_sample_one_mask(
 ):
     with torch.no_grad():
         with torch.cuda.amp.autocast():
-
             # Generate random noise
             latents = (
                 torch.randn(
@@ -365,7 +364,6 @@ class LDMSampler:
         mask_generation_num_inference_steps=None,
         random_seed=None,
     ) -> None:
-
         if random_seed is not None:
             set_determinism(seed=random_seed)
 

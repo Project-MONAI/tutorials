@@ -61,11 +61,7 @@ class InplaceGroupNorm3D(torch.nn.GroupNorm):
         if False:
             input = input.to(dtype=torch.float64)
             mean = input.mean([2, 3, 4, 5], keepdim=True)
-            std = (
-                input.var([2, 3, 4, 5], unbiased=False, keepdim=True)
-                .add_(self.eps)
-                .sqrt_()
-            )
+            std = input.var([2, 3, 4, 5], unbiased=False, keepdim=True).add_(self.eps).sqrt_()
 
             input = input.to(dtype=torch.float32)
             mean = mean.to(dtype=torch.float32)
@@ -77,11 +73,7 @@ class InplaceGroupNorm3D(torch.nn.GroupNorm):
                 array = input[:, _i : _i + 1, ...]
                 array = array.to(dtype=torch.float32)
                 _mean = array.mean([2, 3, 4, 5], keepdim=True)
-                _std = (
-                    array.var([2, 3, 4, 5], unbiased=False, keepdim=True)
-                    .add_(self.eps)
-                    .sqrt_()
-                )
+                _std = array.var([2, 3, 4, 5], unbiased=False, keepdim=True).add_(self.eps).sqrt_()
 
                 # del array
                 # torch.cuda.empty_cache()
@@ -135,9 +127,7 @@ class InplaceGroupNorm3D(torch.nn.GroupNorm):
 
         # Apply affine transformation if enabled
         if self.affine:
-            input.mul_(self.weight.view(1, C, 1, 1, 1)).add_(
-                self.bias.view(1, C, 1, 1, 1)
-            )
+            input.mul_(self.weight.view(1, C, 1, 1, 1)).add_(self.bias.view(1, C, 1, 1, 1))
 
         # input = input.to(dtype=torch.float32)
         # input *= norm
@@ -201,10 +191,7 @@ class SplitConvolutionV1(nn.Module):
         split_size = l // num_splits
 
         if False:
-            splits = [
-                x[:, :, i * split_size : (i + 1) * split_size, :, :]
-                for i in range(num_splits)
-            ]
+            splits = [x[:, :, i * split_size : (i + 1) * split_size, :, :] for i in range(num_splits)]
         else:
             # padding = 1
             padding = SPLIT_PADDING
@@ -306,9 +293,7 @@ class SplitConvolutionV1(nn.Module):
         if self.tp_dim == 0:
             outputs[0] = outputs[0][:, :, :split_size_out, :, :]
             for i in range(1, num_splits):
-                outputs[i] = outputs[i][
-                    :, :, padding_s : padding_s + split_size_out, :, :
-                ]
+                outputs[i] = outputs[i][:, :, padding_s : padding_s + split_size_out, :, :]
         elif self.tp_dim == 1:
             # print("outputs", outputs[0].size(3), f"padding_s: 0, {split_size_out}")
             outputs[0] = outputs[0][:, :, :, :split_size_out, :]
@@ -316,15 +301,11 @@ class SplitConvolutionV1(nn.Module):
             # outputs[0] = outputs[0][:, :, :, padding_s // 2:padding_s // 2 + split_size_out, :]
             for i in range(1, num_splits):
                 # print("outputs", outputs[i].size(3), f"padding_s: {padding_s}, {padding_s + split_size_out}")
-                outputs[i] = outputs[i][
-                    :, :, :, padding_s : padding_s + split_size_out, :
-                ]
+                outputs[i] = outputs[i][:, :, :, padding_s : padding_s + split_size_out, :]
         elif self.tp_dim == 2:
             outputs[0] = outputs[0][:, :, :, :, :split_size_out]
             for i in range(1, num_splits):
-                outputs[i] = outputs[i][
-                    :, :, :, :, padding_s : padding_s + split_size_out
-                ]
+                outputs[i] = outputs[i][:, :, :, :, padding_s : padding_s + split_size_out]
 
         #         for i in range(num_splits):
         # print(f"outputs after {i + 1}/{len(outputs)}:", outputs[i].size())
@@ -427,9 +408,7 @@ class SplitUpsample1(nn.Module):
         use_convtranspose: if True, use ConvTranspose to upsample feature maps in decoder.
     """
 
-    def __init__(
-        self, spatial_dims: int, in_channels: int, use_convtranspose: bool
-    ) -> None:
+    def __init__(self, spatial_dims: int, in_channels: int, use_convtranspose: bool) -> None:
         super().__init__()
         if use_convtranspose:
             self.conv = SplitConvolutionV1(
@@ -743,11 +722,7 @@ class Encoder_TP(nn.Module):
                     )
 
             if not is_final_block:
-                blocks.append(
-                    SplitDownsample(
-                        spatial_dims=spatial_dims, in_channels=input_channel
-                    )
-                )
+                blocks.append(SplitDownsample(spatial_dims=spatial_dims, in_channels=input_channel))
 
         # Non-local attention block
         if with_nonlocal_attn is True:
@@ -1208,10 +1183,7 @@ class Decoder_TP1(nn.Module):
                 split_size = l // num_splits
 
                 if False:
-                    splits = [
-                        x[:, :, i * split_size : (i + 1) * split_size, :, :]
-                        for i in range(num_splits)
-                    ]
+                    splits = [x[:, :, i * split_size : (i + 1) * split_size, :, :] for i in range(num_splits)]
                 else:
                     # padding = 1
                     padding = SPLIT_PADDING
@@ -1272,10 +1244,7 @@ class Decoder_TP1(nn.Module):
                 split_size_out = split_size
                 padding_s = padding
                 non_tp_dim = self.tp_dim + 1 if self.tp_dim < 2 else 0
-                if (
-                    outputs[0].size(non_tp_dim + 2) // splits[0].size(non_tp_dim + 2)
-                    == 2
-                ):
+                if outputs[0].size(non_tp_dim + 2) // splits[0].size(non_tp_dim + 2) == 2:
                     split_size_out *= 2
                     padding_s *= 2
                 # print("split_size_out:", split_size_out)
@@ -1284,9 +1253,7 @@ class Decoder_TP1(nn.Module):
                 if self.tp_dim == 0:
                     outputs[0] = outputs[0][:, :, :split_size_out, :, :]
                     for i in range(1, num_splits):
-                        outputs[i] = outputs[i][
-                            :, :, padding_s : padding_s + split_size_out, :, :
-                        ]
+                        outputs[i] = outputs[i][:, :, padding_s : padding_s + split_size_out, :, :]
                 elif self.tp_dim == 1:
                     # print("outputs", outputs[0].size(3), f"padding_s: 0, {split_size_out}")
                     outputs[0] = outputs[0][:, :, :, :split_size_out, :]
@@ -1294,15 +1261,11 @@ class Decoder_TP1(nn.Module):
                     # outputs[0] = outputs[0][:, :, :, padding_s // 2:padding_s // 2 + split_size_out, :]
                     for i in range(1, num_splits):
                         # print("outputs", outputs[i].size(3), f"padding_s: {padding_s}, {padding_s + split_size_out}")
-                        outputs[i] = outputs[i][
-                            :, :, :, padding_s : padding_s + split_size_out, :
-                        ]
+                        outputs[i] = outputs[i][:, :, :, padding_s : padding_s + split_size_out, :]
                 elif self.tp_dim == 2:
                     outputs[0] = outputs[0][:, :, :, :, :split_size_out]
                     for i in range(1, num_splits):
-                        outputs[i] = outputs[i][
-                            :, :, :, :, padding_s : padding_s + split_size_out
-                        ]
+                        outputs[i] = outputs[i][:, :, :, :, padding_s : padding_s + split_size_out]
 
                 #                 for i in range(num_splits):
                 # print(f"outputs after {i + 1}/{len(outputs)}:", outputs[i].size())

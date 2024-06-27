@@ -107,7 +107,6 @@ class CustomControlNet(ControlNet):
             conditioning_embedding_num_channels,
         )
 
-
     def forward(
         self,
         x: torch.Tensor,
@@ -147,9 +146,9 @@ class CustomControlNet(ControlNet):
         h = self.conv_in(x)
 
         # controlnet_cond = self.controlnet_cond_embedding(controlnet_cond)
-        controlnet_cond = torch.utils.checkpoint.checkpoint(self.controlnet_cond_embedding,
-                                                            controlnet_cond,
-                                                            use_reentrant=False)
+        controlnet_cond = torch.utils.checkpoint.checkpoint(
+            self.controlnet_cond_embedding, controlnet_cond, use_reentrant=False
+        )
 
         h += controlnet_cond
 

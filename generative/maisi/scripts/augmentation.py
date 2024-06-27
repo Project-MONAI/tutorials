@@ -20,9 +20,7 @@ from monai.utils import ensure_tuple_rep
 def erode3d(input_tensor, erosion=3):
     # Define the structuring element
     erosion = ensure_tuple_rep(erosion, 3)
-    structuring_element = torch.ones(1, 1, erosion[0], erosion[1], erosion[2]).to(
-        input_tensor.device
-    )
+    structuring_element = torch.ones(1, 1, erosion[0], erosion[1], erosion[2]).to(input_tensor.device)
 
     # Pad the input tensor to handle border pixels
     input_padded = F.pad(
@@ -51,9 +49,7 @@ def erode3d(input_tensor, erosion=3):
 def dilate3d(input_tensor, erosion=3):
     # Define the structuring element
     erosion = ensure_tuple_rep(erosion, 3)
-    structuring_element = torch.ones(1, 1, erosion[0], erosion[1], erosion[2]).to(
-        input_tensor.device
-    )
+    structuring_element = torch.ones(1, 1, erosion[0], erosion[1], erosion[2]).to(input_tensor.device)
 
     # Pad the input tensor to handle border pixels
     input_padded = F.pad(
@@ -114,17 +110,13 @@ def augmentation_tumor_bone(pt_nda):
             threshold = 0.8 if cnt < 40 else 0.75
             real_l_volume = real_l_volume_
             # random distor mask
-            distored_mask = elastic(
-                (real_l_volume > 0).cuda(), spatial_size=(512, 512, 512)
-            ).as_tensor()
+            distored_mask = elastic((real_l_volume > 0).cuda(), spatial_size=(512, 512, 512)).as_tensor()
             real_l_volume = distored_mask * organ_mask
             cnt += 1
             print(torch.sum(real_l_volume), "|", tumor_szie * threshold)
             if torch.sum(real_l_volume) >= tumor_szie * threshold:
                 real_l_volume = dilate3d(real_l_volume.squeeze(0), erosion=5)
-                real_l_volume = (
-                    erode3d(real_l_volume, erosion=5).unsqueeze(0).to(torch.uint8)
-                )
+                real_l_volume = erode3d(real_l_volume, erosion=5).unsqueeze(0).to(torch.uint8)
                 break
     else:
         real_l_volume = real_l_volume_
@@ -166,9 +158,7 @@ def augmentation_tumor_liver(pt_nda):
     while True:
         real_l_volume = real_l_volume_
         # random distor mask
-        real_l_volume = elastic(
-            (real_l_volume == 2).cuda(), spatial_size=(512, 512, 512)
-        ).as_tensor()
+        real_l_volume = elastic((real_l_volume == 2).cuda(), spatial_size=(512, 512, 512)).as_tensor()
         # get organ mask
         organ_mask = (real_l_volume_ == 1).float() + (real_l_volume_ == 2).float()
 
@@ -229,9 +219,7 @@ def augmentation_tumor_lung(pt_nda):
         while True:
             real_l_volume = real_l_volume_
             # random distor mask
-            real_l_volume = elastic(
-                real_l_volume, spatial_size=(512, 512, 512)
-            ).as_tensor()
+            real_l_volume = elastic(real_l_volume, spatial_size=(512, 512, 512)).as_tensor()
             # get lung mask v2 (133 order)
             lung_mask = (
                 (volume == 28).float()
@@ -247,9 +235,7 @@ def augmentation_tumor_lung(pt_nda):
             print(torch.sum(real_l_volume), "|", tumor_szie * 0.85)
             if torch.sum(real_l_volume) >= tumor_szie * 0.85:
                 real_l_volume = dilate3d(real_l_volume.squeeze(0), erosion=5)
-                real_l_volume = (
-                    erode3d(real_l_volume, erosion=5).unsqueeze(0).to(torch.uint8)
-                )
+                real_l_volume = erode3d(real_l_volume, erosion=5).unsqueeze(0).to(torch.uint8)
                 break
     else:
         real_l_volume = real_l_volume_
@@ -290,9 +276,7 @@ def augmentation_tumor_pancreas(pt_nda):
     while True:
         real_l_volume = real_l_volume_
         # random distor mask
-        real_l_volume = elastic(
-            (real_l_volume == 2).cuda(), spatial_size=(512, 512, 512)
-        ).as_tensor()
+        real_l_volume = elastic((real_l_volume == 2).cuda(), spatial_size=(512, 512, 512)).as_tensor()
         # get organ mask
         organ_mask = (real_l_volume_ == 1).float() + (real_l_volume_ == 2).float()
 
@@ -351,9 +335,7 @@ def augmentation_tumor_colon(pt_nda):
             real_l_volume = real_l_volume_
             if cnt < 20:
                 # random distor mask
-                distored_mask = elastic(
-                    (real_l_volume == 1).cuda(), spatial_size=(512, 512, 512)
-                ).as_tensor()
+                distored_mask = elastic((real_l_volume == 1).cuda(), spatial_size=(512, 512, 512)).as_tensor()
                 real_l_volume = distored_mask * organ_mask
             elif 20 <= cnt < 40:
                 threshold = 0.75
@@ -384,9 +366,7 @@ def augmentation_tumor_colon(pt_nda):
             cnt += 1
             if torch.sum(real_l_volume) >= tumor_szie * threshold:
                 real_l_volume = dilate3d(real_l_volume.squeeze(0), erosion=5)
-                real_l_volume = (
-                    erode3d(real_l_volume, erosion=5).unsqueeze(0).to(torch.uint8)
-                )
+                real_l_volume = erode3d(real_l_volume, erosion=5).unsqueeze(0).to(torch.uint8)
                 break
     else:
         real_l_volume = real_l_volume_

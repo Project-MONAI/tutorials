@@ -27,10 +27,18 @@ from monai.utils import set_determinism
 from tqdm import tqdm
 from generative.metrics import FIDMetric
 from generative.inferers import LatentDiffusionInferer
-from utils import binarize_labels, MapLabelValue, general_mask_generation_post_process, get_body_region_index_from_mask, define_instance, load_autoencoder_ckpt
+from utils import (
+    binarize_labels,
+    MapLabelValue,
+    general_mask_generation_post_process,
+    get_body_region_index_from_mask,
+    define_instance,
+    load_autoencoder_ckpt,
+)
 from find_masks import find_masks
 from augmentation import augmentation
 from sample import LDMSampler, check_input
+
 
 def main():
     parser = argparse.ArgumentParser(description="PyTorch Latent Diffusion Model Inference")
@@ -48,7 +56,7 @@ def main():
     )
     args = parser.parse_args()
 
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     env_dict = json.load(open(args.environment_file, "r"))
     config_dict = json.load(open(args.config_file, "r"))
@@ -59,7 +67,14 @@ def main():
     Path(args.output_dir).mkdir(exist_ok=True)
 
     print("Check input")
-    check_input(args.body_region,args.anatomy_list,args.label_dict_json,args.output_size,args.spacing,args.controllable_anatomy_size)
+    check_input(
+        args.body_region,
+        args.anatomy_list,
+        args.label_dict_json,
+        args.output_size,
+        args.spacing,
+        args.controllable_anatomy_size,
+    )
 
     print("Start loading networks.")
     autoencoder = define_instance(args, "autoencoder_def").to(device)
@@ -68,29 +83,24 @@ def main():
 
     diffusion_unet = define_instance(args, "difusion_unet_def").to(device)
     checkpoint_diffusion_unet = torch.load(args.trained_diffusion_path)
-    diffusion_unet.load_state_dict(checkpoint_diffusion_unet['unet_state_dict'])
+    diffusion_unet.load_state_dict(checkpoint_diffusion_unet["unet_state_dict"])
 
     controlnet = define_instance(args, "controlnet_def").to(device)
     monai.networks.utils.copy_model_state(controlnet, diffusion_unet.state_dict())
     checkpoint_controlnet = torch.load(args.trained_controlnet_path)
-    controlnet.load_state_dict(checkpoint_controlnet['controlnet_state_dict'], strict=True)
-    scale_factor = checkpoint_controlnet['scale_factor'].to(device)
+    controlnet.load_state_dict(checkpoint_controlnet["controlnet_state_dict"], strict=True)
+    scale_factor = checkpoint_controlnet["scale_factor"].to(device)
 
     mask_generation_autoencoder = define_instance(args, "mask_generation_autoencoder_def").to(device)
     checkpoint_mask_generation_autoencoder = torch.load(args.trained_mask_generation_autoencoder_path)
     mask_generation_autoencoder.load_state_dict(checkpoint_mask_generation_autoencoder, strict=True)
-    
+
     mask_generation_diffusion_unet = define_instance(args, "mask_generation_diffusion_def").to(device)
     checkpoint_mask_generation_difusion_unet = torch.load(args.trained_mask_generation_diffusion_path)
     mask_generation_diffusion_unet.load_state_dict(checkpoint_mask_generation_difusion_unet, strict=True)
-    
-    
+
     print("Initialize MAISI sampler.")
-    latent_shape = [args.latent_channels,
-        args.output_size[0]//4,
-        args.output_size[1]//4,
-        args.output_size[2]//4
-    ]
+    latent_shape = [args.latent_channels, args.output_size[0] // 4, args.output_size[1] // 4, args.output_size[2] // 4]
     ldm_sampler = LDMSampler(
         body_region=args.body_region,
         anatomy_list=args.anatomy_list,
@@ -119,8 +129,9 @@ def main():
         output_dir=args.output_dir,
         num_inference_steps=args.num_inference_steps,
         mask_generation_num_inference_steps=args.mask_generation_num_inference_steps,
-        random_seed=args.random_seed
+        random_seed=args.random_seed,
     )
+
 
 if __name__ == "__main__":
     logging.basicConfig(
@@ -130,5 +141,3 @@ if __name__ == "__main__":
         datefmt="%Y-%m-%d %H:%M:%S",
     )
     main()
-    
-    

@@ -5,8 +5,8 @@ Disclaimer: We are not the host of the data. Please make sure to read the requir
 ### 1 VAE training Data
 The VAE training dataset used in MAISI contains 37243 CT traiing data, 17887 CT validation data
 
-### 2 Unconditional Diffusion model training Data
-### 3 ControNet model training Data
+### 2 Diffusion model training Data
+### 3 ControlNet model training Data
 
 ### 4. Questions and bugs
 

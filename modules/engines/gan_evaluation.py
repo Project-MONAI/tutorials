@@ -23,18 +23,21 @@ from glob import glob
 import torch
 
 import monai
-from monai.data import png_writer
 from monai.engines.utils import default_make_latent as make_latent
 from monai.networks.nets import Generator
 from monai.utils.misc import set_determinism
+from monai.data.image_writer import PILWriter
 
 
 def save_generator_fakes(run_folder, g_output_tensor):
+    writer_obj = PILWriter(output_dtype=np.uint8)
+
     for i, image in enumerate(g_output_tensor):
-        filename = "gen-fake-%d.png" % i
+        filename = f"gen-fake-{i}.png"
         save_path = os.path.join(run_folder, filename)
-        img_array = image[0].cpu().data.numpy()
-        png_writer.write_png(img_array, save_path, scale=255)
+        img_array = monai.transforms.utils.rescale_array(image[0].cpu().data.numpy())
+        writer_obj.set_data_array(img_array, channel_dim=None)
+        writer_obj.write(save_path, format="PNG")
 
 
 def main():

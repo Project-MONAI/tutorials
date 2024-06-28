@@ -71,7 +71,7 @@ torchrun \
     --nproc_per_node=${NUM_GPUS_PER_NODE} \
     --nnodes=1 \
     --master_addr=localhost --master_port=1234 \
-    train_autoencoder.py -c ./config/config_train_32g.json -e ./config/environment.json -g ${NUM_GPUS_PER_NODE}
+    train_autoencoder.py -c ./config/config_maisi.json -e ./config/environment.json -g ${NUM_GPUS_PER_NODE}
 ```
 
 <p align="center">
@@ -87,7 +87,7 @@ The training script uses the batch size and patch size defined in the configurat
 
 To train with single 32G GPU, please run:
 ```bash
-python train_diffusion.py -c ./config/config_train_32g.json -e ./config/environment.json -g 1
+python train_diffusion.py -c ./config/config_maisi.json -e ./config/environment.json -g 1
 ```
 
 The training script also enables multi-GPU training. For instance, if you are using eight 32G GPUs, you can run the training script with the following command:
@@ -97,7 +97,7 @@ torchrun \
     --nproc_per_node=${NUM_GPUS_PER_NODE} \
     --nnodes=1 \
     --master_addr=localhost --master_port=1234 \
-    train_diffusion.py -c ./config/config_train_32g.json -e ./config/environment.json -g ${NUM_GPUS_PER_NODE}
+    train_diffusion.py -c ./config/config_maisi.json -e ./config/environment.json -g ${NUM_GPUS_PER_NODE}
 ```
 <p align="center">
   <img src="./figs/train_diffusion.png" alt="latent diffusion train curve" width="45%" >

@@ -3,7 +3,7 @@
 Disclaimer: We are not the host of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the dataset!
 
 ### 1 VAE training Data
-The VAE training dataset used in MAISI contains 37243 CT traiing data, 17887 CT validation data
+The VAE training dataset used in MAISI contains 37243 CT training data and 1963 CT validation data from chest, abdomen, head and neck region; and 17887 MRI training data and 940 MRI validation data from brain, skul-stripped brain, chest, and below-abdomen region.
 
 ### 2 Diffusion model training Data
 ### 3 ControlNet model training Data

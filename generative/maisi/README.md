@@ -22,11 +22,22 @@ Please refer to the [Installation of MONAI Generative Model](../README.md)
 
 ### 2. Model inference and example outputs
 
+The inference script generate images based on the setting in [configuration files](./config/config_maisi.json). 
+
+- `"spacing"`: voxel size of generated images. E.g., if set to `[1.5, 1.5, 2.0]`, it will generate images with a resolution of 1.5x1.5x2.0 mm.
+- `"output_size"`: volume size of generated images. E.g., if set to `[512, 512, 256]`, it will generate images with size of 512x512x256. They need to be divisible by 16. If you have a small GPU memory size, you should adjust it to small numbers.
+- `"controllable_anatomy_size"`: a list of controllable anatomy and its size scale (0--1). E.g., if set to `[["liver", 0.5],["hepatic tumor", 0.3]]`, the generated image will contain liver that have a median size, with size around 50% percentile, and hepatic tumor that is relatively small, with around 30% percentile. The output will contain paired image and segmentation mask for the controllable anatomy.
+- `"body_region"`: If "controllable_anatomy_size" is not specified, "body_region" will be used to constrain the region of generated images. It needs to be chosen from "head", "chest", "thorax", "abdomen", "pelvis", "lower".
+- `"anatomy_list"`: If "controllable_anatomy_size" is not specified, the output will contain paired image and segmentation mask for the anatomy in "anatomy_list".
+
+Before you start inference, please set the path in [./config/environment.json](./config/environment.json).
+
 To generate one image during inference, please run the following command:
 ```bash
-python inference.py -c ./configs/config_maisi.json -e ./configs/environment.json --num 1
+python inference.py -c ./configs/config_maisi.json -e ./configs/environment.json --num_output_samples 1
 ```
-`--num` defines how many images it would generate.
+`--num_output_samples` defines how many images it would generate.
+
 
 An example output is shown below.
 <p align="center">

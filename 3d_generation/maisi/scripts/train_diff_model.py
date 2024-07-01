@@ -59,9 +59,7 @@ def main(
     scheduler_method="ddpm",
 ):
 
-    dist.init_process_group(
-        backend="nccl", init_method="env://", timeout=timedelta(seconds=7200)
-    )
+    dist.init_process_group(backend="nccl", init_method="env://", timeout=timedelta(seconds=7200))
 
     local_rank = int(os.environ["LOCAL_RANK"])
     world_size = int(dist.get_world_size())
@@ -110,9 +108,7 @@ def main(
         if not os.path.exists(str_img):
             continue
 
-        str_info = os.path.join(
-            data_root, filenames_train[_i].replace("_emb.nii.gz", "_image.nii.gz.json")
-        )
+        str_info = os.path.join(data_root, filenames_train[_i].replace("_emb.nii.gz", "_image.nii.gz.json"))
         files.append(
             {
                 "image": str_img,
@@ -179,15 +175,11 @@ def main(
             # monai.transforms.RandRotated(keys=['image'], range_x=0.1, range_y=0.1, range_z=0.1, mode='bilinear', prob=0.15),
             monai.transforms.Lambdad(
                 keys="top_region_index",
-                func=lambda x: torch.FloatTensor(
-                    json.load(open(x))["top_region_index"]
-                ),
+                func=lambda x: torch.FloatTensor(json.load(open(x))["top_region_index"]),
             ),
             monai.transforms.Lambdad(
                 keys="bottom_region_index",
-                func=lambda x: torch.FloatTensor(
-                    json.load(open(x))["bottom_region_index"]
-                ),
+                func=lambda x: torch.FloatTensor(json.load(open(x))["bottom_region_index"]),
             ),
             monai.transforms.Lambdad(
                 keys="spacing",
@@ -195,9 +187,7 @@ def main(
             ),
             # monai.transforms.Lambdad(keys="spacing", func=lambda x: torch.FloatTensor([1, 1, 1])),
             monai.transforms.Lambdad(keys="top_region_index", func=lambda x: x * 1e2),
-            monai.transforms.Lambdad(
-                keys="bottom_region_index", func=lambda x: x * 1e2
-            ),
+            monai.transforms.Lambdad(keys="bottom_region_index", func=lambda x: x * 1e2),
             monai.transforms.Lambdad(keys="spacing", func=lambda x: x * 1e2),
         ]
     )
@@ -219,9 +209,7 @@ def main(
 
     num_images_per_batch = 1
     print(f"num_images_per_batch -> {num_images_per_batch}.")
-    train_loader = ThreadDataLoader(
-        train_ds, num_workers=6, batch_size=num_images_per_batch, shuffle=True
-    )
+    train_loader = ThreadDataLoader(train_ds, num_workers=6, batch_size=num_images_per_batch, shuffle=True)
 
     unet = CustomDiffusionModelUNet(
         spatial_dims=3,
@@ -241,17 +229,13 @@ def main(
 
     # Multi-GPU support
     if torch.cuda.device_count() > 1:
-        unet = DistributedDataParallel(
-            unet, device_ids=[device], find_unused_parameters=True
-        )
+        unet = DistributedDataParallel(unet, device_ids=[device], find_unused_parameters=True)
 
     if torch.cuda.device_count() > 1:
         if pretrained_ckpt_filepath == "scratch":
             print("training from scratch.")
         else:
-            checkpoint_unet = torch.load(
-                f"{pretrained_ckpt_filepath}", map_location=device
-            )
+            checkpoint_unet = torch.load(f"{pretrained_ckpt_filepath}", map_location=device)
             unet.module.load_state_dict(checkpoint_unet["unet_state_dict"], strict=True)
             print(f"pretrained checkpoint {pretrained_ckpt_filepath} loaded.")
     else:
@@ -318,9 +302,7 @@ def main(
     total_steps = (num_epochs * len(train_loader.dataset)) / num_images_per_batch
     print(f"total number of training steps: {total_steps}.")
 
-    lr_scheduler = torch.optim.lr_scheduler.PolynomialLR(
-        optimizer, total_iters=total_steps, power=2.0
-    )
+    lr_scheduler = torch.optim.lr_scheduler.PolynomialLR(optimizer, total_iters=total_steps, power=2.0)
 
     loss_pt = torch.nn.L1Loss()
 
@@ -437,9 +419,7 @@ def main(
 
         # Save unet only on master GPU (rank 0)
         if local_rank == 0:
-            unet_state_dict = (
-                unet.module.state_dict() if world_size > 1 else unet.state_dict()
-            )
+            unet_state_dict = unet.module.state_dict() if world_size > 1 else unet.state_dict()
 
             torch.save(
                 {
@@ -455,9 +435,7 @@ def main(
             )
 
             if loss_torch_epoch < best_loss:
-                best_loss = (
-                    loss_torch_epoch if loss_torch_epoch < best_loss else best_loss
-                )
+                best_loss = loss_torch_epoch if loss_torch_epoch < best_loss else best_loss
                 print(f"best loss -> {best_loss}.")
                 torch.save(
                     {

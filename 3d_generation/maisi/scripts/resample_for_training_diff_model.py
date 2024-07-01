@@ -136,7 +136,7 @@ for _iter in range(len(filenames_raw)):
         continue
 
     filepath = filenames_raw[_iter]
-    
+
     out_filename_base = filepath.replace("_image.nii.gz", "")
     out_filename_base = os.path.join(output_root_embedding, out_filename_base)
     # print(f"out_filename_base: {out_filename_base}")
@@ -179,9 +179,7 @@ for _iter in range(len(filenames_raw)):
                     #     resized_pt_nda = F.interpolate(pt_nda, size=target_shape, mode='trilinear', align_corners=False)
 
                     z = autoencoder.encode_stage_2_inputs(pt_nda)
-                    print(
-                        f"z: {z.size()}, {z.dtype}, {z.is_cuda} {1 / torch.std(z)} {torch.mean(z)}"
-                    )
+                    print(f"z: {z.size()}, {z.dtype}, {z.is_cuda} {1 / torch.std(z)} {torch.mean(z)}")
 
                     out_nda = z.squeeze().cpu().detach().numpy()
                     # print(f'out_nda: {out_nda.shape} {out_nda.dtype}')

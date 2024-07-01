@@ -210,9 +210,7 @@ def main(
     print(f"scale_factor -> {scale_factor}.")
 
     # load checkpoint
-    checkpoint_autoencoder = torch.load(
-        "/workspace/monai/generative/from_canz/autoencoder_epoch273.pt"
-    )
+    checkpoint_autoencoder = torch.load("/workspace/monai/generative/from_canz/autoencoder_epoch273.pt")
     if True:
         new_state_dict = {}
         for k, v in checkpoint_autoencoder.items():
@@ -291,20 +289,12 @@ def main(
             spacing_tensor = spacing_tensor[np.newaxis, :]
 
             if amp:
-                top_region_index_tensor = (
-                    torch.from_numpy(top_region_index_tensor).half().to(device)
-                )
-                bottom_region_index_tensor = (
-                    torch.from_numpy(bottom_region_index_tensor).half().to(device)
-                )
+                top_region_index_tensor = torch.from_numpy(top_region_index_tensor).half().to(device)
+                bottom_region_index_tensor = torch.from_numpy(bottom_region_index_tensor).half().to(device)
                 spacing_tensor = torch.from_numpy(spacing_tensor).half().to(device)
             else:
-                top_region_index_tensor = (
-                    torch.from_numpy(top_region_index_tensor).float().to(device)
-                )
-                bottom_region_index_tensor = (
-                    torch.from_numpy(bottom_region_index_tensor).float().to(device)
-                )
+                top_region_index_tensor = torch.from_numpy(top_region_index_tensor).float().to(device)
+                bottom_region_index_tensor = torch.from_numpy(bottom_region_index_tensor).float().to(device)
                 spacing_tensor = torch.from_numpy(spacing_tensor).float().to(device)
 
             outputs = DiffusionInferer.sample(

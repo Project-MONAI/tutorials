@@ -213,12 +213,12 @@ This document describes the steps involved in data resampling, model training, a
             top_region_index_tensor = train_data["top_region_index"].to(device)
             bottom_region_index_tensor = train_data["bottom_region_index"].to(device)
             spacing_tensor = train_data["spacing"].to(device)
-            
+
             optimizer.zero_grad(set_to_none=True)
             with autocast(enabled=True):
                 noise = torch.randn(num_images_per_batch, 4, images.size(-3), images.size(-2), images.size(-1)).to(device)
                 timesteps = torch.randint(0, inferer.scheduler.num_train_timesteps, (images.shape[0],), device=images.device).long()
-                noise_pred = inferer(inputs=images, diffusion_model=unet, noise=noise, timesteps=timesteps, top_region_index_tensor=top_region_index_tensor, 
+                noise_pred = inferer(inputs=images, diffusion_model=unet, noise=noise, timesteps=timesteps, top_region_index_tensor=top_region_index_tensor,
 bottom_region_index_tensor=bottom_region_index_tensor, spacing_tensor=spacing_tensor)
                 loss = loss_pt(noise_pred.float(), noise.float())
 
@@ -310,7 +310,7 @@ scheduler_method": scheduler_method, "output_size": output_size, "unet_state_dic
     ```python
     with torch.cuda.amp.autocast(enabled=amp):
         outputs = DiffusionInferer.sample(
-            inferer, input_noise=noise, diffusion_model=unet, scheduler=scheduler, save_intermediates=False, intermediate_steps=False, 
+            inferer, input_noise=noise, diffusion_model=unet, scheduler=scheduler, save_intermediates=False, intermediate_steps=False,
 top_region_index_tensor=top_region_index_tensor, bottom_region_index_tensor=bottom_region_index_tensor, spacing_tensor=spacing_tensor
         )
         target_shape = output_size
@@ -333,7 +333,7 @@ top_region_index_tensor=top_region_index_tensor, bottom_region_index_tensor=bott
     for _k in range(3):
         out_affine[_k, _k] = out_spacing[_k]
     new_image = nib.Nifti1Image(data, affine=out_affine)
-    nib.save(new_image, 
+    nib.save(new_image,
 f"./predictions/{output_prefix}_seed{rand_seed}_size{output_size[0]:d}x{output_size[1]:d}x{output_size[2]:d}_spacing{out_spacing[0]:.2f}x{out_spacing[1]:.2f}x{out_spacing[2]:.2f}_{timestamp}.nii.gz")
     ```
 

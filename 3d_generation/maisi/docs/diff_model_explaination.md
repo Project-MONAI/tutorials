@@ -1,6 +1,3 @@
-Sure, here is the document converted into a raw Markdown file:
-
-```markdown
 # Data Resampling, Model Training, and Model Inference Processes
 
 This document describes the steps involved in data resampling, model training, and model inference, following the order provided in the Python scripts.
@@ -338,4 +335,3 @@ f"./predictions/{output_prefix}_seed{rand_seed}_size{output_size[0]:d}x{output_s
     ```
 
 This document provides an overview of the data resampling, model training, and model inference processes, following the structure and order of the provided Python scripts.
-```

@@ -1,0 +1,85 @@
+{
+    "random_seed": null,
+    "spatial_dims": 3,
+    "image_channels": 1,
+    "latent_channels": 4,
+    "difusion_unet_def": {
+        "_target_": "custom_network_diffusion.CustomDiffusionModelUNet",
+        "spatial_dims": "@spatial_dims",
+        "in_channels": "@latent_channels",
+        "out_channels": "@latent_channels",
+        "num_channels": [
+            64,
+            128,
+            256,
+            512
+        ],
+        "attention_levels": [
+            false,
+            false,
+            true,
+            true
+        ],
+        "num_head_channels": [
+            0,
+            0,
+            32,
+            32
+        ],
+        "num_res_blocks": 2,
+        "use_flash_attention": true,
+        "input_top_region_index": true,
+        "input_bottom_region_index": true,
+        "input_spacing": true
+    },
+    "controlnet_def": {
+        "_target_": "custom_network_controlnet.CustomControlNet",
+        "spatial_dims": "@spatial_dims",
+        "in_channels": "@latent_channels",
+        "num_channels": [
+            64,
+            128,
+            256,
+            512
+        ],
+        "attention_levels": [
+            false,
+            false,
+            true,
+            true
+        ],
+        "num_head_channels": [
+            0,
+            0,
+            32,
+            32
+        ],
+        "num_res_blocks": 2,
+        "use_flash_attention": true,
+        "conditioning_embedding_in_channels": 8,
+        "conditioning_embedding_num_channels": [8, 32, 64]
+    },
+    "noise_scheduler": {
+        "_target_": "generative.networks.schedulers.DDPMScheduler",
+        "num_train_timesteps": 1000,
+        "beta_start": 0.0015,
+        "beta_end": 0.0195,
+        "schedule": "scaled_linear_beta",
+        "clip_sample": false
+    },
+    "mask_generation_noise_scheduler": {
+        "_target_": "generative.networks.schedulers.DDPMScheduler",
+        "num_train_timesteps": 1000,
+        "beta_start": 0.0015,
+        "beta_end": 0.0195,
+        "schedule": "scaled_linear_beta",
+        "clip_sample": false
+    },
+    "controlnet_train": {
+        "batch_size": 1,
+        "patch_size": [256, 256, 256],
+        "lr": 1e-5,
+        "n_epochs": 10000,
+        "val_interval": 5
+    }
+}

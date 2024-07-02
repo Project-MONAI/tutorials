@@ -99,7 +99,6 @@ def augment_bone_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, int] | 
             # the tumor must be within the organ
             tumor_mask = distorted_mask * organ_mask
             count += 1
-            print(torch.sum(tumor_mask), "|", tumor_size * threshold)
             if torch.sum(tumor_mask) >= tumor_size * threshold:
                 tumor_mask = dilate_one_img(tumor_mask.squeeze(0), erosion=5, pad_value=1.0)
                 tumor_mask = (
@@ -174,7 +173,6 @@ def augmentation_liver_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, i
         
         # the tumor must be within the organ
         tumor_mask = tumor_mask * organ_mask
-        print(torch.sum(tumor_mask), "|", tumor_size * 0.80)
         if torch.sum(tumor_mask) >= tumor_size * 0.80:
             tumor_mask = dilate_one_img(tumor_mask.squeeze(0), erosion=5, pad_value=1.0)
             tumor_mask = erode_one_img(tumor_mask, erosion=5, pad_value=1.0).unsqueeze(0)
@@ -232,7 +230,6 @@ def augmentation_lung_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, in
     tmp = volume[(volume * new_tumor_mask_).nonzero(as_tuple=True)].view(-1)
 
     mode = torch.mode(tmp, 0)[0].item()
-    print(mode)
     assert 28 <= mode <= 32
     volume[tumor_mask_.bool()] = mode
     ###########################
@@ -257,7 +254,6 @@ def augmentation_lung_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, in
             
             # the tumor must be within the organ
             tumor_mask = tumor_mask * lung_mask
-            print(torch.sum(tumor_mask), "|", tumor_size * 0.85)
             if torch.sum(tumor_mask) >= tumor_size * 0.85:
                 tumor_mask = dilate_one_img(tumor_mask.squeeze(0), erosion=5, pad_value=1.0)
                 tumor_mask = (
@@ -331,7 +327,6 @@ def augmentation_pancreas_tumor(whole_mask: Tensor, spatial_size: tuple[int, int
         
         # the tumor must be within the organ
         tumor_mask = tumor_mask * organ_mask
-        print(torch.sum(tumor_mask), "|", tumor_size * 0.80)
         if torch.sum(tumor_mask) >= tumor_size * 0.80:
             tumor_mask = dilate_one_img(tumor_mask.squeeze(0), erosion=5, pad_value=1.0)
             tumor_mask = erode_one_img(tumor_mask, erosion=5, pad_value=1.0).unsqueeze(0)
@@ -407,7 +402,6 @@ def augmentation_colon_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, i
 
             # the tumor must be within the organ
             tumor_mask = tumor_mask * organ_mask
-            print(torch.sum(tumor_mask), "|", tumor_size * threshold)
             count += 1
             if torch.sum(tumor_mask) >= tumor_size * threshold:
                 tumor_mask = dilate_one_img(tumor_mask.squeeze(0), erosion=5, pad_value=1.0)

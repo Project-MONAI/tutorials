@@ -319,7 +319,7 @@ def augmentation_pancreas_tumor(whole_mask: Tensor, spatial_size: tuple[int, int
             break
 
     volume[tumor_mask == 1] = tumor_label[0]
-    
+
     return volume.unsqueeze(0)
 
 

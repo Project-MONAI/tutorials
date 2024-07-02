@@ -17,7 +17,7 @@ import time
 from datetime import timedelta
 import warnings
 
-warnings.simplefilter('ignore', UserWarning)
+warnings.simplefilter("ignore", UserWarning)
 
 import os
 import sys
@@ -41,20 +41,23 @@ from monai.transforms import (
 from monai.bundle import ConfigParser
 from utils import binarize_labels
 
+
 def setup_ddp(rank, world_size):
     print(f"Running DDP diffusion example on rank {rank}/world_size {world_size}.")
     print(f"Initing to IP {os.environ['MASTER_ADDR']}")
     dist.init_process_group(
         backend="nccl", init_method="env://", timeout=timedelta(seconds=36000), rank=rank, world_size=world_size
-    ) 
+    )
     dist.barrier()
     device = torch.device(f"cuda:{rank}")
     return dist, device
+
 
 def define_instance(args, instance_def_key):
     parser = ConfigParser(vars(args))
     parser.parse(True)
     return parser.get_parsed_content(instance_def_key, instantiate=True)
+
 
 def add_data_dir2path(list_files, data_dir, fold=None):
     new_list_files = copy.deepcopy(list_files)
@@ -63,16 +66,16 @@ def add_data_dir2path(list_files, data_dir, fold=None):
         new_list_files_val = []
     for d in new_list_files:
         d["image"] = os.path.join(data_dir, d["image"])
-            
+
         if "label" in d:
             d["label"] = os.path.join(data_dir, d["label"])
-            
+
         if fold is not None:
             if d["fold"] == fold:
                 new_list_files_val.append(copy.deepcopy(d))
             else:
                 new_list_files_train.append(copy.deepcopy(d))
-                
+
     if fold is not None:
         return new_list_files_train, new_list_files_val
     else:
@@ -80,14 +83,14 @@ def add_data_dir2path(list_files, data_dir, fold=None):
 
 
 def prepare_maisi_controlnet_json_dataloader(
-        args,
-        json_data_list,
-        data_base_dir,
-        batch_size=1,
-        fold=0,
-        cache_rate=0.0,
-        rank=0,
-        world_size=1,
+    args,
+    json_data_list,
+    data_base_dir,
+    batch_size=1,
+    fold=0,
+    cache_rate=0.0,
+    rank=0,
+    world_size=1,
 ):
     ddp_bool = world_size > 1
     if isinstance(json_data_list, list):
@@ -103,23 +106,23 @@ def prepare_maisi_controlnet_json_dataloader(
     else:
         with open(json_data_list, "r") as f:
             json_data = json.load(f)
-        list_train, list_valid = add_data_dir2path(json_data['training'], data_base_dir, fold)
+        list_train, list_valid = add_data_dir2path(json_data["training"], data_base_dir, fold)
 
     common_transform = [
         LoadImaged(keys=["image", "label"], image_only=True, ensure_channel_first=True),
         Orientationd(keys=["label"], axcodes="RAS"),
         EnsureTyped(keys=["label"], dtype=torch.uint8, track_meta=True),
-        Lambdad(keys='top_region_index', func=lambda x: torch.FloatTensor(x)),
-        Lambdad(keys='bottom_region_index', func=lambda x: torch.FloatTensor(x)),
-        Lambdad(keys='spacing', func=lambda x: torch.FloatTensor(x)),
-        Lambdad(keys='top_region_index', func=lambda x: x * 1e2),
-        Lambdad(keys='bottom_region_index', func=lambda x: x * 1e2),
-        Lambdad(keys='spacing', func=lambda x: x * 1e2),
+        Lambdad(keys="top_region_index", func=lambda x: torch.FloatTensor(x)),
+        Lambdad(keys="bottom_region_index", func=lambda x: torch.FloatTensor(x)),
+        Lambdad(keys="spacing", func=lambda x: torch.FloatTensor(x)),
+        Lambdad(keys="top_region_index", func=lambda x: x * 1e2),
+        Lambdad(keys="bottom_region_index", func=lambda x: x * 1e2),
+        Lambdad(keys="spacing", func=lambda x: x * 1e2),
     ]
     train_transforms, val_transforms = Compose(common_transform), Compose(common_transform)
 
     train_loader = None
-   
+
     if ddp_bool:
         list_train = partition_dataset(
             data=list_train,
@@ -127,13 +130,8 @@ def prepare_maisi_controlnet_json_dataloader(
             num_partitions=world_size,
             even_divisible=True,
         )[rank]
-    train_ds = CacheDataset(
-        data=list_train, transform=train_transforms, cache_rate=cache_rate, num_workers=8
-    )
-    train_loader = DataLoader(
-        train_ds, batch_size=batch_size, shuffle=True,
-        num_workers=8, pin_memory=True
-    )
+    train_ds = CacheDataset(data=list_train, transform=train_transforms, cache_rate=cache_rate, num_workers=8)
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True)
     if ddp_bool:
         list_valid = partition_dataset(
             data=list_valid,
@@ -142,12 +140,14 @@ def prepare_maisi_controlnet_json_dataloader(
             even_divisible=False,
         )[rank]
     val_ds = CacheDataset(
-        data=list_valid, transform=val_transforms, cache_rate=cache_rate, num_workers=8,
+        data=list_valid,
+        transform=val_transforms,
+        cache_rate=cache_rate,
+        num_workers=8,
     )
-    val_loader = DataLoader(
-        val_ds, batch_size=batch_size, shuffle=False, num_workers=2, pin_memory=False
-    )
-    return train_loader, val_loader 
+    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False, num_workers=2, pin_memory=False)
+    return train_loader, val_loader
+
 
 def main():
     parser = argparse.ArgumentParser(description="PyTorch VAE-GAN training")
@@ -164,7 +164,14 @@ def main():
         help="config json file that stores hyper-parameters",
     )
     parser.add_argument("-g", "--gpus", default=1, type=int, help="number of gpus per node")
-    parser.add_argument("-w", "--weighted_loss_label", nargs='+', default=[], action="store_true", help="list of lables that use weighted loss")
+    parser.add_argument(
+        "-w",
+        "--weighted_loss_label",
+        nargs="+",
+        default=[],
+        action="store_true",
+        help="list of lables that use weighted loss",
+    )
     parser.add_argument("-l", "--weighted_loss", default=100, type=int, help="loss weight loss for ROI labels")
     args = parser.parse_args()
 
@@ -189,7 +196,7 @@ def main():
         setattr(args, k, v)
     for k, v in config_dict.items():
         setattr(args, k, v)
-        
+
     # initialize tensorboard writer
     if rank == 0:
         Path(args.tfevent_path).mkdir(parents=True, exist_ok=True)
@@ -199,13 +206,13 @@ def main():
     # Step 1: set data loader
     train_loader, val_loader = prepare_maisi_controlnet_json_dataloader(
         args,
-        json_data_list = args.json_data_list,
-        data_base_dir = args.data_base_dir,
+        json_data_list=args.json_data_list,
+        data_base_dir=args.data_base_dir,
         rank=rank,
         world_size=world_size,
         batch_size=args.controlnet_train["batch_size"],
         cache_rate=args.controlnet_train["cache_rate"],
-        fold=args.controlnet_train["fold"]
+        fold=args.controlnet_train["fold"],
     )
 
     # Step 2: define diffusion model and controlnet
@@ -235,16 +242,16 @@ def main():
     noise_scheduler = define_instance(args, "noise_scheduler")
 
     if ddp_bool:
-        controlnet = DDP(controlnet, device_ids=[device], output_device=rank, find_unused_parameters=True)   
+        controlnet = DDP(controlnet, device_ids=[device], output_device=rank, find_unused_parameters=True)
 
     # Step 3: training config
     optimizer = torch.optim.AdamW(params=controlnet.parameters(), lr=args.controlnet_train["lr"])
     total_steps = (args.controlnet_train["n_epochs"] * len(train_loader.dataset)) / args.controlnet_train["batch_size"]
-    if rank ==0:
+    if rank == 0:
         print(f"total number of training steps: {total_steps}.")
 
     lr_scheduler = torch.optim.lr_scheduler.PolynomialLR(optimizer, total_iters=total_steps, power=2.0)
-  
+
     # Step 4: training
     n_epochs = args.controlnet_train["n_epochs"]
     scaler = GradScaler()
@@ -259,44 +266,46 @@ def main():
         epoch_loss_ = 0
 
         for step, batch in enumerate(train_loader):
-            # get image embedding and label mask 
+            # get image embedding and label mask
             inputs = batch["image"].to(device)
             labels = batch["label"].to(device)
             # get coresponding condtions
-            top_region_index_tensor = batch['top_region_index'].to(device)
-            bottom_region_index_tensor = batch['bottom_region_index'].to(device)
-            spacing_tensor = batch['spacing'].to(device)
-            
+            top_region_index_tensor = batch["top_region_index"].to(device)
+            bottom_region_index_tensor = batch["bottom_region_index"].to(device)
+            spacing_tensor = batch["spacing"].to(device)
+
             optimizer.zero_grad(set_to_none=True)
 
             with autocast(enabled=True):
                 # generate random noise
                 noise_shape = list(inputs.shape)
                 noise = torch.randn(noise_shape, dtype=inputs.dtype).to(inputs.device)
-                
+
                 # use binary encoding to encode segmentation mask
                 controlnet_cond = binarize_labels(labels.as_tensor().to(torch.uint8)).float()
-                
+
                 # create timesteps
                 timesteps = torch.randint(
-                        0, noise_scheduler.num_train_timesteps, (inputs.shape[0],), device=inputs.device
-                    ).long()
-                
+                    0, noise_scheduler.num_train_timesteps, (inputs.shape[0],), device=inputs.device
+                ).long()
+
                 # create noisy latent
                 noisy_latent = noise_scheduler.add_noise(original_samples=inputs, noise=noise, timesteps=timesteps)
-                
+
                 # get controlnet output
                 down_block_res_samples, mid_block_res_sample = controlnet(
                     x=noisy_latent, timesteps=timesteps, controlnet_cond=controlnet_cond
                 )
                 # get noise prediction from diffusion unet
-                noise_pred = unet(x=noisy_latent,
-                                timesteps=timesteps,
-                                top_region_index_tensor=top_region_index_tensor,
-                                bottom_region_index_tensor=bottom_region_index_tensor,
-                                spacing_tensor=spacing_tensor,
-                                down_block_additional_residuals=down_block_res_samples,
-                                mid_block_additional_residual=mid_block_res_sample)
+                noise_pred = unet(
+                    x=noisy_latent,
+                    timesteps=timesteps,
+                    top_region_index_tensor=top_region_index_tensor,
+                    bottom_region_index_tensor=bottom_region_index_tensor,
+                    spacing_tensor=spacing_tensor,
+                    down_block_additional_residuals=down_block_res_samples,
+                    mid_block_additional_residual=mid_block_res_sample,
+                )
 
             if args.weighted_loss > 1.0:
                 weights = torch.ones_like(inputs).to(inputs.device)
@@ -304,7 +313,7 @@ def main():
                 interpolate_label = F.interpolate(labels, size=inputs.shape[2:], mode="nearest")
                 # assign larger weights for ROI (tumor)
                 for label in args.weighted_loss_label:
-                    roi[interpolate_label==label] = 1
+                    roi[interpolate_label == label] = 1
                 weights[roi.repeat(1, inputs.shape[1], 1, 1, 1) == 1] = args.weighted_loss
                 loss = (F.l1_loss(noise_pred.float(), noise.float(), reduction="none") * weights).mean()
             else:
@@ -330,8 +339,7 @@ def main():
                         n_epochs,
                         step,
                         len(train_loader),
-                        lr_scheduler.get_last_lr()[0] if lr_scheduler is not None else optimizer.param_groups[0][
-                            'lr'],
+                        lr_scheduler.get_last_lr()[0] if lr_scheduler is not None else optimizer.param_groups[0]["lr"],
                         loss.detach().cpu().item(),
                         time_left,
                     )
@@ -348,7 +356,6 @@ def main():
             tensorboard_writer.add_scalar("train/train_diffusion_loss_epoch", epoch_loss.cpu().item(), total_step)
 
         torch.cuda.empty_cache()
-            
 
 
 if __name__ == "__main__":

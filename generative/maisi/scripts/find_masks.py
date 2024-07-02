@@ -45,7 +45,7 @@ def find_masks(
     anatomy_list: int | list[int],
     spacing: list[float],
     output_size: list[int],
-    check_spacing_and_output_size: bool = False,
+    check_spacing_and_output_size: bool = False, 
     database_filepath: str = "./database.json",
     mask_foldername: str = "./masks",
 ):
@@ -80,35 +80,45 @@ def find_masks(
         if not set(anatomy_list).issubset(_item["label_list"]):
             continue
 
-        top_index = [index for index, element in enumerate(_item["top_region_index"]) if element != 0]
+        top_index = [
+            index
+            for index, element in enumerate(_item["top_region_index"])
+            if element != 0
+        ]
         top_index = top_index[0]
-        bottom_index = [index for index, element in enumerate(_item["bottom_region_index"]) if element != 0]
+        bottom_index = [
+            index
+            for index, element in enumerate(_item["bottom_region_index"])
+            if element != 0
+        ]
         bottom_index = bottom_index[0]
 
         flag = False
         for _idx in body_region:
             if _idx > bottom_index or _idx < top_index:
                 flag = True
-
+        
         # check if candiate mask contains tumors
         for tumor_label in [23, 24, 26, 27, 128]:
             # we skip those mask with tumors if users do not provide tumor label in anatomy_list
             if tumor_label not in anatomy_list and tumor_label in _item["label_list"]:
                 flag = True
-
+        
         if check_spacing_and_output_size:
             # check if the output_size and spacing are same as user's input
             for axis in range(3):
                 if _item["dim"][axis] != output_size[axis] or _item["spacing"][axis] != spacing[axis]:
                     flag = True
-
+        
         if flag == True:
             continue
 
         candidate = {}
         if "label_filename" in _item:
             candidate["label"] = os.path.join(mask_foldername, _item["label_filename"])
-        candidate["pseudo_label"] = os.path.join(mask_foldername, _item["pseudo_label_filename"])
+        candidate["pseudo_label"] = os.path.join(
+            mask_foldername, _item["pseudo_label_filename"]
+        )
         candidate["spacing"] = _item["spacing"]
         candidate["dim"] = _item["dim"]
         candidate["top_region_index"] = _item["top_region_index"]

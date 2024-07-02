@@ -10,77 +10,58 @@
 # limitations under the License.
 
 import numpy as np
+from typing import Sequence
+
 import torch
 import torch.nn.functional as F
+from torch import Tensor
 
 from monai.transforms import Rand3DElastic, RandAffine, RandZoom
 from monai.utils import ensure_tuple_rep
+from .utils import erode_one_img, dilate_one_img
 
+def initialize_tumor_mask(volume: Tensor, tumor_label: Sequence[int]) -> Tensor:
+    """
+    Initialize tumor mask for tumor augmentation.
 
-def erode3d(input_tensor, erosion=3):
-    # Define the structuring element
-    erosion = ensure_tuple_rep(erosion, 3)
-    structuring_element = torch.ones(1, 1, erosion[0], erosion[1], erosion[2]).to(input_tensor.device)
+    Args:
+        volume: input 3D multi-label mask, [H,W,D] torch tensor.
+        tumor_label: tumor label in whole_mask, list of int. 
 
-    # Pad the input tensor to handle border pixels
-    input_padded = F.pad(
-        input_tensor.float().unsqueeze(0).unsqueeze(0),
-        (
-            erosion[0] // 2,
-            erosion[0] // 2,
-            erosion[1] // 2,
-            erosion[1] // 2,
-            erosion[2] // 2,
-            erosion[2] // 2,
-        ),
-        mode="constant",
-        value=1.0,
-    )
+    Return:
+        tumor_mask_, initialized tumor mask, [H,W,D] torch tensor.
+    """
+    tumor_mask_ = torch.zeros_like(volume)
+    for idx, label in enumerate(tumor_label):
+        tumor_mask_[volume == label] = idx + 1
+    tumor_mask_ = tumor_mask_.to(torch.uint8)
+    return tumor_mask_
+    
+def augment_bone_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, int] | int | None = None) -> Tensor:
+    """
+    Bone tumor augmentation.
 
-    # Apply erosion operation
-    output = F.conv3d(input_padded, structuring_element, padding=0)
+    Args:
+        whole_mask: input 3D multi-label mask, [1,H,W,D] torch tensor.
+        spatial_size: output image spatial size, used in random transform. If not defined, will use (H,W,D). If some components are non-positive values, the transform will use the corresponding components of whole_mask size. For example, spatial_size=(128, 128, -1) will be adapted to (128, 128, 64) if the third spatial dimension size of whole_mask is 64.
 
-    # Set output values based on the minimum value within the structuring element
-    output = torch.where(output == torch.sum(structuring_element), 1.0, 0.0)
+    Return:
+        augmented mask, with shape of spatial_size and data type as whole_mask.
 
-    return output.squeeze(0).squeeze(0)
+    Example:
 
+        .. code-block:: python
 
-def dilate3d(input_tensor, erosion=3):
-    # Define the structuring element
-    erosion = ensure_tuple_rep(erosion, 3)
-    structuring_element = torch.ones(1, 1, erosion[0], erosion[1], erosion[2]).to(input_tensor.device)
+            # define a multi-label mask
+            whole_mask = torch.randint(0, 132, [1,128,128,128])
+            augmented_whole_mask = augment_bone_tumor(whole_mask)
+    """
+    # Initialize binary tumor mask
+    volume = whole_mask.squeeze(0) # [M,N,P]
+    tumor_label = [128]
+    tumor_mask_ = initialize_tumor_mask(volume, tumor_label)
 
-    # Pad the input tensor to handle border pixels
-    input_padded = F.pad(
-        input_tensor.float().unsqueeze(0).unsqueeze(0),
-        (
-            erosion[0] // 2,
-            erosion[0] // 2,
-            erosion[1] // 2,
-            erosion[1] // 2,
-            erosion[2] // 2,
-            erosion[2] // 2,
-        ),
-        mode="constant",
-        value=1.0,
-    )
-
-    # Apply erosion operation
-    output = F.conv3d(input_padded, structuring_element, padding=0)
-
-    # Set output values based on the minimum value within the structuring element
-    output = torch.where(output > 0, 1.0, 0.0)
-
-    return output.squeeze(0).squeeze(0)
-
-
-def augmentation_tumor_bone(pt_nda):
-    volume = pt_nda.squeeze(0)
-    real_l_volume_ = torch.zeros_like(volume)
-    real_l_volume_[volume == 128] = 1
-    real_l_volume_ = real_l_volume_.to(torch.uint8)
-
+    # Define augmentation transform
     elastic = RandAffine(
         mode="nearest",
         prob=1.0,
@@ -90,51 +71,76 @@ def augmentation_tumor_bone(pt_nda):
         padding_mode="zeros",
     )
 
-    tumor_szie = torch.sum((real_l_volume_ > 0).float())
+    tumor_size = torch.sum((tumor_mask_ > 0).float())
     ###########################
     # remove pred in pseudo_label in real lesion region
-    volume[real_l_volume_ > 0] = 0
+    volume[tumor_mask_ > 0] = 200
     ###########################
-    if tumor_szie > 0:
+    if tumor_size > 0:
         # get organ mask
         organ_mask = (
             torch.logical_and(33 <= volume, volume <= 56).float()
             + torch.logical_and(63 <= volume, volume <= 97).float()
             + (volume == 127).float()
             + (volume == 114).float()
-            + real_l_volume_
+            + tumor_mask_
         )
         organ_mask = (organ_mask > 0).float()
-        cnt = 0
+        
+        # augment mask
+        count = 0        
         while True:
-            threshold = 0.8 if cnt < 40 else 0.75
-            real_l_volume = real_l_volume_
-            # random distor mask
-            distored_mask = elastic((real_l_volume > 0).cuda(), spatial_size=(512, 512, 512)).as_tensor()
-            real_l_volume = distored_mask * organ_mask
-            cnt += 1
-            print(torch.sum(real_l_volume), "|", tumor_szie * threshold)
-            if torch.sum(real_l_volume) >= tumor_szie * threshold:
-                real_l_volume = dilate3d(real_l_volume.squeeze(0), erosion=5)
-                real_l_volume = erode3d(real_l_volume, erosion=5).unsqueeze(0).to(torch.uint8)
+            threshold = 0.8 if count < 40 else 0.75
+            tumor_mask = tumor_mask_
+            # apply random augmentation
+            distorted_mask = elastic(
+                (tumor_mask > 0).cuda(), spatial_size=spatial_size
+            ).as_tensor()
+            # the tumor must be within the organ
+            tumor_mask = distorted_mask * organ_mask
+            count += 1
+            print(torch.sum(tumor_mask), "|", tumor_size * threshold)
+            if torch.sum(tumor_mask) >= tumor_size * threshold:
+                tumor_mask = dilate_one_img(tumor_mask.squeeze(0), erosion=5, pad_value=1.0)
+                tumor_mask = (
+                    erode_one_img(tumor_mask, erosion=5, pad_value=1.0).unsqueeze(0).to(torch.uint8)
+                )
                 break
     else:
-        real_l_volume = real_l_volume_
-        no_aug += 1
+        tumor_mask = tumor_mask_
 
-    volume[real_l_volume == 1] = 128
+    # update the new tumor mask
+    volume[tumor_mask == 1] = tumor_label[0]
 
-    pt_nda = volume.unsqueeze(0)
-    return pt_nda
+    whole_mask = volume.unsqueeze(0)
+    return whole_mask
 
 
-def augmentation_tumor_liver(pt_nda):
-    volume = pt_nda.squeeze(0)
-    real_l_volume_ = torch.zeros_like(volume)
-    real_l_volume_[volume == 1] = 1
-    real_l_volume_[volume == 26] = 2
-    real_l_volume_ = real_l_volume_.to(torch.uint8)
+def augmentation_liver_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, int] | int | None = None) -> Tensor:
+    """
+    Bone liver augmentation.
 
+    Args:
+        whole_mask: input 3D multi-label mask, [1,H,W,D] torch tensor.
+        spatial_size: output image spatial size, used in random transform. If not defined, will use (H,W,D). If some components are non-positive values, the transform will use the corresponding components of whole_mask size. For example, spatial_size=(128, 128, -1) will be adapted to (128, 128, 64) if the third spatial dimension size of whole_mask is 64.
+
+    Return:
+        augmented mask, with shape of spatial_size and data type as whole_mask.
+
+    Example:
+
+        .. code-block:: python
+
+            # define a multi-label mask
+            whole_mask = torch.randint(0, 132, [1,128,128,128])
+            augmented_whole_mask = augment_liver_tumor(whole_mask)
+    """
+    # Initialize binary tumor mask
+    volume = whole_mask.squeeze(0)
+    tumor_label = [1, 26]
+    tumor_mask_ = initialize_tumor_mask(volume, tumor_label)
+
+    # Define augmentation transform
     elastic = Rand3DElastic(
         mode="nearest",
         prob=1.0,
@@ -146,43 +152,65 @@ def augmentation_tumor_liver(pt_nda):
         padding_mode="zeros",
     )
 
-    tumor_szie = torch.sum(real_l_volume_ == 2)
+    tumor_size = torch.sum(tumor_mask_ == 2)
     ###########################
     # remove pred  organ labels
     volume[volume == 1] = 0
     volume[volume == 26] = 0
     # before move tumor maks, full the original location by organ labels
-    volume[real_l_volume_ == 1] = 1
-    volume[real_l_volume_ == 2] = 1
+    volume[tumor_mask_ == 1] = 1
+    volume[tumor_mask_ == 2] = 1
     ###########################
     while True:
-        real_l_volume = real_l_volume_
-        # random distor mask
-        real_l_volume = elastic((real_l_volume == 2).cuda(), spatial_size=(512, 512, 512)).as_tensor()
+        tumor_mask = tumor_mask_
+        # apply random augmentation
+        tumor_mask = elastic(
+            (tumor_mask == 2).cuda(), spatial_size=tuple(spatial_size)
+        ).as_tensor()
         # get organ mask
-        organ_mask = (real_l_volume_ == 1).float() + (real_l_volume_ == 2).float()
-
-        organ_mask = dilate3d(organ_mask.squeeze(0), erosion=5)
-        organ_mask = erode3d(organ_mask, erosion=5).unsqueeze(0)
-        real_l_volume = real_l_volume * organ_mask
-        print(torch.sum(real_l_volume), "|", tumor_szie * 0.80)
-        if torch.sum(real_l_volume) >= tumor_szie * 0.80:
-            real_l_volume = dilate3d(real_l_volume.squeeze(0), erosion=5)
-            real_l_volume = erode3d(real_l_volume, erosion=5).unsqueeze(0)
+        organ_mask = (tumor_mask_ == 1).float() + (tumor_mask_ == 2).float()
+        organ_mask = dilate_one_img(organ_mask.squeeze(0), erosion=5, pad_value=1.0)
+        organ_mask = erode_one_img(organ_mask, erosion=5, pad_value=1.0).unsqueeze(0)
+        
+        # the tumor must be within the organ
+        tumor_mask = tumor_mask * organ_mask
+        print(torch.sum(tumor_mask), "|", tumor_size * 0.80)
+        if torch.sum(tumor_mask) >= tumor_size * 0.80:
+            tumor_mask = dilate_one_img(tumor_mask.squeeze(0), erosion=5, pad_value=1.0)
+            tumor_mask = erode_one_img(tumor_mask, erosion=5, pad_value=1.0).unsqueeze(0)
             break
 
-    volume[real_l_volume == 1] = 26
+    volume[tumor_mask == 1] = 26
 
-    pt_nda = volume.unsqueeze(0)
-    return pt_nda
+    whole_mask = volume.unsqueeze(0)
+    return whole_mask
 
 
-def augmentation_tumor_lung(pt_nda):
-    volume = pt_nda.squeeze(0)
-    real_l_volume_ = torch.zeros_like(volume)
-    real_l_volume_[volume == 23] = 1
-    real_l_volume_ = real_l_volume_.to(torch.uint8)
+def augmentation_lung_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, int] | int | None = None) -> Tensor:
+    """
+    Lung tumor augmentation.
 
+    Args:
+        whole_mask: input 3D multi-label mask, [1,H,W,D] torch tensor.
+        spatial_size: output image spatial size, used in random transform. If not defined, will use (H,W,D). If some components are non-positive values, the transform will use the corresponding components of whole_mask size. For example, spatial_size=(128, 128, -1) will be adapted to (128, 128, 64) if the third spatial dimension size of whole_mask is 64.
+
+    Return:
+        augmented mask, with shape of spatial_size and data type as whole_mask.
+
+    Example:
+
+        .. code-block:: python
+
+            # define a multi-label mask
+            whole_mask = torch.randint(0, 132, [1,128,128,128])
+            augmented_whole_mask = augment_lung_tumor(whole_mask)
+    """
+    # Initialize binary tumor mask
+    volume = whole_mask.squeeze(0)
+    tumor_label = [23]
+    tumor_mask_ = initialize_tumor_mask(volume, tumor_label)
+
+    # Define augmentation transform
     elastic = Rand3DElastic(
         mode="nearest",
         prob=1.0,
@@ -194,27 +222,28 @@ def augmentation_tumor_lung(pt_nda):
         padding_mode="zeros",
     )
 
-    tumor_szie = torch.sum(real_l_volume_)
-    ###########################
+    tumor_size = torch.sum(tumor_mask_)
     # before move lung tumor maks, full the original location by lung labels
-    new_real_l_volume_ = dilate3d(real_l_volume_.squeeze(0), erosion=3)
-    new_real_l_volume_ = new_real_l_volume_.unsqueeze(0)
-    new_real_l_volume_[real_l_volume_ > 0] = 0
-    new_real_l_volume_[volume < 28] = 0
-    new_real_l_volume_[volume > 32] = 0
-    tmp = volume[(volume * new_real_l_volume_).nonzero(as_tuple=True)].view(-1)
+    new_tumor_mask_ = dilate_one_img(tumor_mask_.squeeze(0), erosion=3, pad_value=1.0)
+    new_tumor_mask_ = new_tumor_mask_.unsqueeze(0)
+    new_tumor_mask_[tumor_mask_ > 0] = 0
+    new_tumor_mask_[volume < 28] = 0
+    new_tumor_mask_[volume > 32] = 0
+    tmp = volume[(volume * new_tumor_mask_).nonzero(as_tuple=True)].view(-1)
 
     mode = torch.mode(tmp, 0)[0].item()
     print(mode)
     assert 28 <= mode <= 32
-    volume[real_l_volume_.bool()] = mode
+    volume[tumor_mask_.bool()] = mode
     ###########################
-    if tumor_szie > 0:
+    if tumor_size > 0:
         # aug
         while True:
-            real_l_volume = real_l_volume_
-            # random distor mask
-            real_l_volume = elastic(real_l_volume, spatial_size=(512, 512, 512)).as_tensor()
+            tumor_mask = tumor_mask_
+            # apply random augmentation
+            tumor_mask = elastic(
+                tumor_mask, spatial_size=tuple(spatial_size)
+            ).as_tensor()
             # get lung mask v2 (133 order)
             lung_mask = (
                 (volume == 28).float()
@@ -223,31 +252,52 @@ def augmentation_tumor_lung(pt_nda):
                 + (volume == 31).float()
                 + (volume == 32).float()
             )
-
-            lung_mask = dilate3d(lung_mask.squeeze(0), erosion=5)
-            lung_mask = erode3d(lung_mask, erosion=5).unsqueeze(0)
-            real_l_volume = real_l_volume * lung_mask
-            print(torch.sum(real_l_volume), "|", tumor_szie * 0.85)
-            if torch.sum(real_l_volume) >= tumor_szie * 0.85:
-                real_l_volume = dilate3d(real_l_volume.squeeze(0), erosion=5)
-                real_l_volume = erode3d(real_l_volume, erosion=5).unsqueeze(0).to(torch.uint8)
+            lung_mask = dilate_one_img(lung_mask.squeeze(0), erosion=5, pad_value=1.0)
+            lung_mask = erode_one_img(lung_mask, erosion=5, pad_value=1.0).unsqueeze(0)
+            
+            # the tumor must be within the organ
+            tumor_mask = tumor_mask * lung_mask
+            print(torch.sum(tumor_mask), "|", tumor_size * 0.85)
+            if torch.sum(tumor_mask) >= tumor_size * 0.85:
+                tumor_mask = dilate_one_img(tumor_mask.squeeze(0), erosion=5, pad_value=1.0)
+                tumor_mask = (
+                    erode_one_img(tumor_mask, erosion=5, pad_value=1.0).unsqueeze(0).to(torch.uint8)
+                )
                 break
     else:
-        real_l_volume = real_l_volume_
+        tumor_mask = tumor_mask_
 
-    volume[real_l_volume == 1] = 23
+    volume[tumor_mask == 1] = tumor_label[0]
 
-    pt_nda = volume.unsqueeze(0)
-    return pt_nda
+    whole_mask = volume.unsqueeze(0)
+    return whole_mask
 
 
-def augmentation_tumor_pancreas(pt_nda):
-    volume = pt_nda.squeeze(0)
-    real_l_volume_ = torch.zeros_like(volume)
-    real_l_volume_[volume == 4] = 1
-    real_l_volume_[volume == 24] = 2
-    real_l_volume_ = real_l_volume_.to(torch.uint8)
+def augmentation_pancreas_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, int] | int | None = None) -> Tensor:
+    """
+    Pancreas tumor augmentation.
 
+    Args:
+        whole_mask: input 3D multi-label mask, [1,H,W,D] torch tensor.
+        spatial_size: output image spatial size, used in random transform. If not defined, will use (H,W,D). If some components are non-positive values, the transform will use the corresponding components of whole_mask size. For example, spatial_size=(128, 128, -1) will be adapted to (128, 128, 64) if the third spatial dimension size of whole_mask is 64.
+
+    Return:
+        augmented mask, with shape of spatial_size and data type as whole_mask.
+
+    Example:
+
+        .. code-block:: python
+
+            # define a multi-label mask
+            whole_mask = torch.randint(0, 132, [1,128,128,128])
+            augmented_whole_mask = augment_pancreas_tumor(whole_mask)
+    """
+    # Initialize binary tumor mask
+    volume = whole_mask.squeeze(0)
+    tumor_label = [4, 24]
+    tumor_mask_ = initialize_tumor_mask(volume, tumor_label)
+
+    # Define augmentation transform
     elastic = Rand3DElastic(
         mode="nearest",
         prob=1.0,
@@ -259,43 +309,65 @@ def augmentation_tumor_pancreas(pt_nda):
         padding_mode="zeros",
     )
 
-    tumor_szie = torch.sum(real_l_volume_ == 2)
+    tumor_size = torch.sum(tumor_mask_ == 2)
     ###########################
     # remove pred  organ labels
     volume[volume == 24] = 0
     volume[volume == 4] = 0
     # before move tumor maks, full the original location by organ labels
-    volume[real_l_volume_ == 1] = 4
-    volume[real_l_volume_ == 2] = 4
+    volume[tumor_mask_ == 1] = 4
+    volume[tumor_mask_ == 2] = 4
     ###########################
     while True:
-        real_l_volume = real_l_volume_
-        # random distor mask
-        real_l_volume = elastic((real_l_volume == 2).cuda(), spatial_size=(512, 512, 512)).as_tensor()
+        tumor_mask = tumor_mask_
+        # apply random augmentation
+        tumor_mask = elastic(
+            (tumor_mask == 2).cuda(), spatial_size=tuple(spatial_size)
+        ).as_tensor()
         # get organ mask
-        organ_mask = (real_l_volume_ == 1).float() + (real_l_volume_ == 2).float()
-
-        organ_mask = dilate3d(organ_mask.squeeze(0), erosion=5)
-        organ_mask = erode3d(organ_mask, erosion=5).unsqueeze(0)
-        real_l_volume = real_l_volume * organ_mask
-        print(torch.sum(real_l_volume), "|", tumor_szie * 0.80)
-        if torch.sum(real_l_volume) >= tumor_szie * 0.80:
-            real_l_volume = dilate3d(real_l_volume.squeeze(0), erosion=5)
-            real_l_volume = erode3d(real_l_volume, erosion=5).unsqueeze(0)
+        organ_mask = (tumor_mask_ == 1).float() + (tumor_mask_ == 2).float()
+        organ_mask = dilate_one_img(organ_mask.squeeze(0), erosion=5, pad_value=1.0)
+        organ_mask = erode_one_img(organ_mask, erosion=5, pad_value=1.0).unsqueeze(0)
+        
+        # the tumor must be within the organ
+        tumor_mask = tumor_mask * organ_mask
+        print(torch.sum(tumor_mask), "|", tumor_size * 0.80)
+        if torch.sum(tumor_mask) >= tumor_size * 0.80:
+            tumor_mask = dilate_one_img(tumor_mask.squeeze(0), erosion=5, pad_value=1.0)
+            tumor_mask = erode_one_img(tumor_mask, erosion=5, pad_value=1.0).unsqueeze(0)
             break
 
-    volume[real_l_volume == 1] = 24
+    volume[tumor_mask == 1] = tumor_label[0]
+    
+    whole_mask = volume.unsqueeze(0)
+    return whole_mask
 
-    pt_nda = volume.unsqueeze(0)
-    return pt_nda
 
+def augmentation_colon_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, int] | int | None = None) -> Tensor:
+    """
+    Colon tumor augmentation.
 
-def augmentation_tumor_colon(pt_nda):
-    volume = pt_nda.squeeze(0)
-    real_l_volume_ = torch.zeros_like(volume)
-    real_l_volume_[volume == 27] = 1
-    real_l_volume_ = real_l_volume_.to(torch.uint8)
+    Args:
+        whole_mask: input 3D multi-label mask, [1,H,W,D] torch tensor.
+        spatial_size: output image spatial size, used in random transform. If not defined, will use (H,W,D). If some components are non-positive values, the transform will use the corresponding components of whole_mask size. For example, spatial_size=(128, 128, -1) will be adapted to (128, 128, 64) if the third spatial dimension size of whole_mask is 64.
 
+    Return:
+        augmented mask, with shape of spatial_size and data type as whole_mask.
+
+    Example:
+
+        .. code-block:: python
+
+            # define a multi-label mask
+            whole_mask = torch.randint(0, 132, [1,128,128,128])
+            augmented_whole_mask = augment_colon_tumor(whole_mask)
+    """
+    # Initialize binary tumor mask
+    volume = whole_mask.squeeze(0)
+    tumor_label = [27]
+    tumor_mask_ = initialize_tumor_mask(volume, tumor_label)
+
+    # Define augmentation transform
     elastic = Rand3DElastic(
         mode="nearest",
         prob=1.0,
@@ -307,51 +379,72 @@ def augmentation_tumor_colon(pt_nda):
         padding_mode="zeros",
     )
 
-    tumor_szie = torch.sum(real_l_volume_)
+    tumor_size = torch.sum(tumor_mask_)
     ###########################
     # before move tumor maks, full the original location by organ labels
-    volume[real_l_volume_.bool()] = 62
+    volume[tumor_mask_.bool()] = 62
     ###########################
-    if tumor_szie > 0:
+    if tumor_size > 0:
         # get organ mask
         organ_mask = (volume == 62).float()
-        organ_mask = dilate3d(organ_mask.squeeze(0), erosion=5)
-        organ_mask = erode3d(organ_mask, erosion=5).unsqueeze(0)
-        #         cnt = 0
-        cnt = 0
+        organ_mask = dilate_one_img(organ_mask.squeeze(0), erosion=5, pad_value=1.0)
+        organ_mask = erode_one_img(organ_mask, erosion=5, pad_value=1.0).unsqueeze(0)
+        
+        count = 0
         while True:
             threshold = 0.8
-            real_l_volume = real_l_volume_
-            if cnt < 20:
-                # random distor mask
-                distored_mask = elastic((real_l_volume == 1).cuda(), spatial_size=(512, 512, 512)).as_tensor()
-                real_l_volume = distored_mask * organ_mask
-            elif 20 <= cnt < 40:
+            tumor_mask = tumor_mask_
+            if count < 20:
+                # apply random augmentation
+                distorted_mask = elastic(
+                    (tumor_mask == 1).cuda(), spatial_size=tuple(spatial_size)
+                ).as_tensor()
+                tumor_mask = distorted_mask * organ_mask
+            elif 20 <= count < 40:
                 threshold = 0.75
             else:
-                no_aug += 1
                 break
 
-            real_l_volume = real_l_volume * organ_mask
-            print(torch.sum(real_l_volume), "|", tumor_szie * threshold)
-            cnt += 1
-            if torch.sum(real_l_volume) >= tumor_szie * threshold:
-                real_l_volume = dilate3d(real_l_volume.squeeze(0), erosion=5)
-                real_l_volume = erode3d(real_l_volume, erosion=5).unsqueeze(0).to(torch.uint8)
+            # the tumor must be within the organ
+            tumor_mask = tumor_mask * organ_mask
+            print(torch.sum(tumor_mask), "|", tumor_size * threshold)
+            count += 1
+            if torch.sum(tumor_mask) >= tumor_size * threshold:
+                tumor_mask = dilate_one_img(tumor_mask.squeeze(0), erosion=5, pad_value=1.0)
+                tumor_mask = (
+                    erode_one_img(tumor_mask, erosion=5, pad_value=1.0).unsqueeze(0).to(torch.uint8)
+                )
                 break
     else:
-        real_l_volume = real_l_volume_
-        no_aug += 1
-    #     break
-    volume[real_l_volume == 1] = 27
+        tumor_mask = tumor_mask_
 
-    pt_nda = volume.unsqueeze(0)
-    return pt_nda
+    volume[tumor_mask == 1] = tumor_label[0]
+
+    whole_mask = volume.unsqueeze(0)
+    return whole_mask
 
 
-def augmentation_body(pt_nda):
-    volume = pt_nda.squeeze(0)
+def augmentation_body(whole_mask: Tensor) -> Tensor:
+    """
+    Whole body mask augmentation.
 
+    Args:
+        whole_mask: input 3D multi-label mask, [1,H,W,D] torch tensor.
+
+    Return:
+        augmented mask, with same shape and data type as whole_mask.
+
+    Example:
+
+        .. code-block:: python
+
+            # define a multi-label mask
+            whole_mask = torch.randint(0, 132, [1,128,128,128])
+            augmented_whole_mask = augment_body(whole_mask)
+    """
+    volume = whole_mask.squeeze(0)
+
+    # Define augmentation transform
     zoom = RandZoom(
         min_zoom=0.99,
         max_zoom=1.01,
@@ -359,33 +452,53 @@ def augmentation_body(pt_nda):
         align_corners=None,
         prob=1.0,
     )
+    # apply random augmentation
     volume = zoom(volume)
 
-    pt_nda = volume.unsqueeze(0)
-    return pt_nda
+    whole_mask = volume.unsqueeze(0)
+    return whole_mask
 
 
-def augmentation(pt_nda):
-    label_list = torch.unique(pt_nda)
+def augmentation(whole_mask: Tensor, spatial_size: tuple[int, int, int] | int | None = None) -> Tensor:
+    """
+    Tumor or whole body mask augmentation. If tumor exist, augment tumor mask; if not, augment whole body mask
+
+    Args:
+        whole_mask: input 3D multi-label mask, [1,H,W,D] torch tensor.
+        spatial_size: output image spatial size, used in random transform. If not defined, will use (H,W,D). If some components are non-positive values, the transform will use the corresponding components of whole_mask size. For example, spatial_size=(128, 128, -1) will be adapted to (128, 128, 64) if the third spatial dimension size of whole_mask is 64.
+
+    Return:
+        augmented mask, with shape of spatial_size and data type as whole_mask.
+
+    Example:
+
+        .. code-block:: python
+
+            # define a multi-label mask
+            whole_mask = torch.randint(0, 132, [1,128,128,128])
+            augmented_whole_mask = augmentation(whole_mask)
+    """
+    label_list = torch.unique(whole_mask)
     label_list = list(label_list.cpu().numpy())
 
+    # Note that we only augment one type of tumor.
     if 128 in label_list:
         print(f"augmenting bone lesion/tumor")
-        pt_nda = augmentation_tumor_bone(pt_nda)
+        whole_mask = augmentation_bone_tumor(whole_mask, spatial_size)
     elif 26 in label_list:
         print(f"augmenting liver tumor")
-        pt_nda = augmentation_tumor_liver(pt_nda)
+        whole_mask = augmentation_liver_tumor(whole_mask, spatial_size)
     elif 23 in label_list:
         print(f"augmenting lung tumor")
-        pt_nda = augmentation_tumor_lung(pt_nda)
+        whole_mask = augmentation_lung_tumor(whole_mask, spatial_size)
     elif 24 in label_list:
         print(f"augmenting pancreas tumor")
-        pt_nda = augmentation_tumor_pancreas(pt_nda)
+        whole_mask = augmentation_pancreas_tumor(whole_mask, spatial_size)
     elif 27 in label_list:
         print(f"augmenting colon tumor")
-        pt_nda = augmentation_tumor_colon(pt_nda)
+        whole_mask = augmentation_colon_tumor(whole_mask, spatial_size)
     else:
         print(f"augmenting body")
-        pt_nda = augmentation_body(pt_nda)
+        whole_mask = augmentation_body(whole_mask)
 
-    return pt_nda
+    return whole_mask

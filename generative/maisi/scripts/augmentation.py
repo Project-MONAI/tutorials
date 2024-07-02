@@ -99,8 +99,8 @@ def augment_bone_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, int] | 
             tumor_mask = distorted_mask * organ_mask
             count += 1
             if torch.sum(tumor_mask) >= tumor_size * threshold:
-                tumor_mask = dilate_one_img(tumor_mask.squeeze(0), erosion=5, pad_value=1.0)
-                tumor_mask = erode_one_img(tumor_mask, erosion=5, pad_value=1.0).unsqueeze(0).to(torch.uint8)
+                tumor_mask = dilate_one_img(tumor_mask.squeeze(0), filter_size=5, pad_value=1.0)
+                tumor_mask = erode_one_img(tumor_mask, filter_size=5, pad_value=1.0).unsqueeze(0).to(torch.uint8)
                 break
     else:
         tumor_mask = tumor_mask_
@@ -162,14 +162,14 @@ def augmentation_liver_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, i
         tumor_mask = elastic((tumor_mask == 2).cuda(), spatial_size=tuple(spatial_size)).as_tensor()
         # get organ mask
         organ_mask = (tumor_mask_ == 1).float() + (tumor_mask_ == 2).float()
-        organ_mask = dilate_one_img(organ_mask.squeeze(0), erosion=5, pad_value=1.0)
-        organ_mask = erode_one_img(organ_mask, erosion=5, pad_value=1.0).unsqueeze(0)
+        organ_mask = dilate_one_img(organ_mask.squeeze(0), filter_size=5, pad_value=1.0)
+        organ_mask = erode_one_img(organ_mask, filter_size=5, pad_value=1.0).unsqueeze(0)
 
         # the tumor must be within the organ
         tumor_mask = tumor_mask * organ_mask
         if torch.sum(tumor_mask) >= tumor_size * 0.80:
-            tumor_mask = dilate_one_img(tumor_mask.squeeze(0), erosion=5, pad_value=1.0)
-            tumor_mask = erode_one_img(tumor_mask, erosion=5, pad_value=1.0).unsqueeze(0)
+            tumor_mask = dilate_one_img(tumor_mask.squeeze(0), filter_size=5, pad_value=1.0)
+            tumor_mask = erode_one_img(tumor_mask, filter_size=5, pad_value=1.0).unsqueeze(0)
             break
 
     volume[tumor_mask == 1] = 26
@@ -215,7 +215,7 @@ def augmentation_lung_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, in
 
     tumor_size = torch.sum(tumor_mask_)
     # before move lung tumor maks, full the original location by lung labels
-    new_tumor_mask_ = dilate_one_img(tumor_mask_.squeeze(0), erosion=3, pad_value=1.0)
+    new_tumor_mask_ = dilate_one_img(tumor_mask_.squeeze(0), filter_size=3, pad_value=1.0)
     new_tumor_mask_ = new_tumor_mask_.unsqueeze(0)
     new_tumor_mask_[tumor_mask_ > 0] = 0
     new_tumor_mask_[volume < 28] = 0
@@ -240,14 +240,14 @@ def augmentation_lung_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, in
                 + (volume == 31).float()
                 + (volume == 32).float()
             )
-            lung_mask = dilate_one_img(lung_mask.squeeze(0), erosion=5, pad_value=1.0)
-            lung_mask = erode_one_img(lung_mask, erosion=5, pad_value=1.0).unsqueeze(0)
+            lung_mask = dilate_one_img(lung_mask.squeeze(0), filter_size=5, pad_value=1.0)
+            lung_mask = erode_one_img(lung_mask, filter_size=5, pad_value=1.0).unsqueeze(0)
 
             # the tumor must be within the organ
             tumor_mask = tumor_mask * lung_mask
             if torch.sum(tumor_mask) >= tumor_size * 0.85:
-                tumor_mask = dilate_one_img(tumor_mask.squeeze(0), erosion=5, pad_value=1.0)
-                tumor_mask = erode_one_img(tumor_mask, erosion=5, pad_value=1.0).unsqueeze(0).to(torch.uint8)
+                tumor_mask = dilate_one_img(tumor_mask.squeeze(0), filter_size=5, pad_value=1.0)
+                tumor_mask = erode_one_img(tumor_mask, filter_size=5, pad_value=1.0).unsqueeze(0).to(torch.uint8)
                 break
     else:
         tumor_mask = tumor_mask_
@@ -308,14 +308,14 @@ def augmentation_pancreas_tumor(whole_mask: Tensor, spatial_size: tuple[int, int
         tumor_mask = elastic((tumor_mask == 2).cuda(), spatial_size=tuple(spatial_size)).as_tensor()
         # get organ mask
         organ_mask = (tumor_mask_ == 1).float() + (tumor_mask_ == 2).float()
-        organ_mask = dilate_one_img(organ_mask.squeeze(0), erosion=5, pad_value=1.0)
-        organ_mask = erode_one_img(organ_mask, erosion=5, pad_value=1.0).unsqueeze(0)
+        organ_mask = dilate_one_img(organ_mask.squeeze(0), filter_size=5, pad_value=1.0)
+        organ_mask = erode_one_img(organ_mask, filter_size=5, pad_value=1.0).unsqueeze(0)
 
         # the tumor must be within the organ
         tumor_mask = tumor_mask * organ_mask
         if torch.sum(tumor_mask) >= tumor_size * 0.80:
-            tumor_mask = dilate_one_img(tumor_mask.squeeze(0), erosion=5, pad_value=1.0)
-            tumor_mask = erode_one_img(tumor_mask, erosion=5, pad_value=1.0).unsqueeze(0)
+            tumor_mask = dilate_one_img(tumor_mask.squeeze(0), filter_size=5, pad_value=1.0)
+            tumor_mask = erode_one_img(tumor_mask, filter_size=5, pad_value=1.0).unsqueeze(0)
             break
 
     volume[tumor_mask == 1] = tumor_label[0]
@@ -367,8 +367,8 @@ def augmentation_colon_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, i
     if tumor_size > 0:
         # get organ mask
         organ_mask = (volume == 62).float()
-        organ_mask = dilate_one_img(organ_mask.squeeze(0), erosion=5, pad_value=1.0)
-        organ_mask = erode_one_img(organ_mask, erosion=5, pad_value=1.0).unsqueeze(0)
+        organ_mask = dilate_one_img(organ_mask.squeeze(0), filter_size=5, pad_value=1.0)
+        organ_mask = erode_one_img(organ_mask, filter_size=5, pad_value=1.0).unsqueeze(0)
 
         count = 0
         while True:
@@ -387,8 +387,8 @@ def augmentation_colon_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, i
             tumor_mask = tumor_mask * organ_mask
             count += 1
             if torch.sum(tumor_mask) >= tumor_size * threshold:
-                tumor_mask = dilate_one_img(tumor_mask.squeeze(0), erosion=5, pad_value=1.0)
-                tumor_mask = erode_one_img(tumor_mask, erosion=5, pad_value=1.0).unsqueeze(0).to(torch.uint8)
+                tumor_mask = dilate_one_img(tumor_mask.squeeze(0), filter_size=5, pad_value=1.0)
+                tumor_mask = erode_one_img(tumor_mask, filter_size=5, pad_value=1.0).unsqueeze(0).to(torch.uint8)
                 break
     else:
         tumor_mask = tumor_mask_

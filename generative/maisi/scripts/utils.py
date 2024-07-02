@@ -121,18 +121,18 @@ def dilate_one_img(mask_t: Tensor, filter_size: int | Sequence[int] = 3, pad_val
 
 def organ_fill_by_closing(data, target_label, device):
     mask = (data == target_label).astype(np.uint8)
-    mask = dilate3d(torch.from_numpy(mask).to(device), erosion=3, value=0.0)
-    mask = erode3d(mask, erosion=3, value=0.0)
-    mask = dilate3d(mask, erosion=3, value=0.0)
-    mask = erode3d(mask, erosion=3, value=0.0).cpu().numpy()
+    mask = dilate_one_img(torch.from_numpy(mask).to(device), filter_size=3, pad_value=0.0)
+    mask = erode_one_img(mask, filter_size=3, pad_value=0.0)
+    mask = dilate_one_img(mask, filter_size=3, pad_value=0.0)
+    mask = erode_one_img(mask, filter_size=3, pad_value=0.0).cpu().numpy()
     return mask.astype(np.bool_)
 
 
 def organ_fill_by_removed_mask(data, target_label, remove_mask, device):
     mask = (data == target_label).astype(np.uint8)
-    mask = dilate3d(torch.from_numpy(mask).to(device), erosion=3, value=0.0)
-    mask = dilate3d(mask, erosion=3, value=0.0)
-    roi_oragn_mask = dilate3d(mask, erosion=3, value=0.0).cpu().numpy()
+    mask = dilate_one_img(torch.from_numpy(mask).to(device), filter_size=3, pad_value=0.0)
+    mask = dilate_one_img(mask, filter_size=3, pad_value=0.0)
+    roi_oragn_mask = dilate_one_img(mask, filter_size=3, pad_value=0.0).cpu().numpy()
     return (roi_oragn_mask * remove_mask).astype(np.bool_)
 
 
@@ -172,10 +172,10 @@ def general_mask_generation_post_process(volume_t, target_tumor_label=None, devi
     airway = volume_t == 132
 
     # ------------ refine body mask pred
-    body_region_mask = erode3d(torch.from_numpy((volume_t > 0)).to(device), erosion=3, value=0.0).cpu().numpy()
+    body_region_mask = erode_one_img(torch.from_numpy((volume_t > 0)).to(device), filter_size=3, pad_value=0.0).cpu().numpy()
     body_region_mask, _ = supress_non_largest_components(body_region_mask, [1])
     body_region_mask = (
-        dilate3d(torch.from_numpy(body_region_mask).to(device), erosion=3, value=0.0).cpu().numpy().astype(np.uint8)
+        dilate_one_img(torch.from_numpy(body_region_mask).to(device), filter_size=3, pad_value=0.0).cpu().numpy().astype(np.uint8)
     )
     volume_t = volume_t * body_region_mask
 
@@ -221,7 +221,7 @@ def general_mask_generation_post_process(volume_t, target_tumor_label=None, devi
 
     if target_tumor_label == 23 and np.sum(target_tumor) > 0:
         # speical process for cases with lung tumor
-        dia_lung_tumor_mask = dilate3d(torch.from_numpy((data == 23)).to(device), erosion=3, value=0.0).cpu().numpy()
+        dia_lung_tumor_mask = dilate_one_img(torch.from_numpy((data == 23)).to(device), filter_size=3, pad_value=0.0).cpu().numpy()
         tmp = (
             (data * (dia_lung_tumor_mask.astype(np.uint8) - (data == 23).astype(np.uint8))).astype(np.float32).flatten()
         )
@@ -229,14 +229,14 @@ def general_mask_generation_post_process(volume_t, target_tumor_label=None, devi
         mode = int(stats.mode(tmp.flatten(), nan_policy="omit")[0])
         if mode in [28, 29, 30, 31, 32]:
             dia_lung_tumor_mask = (
-                dilate3d(torch.from_numpy(dia_lung_tumor_mask).to(device), erosion=3, value=0.0).cpu().numpy()
+                dilate_one_img(torch.from_numpy(dia_lung_tumor_mask).to(device), filter_size=3, pad_value=0.0).cpu().numpy()
             )
             lung_remove_mask = dia_lung_tumor_mask.astype(np.uint8) - (data == 23).astype(np.uint8).astype(np.uint8)
             data[organ_fill_by_removed_mask(data, target_label=mode, remove_mask=lung_remove_mask, device=device)] = (
                 mode
             )
         dia_lung_tumor_mask = (
-            dilate3d(torch.from_numpy(dia_lung_tumor_mask).to(device), erosion=3, value=0.0).cpu().numpy()
+            dilate_one_img(torch.from_numpy(dia_lung_tumor_mask).to(device), filter_size=3, pad_value=0.0).cpu().numpy()
         )
         data[
             organ_fill_by_removed_mask(
@@ -257,9 +257,9 @@ def general_mask_generation_post_process(volume_t, target_tumor_label=None, devi
         data[organ_fill_by_removed_mask(data, target_label=3, remove_mask=organ_remove_mask, device=device)] = 3
         data[organ_fill_by_removed_mask(data, target_label=3, remove_mask=organ_remove_mask, device=device)] = 3
         dia_tumor_mask = (
-            dilate3d(torch.from_numpy((data == target_tumor_label)).to(device), erosion=3, value=0.0).cpu().numpy()
+            dilate_one_img(torch.from_numpy((data == target_tumor_label)).to(device), filter_size=3, pad_value=0.0).cpu().numpy()
         )
-        dia_tumor_mask = dilate3d(torch.from_numpy(dia_tumor_mask).to(device), erosion=3, value=0.0).cpu().numpy()
+        dia_tumor_mask = dilate_one_img(torch.from_numpy(dia_tumor_mask).to(device), filter_size=3, pad_value=0.0).cpu().numpy()
         data[
             organ_fill_by_removed_mask(
                 data, target_label=target_tumor_label, remove_mask=dia_tumor_mask * organ_remove_mask, device=device
@@ -284,9 +284,9 @@ def general_mask_generation_post_process(volume_t, target_tumor_label=None, devi
     if target_tumor_label == 27 and np.sum(target_tumor) > 0:
         # speical process for cases with colon tumor
         dia_tumor_mask = (
-            dilate3d(torch.from_numpy((data == target_tumor_label)).to(device), erosion=3, value=0.0).cpu().numpy()
+            dilate_one_img(torch.from_numpy((data == target_tumor_label)).to(device), filter_size=3, pad_value=0.0).cpu().numpy()
         )
-        dia_tumor_mask = dilate3d(torch.from_numpy(dia_tumor_mask).to(device), erosion=3, value=0.0).cpu().numpy()
+        dia_tumor_mask = dilate_one_img(torch.from_numpy(dia_tumor_mask).to(device), filter_size=3, pad_value=0.0).cpu().numpy()
         data[
             organ_fill_by_removed_mask(
                 data, target_label=target_tumor_label, remove_mask=dia_tumor_mask * organ_remove_mask, device=device

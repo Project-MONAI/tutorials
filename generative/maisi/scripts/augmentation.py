@@ -31,10 +31,9 @@ def initialize_tumor_mask(volume: Tensor, tumor_label: Sequence[int]) -> Tensor:
     Return:
         tumor_mask_, initialized tumor mask, [H,W,D] torch tensor.
     """
-    tumor_mask_ = torch.zeros_like(volume)
+    tumor_mask_ = torch.zeros_like(volume, dtype=torch.uint8)
     for idx, label in enumerate(tumor_label):
         tumor_mask_[volume == label] = idx + 1
-    tumor_mask_ = tumor_mask_.to(torch.uint8)
     return tumor_mask_
     
 def augment_bone_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, int] | int | None = None) -> Tensor:
@@ -111,8 +110,7 @@ def augment_bone_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, int] | 
     # update the new tumor mask
     volume[tumor_mask == 1] = tumor_label[0]
 
-    whole_mask = volume.unsqueeze(0)
-    return whole_mask
+    return volume.unsqueeze(0)
 
 
 def augmentation_liver_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, int] | int | None = None) -> Tensor:
@@ -180,8 +178,7 @@ def augmentation_liver_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, i
 
     volume[tumor_mask == 1] = 26
 
-    whole_mask = volume.unsqueeze(0)
-    return whole_mask
+    return volume.unsqueeze(0)
 
 
 def augmentation_lung_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, int] | int | None = None) -> Tensor:
@@ -265,8 +262,7 @@ def augmentation_lung_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, in
 
     volume[tumor_mask == 1] = tumor_label[0]
 
-    whole_mask = volume.unsqueeze(0)
-    return whole_mask
+    return volume.unsqueeze(0)
 
 
 def augmentation_pancreas_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, int] | int | None = None) -> Tensor:
@@ -334,8 +330,7 @@ def augmentation_pancreas_tumor(whole_mask: Tensor, spatial_size: tuple[int, int
 
     volume[tumor_mask == 1] = tumor_label[0]
     
-    whole_mask = volume.unsqueeze(0)
-    return whole_mask
+    return volume.unsqueeze(0)
 
 
 def augmentation_colon_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, int] | int | None = None) -> Tensor:
@@ -414,8 +409,7 @@ def augmentation_colon_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, i
 
     volume[tumor_mask == 1] = tumor_label[0]
 
-    whole_mask = volume.unsqueeze(0)
-    return whole_mask
+    return volume.unsqueeze(0)
 
 
 def augmentation_body(whole_mask: Tensor) -> Tensor:
@@ -449,8 +443,7 @@ def augmentation_body(whole_mask: Tensor) -> Tensor:
     # apply random augmentation
     volume = zoom(volume)
 
-    whole_mask = volume.unsqueeze(0)
-    return whole_mask
+    return volume.unsqueeze(0)
 
 
 def augmentation(whole_mask: Tensor, spatial_size: tuple[int, int, int] | int | None = None) -> Tensor:

@@ -121,11 +121,11 @@ def dilate_one_img(mask_t: Tensor, filter_size: int | Sequence[int] = 3, pad_val
 
 def organ_fill_by_closing(data, target_label, device):
     mask = (data == target_label).astype(np.uint8)
-    mask = dilate_one_img(torch.from_numpy(mask).to(device), filter_size=3, pad_value=0.0)
-    mask = erode_one_img(mask, filter_size=3, pad_value=0.0)
-    mask = dilate_one_img(mask, filter_size=3, pad_value=0.0)
-    mask = erode_one_img(mask, filter_size=3, pad_value=0.0).cpu().numpy()
-    return mask.astype(np.bool_)
+    mast = torch.from_numpy(mask).to(device)
+    for _ in range(2):
+        mask = dilate_one_img(mast, filter_size=3, pad_value=0.0)
+        mask = erode_one_img(mask, filter_size=3, pad_value=0.0)
+    return mask.cpu().numpy().astype(np.bool_)
 
 
 def organ_fill_by_removed_mask(data, target_label, remove_mask, device):

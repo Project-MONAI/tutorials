@@ -21,6 +21,8 @@ from torch import Tensor
 from .utils import dilate_one_img, erode_one_img
 
 MAX_COUNT = 100
+
+
 def initialize_tumor_mask(volume: Tensor, tumor_label: Sequence[int]) -> Tensor:
     """
     Initialize tumor mask for tumor augmentation.
@@ -37,9 +39,10 @@ def initialize_tumor_mask(volume: Tensor, tumor_label: Sequence[int]) -> Tensor:
         tumor_mask_[volume == label] = idx + 1
     return tumor_mask_
 
+
 def finalize_tumor_mask(distorted_mask: Tensor, organ_mask: Tensor, threshold_tumor_size: float):
     """
-    Try to generate the final tumor mask by combining the augmentd tumor mask and organ mask. 
+    Try to generate the final tumor mask by combining the augmentd tumor mask and organ mask.
     Need to make sure tumor is inside of organ and is larger than threshold_tumor_size.
 
     Args:
@@ -57,6 +60,7 @@ def finalize_tumor_mask(distorted_mask: Tensor, organ_mask: Tensor, threshold_tu
         return tumor_mask
     else:
         return None
+
 
 def augmentation_bone_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, int] | int | None = None) -> Tensor:
     """
@@ -192,7 +196,7 @@ def augmentation_liver_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, i
             tumor_mask = tumor_mask_
             # apply random augmentation
             distorted_mask = elastic((tumor_mask == 2), spatial_size=spatial_size).as_tensor()
-            
+
             # generate final tumor mask
             count += 1
             tumor_mask = finalize_tumor_mask(distorted_mask, organ_mask, tumor_size * 0.80)
@@ -260,8 +264,7 @@ def augmentation_lung_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, in
     assert 28 <= mode <= 32
     volume[tumor_mask_.bool()] = mode
     ###########################
-    
-    
+
     if tumor_size > 0:
         count = 0
         # get lung mask v2 (133 order)
@@ -353,7 +356,7 @@ def augmentation_pancreas_tumor(whole_mask: Tensor, spatial_size: tuple[int, int
         while True:
             tumor_mask = tumor_mask_
             # apply random augmentation
-            distorted_mask = elastic((tumor_mask == 2), spatial_size=spatial_size).as_tensor()            
+            distorted_mask = elastic((tumor_mask == 2), spatial_size=spatial_size).as_tensor()
 
             # generate final tumor mask
             count += 1
@@ -432,7 +435,6 @@ def augmentation_colon_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, i
                 threshold = 0.75
             else:
                 break
-
 
             # generate final tumor mask
             count += 1

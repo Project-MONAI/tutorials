@@ -20,13 +20,14 @@ from monai.transforms import Rand3DElastic, RandAffine, RandZoom
 from monai.utils import ensure_tuple_rep
 from .utils import erode_one_img, dilate_one_img
 
+
 def initialize_tumor_mask(volume: Tensor, tumor_label: Sequence[int]) -> Tensor:
     """
     Initialize tumor mask for tumor augmentation.
 
     Args:
         volume: input 3D multi-label mask, [H,W,D] torch tensor.
-        tumor_label: tumor label in whole_mask, list of int. 
+        tumor_label: tumor label in whole_mask, list of int.
 
     Return:
         tumor_mask_, initialized tumor mask, [H,W,D] torch tensor.
@@ -36,7 +37,8 @@ def initialize_tumor_mask(volume: Tensor, tumor_label: Sequence[int]) -> Tensor:
         tumor_mask_[volume == label] = idx + 1
     tumor_mask_ = tumor_mask_.to(torch.uint8)
     return tumor_mask_
-    
+
+
 def augment_bone_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, int] | int | None = None) -> Tensor:
     """
     Bone tumor augmentation.
@@ -57,7 +59,7 @@ def augment_bone_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, int] | 
             augmented_whole_mask = augment_bone_tumor(whole_mask)
     """
     # Initialize binary tumor mask
-    volume = whole_mask.squeeze(0) # [M,N,P]
+    volume = whole_mask.squeeze(0)  # [M,N,P]
     tumor_label = [128]
     tumor_mask_ = initialize_tumor_mask(volume, tumor_label)
 
@@ -86,25 +88,21 @@ def augment_bone_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, int] | 
             + tumor_mask_
         )
         organ_mask = (organ_mask > 0).float()
-        
+
         # augment mask
-        count = 0        
+        count = 0
         while True:
             threshold = 0.8 if count < 40 else 0.75
             tumor_mask = tumor_mask_
             # apply random augmentation
-            distorted_mask = elastic(
-                (tumor_mask > 0).cuda(), spatial_size=spatial_size
-            ).as_tensor()
+            distorted_mask = elastic((tumor_mask > 0).cuda(), spatial_size=spatial_size).as_tensor()
             # the tumor must be within the organ
             tumor_mask = distorted_mask * organ_mask
             count += 1
             print(torch.sum(tumor_mask), "|", tumor_size * threshold)
             if torch.sum(tumor_mask) >= tumor_size * threshold:
                 tumor_mask = dilate_one_img(tumor_mask.squeeze(0), erosion=5, pad_value=1.0)
-                tumor_mask = (
-                    erode_one_img(tumor_mask, erosion=5, pad_value=1.0).unsqueeze(0).to(torch.uint8)
-                )
+                tumor_mask = erode_one_img(tumor_mask, erosion=5, pad_value=1.0).unsqueeze(0).to(torch.uint8)
                 break
     else:
         tumor_mask = tumor_mask_
@@ -164,14 +162,12 @@ def augmentation_liver_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, i
     while True:
         tumor_mask = tumor_mask_
         # apply random augmentation
-        tumor_mask = elastic(
-            (tumor_mask == 2).cuda(), spatial_size=tuple(spatial_size)
-        ).as_tensor()
+        tumor_mask = elastic((tumor_mask == 2).cuda(), spatial_size=tuple(spatial_size)).as_tensor()
         # get organ mask
         organ_mask = (tumor_mask_ == 1).float() + (tumor_mask_ == 2).float()
         organ_mask = dilate_one_img(organ_mask.squeeze(0), erosion=5, pad_value=1.0)
         organ_mask = erode_one_img(organ_mask, erosion=5, pad_value=1.0).unsqueeze(0)
-        
+
         # the tumor must be within the organ
         tumor_mask = tumor_mask * organ_mask
         print(torch.sum(tumor_mask), "|", tumor_size * 0.80)
@@ -241,9 +237,7 @@ def augmentation_lung_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, in
         while True:
             tumor_mask = tumor_mask_
             # apply random augmentation
-            tumor_mask = elastic(
-                tumor_mask, spatial_size=tuple(spatial_size)
-            ).as_tensor()
+            tumor_mask = elastic(tumor_mask, spatial_size=tuple(spatial_size)).as_tensor()
             # get lung mask v2 (133 order)
             lung_mask = (
                 (volume == 28).float()
@@ -254,15 +248,13 @@ def augmentation_lung_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, in
             )
             lung_mask = dilate_one_img(lung_mask.squeeze(0), erosion=5, pad_value=1.0)
             lung_mask = erode_one_img(lung_mask, erosion=5, pad_value=1.0).unsqueeze(0)
-            
+
             # the tumor must be within the organ
             tumor_mask = tumor_mask * lung_mask
             print(torch.sum(tumor_mask), "|", tumor_size * 0.85)
             if torch.sum(tumor_mask) >= tumor_size * 0.85:
                 tumor_mask = dilate_one_img(tumor_mask.squeeze(0), erosion=5, pad_value=1.0)
-                tumor_mask = (
-                    erode_one_img(tumor_mask, erosion=5, pad_value=1.0).unsqueeze(0).to(torch.uint8)
-                )
+                tumor_mask = erode_one_img(tumor_mask, erosion=5, pad_value=1.0).unsqueeze(0).to(torch.uint8)
                 break
     else:
         tumor_mask = tumor_mask_
@@ -321,14 +313,12 @@ def augmentation_pancreas_tumor(whole_mask: Tensor, spatial_size: tuple[int, int
     while True:
         tumor_mask = tumor_mask_
         # apply random augmentation
-        tumor_mask = elastic(
-            (tumor_mask == 2).cuda(), spatial_size=tuple(spatial_size)
-        ).as_tensor()
+        tumor_mask = elastic((tumor_mask == 2).cuda(), spatial_size=tuple(spatial_size)).as_tensor()
         # get organ mask
         organ_mask = (tumor_mask_ == 1).float() + (tumor_mask_ == 2).float()
         organ_mask = dilate_one_img(organ_mask.squeeze(0), erosion=5, pad_value=1.0)
         organ_mask = erode_one_img(organ_mask, erosion=5, pad_value=1.0).unsqueeze(0)
-        
+
         # the tumor must be within the organ
         tumor_mask = tumor_mask * organ_mask
         print(torch.sum(tumor_mask), "|", tumor_size * 0.80)
@@ -338,7 +328,7 @@ def augmentation_pancreas_tumor(whole_mask: Tensor, spatial_size: tuple[int, int
             break
 
     volume[tumor_mask == 1] = tumor_label[0]
-    
+
     whole_mask = volume.unsqueeze(0)
     return whole_mask
 
@@ -389,16 +379,14 @@ def augmentation_colon_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, i
         organ_mask = (volume == 62).float()
         organ_mask = dilate_one_img(organ_mask.squeeze(0), erosion=5, pad_value=1.0)
         organ_mask = erode_one_img(organ_mask, erosion=5, pad_value=1.0).unsqueeze(0)
-        
+
         count = 0
         while True:
             threshold = 0.8
             tumor_mask = tumor_mask_
             if count < 20:
                 # apply random augmentation
-                distorted_mask = elastic(
-                    (tumor_mask == 1).cuda(), spatial_size=tuple(spatial_size)
-                ).as_tensor()
+                distorted_mask = elastic((tumor_mask == 1).cuda(), spatial_size=tuple(spatial_size)).as_tensor()
                 tumor_mask = distorted_mask * organ_mask
             elif 20 <= count < 40:
                 threshold = 0.75
@@ -411,9 +399,7 @@ def augmentation_colon_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, i
             count += 1
             if torch.sum(tumor_mask) >= tumor_size * threshold:
                 tumor_mask = dilate_one_img(tumor_mask.squeeze(0), erosion=5, pad_value=1.0)
-                tumor_mask = (
-                    erode_one_img(tumor_mask, erosion=5, pad_value=1.0).unsqueeze(0).to(torch.uint8)
-                )
+                tumor_mask = erode_one_img(tumor_mask, erosion=5, pad_value=1.0).unsqueeze(0).to(torch.uint8)
                 break
     else:
         tumor_mask = tumor_mask_

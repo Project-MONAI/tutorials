@@ -13,11 +13,12 @@
 import json
 import os
 import zipfile
+from typing import Sequence
 
 from monai.utils import ensure_tuple_rep
 
 
-def convert_body_region(body_region: str | List[str]) -> List[int]:
+def convert_body_region(body_region: str | Sequence[str]) -> Sequence[int]:
     """
     Convert body region string to body region index.
     Args:
@@ -52,10 +53,10 @@ def convert_body_region(body_region: str | List[str]) -> List[int]:
 
 
 def find_masks(
-    body_region: str | list[str],
-    anatomy_list: int | list[int],
+    body_region: str | Sequence[str],
+    anatomy_list: int | Sequence[int],
     spacing: Sequence[float] | float = 1.0,
-    output_size: list[int] = [512, 512, 512],
+    output_size: Sequence[int] = [512, 512, 512],
     check_spacing_and_output_size: bool = False,
     database_filepath: str = "./data/database.json",
     mask_foldername: str = "./data/masks/",
@@ -80,7 +81,7 @@ def find_masks(
     # check and preprocess input
     body_region = convert_body_region(body_region)
 
-    if type(anatomy_list) == int:
+    if isinstance(anatomy_list, int):
         anatomy_list = [anatomy_list]
 
     spacing = ensure_tuple_rep(spacing, 3)
@@ -89,13 +90,15 @@ def find_masks(
         zip_file_path = mask_foldername + ".zip"
 
         if not os.path.isfile(zip_file_path):
-            raise ValueError(f"Please download {zip_file_path}.")
+            raise ValueError(f"Please download {zip_file_path} following the instruction in ./data/README.md.")
 
         with zipfile.ZipFile(zip_file_path, "r") as zip_ref:
             print(f"Extracting {zip_file_path}...")
             zip_ref.extractall(path=mask_foldername)
         print(f"Unzipped {zip_file_path} to {mask_foldername}.")
 
+    if not os.path.isfile(database_filepath):
+        raise ValueError(f"Please download {database_filepath} following the instruction in ./data/README.md.")
     with open(database_filepath, "r") as f:
         db = json.load(f)
 

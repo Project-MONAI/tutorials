@@ -225,7 +225,7 @@ def main():
     diffusion_model_ckpt = torch.load(args.trained_diffusion_path, map_location=device)
     unet.load_state_dict(diffusion_model_ckpt["unet_state_dict"])
     # load scale factor
-    scale_factor = diffusion_model_ckpt["scale_factor"]                
+    scale_factor = diffusion_model_ckpt["scale_factor"]
     if rank == 0:
         print(f"Load trained diffusion model from {args.trained_diffusion_path}.")
         print(f"loaded scale_factor from diffusion model ckpt -> {scale_factor}.")
@@ -234,10 +234,12 @@ def main():
     # Copy weights from the DM to the controlnet
     _, updated_keys, _ = copy_model_state(controlnet, unet.state_dict())
     if rank == 0:
-        print("ControlNet updated_keys:" , updated_keys)
+        print("ControlNet updated_keys:", updated_keys)
     # load trained controlnet model if it is provided
     if args.trained_controlnet_path is not None:
-        controlnet.load_state_dict(torch.load(args.trained_controlnet_path, map_location=device)['controlnet_state_dict'])
+        controlnet.load_state_dict(
+            torch.load(args.trained_controlnet_path, map_location=device)["controlnet_state_dict"]
+        )
         if rank == 0:
             print(f"load trained controlnet model from", args.trained_controlnet_path)
     else:
@@ -336,8 +338,10 @@ def main():
 
             if rank == 0:
                 # write train loss for each batch into tensorboard
-                tensorboard_writer.add_scalar("train/train_controlnet_loss_iter", loss.detach().cpu().item(), total_step)
-                batches_done = step+1
+                tensorboard_writer.add_scalar(
+                    "train/train_controlnet_loss_iter", loss.detach().cpu().item(), total_step
+                )
+                batches_done = step + 1
                 batches_left = len(train_loader) - batches_done
                 time_left = timedelta(seconds=batches_left * (time.time() - prev_time))
                 prev_time = time.time()
@@ -346,7 +350,7 @@ def main():
                     % (
                         epoch + 1,
                         n_epochs,
-                        step+1,
+                        step + 1,
                         len(train_loader),
                         lr_scheduler.get_last_lr()[0],
                         loss.detach().cpu().item(),
@@ -365,24 +369,31 @@ def main():
             tensorboard_writer.add_scalar("train/train_controlnet_loss_epoch", epoch_loss.cpu().item(), total_step)
             # save controlnet only on master GPU (rank 0)
             controlnet_state_dict = controlnet.module.state_dict() if world_size > 1 else controlnet.state_dict()
-            torch.save({
-                'epoch': epoch + 1,
-                'loss': epoch_loss,
-                'controlnet_state_dict': controlnet_state_dict,
-            }, f'{args.model_dir}/{args.exp_name}_current.pt')
-            
+            torch.save(
+                {
+                    "epoch": epoch + 1,
+                    "loss": epoch_loss,
+                    "controlnet_state_dict": controlnet_state_dict,
+                },
+                f"{args.model_dir}/{args.exp_name}_current.pt",
+            )
+
             if epoch_loss < best_loss:
                 best_loss = epoch_loss
-                print(f'best loss -> {best_loss}.')
-                torch.save({
-                    'epoch': epoch + 1,
-                    'loss': best_loss,
-                    'controlnet_state_dict': controlnet_state_dict,
-                }, f'{args.model_dir}/{args.exp_name}_best.pt')
+                print(f"best loss -> {best_loss}.")
+                torch.save(
+                    {
+                        "epoch": epoch + 1,
+                        "loss": best_loss,
+                        "controlnet_state_dict": controlnet_state_dict,
+                    },
+                    f"{args.model_dir}/{args.exp_name}_best.pt",
+                )
 
         torch.cuda.empty_cache()
     if ddp_bool:
         dist.destroy_process_group()
+
 
 if __name__ == "__main__":
     logging.basicConfig(

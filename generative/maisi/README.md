@@ -22,7 +22,7 @@ Please refer to the [Installation of MONAI Generative Model](../README.md)
 
 ### 2. Model inference and example outputs
 
-The inference script generate images based on the setting in [configuration files](./config/config_maisi.json). 
+The inference script generate images based on the setting in [configuration files](./config/config_maisi.json).
 
 - `"spacing"`: voxel size of generated images. E.g., if set to `[1.5, 1.5, 2.0]`, it will generate images with a resolution of 1.5x1.5x2.0 mm.
 - `"output_size"`: volume size of generated images. E.g., if set to `[512, 512, 256]`, it will generate images with size of 512x512x256. They need to be divisible by 16. If you have a small GPU memory size, you should adjust it to small numbers.

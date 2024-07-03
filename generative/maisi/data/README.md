@@ -7,8 +7,8 @@ The VAE training dataset used in MAISI contains 37243 CT training data and 1963 
 
 ### 2 Diffusion model training Data
 ### 3 ControlNet model training Data
-The preprocessed subset of [C4KC-KiTS](https://www.cancerimagingarchive.net/collection/c4kc-kits/) dataset used in this 
-finetuning config is provided in `./dataset/C4KC-KiTS_subset`. The URL is specified at `large_files.yml`. The structure of example folder in the preprocessed dataset is: 
+The preprocessed subset of [C4KC-KiTS](https://www.cancerimagingarchive.net/collection/c4kc-kits/) dataset used in this
+finetuning config is provided in `./dataset/C4KC-KiTS_subset`. The URL is specified at `large_files.yml`. The structure of example folder in the preprocessed dataset is:
 
 ### 4. Questions and bugs
 

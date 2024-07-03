@@ -4,7 +4,7 @@
     "image_channels": 1,
     "latent_channels": 4,
     "difusion_unet_def": {
-        "_target_": "custom_network_diffusion.CustomDiffusionModelUNet",
+        "_target_": "monai.apps.generation.maisi.networks.diffusion_model_unet_maisi.DiffusionModelUNetMaisi",
         "spatial_dims": "@spatial_dims",
         "in_channels": "@latent_channels",
         "out_channels": "@latent_channels",
@@ -28,12 +28,12 @@
         ],
         "num_res_blocks": 2,
         "use_flash_attention": true,
-        "input_top_region_index": true,
-        "input_bottom_region_index": true,
-        "input_spacing": true
+        "include_top_region_index_input": true,
+        "include_bottom_region_index_input": true,
+        "include_spacing_input": true
     },
     "controlnet_def": {
-        "_target_": "custom_network_controlnet.CustomControlNet",
+        "_target_": "monai.apps.generation.maisi.networks.controlnet_maisi.ControlNetMaisi",
         "spatial_dims": "@spatial_dims",
         "in_channels": "@latent_channels",
         "num_channels": [
@@ -67,19 +67,11 @@
         "schedule": "scaled_linear_beta",
         "clip_sample": false
     },
-    "mask_generation_noise_scheduler": {
-        "_target_": "generative.networks.schedulers.DDPMScheduler",
-        "num_train_timesteps": 1000,
-        "beta_start": 0.0015,
-        "beta_end": 0.0195,
-        "schedule": "scaled_linear_beta",
-        "clip_sample": false
-    },
     "controlnet_train": {
         "batch_size": 1,
-        "patch_size": [256, 256, 256],
+        "cache_rate": 0.0,
+        "fold": 0,
         "lr": 1e-5,
-        "n_epochs": 10000,
-        "val_interval": 5
+        "n_epochs": 5
     }
 }

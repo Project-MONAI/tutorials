@@ -28,6 +28,7 @@ import torch.nn.functional as F
 from monai.config import print_config
 from monai.utils import first, set_determinism
 from monai.data import DataLoader, CacheDataset, partition_dataset
+from monai.networks.utils import copy_model_state
 from torch.cuda.amp import GradScaler, autocast
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
@@ -97,16 +98,16 @@ def prepare_maisi_controlnet_json_dataloader(
         assert isinstance(args.data_base_dir, list)
         list_train = []
         list_valid = []
-        for data_list, data_base_dir in zip(json_data_list, data_base_dir):
+        for data_list, data_root in zip(json_data_list, data_base_dir):
             with open(data_list, "r") as f:
-                json_data = json.load(f)
-            train, val = add_data_dir2path(json_data, data_base_dir, fold)
+                json_data = json.load(f)["training"]
+            train, val = add_data_dir2path(json_data, data_root, fold)
             list_train += train
             list_valid += val
     else:
         with open(json_data_list, "r") as f:
-            json_data = json.load(f)
-        list_train, list_valid = add_data_dir2path(json_data["training"], data_base_dir, fold)
+            json_data = json.load(f)["training"]
+        list_train, list_valid = add_data_dir2path(json_data, data_base_dir, fold)
 
     common_transform = [
         LoadImaged(keys=["image", "label"], image_only=True, ensure_channel_first=True),
@@ -169,7 +170,6 @@ def main():
         "--weighted_loss_label",
         nargs="+",
         default=[],
-        action="store_true",
         help="list of labels that apply weighted loss",
     )
     parser.add_argument("-l", "--weighted_loss", default=100, type=int, help="loss weight loss for ROI labels")
@@ -196,15 +196,17 @@ def main():
         setattr(args, k, v)
     for k, v in config_dict.items():
         setattr(args, k, v)
+    # parse input label index to int
+    args.weighted_loss_label = [int(i) for i in args.weighted_loss_label]
 
     # initialize tensorboard writer
     if rank == 0:
-        Path(args.tfevent_path).mkdir(parents=True, exist_ok=True)
-        tensorboard_path = os.path.join(args.output_dir, "controlnet_tfevent")
+        tensorboard_path = os.path.join(args.tfevent_path, args.exp_name)
+        Path(tensorboard_path).mkdir(parents=True, exist_ok=True)
         tensorboard_writer = SummaryWriter(tensorboard_path)
 
     # Step 1: set data loader
-    train_loader, val_loader = prepare_maisi_controlnet_json_dataloader(
+    train_loader, _ = prepare_maisi_controlnet_json_dataloader(
         args,
         json_data_list=args.json_data_list,
         data_base_dir=args.data_base_dir,
@@ -220,16 +222,22 @@ def main():
     # define diffusion Model
     unet = define_instance(args, "difusion_unet_def").to(device)
     # load trained diffusion model
-    map_location = {"cuda:%d" % 0: "cuda:%d" % rank}
-    unet.load_state_dict(torch.load(args.trained_diffusion_path, map_location=map_location))
+    diffusion_model_ckpt = torch.load(args.trained_diffusion_path, map_location=device)
+    unet.load_state_dict(diffusion_model_ckpt["unet_state_dict"])
+    # load scale factor
+    scale_factor = diffusion_model_ckpt["scale_factor"]                
     if rank == 0:
-        print(f"Load trained diffusion model from", args.trained_diffusion_path)
+        print(f"Load trained diffusion model from {args.trained_diffusion_path}.")
+        print(f"loaded scale_factor from diffusion model ckpt -> {scale_factor}.")
     # define ControlNet
     controlnet = define_instance(args, "controlnet_def").to(device)
-    # copy weights from the DM to the controlnet
-    controlnet.load_state_dict(unet.state_dict(), strict=False)
+    # Copy weights from the DM to the controlnet
+    _, updated_keys, _ = copy_model_state(controlnet, unet.state_dict())
+    if rank == 0:
+        print("ControlNet updated_keys:" , updated_keys)
+    # load trained controlnet model if it is provided
     if args.trained_controlnet_path is not None:
-        controlnet.load_state_dict(torch.load(args.trained_controlnet_path, map_location=map_location))
+        controlnet.load_state_dict(torch.load(args.trained_controlnet_path, map_location=device)['controlnet_state_dict'])
         if rank == 0:
             print(f"load trained controlnet model from", args.trained_controlnet_path)
     else:
@@ -256,20 +264,21 @@ def main():
     n_epochs = args.controlnet_train["n_epochs"]
     scaler = GradScaler()
     total_step = 0
+    best_loss = 1e4
 
     if args.weighted_loss > 0 and rank == 0:
         print(f"apply weighted loss = {args.weighted_loss} on labels: {args.weighted_loss_label}")
 
+    controlnet.train()
+    unet.eval()
     prev_time = time.time()
     for epoch in range(n_epochs):
-        unet.train()
         epoch_loss_ = 0
-
         for step, batch in enumerate(train_loader):
-            # get image embedding and label mask
-            inputs = batch["image"].to(device)
+            # get image embedding and label mask and scale image embedding by the provided scale_factor
+            inputs = batch["image"].to(device) * scale_factor
             labels = batch["label"].to(device)
-            # get coresponding condtions
+            # get corresponding conditions
             top_region_index_tensor = batch["top_region_index"].to(device)
             bottom_region_index_tensor = batch["bottom_region_index"].to(device)
             spacing_tensor = batch["spacing"].to(device)
@@ -279,14 +288,14 @@ def main():
             with autocast(enabled=True):
                 # generate random noise
                 noise_shape = list(inputs.shape)
-                noise = torch.randn(noise_shape, dtype=inputs.dtype).to(inputs.device)
+                noise = torch.randn(noise_shape, dtype=inputs.dtype).to(device)
 
                 # use binary encoding to encode segmentation mask
                 controlnet_cond = binarize_labels(labels.as_tensor().to(torch.uint8)).float()
 
                 # create timesteps
                 timesteps = torch.randint(
-                    0, noise_scheduler.num_train_timesteps, (inputs.shape[0],), device=inputs.device
+                    0, noise_scheduler.num_train_timesteps, (inputs.shape[0],), device=device
                 ).long()
 
                 # create noisy latent
@@ -323,23 +332,23 @@ def main():
             scaler.step(optimizer)
             scaler.update()
             lr_scheduler.step()
+            total_step += 1
 
             if rank == 0:
                 # write train loss for each batch into tensorboard
-                total_step += 1
-                tensorboard_writer.add_scalar("train/train_diffusion_loss_iter", loss.detach().cpu().item(), total_step)
-                batches_done = step
+                tensorboard_writer.add_scalar("train/train_controlnet_loss_iter", loss.detach().cpu().item(), total_step)
+                batches_done = step+1
                 batches_left = len(train_loader) - batches_done
                 time_left = timedelta(seconds=batches_left * (time.time() - prev_time))
                 prev_time = time.time()
                 sys.stdout.write(
-                    "\r[Epoch %d/%d] [Batch %d/%d] [LR: %f] [loss: %04f] ETA: %s "
+                    "\r[Epoch %d/%d] [Batch %d/%d] [LR: %.8f] [loss: %.4f] ETA: %s "
                     % (
-                        epoch,
+                        epoch + 1,
                         n_epochs,
-                        step,
+                        step+1,
                         len(train_loader),
-                        lr_scheduler.get_last_lr()[0] if lr_scheduler is not None else optimizer.param_groups[0]["lr"],
+                        lr_scheduler.get_last_lr()[0],
                         loss.detach().cpu().item(),
                         time_left,
                     )
@@ -353,10 +362,27 @@ def main():
             dist.all_reduce(epoch_loss, op=torch.distributed.ReduceOp.AVG)
 
         if rank == 0:
-            tensorboard_writer.add_scalar("train/train_diffusion_loss_epoch", epoch_loss.cpu().item(), total_step)
+            tensorboard_writer.add_scalar("train/train_controlnet_loss_epoch", epoch_loss.cpu().item(), total_step)
+            # save controlnet only on master GPU (rank 0)
+            controlnet_state_dict = controlnet.module.state_dict() if world_size > 1 else controlnet.state_dict()
+            torch.save({
+                'epoch': epoch + 1,
+                'loss': epoch_loss,
+                'controlnet_state_dict': controlnet_state_dict,
+            }, f'{args.model_dir}/{args.exp_name}_current.pt')
+            
+            if epoch_loss < best_loss:
+                best_loss = epoch_loss
+                print(f'best loss -> {best_loss}.')
+                torch.save({
+                    'epoch': epoch + 1,
+                    'loss': best_loss,
+                    'controlnet_state_dict': controlnet_state_dict,
+                }, f'{args.model_dir}/{args.exp_name}_best.pt')
 
         torch.cuda.empty_cache()
-
+    if ddp_bool:
+        dist.destroy_process_group()
 
 if __name__ == "__main__":
     logging.basicConfig(

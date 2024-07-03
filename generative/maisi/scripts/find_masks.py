@@ -70,7 +70,7 @@ def find_masks(
         body_region: list of input body region string. If single str, will be converted to list of str.
                      The found candidate mask will include these body regions.
         anatomy_list: list of input anatomy. The found candidate mask will include these anatomies.
-        spacing: list of three floats, voxel spacing. If providing a single number, will use it for the first dimension.
+        spacing: list of three floats, voxel spacing. If providing a single number, will use it for all the three dimensions.
         output_size: list of three int, expected candidate mask spatial size.
         check_spacing_and_output_size: whether we expect candidate mask to have spatial size of `output_size` and voxel size of `spacing`.
         database_filepath: path for the json file that stores the information of all the candidate masks.

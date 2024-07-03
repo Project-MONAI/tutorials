@@ -170,7 +170,7 @@ def main():
         nargs="+",
         default=[],
         action="store_true",
-        help="list of lables that apply weighted loss",
+        help="list of labels that apply weighted loss",
     )
     parser.add_argument("-l", "--weighted_loss", default=100, type=int, help="loss weight loss for ROI labels")
     args = parser.parse_args()

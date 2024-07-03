@@ -7,23 +7,11 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
-import copy
+# limitations under the License.
+
 from typing import Sequence
 
-import numpy as np
-import skimage
-import torch
-import torch.nn.functional as F
 from monai.apps.generation.maisi.utils.morphological_ops import dilate, erode
-from monai.config import DtypeLike, NdarrayOrTensor
-from monai.utils import (
-    TransformBackends,
-    convert_data_type,
-    convert_to_dst_type,
-    ensure_tuple_rep,
-    get_equivalent_dtype,
-)
-from scipy import stats
 from torch import Tensor
 
 

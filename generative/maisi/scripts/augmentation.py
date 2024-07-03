@@ -9,13 +9,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Functions to perform augmentation.
+Reference: (TODO), a 132-class label dict that maps organ names and index. URL: TBD
+"""
+
 from typing import Sequence
 
 import numpy as np
 import torch
-import torch.nn.functional as F
 from monai.transforms import Rand3DElastic, RandAffine, RandZoom
-from monai.utils import ensure_tuple_rep
 from torch import Tensor
 
 from .utils import dilate_one_img, erode_one_img
@@ -40,20 +43,20 @@ def initialize_tumor_mask(volume: Tensor, tumor_label: Sequence[int]) -> Tensor:
     return tumor_mask_
 
 
-def finalize_tumor_mask(distorted_mask: Tensor, organ_mask: Tensor, threshold_tumor_size: float):
+def finalize_tumor_mask(augmented_mask: Tensor, organ_mask: Tensor, threshold_tumor_size: float):
     """
-    Try to generate the final tumor mask by combining the augmentd tumor mask and organ mask.
+    Try to generate the final tumor mask by combining the augmented tumor mask and organ mask.
     Need to make sure tumor is inside of organ and is larger than threshold_tumor_size.
 
     Args:
-        distorted_mask: input 3D binary tumor mask, [1,H,W,D] torch tensor.
+        augmented_mask: input 3D binary tumor mask, [1,H,W,D] torch tensor.
         organ_mask: input 3D binary organ mask, [1,H,W,D] torch tensor.
         threshold_tumor_size: threshold tumor size, float
 
     Return:
-        tumor_mask, [H,W,D] torch tensor; or False if the size did not qualify
+        tumor_mask, [H,W,D] torch tensor; or None if the size did not qualify
     """
-    tumor_mask = distorted_mask * organ_mask
+    tumor_mask = augmented_mask * organ_mask
     if torch.sum(tumor_mask) >= threshold_tumor_size:
         tumor_mask = dilate_one_img(tumor_mask.squeeze(0), filter_size=5, pad_value=1.0)
         tumor_mask = erode_one_img(tumor_mask, filter_size=5, pad_value=1.0).unsqueeze(0).to(torch.uint8)
@@ -125,10 +128,10 @@ def augmentation_bone_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, in
             threshold = 0.8 if count < 40 else 0.75
             tumor_mask = tumor_mask_
             # apply random augmentation
-            distorted_mask = elastic(tumor_mask > 0, spatial_size=spatial_size).as_tensor()
+            augmented_mask = elastic(tumor_mask > 0, spatial_size=spatial_size).as_tensor()
             # generate final tumor mask
             count += 1
-            tumor_mask = finalize_tumor_mask(distorted_mask, organ_mask, tumor_size * threshold)
+            tumor_mask = finalize_tumor_mask(augmented_mask, organ_mask, tumor_size * threshold)
             if tumor_mask is not None:
                 break
             if count > MAX_COUNT:
@@ -203,11 +206,11 @@ def augmentation_liver_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, i
         while True:
             tumor_mask = tumor_mask_
             # apply random augmentation
-            distorted_mask = elastic((tumor_mask == 2), spatial_size=spatial_size).as_tensor()
+            augmented_mask = elastic((tumor_mask == 2), spatial_size=spatial_size).as_tensor()
 
             # generate final tumor mask
             count += 1
-            tumor_mask = finalize_tumor_mask(distorted_mask, organ_mask, tumor_size * 0.80)
+            tumor_mask = finalize_tumor_mask(augmented_mask, organ_mask, tumor_size * 0.80)
             if tumor_mask is not None:
                 break
             if count > MAX_COUNT:
@@ -294,11 +297,11 @@ def augmentation_lung_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, in
         while True:
             tumor_mask = tumor_mask_
             # apply random augmentation
-            distorted_mask = elastic(tumor_mask, spatial_size=spatial_size).as_tensor()
+            augmented_mask = elastic(tumor_mask, spatial_size=spatial_size).as_tensor()
 
             # generate final tumor mask
             count += 1
-            tumor_mask = finalize_tumor_mask(distorted_mask, organ_mask, tumor_size * 0.85)
+            tumor_mask = finalize_tumor_mask(augmented_mask, organ_mask, tumor_size * 0.85)
             if tumor_mask is not None:
                 break
             if count > MAX_COUNT:
@@ -372,11 +375,11 @@ def augmentation_pancreas_tumor(whole_mask: Tensor, spatial_size: tuple[int, int
         while True:
             tumor_mask = tumor_mask_
             # apply random augmentation
-            distorted_mask = elastic((tumor_mask == 2), spatial_size=spatial_size).as_tensor()
+            augmented_mask = elastic((tumor_mask == 2), spatial_size=spatial_size).as_tensor()
 
             # generate final tumor mask
             count += 1
-            tumor_mask = finalize_tumor_mask(distorted_mask, organ_mask, tumor_size * 0.80)
+            tumor_mask = finalize_tumor_mask(augmented_mask, organ_mask, tumor_size * 0.80)
             if tumor_mask is not None:
                 break
             if count > MAX_COUNT:
@@ -384,7 +387,7 @@ def augmentation_pancreas_tumor(whole_mask: Tensor, spatial_size: tuple[int, int
     else:
         tumor_mask = tumor_mask_
 
-    volume[tumor_mask == 1] = tumor_label[0]
+    volume[tumor_mask == 1] = 24
 
     return volume.unsqueeze(0).to(device)
 
@@ -449,8 +452,8 @@ def augmentation_colon_tumor(whole_mask: Tensor, spatial_size: tuple[int, int, i
             tumor_mask = tumor_mask_
             if count < 20:
                 # apply random augmentation
-                distorted_mask = elastic((tumor_mask == 1), spatial_size=spatial_size).as_tensor()
-                tumor_mask = distorted_mask * organ_mask
+                augmented_mask = elastic((tumor_mask == 1), spatial_size=spatial_size).as_tensor()
+                tumor_mask = augmented_mask * organ_mask
             elif 20 <= count < 40:
                 threshold = 0.75
             else:
@@ -534,22 +537,22 @@ def augmentation(whole_mask: Tensor, spatial_size: tuple[int, int, int] | int | 
 
     # Note that we only augment one type of tumor.
     if 128 in label_list:
-        print(f"augmenting bone lesion/tumor")
+        print("augmenting bone lesion/tumor")
         whole_mask = augmentation_bone_tumor(whole_mask, spatial_size)
     elif 26 in label_list:
-        print(f"augmenting liver tumor")
+        print("augmenting liver tumor")
         whole_mask = augmentation_liver_tumor(whole_mask, spatial_size)
     elif 23 in label_list:
-        print(f"augmenting lung tumor")
+        print("augmenting lung tumor")
         whole_mask = augmentation_lung_tumor(whole_mask, spatial_size)
     elif 24 in label_list:
-        print(f"augmenting pancreas tumor")
+        print("augmenting pancreas tumor")
         whole_mask = augmentation_pancreas_tumor(whole_mask, spatial_size)
     elif 27 in label_list:
-        print(f"augmenting colon tumor")
+        print("augmenting colon tumor")
         whole_mask = augmentation_colon_tumor(whole_mask, spatial_size)
     else:
-        print(f"augmenting body")
+        print("augmenting body")
         whole_mask = augmentation_body(whole_mask)
 
     return whole_mask

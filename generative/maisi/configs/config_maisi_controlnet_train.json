@@ -72,6 +72,8 @@
         "cache_rate": 0.0,
         "fold": 0,
         "lr": 1e-5,
-        "n_epochs": 5
+        "n_epochs": 100,
+        "weighted_loss_label": [129],
+        "weighted_loss": 100
     }
 }

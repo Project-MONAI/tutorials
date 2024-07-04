@@ -199,14 +199,6 @@ def main():
         help="config json file that stores hyper-parameters",
     )
     parser.add_argument("-g", "--gpus", default=1, type=int, help="number of gpus per node")
-    parser.add_argument(
-        "-w",
-        "--weighted_loss_label",
-        nargs="+",
-        default=[],
-        help="list of labels that apply weighted loss",
-    )
-    parser.add_argument("-l", "--weighted_loss", default=100, type=int, help="loss weight loss for ROI labels")
     args = parser.parse_args()
 
     # Step 0: configuration
@@ -234,8 +226,6 @@ def main():
         setattr(args, k, v)
     for k, v in config_dict.items():
         setattr(args, k, v)
-    # parse input label index to int
-    args.weighted_loss_label = [int(i) for i in args.weighted_loss_label]
 
     # initialize tensorboard writer
     if rank == 0:
@@ -286,6 +276,8 @@ def main():
         controlnet = DDP(controlnet, device_ids=[device], output_device=rank, find_unused_parameters=True)
 
     # Step 3: training config
+    weighted_loss = args.controlnet_train["weighted_loss"]
+    weighted_loss_label = args.controlnet_train["weighted_loss_label"]
     optimizer = torch.optim.AdamW(params=controlnet.parameters(), lr=args.controlnet_train["lr"])
     total_steps = (args.controlnet_train["n_epochs"] * len(train_loader.dataset)) / args.controlnet_train["batch_size"]
     logger.info(f"total number of training steps: {total_steps}.")
@@ -298,8 +290,8 @@ def main():
     total_step = 0
     best_loss = 1e4
 
-    if args.weighted_loss > 0:
-        logger.info(f"apply weighted loss = {args.weighted_loss} on labels: {args.weighted_loss_label}")
+    if weighted_loss > 0:
+        logger.info(f"apply weighted loss = {weighted_loss} on labels: {weighted_loss_label}")
 
     controlnet.train()
     unet.eval()
@@ -348,14 +340,14 @@ def main():
                     mid_block_additional_residual=mid_block_res_sample,
                 )
 
-            if args.weighted_loss > 1.0:
+            if weighted_loss > 1.0:
                 weights = torch.ones_like(inputs).to(inputs.device)
                 roi = torch.zeros([noise_shape[0]] + [1] + noise_shape[2:]).to(inputs.device)
                 interpolate_label = F.interpolate(labels, size=inputs.shape[2:], mode="nearest")
                 # assign larger weights for ROI (tumor)
-                for label in args.weighted_loss_label:
+                for label in weighted_loss_label:
                     roi[interpolate_label == label] = 1
-                weights[roi.repeat(1, inputs.shape[1], 1, 1, 1) == 1] = args.weighted_loss
+                weights[roi.repeat(1, inputs.shape[1], 1, 1, 1) == 1] = weighted_loss
                 loss = (F.l1_loss(noise_pred.float(), noise.float(), reduction="none") * weights).mean()
             else:
                 loss = F.l1_loss(noise_pred.float(), noise.float())

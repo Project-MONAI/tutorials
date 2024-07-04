@@ -10,23 +10,21 @@
 # limitations under the License.
 
 import argparse
+from argparse import Namespace
 import json
 import logging
 from pathlib import Path
 import time
 from datetime import timedelta
-import warnings
-
-warnings.simplefilter("ignore", UserWarning)
-
+from typing import Any
 import os
 import sys
 import copy
 import torch
 import torch.distributed as dist
 import torch.nn.functional as F
-from monai.config import print_config
-from monai.utils import first, set_determinism
+import logging
+from monai.utils import RankFilter
 from monai.data import DataLoader, CacheDataset, partition_dataset
 from monai.networks.utils import copy_model_state
 from torch.cuda.amp import GradScaler, autocast
@@ -41,26 +39,50 @@ from monai.transforms import (
 )
 from monai.bundle import ConfigParser
 from utils import binarize_labels
+import logging
 
 
-def setup_ddp(rank, world_size):
-    print(f"Running DDP diffusion example on rank {rank}/world_size {world_size}.")
-    print(f"Initing to IP {os.environ['MASTER_ADDR']}")
+def setup_ddp(rank: int, world_size:int) -> torch.device:
+    """Initialize the distributed process group.
+
+    Args:
+        rank (int): rank of the current process.
+        world_size (int): number of processes participating in the job.
+    """
     dist.init_process_group(
         backend="nccl", init_method="env://", timeout=timedelta(seconds=36000), rank=rank, world_size=world_size
     )
     dist.barrier()
     device = torch.device(f"cuda:{rank}")
-    return dist, device
+    return device
 
 
-def define_instance(args, instance_def_key):
+def define_instance(args: Namespace, instance_def_key : str) -> Any:
+    """ Get the parsed instance based on provided attributes.
+
+    Args:
+        args (Namespace): a object for storing attributes.
+        instance_def_key (str): key associated to target instance.
+
+    Returns:
+        Any: parsed instance.
+    """
     parser = ConfigParser(vars(args))
     parser.parse(True)
     return parser.get_parsed_content(instance_def_key, instantiate=True)
 
 
-def add_data_dir2path(list_files, data_dir, fold=None):
+def add_data_dir2path(list_files : list, data_dir : str, fold:int=None) -> tuple[list, list]:
+    """Read a list of data dictionary.
+
+    Args:
+        list_files (list): input data to load and transform to generate dataset for model.
+        data_dir (str): directory of files.
+        fold (int, optional): fold index for cross validation. Defaults to None.
+
+    Returns:
+        tuple[list, list]: A tuple of two arrays (training, validation).
+    """
     new_list_files = copy.deepcopy(list_files)
     if fold is not None:
         new_list_files_train = []
@@ -84,18 +106,30 @@ def add_data_dir2path(list_files, data_dir, fold=None):
 
 
 def prepare_maisi_controlnet_json_dataloader(
-    args,
-    json_data_list,
-    data_base_dir,
-    batch_size=1,
-    fold=0,
-    cache_rate=0.0,
-    rank=0,
-    world_size=1,
-):
+    json_data_list: list | str,
+    data_base_dir: list | str,
+    batch_size: int=1,
+    fold: int=0,
+    cache_rate: float=0.0,
+    rank: int=0,
+    world_size: int=1) -> tuple[DataLoader, DataLoader]:
+    """Prepare dataloaders for training and validation.
+
+    Args:
+        json_data_list (list | str): the name of JSON files listing the data.
+        data_base_dir (list | str): directory of files.
+        batch_size (int, optional): how many samples per batch to load . Defaults to 1.
+        fold (int, optional): fold index for cross validation. Defaults to 0.
+        cache_rate (float, optional): percentage of cached data in total. Defaults to 0.0.
+        rank (int, optional): rank of the current process. Defaults to 0.
+        world_size (int, optional): number of processes participating in the job. Defaults to 1.
+
+    Returns:
+        tuple[DataLoader, DataLoader]:  A tuple of two dataloaders (training, validation).
+    """
     ddp_bool = world_size > 1
     if isinstance(json_data_list, list):
-        assert isinstance(args.data_base_dir, list)
+        assert isinstance(data_base_dir, list)
         list_train = []
         list_valid = []
         for data_list, data_root in zip(json_data_list, data_base_dir):
@@ -151,7 +185,7 @@ def prepare_maisi_controlnet_json_dataloader(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="PyTorch VAE-GAN training")
+    parser = argparse.ArgumentParser(description="maisi.controlnet.training")
     parser.add_argument(
         "-e",
         "--environment-file",
@@ -176,18 +210,22 @@ def main():
     args = parser.parse_args()
 
     # Step 0: configuration
-    ddp_bool = args.gpus > 1  # whether to use distributed data parallel
+    logger = logging.getLogger("maisi.controlnet.training")
+    # whether to use distributed data parallel
+    ddp_bool = args.gpus > 1 
     if ddp_bool:
         rank = int(os.environ["LOCAL_RANK"])
         world_size = int(os.environ["WORLD_SIZE"])
-        dist, device = setup_ddp(rank, world_size)
+        device = setup_ddp(rank, world_size)
+        logger.addFilter(RankFilter())
     else:
         rank = 0
         world_size = 1
-        device = 0
+        device = torch.device(f"cuda:{rank}")
 
     torch.cuda.set_device(device)
-    print(f"Using {device}")
+    logger.info(f"Number of GPUs: {torch.cuda.device_count()}")
+    logger.info(f"World_size: {world_size}")
 
     env_dict = json.load(open(args.environment_file, "r"))
     config_dict = json.load(open(args.config_file, "r"))
@@ -207,7 +245,6 @@ def main():
 
     # Step 1: set data loader
     train_loader, _ = prepare_maisi_controlnet_json_dataloader(
-        args,
         json_data_list=args.json_data_list,
         data_base_dir=args.data_base_dir,
         rank=rank,
@@ -218,7 +255,6 @@ def main():
     )
 
     # Step 2: define diffusion model and controlnet
-
     # define diffusion Model
     unet = define_instance(args, "difusion_unet_def").to(device)
     # load trained diffusion model
@@ -226,25 +262,20 @@ def main():
     unet.load_state_dict(diffusion_model_ckpt["unet_state_dict"])
     # load scale factor
     scale_factor = diffusion_model_ckpt["scale_factor"]
-    if rank == 0:
-        print(f"Load trained diffusion model from {args.trained_diffusion_path}.")
-        print(f"loaded scale_factor from diffusion model ckpt -> {scale_factor}.")
+    logger.info(f"Load trained diffusion model from {args.trained_diffusion_path}.")
+    logger.info(f"loaded scale_factor from diffusion model ckpt -> {scale_factor}.")
     # define ControlNet
     controlnet = define_instance(args, "controlnet_def").to(device)
-    # Copy weights from the DM to the controlnet
-    _, updated_keys, _ = copy_model_state(controlnet, unet.state_dict())
-    if rank == 0:
-        print("ControlNet updated_keys:", updated_keys)
+    # copy weights from the DM to the controlnet
+    copy_model_state(controlnet, unet.state_dict())
     # load trained controlnet model if it is provided
     if args.trained_controlnet_path is not None:
         controlnet.load_state_dict(
             torch.load(args.trained_controlnet_path, map_location=device)["controlnet_state_dict"]
         )
-        if rank == 0:
-            print(f"load trained controlnet model from", args.trained_controlnet_path)
+        logger.info(f"load trained controlnet model from {args.trained_controlnet_path}")
     else:
-        if rank == 0:
-            print("train controlnet model from scratch.")
+        logger.info("train controlnet model from scratch.")
     # we freeze the parameters of the diffusion model.
     for p in unet.parameters():
         p.requires_grad = False
@@ -257,8 +288,7 @@ def main():
     # Step 3: training config
     optimizer = torch.optim.AdamW(params=controlnet.parameters(), lr=args.controlnet_train["lr"])
     total_steps = (args.controlnet_train["n_epochs"] * len(train_loader.dataset)) / args.controlnet_train["batch_size"]
-    if rank == 0:
-        print(f"total number of training steps: {total_steps}.")
+    logger.info(f"total number of training steps: {total_steps}.")
 
     lr_scheduler = torch.optim.lr_scheduler.PolynomialLR(optimizer, total_iters=total_steps, power=2.0)
 
@@ -268,8 +298,8 @@ def main():
     total_step = 0
     best_loss = 1e4
 
-    if args.weighted_loss > 0 and rank == 0:
-        print(f"apply weighted loss = {args.weighted_loss} on labels: {args.weighted_loss_label}")
+    if args.weighted_loss > 0:
+        logger.info(f"apply weighted loss = {args.weighted_loss} on labels: {args.weighted_loss_label}")
 
     controlnet.train()
     unet.eval()
@@ -345,7 +375,7 @@ def main():
                 batches_left = len(train_loader) - batches_done
                 time_left = timedelta(seconds=batches_left * (time.time() - prev_time))
                 prev_time = time.time()
-                sys.stdout.write(
+                logger.info(
                     "\r[Epoch %d/%d] [Batch %d/%d] [LR: %.8f] [loss: %.4f] ETA: %s "
                     % (
                         epoch + 1,
@@ -380,7 +410,7 @@ def main():
 
             if epoch_loss < best_loss:
                 best_loss = epoch_loss
-                print(f"best loss -> {best_loss}.")
+                logger.info(f"best loss -> {best_loss}.")
                 torch.save(
                     {
                         "epoch": epoch + 1,

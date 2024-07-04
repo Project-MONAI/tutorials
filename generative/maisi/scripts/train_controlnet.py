@@ -42,7 +42,7 @@ from utils import binarize_labels
 import logging
 
 
-def setup_ddp(rank: int, world_size:int) -> torch.device:
+def setup_ddp(rank: int, world_size: int) -> torch.device:
     """Initialize the distributed process group.
 
     Args:
@@ -57,8 +57,8 @@ def setup_ddp(rank: int, world_size:int) -> torch.device:
     return device
 
 
-def define_instance(args: Namespace, instance_def_key : str) -> Any:
-    """ Get the parsed instance based on provided attributes.
+def define_instance(args: Namespace, instance_def_key: str) -> Any:
+    """Get the parsed instance based on provided attributes.
 
     Args:
         args (Namespace): a object for storing attributes.
@@ -72,7 +72,7 @@ def define_instance(args: Namespace, instance_def_key : str) -> Any:
     return parser.get_parsed_content(instance_def_key, instantiate=True)
 
 
-def add_data_dir2path(list_files : list, data_dir : str, fold:int=None) -> tuple[list, list]:
+def add_data_dir2path(list_files: list, data_dir: str, fold: int = None) -> tuple[list, list]:
     """Read a list of data dictionary.
 
     Args:
@@ -108,11 +108,12 @@ def add_data_dir2path(list_files : list, data_dir : str, fold:int=None) -> tuple
 def prepare_maisi_controlnet_json_dataloader(
     json_data_list: list | str,
     data_base_dir: list | str,
-    batch_size: int=1,
-    fold: int=0,
-    cache_rate: float=0.0,
-    rank: int=0,
-    world_size: int=1) -> tuple[DataLoader, DataLoader]:
+    batch_size: int = 1,
+    fold: int = 0,
+    cache_rate: float = 0.0,
+    rank: int = 0,
+    world_size: int = 1,
+) -> tuple[DataLoader, DataLoader]:
     """Prepare dataloaders for training and validation.
 
     Args:
@@ -204,7 +205,7 @@ def main():
     # Step 0: configuration
     logger = logging.getLogger("maisi.controlnet.training")
     # whether to use distributed data parallel
-    ddp_bool = args.gpus > 1 
+    ddp_bool = args.gpus > 1
     if ddp_bool:
         rank = int(os.environ["LOCAL_RANK"])
         world_size = int(os.environ["WORLD_SIZE"])

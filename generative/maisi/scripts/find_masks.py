@@ -12,7 +12,7 @@
 
 import json
 import os
-import zipfile
+from monai.apps.utils import extractall
 from typing import Sequence
 
 from monai.utils import ensure_tuple_rep
@@ -92,9 +92,8 @@ def find_masks(
         if not os.path.isfile(zip_file_path):
             raise ValueError(f"Please download {zip_file_path} following the instruction in ./data/README.md.")
 
-        with zipfile.ZipFile(zip_file_path, "r") as zip_ref:
-            print(f"Extracting {zip_file_path}...")
-            zip_ref.extractall(path=mask_foldername)
+        print(f"Extracting {zip_file_path}...")
+        extractall(filepath=mask_foldername, output_dir=mask_foldername)
         print(f"Unzipped {zip_file_path} to {mask_foldername}.")
 
     if not os.path.isfile(database_filepath):

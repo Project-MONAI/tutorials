@@ -39,7 +39,6 @@ from monai.transforms import (
 )
 from monai.bundle import ConfigParser
 from utils import binarize_labels
-import logging
 
 
 def setup_ddp(rank: int, world_size: int) -> torch.device:

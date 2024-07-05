@@ -215,8 +215,15 @@ This document describes the steps involved in data resampling, model training, a
             with autocast(enabled=True):
                 noise = torch.randn(num_images_per_batch, 4, images.size(-3), images.size(-2), images.size(-1)).to(device)
                 timesteps = torch.randint(0, inferer.scheduler.num_train_timesteps, (images.shape[0],), device=images.device).long()
-                noise_pred = inferer(inputs=images, diffusion_model=unet, noise=noise, timesteps=timesteps, top_region_index_tensor=top_region_index_tensor,
-bottom_region_index_tensor=bottom_region_index_tensor, spacing_tensor=spacing_tensor)
+                noise_pred = inferer(
+                    inputs=images,
+                    diffusion_model=unet,
+                    noise=noise,
+                    timesteps=timesteps,
+                    top_region_index_tensor=top_region_index_tensor,
+                    bottom_region_index_tensor=bottom_region_index_tensor,
+                    spacing_tensor=spacing_tensor
+                )
                 loss = loss_pt(noise_pred.float(), noise.float())
 
             scaler.scale(loss).backward()

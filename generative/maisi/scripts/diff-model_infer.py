@@ -141,9 +141,17 @@ def main(
     new_state_dict = {}
     for k, v in checkpoint_autoencoder.items():
         if "decoder" in k and "conv" in k:
-            new_key = k.replace("conv.weight", "conv.conv.weight") if "conv.weight" in k else k.replace("conv.bias", "conv.conv.bias")
+            new_key = (
+                k.replace("conv.weight", "conv.conv.weight")
+                if "conv.weight" in k
+                else k.replace("conv.bias", "conv.conv.bias")
+            )
         elif "encoder" in k and "conv" in k:
-            new_key = k.replace("conv.weight", "conv.conv.weight") if "conv.weight" in k else k.replace("conv.bias", "conv.conv.bias")
+            new_key = (
+                k.replace("conv.weight", "conv.conv.weight")
+                if "conv.weight" in k
+                else k.replace("conv.bias", "conv.conv.bias")
+            )
         else:
             new_key = k
         new_state_dict[new_key] = v

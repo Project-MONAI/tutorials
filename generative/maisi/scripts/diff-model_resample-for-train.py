@@ -46,6 +46,7 @@ torch.cuda.set_device(device)
 print(f"Using {device}.")
 print(f"world_size -> {world_size}.")
 
+
 def load_autoencoder(autoencoder_root, device):
     """
     Load the autoencoder model and its checkpoints.
@@ -79,9 +80,17 @@ def load_autoencoder(autoencoder_root, device):
     new_state_dict = {}
     for k, v in checkpoint_autoencoder.items():
         if "decoder" in k and "conv" in k:
-            new_key = k.replace("conv.weight", "conv.conv.weight") if "conv.weight" in k else k.replace("conv.bias", "conv.conv.bias")
+            new_key = (
+                k.replace("conv.weight", "conv.conv.weight")
+                if "conv.weight" in k
+                else k.replace("conv.bias", "conv.conv.bias")
+            )
         elif "encoder" in k and "conv" in k:
-            new_key = k.replace("conv.weight", "conv.conv.weight") if "conv.weight" in k else k.replace("conv.bias", "conv.conv.bias")
+            new_key = (
+                k.replace("conv.weight", "conv.conv.weight")
+                if "conv.weight" in k
+                else k.replace("conv.bias", "conv.conv.bias")
+            )
         else:
             new_key = k
         new_state_dict[new_key] = v
@@ -89,6 +98,7 @@ def load_autoencoder(autoencoder_root, device):
     autoencoder.load_state_dict(new_state_dict)
     print("checkpoints loaded.")
     return autoencoder
+
 
 def get_filenames(filenames_filepath):
     """
@@ -109,6 +119,7 @@ def get_filenames(filenames_filepath):
             data = json.load(file)
         filenames_raw = data
     return filenames_raw
+
 
 def create_transforms():
     """
@@ -133,6 +144,7 @@ def create_transforms():
             monai.transforms.EnsureTyped(keys="image", dtype=torch.float32),
         ]
     )
+
 
 def main():
     # Load autoencoder if saving embeddings
@@ -195,6 +207,7 @@ def main():
                         nib.save(out_img, out_filename)
             except Exception as e:
                 print(f"Error processing {filepath}: {e}")
+
 
 if __name__ == "__main__":
     main()

@@ -424,4 +424,3 @@ def binarize_labels(x, bits=8):
     """
     mask = 2 ** torch.arange(bits).to(x.device, x.dtype)
     return x.unsqueeze(-1).bitwise_and(mask).ne(0).byte().squeeze(1).permute(0, 4, 1, 2, 3)
-

@@ -307,8 +307,15 @@ scheduler_method": scheduler_method, "output_size": output_size, "unet_state_dic
     ```python
     with torch.cuda.amp.autocast(enabled=amp):
         outputs = DiffusionInferer.sample(
-            inferer, input_noise=noise, diffusion_model=unet, scheduler=scheduler, save_intermediates=False, intermediate_steps=False,
-top_region_index_tensor=top_region_index_tensor, bottom_region_index_tensor=bottom_region_index_tensor, spacing_tensor=spacing_tensor
+            inferer,
+            input_noise=noise,
+            diffusion_model=unet,
+            scheduler=scheduler,
+            save_intermediates=False,
+            intermediate_steps=False,
+            top_region_index_tensor=top_region_index_tensor,
+            bottom_region_index_tensor=bottom_region_index_tensor,
+            spacing_tensor=spacing_tensor,
         )
         target_shape = output_size
         recon_pt_nda = torch.zeros((1, 1, target_shape[0], target_shape[1], target_shape[2]), dtype=outputs.dtype).to("cuda")
@@ -330,8 +337,7 @@ top_region_index_tensor=top_region_index_tensor, bottom_region_index_tensor=bott
     for _k in range(3):
         out_affine[_k, _k] = out_spacing[_k]
     new_image = nib.Nifti1Image(data, affine=out_affine)
-    nib.save(new_image,
-f"./predictions/{output_prefix}_seed{rand_seed}_size{output_size[0]:d}x{output_size[1]:d}x{output_size[2]:d}_spacing{out_spacing[0]:.2f}x{out_spacing[1]:.2f}x{out_spacing[2]:.2f}_{timestamp}.nii.gz")
+    nib.save(new_image, f'./predictions/{output_prefix}_seed{rand_seed}_size{output_size[0]:d}x{output_size[1]:d}x{output_size[2]:d}_spacing{out_spacing[0]:.2f}x{out_spacing[1]:.2f}x{out_spacing[2]:.2f}_{timestamp}.nii.gz')
     ```
 
 This document provides an overview of the data resampling, model training, and model inference processes, following the structure and order of the provided Python scripts.

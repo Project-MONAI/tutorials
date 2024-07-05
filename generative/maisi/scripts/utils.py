@@ -30,6 +30,7 @@ from monai.config import DtypeLike, NdarrayOrTensor
 from monai.apps.generation.maisi.utils.morphological_ops import dilate, erode
 from monai.bundle import ConfigParser
 
+
 def define_instance(args, instance_def_key):
     parser = ConfigParser(vars(args))
     parser.parse(True)

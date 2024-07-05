@@ -118,7 +118,6 @@ def dilate_one_img(mask_t: Tensor, filter_size: int | Sequence[int] = 3, pad_val
         .squeeze(0)
         .squeeze(0)
     )
-<<<<<<< HEAD
 
 
 def organ_fill_by_closing(data, target_label, device):
@@ -419,5 +418,4 @@ def binarize_labels(x, bits=8):
     """
     mask = 2 ** torch.arange(bits).to(x.device, x.dtype)
     return x.unsqueeze(-1).bitwise_and(mask).ne(0).byte().squeeze(1).permute(0, 4, 1, 2, 3)
-=======
->>>>>>> 4ad30a698d70bc580148da478d0108d0b9a9b772
+

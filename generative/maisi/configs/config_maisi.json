@@ -52,7 +52,7 @@
         "use_convtranspose": false
     },
     "difusion_unet_def": {
-        "_target_": "custom_network_diffusion.CustomDiffusionModelUNet",
+        "_target_": "diffusion_model_unet_maisi.DiffusionModelUNetMaisi",
         "spatial_dims": "@spatial_dims",
         "in_channels": "@latent_channels",
         "out_channels": "@latent_channels",
@@ -81,7 +81,7 @@
         "input_spacing": true
     },
     "controlnet_def": {
-        "_target_": "custom_network_controlnet.CustomControlNet",
+        "_target_": "controlnet_maisi.ControlNetMaisi",
         "spatial_dims": "@spatial_dims",
         "in_channels": "@latent_channels",
         "num_channels": [

@@ -256,6 +256,7 @@ def create_trainer(args):
             click_probability_key="probability",
             train=False,
             label_names=args.labels,
+            max_interactions=args.max_val_interactions,
         ),
         inferer=SimpleInferer(),
         postprocessing=post_transform,
@@ -307,6 +308,7 @@ def create_trainer(args):
             click_probability_key="probability",
             train=True,
             label_names=args.labels,
+            max_interactions=args.max_train_interactions,
         ),
         optimizer=optimizer,
         loss_function=loss_function,
@@ -393,8 +395,8 @@ def main():
 
     parser.add_argument("-f", "--val_freq", type=int, default=1)
     parser.add_argument("-lr", "--learning_rate", type=float, default=0.0001)
-    parser.add_argument("-it", "--max_train_interactions", type=int, default=15)
-    parser.add_argument("-iv", "--max_val_interactions", type=int, default=5)
+    parser.add_argument("-it", "--max_train_interactions", type=int, default=1)
+    parser.add_argument("-iv", "--max_val_interactions", type=int, default=1)
 
     parser.add_argument("-dpt", "--deepgrow_probability_train", type=float, default=0.4)
     parser.add_argument("-dpv", "--deepgrow_probability_val", type=float, default=1.0)

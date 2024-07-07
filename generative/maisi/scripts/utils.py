@@ -30,6 +30,7 @@ from monai.config import DtypeLike, NdarrayOrTensor
 from monai.apps.generation.maisi.utils.morphological_ops import dilate, erode
 from monai.bundle import ConfigParser
 
+
 def define_instance(args, instance_def_key):
     parser = ConfigParser(vars(args))
     parser.parse(True)
@@ -44,11 +45,13 @@ def get_index_arr(img):
         0,
         1,
     )
-    
+
+
 def define_instance(args, instance_def_key):
     parser = ConfigParser(vars(args))
     parser.parse(True)
     return parser.get_parsed_content(instance_def_key, instantiate=True)
+
 
 def supress_non_largest_components(img, target_label, default_val=0):
     """As a last step, supress all non largest components"""
@@ -428,4 +431,3 @@ def binarize_labels(x, bits=8):
     """
     mask = 2 ** torch.arange(bits).to(x.device, x.dtype)
     return x.unsqueeze(-1).bitwise_and(mask).ne(0).byte().squeeze(1).permute(0, 4, 1, 2, 3)
-

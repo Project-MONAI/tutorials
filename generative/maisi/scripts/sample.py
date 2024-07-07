@@ -39,9 +39,20 @@ class ReconModel(torch.nn.Module):
         recon_pt_nda = self.autoencoder.decode_stage_2_outputs(z / self.scale_factor)
         return recon_pt_nda
 
+
 def initialize_noise_latents(latent_shape, device):
-    return torch.randn([1,]+ list(latent_shape)).half().to(device)
-    
+    return (
+        torch.randn(
+            [
+                1,
+            ]
+            + list(latent_shape)
+        )
+        .half()
+        .to(device)
+    )
+
+
 def ldm_conditional_sample_one_mask(
     autoencoder,
     diffusion_unet,

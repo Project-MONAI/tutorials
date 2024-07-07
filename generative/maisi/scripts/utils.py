@@ -30,10 +30,6 @@ from monai.config import DtypeLike, NdarrayOrTensor
 from monai.apps.generation.maisi.utils.morphological_ops import dilate, erode
 from monai.bundle import ConfigParser
 
-def define_instance(args, instance_def_key):
-    parser = ConfigParser(vars(args))
-    parser.parse(True)
-    return parser.get_parsed_content(instance_def_key, instantiate=True)
 
 
 def get_index_arr(img):
@@ -44,7 +40,11 @@ def get_index_arr(img):
         0,
         1,
     )
-
+    
+def define_instance(args, instance_def_key):
+    parser = ConfigParser(vars(args))
+    parser.parse(True)
+    return parser.get_parsed_content(instance_def_key, instantiate=True)
 
 def supress_non_largest_components(img, target_label, default_val=0):
     """As a last step, supress all non largest components"""
@@ -157,7 +157,7 @@ def get_body_region_index_from_mask(input_mask):
     nda = input_mask.cpu().numpy().squeeze()
     unique_elements = np.lib.arraysetops.unique(nda)
     unique_elements = list(unique_elements)
-    print(f"nda: {nda.shape} {unique_elements}.")
+    # print(f"nda: {nda.shape} {unique_elements}.")
     overlap_array = np.zeros(len(region_indices), dtype=np.uint8)
     for _j in range(len(region_indices)):
         overlap = any(element in region_indices[f"region_{_j}"] for element in unique_elements)
@@ -169,7 +169,7 @@ def get_body_region_index_from_mask(input_mask):
     bottom_region_index = np.eye(len(region_indices), dtype=np.uint8)[np.amax(overlap_array_indices), ...]
     bottom_region_index = list(bottom_region_index)
     bottom_region_index = [int(_k) for _k in bottom_region_index]
-    print(f"{top_region_index} {bottom_region_index}")
+    # print(f"{top_region_index} {bottom_region_index}")
     return top_region_index, bottom_region_index
 
 
@@ -424,3 +424,4 @@ def binarize_labels(x, bits=8):
     """
     mask = 2 ** torch.arange(bits).to(x.device, x.dtype)
     return x.unsqueeze(-1).bitwise_and(mask).ne(0).byte().squeeze(1).permute(0, 4, 1, 2, 3)
+

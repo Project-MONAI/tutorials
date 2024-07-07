@@ -1,9 +1,8 @@
 {
-    "quality_check_args": null,
     "num_output_samples": 1,
     "body_region": ["abdomen"],
     "anatomy_list": ["liver"],
-    "controllable_anatomy_size": [],
+    "controllable_anatomy_size": [["hepatic tumor", 0.3], ["liver", 0.5]],
     "num_inference_steps": 1000,
     "mask_generation_num_inference_steps": 1000,
     "random_seed": null,
@@ -15,11 +14,12 @@
         256,
         256
     ],
-    "output_ext": ".nii.gz",
+    "image_output_ext": ".nii.gz",
+    "label_output_ext": ".nii.gz",
     "spacing": [
-        1.0,
-        1.0,
-        1.0
+        1.5,
+        1.5,
+        2.0
     ],
     "mask_generation_latent_shape": [
         4,
@@ -28,7 +28,7 @@
         64
     ],
     "autoencoder_def": {
-        "_target_": "autoencoderkl_maisi.AutoencoderKlMaisi",
+        "_target_": "monai.apps.generation.maisi.networks.autoencoderkl_maisi.AutoencoderKlMaisi",
         "spatial_dims": "@spatial_dims",
         "in_channels": "@image_channels",
         "out_channels": "@image_channels",
@@ -51,8 +51,8 @@
         "use_checkpointing": false,
         "use_convtranspose": false
     },
-    "difusion_unet_def": {
-        "_target_": "diffusion_model_unet_maisi.DiffusionModelUNetMaisi",
+    "diffusion_unet_def": {
+        "_target_": "monai.apps.generation.maisi.networks.diffusion_model_unet_maisi.DiffusionModelUNetMaisi",
         "spatial_dims": "@spatial_dims",
         "in_channels": "@latent_channels",
         "out_channels": "@latent_channels",
@@ -76,12 +76,12 @@
         ],
         "num_res_blocks": 2,
         "use_flash_attention": true,
-        "input_top_region_index": true,
-        "input_bottom_region_index": true,
-        "input_spacing": true
+        "include_top_region_index_input": true,
+        "include_bottom_region_index_input": true,
+        "include_spacing_input": true
     },
     "controlnet_def": {
-        "_target_": "controlnet_maisi.ControlNetMaisi",
+        "_target_": "monai.apps.generation.maisi.networks.controlnet_maisi.ControlNetMaisi",
         "spatial_dims": "@spatial_dims",
         "in_channels": "@latent_channels",
         "num_channels": [

@@ -92,8 +92,8 @@ def find_masks(
         if not os.path.isfile(zip_file_path):
             raise ValueError(f"Please download {zip_file_path} following the instruction in ./datasets/README.md.")
 
-        print(f"Extracting {zip_file_path}...")
-        extractall(filepath=mask_foldername, output_dir=mask_foldername)
+        print(f"Extracting {zip_file_path} to {os.path.dirname(zip_file_path)}")
+        extractall(filepath=zip_file_path, output_dir=os.path.dirname(zip_file_path),file_type="zip")
         print(f"Unzipped {zip_file_path} to {mask_foldername}.")
 
     if not os.path.isfile(database_filepath):

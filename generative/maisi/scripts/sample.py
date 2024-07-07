@@ -672,7 +672,7 @@ class LDMSampler:
         if need_resample:
             print("Resampling mask to target shape and spacing")
             print(f"Resize Spacing: {current_spacing} -> {self.spacing}")
-            print(f"Output size: {current_shape} -> {self.output_size}")            
+            print(f"Output size: {current_shape} -> {self.output_size}")
             spacing = monai.transforms.Spacing(pixdim=tuple(self.spacing), mode="nearest")
             pad_crop = monai.transforms.ResizeWithPadOrCrop(spatial_size=tuple(self.output_size))
             resampled_labels = pad_crop(spacing(labels.squeeze(0))).unsqueeze(0).to(labels.dtype)

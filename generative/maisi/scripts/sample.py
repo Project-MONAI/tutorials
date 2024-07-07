@@ -70,7 +70,9 @@ def ldm_conditional_sample_one_mask(
         synthetic_mask = torch.softmax(synthetic_mask, dim=1)
         synthetic_mask = torch.argmax(synthetic_mask, dim=1, keepdim=True)
         # mapping raw index to 132 labels
-        synthetic_mask = remap_labels(synthetic_mask, label_dict_json)
+        print(torch.unique(synthetic_mask))
+        synthetic_mask = remap_labels(synthetic_mask, label_dict_remap_json)
+        print(torch.unique(synthetic_mask))
 
         ###### post process #####
         data = synthetic_mask.squeeze().cpu().detach().numpy()

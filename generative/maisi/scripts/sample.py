@@ -125,7 +125,7 @@ def ldm_conditional_sample_one_image(
     recon_model = ReconModel(autoencoder=autoencoder, scale_factor=scale_factor).to(device)
 
     with torch.no_grad(), torch.cuda.amp.autocast():
-        print("Start generating latent features...")
+        print("---- Start generating latent features... ----")
         start_time = time.time()
         # generate segmentation mask
         comebine_label = comebine_label_or.to(device)
@@ -165,10 +165,10 @@ def ldm_conditional_sample_one_image(
             )
             latents, _ = noise_scheduler.step(noise_pred, t, latents)
         end_time = time.time()
-        print(f"Latent features generation time: {end_time - start_time} seconds")
+        print(f"---- Latent features generation time: {end_time - start_time} seconds ----")
 
         # decode latents to synthesized images
-        print("Start decoding latent features into images...")
+        print("---- Start decoding latent features into images... ----")
         start_time = time.time()
         synthetic_images = sliding_window_inference(
             inputs=latents,
@@ -186,7 +186,7 @@ def ldm_conditional_sample_one_image(
         )
         synthetic_images = torch.clip(synthetic_images, b_min, b_max).cpu()
         end_time = time.time()
-        print(f"Image decoding time: {end_time - start_time} seconds")
+        print(f"---- Image decoding time: {end_time - start_time} seconds ----")
 
         ## post processing:
         # project output to [0, 1]
@@ -455,7 +455,7 @@ class LDMSampler:
                     f"len(selected_mask_files) ({len(selected_mask_files)}) != num_img ({num_img}). This should not happen. Please revisit function select_mask(self, candidate_mask_files, num_img)."
                 )
         for item in selected_mask_files:
-            print("Prepare mask...")
+            print("---- Start preparing masks... ----")
             start_time = time.time()
             if len(self.controllable_anatomy_size) > 0:
                 # generate a synthetic mask
@@ -481,7 +481,7 @@ class LDMSampler:
                 if if_aug:
                     comebine_label_or = augmentation(comebine_label_or, self.output_size)
             end_time = time.time()
-            print(f"Mask preparation time: {end_time - start_time} seconds.")
+            print(f"---- Mask preparation time: {end_time - start_time} seconds ----")
             torch.cuda.empty_cache()
             # generate image/label pairs
             to_generate = True

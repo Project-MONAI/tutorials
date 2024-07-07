@@ -666,7 +666,7 @@ class LDMSampler:
             spacing = monai.transforms.Spacing(pixdim=tuple(self.spacing), mode="nearest")
             pad_crop = monai.transforms.ResizeWithPadOrCrop(spatial_size=tuple(self.output_size))
             resampled_labels = pad_crop(spacing(labels.squeeze(0))).unsqueeze(0).to(labels.dtype)
-            
+
             contained_labels = torch.unique(resampled_labels)
             if check_contains_target_labels:
                 # check if the resampled mask still contains those target labels

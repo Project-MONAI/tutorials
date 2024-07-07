@@ -51,57 +51,47 @@ def ldm_conditional_sample_one_mask(
     label_dict_remap_json,
     num_inference_steps=1000,
 ):
-    with torch.no_grad():
-        with torch.cuda.amp.autocast():
+    with torch.no_grad(), torch.cuda.amp.autocast():
 
-            # Generate random noise
-            latents = (
-                torch.randn(
-                    [
-                        1,
-                    ]
-                    + list(latent_shape)
-                )
-                .half()
-                .to(device)
-            )
-            anatomy_size = torch.FloatTensor(anatomy_size).unsqueeze(0).unsqueeze(0).half().to(device)
-            # synthesize masks
-            noise_scheduler.set_timesteps(num_inference_steps=num_inference_steps)
-            inferer_ddpm = LatentDiffusionInferer(noise_scheduler, scale_factor=scale_factor)
-            synthetic_mask = inferer_ddpm.sample(
-                input_noise=latents,
-                autoencoder_model=autoencoder,
-                diffusion_model=diffusion_unet,
-                scheduler=noise_scheduler,
-                verbose=True,
-                conditioning=anatomy_size.to(device),
-            )
-            synthetic_mask = torch.softmax(synthetic_mask, dim=1)
-            synthetic_mask = torch.argmax(synthetic_mask, dim=1, keepdim=True)
-            # mapping raw index to 132 labels
-            with open(label_dict_remap_json, "r") as f:
-                mapping_dict = json.load(f)
-            mapping = [v for _, v in mapping_dict.items()]
-            mapper = MapLabelValue(
-                orig_labels=[pair[0] for pair in mapping],
-                target_labels=[pair[1] for pair in mapping],
-                dtype=torch.uint8,
-            )
-            synthetic_mask = mapper(synthetic_mask[0, ...])[None, ...].to(device)
+        # Generate random noise
+        latents = torch.randn([1,]+ list(latent_shape)).half().to(device)
+        anatomy_size = torch.FloatTensor(anatomy_size).unsqueeze(0).unsqueeze(0).half().to(device)
+        # synthesize masks
+        noise_scheduler.set_timesteps(num_inference_steps=num_inference_steps)
+        inferer_ddpm = LatentDiffusionInferer(noise_scheduler, scale_factor=scale_factor)
+        synthetic_mask = inferer_ddpm.sample(
+            input_noise=latents,
+            autoencoder_model=autoencoder,
+            diffusion_model=diffusion_unet,
+            scheduler=noise_scheduler,
+            verbose=True,
+            conditioning=anatomy_size.to(device),
+        )
+        synthetic_mask = torch.softmax(synthetic_mask, dim=1)
+        synthetic_mask = torch.argmax(synthetic_mask, dim=1, keepdim=True)
+        # mapping raw index to 132 labels
+        with open(label_dict_remap_json, "r") as f:
+            mapping_dict = json.load(f)
+        mapping = [v for _, v in mapping_dict.items()]
+        mapper = MapLabelValue(
+            orig_labels=[pair[0] for pair in mapping],
+            target_labels=[pair[1] for pair in mapping],
+            dtype=torch.uint8,
+        )
+        synthetic_mask = mapper(synthetic_mask[0, ...])[None, ...].to(device)
 
-            ###### post process #####
-            data = synthetic_mask.squeeze().cpu().detach().numpy()
+        ###### post process #####
+        data = synthetic_mask.squeeze().cpu().detach().numpy()
 
-            labels = [23, 24, 26, 27, 128]
-            target_tumor_label = None
-            for index, size in enumerate(anatomy_size[5:10]):
-                if size.item() != -1.0:
-                    target_tumor_label = labels[index]
+        labels = [23, 24, 26, 27, 128]
+        target_tumor_label = None
+        for index, size in enumerate(anatomy_size[5:10]):
+            if size.item() != -1.0:
+                target_tumor_label = labels[index]
 
-            print("target_tumor_label for postprocess:", target_tumor_label)
-            data = general_mask_generation_post_process(data, target_tumor_label=target_tumor_label, device=device)
-            synthetic_mask = torch.from_numpy(data).unsqueeze(0).unsqueeze(0).to(device)
+        print("target_tumor_label for postprocess:", target_tumor_label)
+        data = general_mask_generation_post_process(data, target_tumor_label=target_tumor_label, device=device)
+        synthetic_mask = torch.from_numpy(data).unsqueeze(0).unsqueeze(0).to(device)
 
     return synthetic_mask
 

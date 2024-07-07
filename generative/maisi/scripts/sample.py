@@ -29,17 +29,43 @@ from .utils import binarize_labels, general_mask_generation_post_process, get_bo
 
 
 class ReconModel(torch.nn.Module):
+    """
+    A PyTorch module for reconstructing images from latent representations.
+
+    Attributes:
+        autoencoder: The autoencoder model used for decoding.
+        scale_factor: Scaling factor applied to the input before decoding.
+    """
     def __init__(self, autoencoder, scale_factor):
         super().__init__()
         self.autoencoder = autoencoder
         self.scale_factor = scale_factor
 
     def forward(self, z):
+        """
+        Decode the input latent representation to an image.
+
+        Args:
+            z (torch.Tensor): The input latent representation.
+
+        Returns:
+            torch.Tensor: The reconstructed image.
+        """
         recon_pt_nda = self.autoencoder.decode_stage_2_outputs(z / self.scale_factor)
         return recon_pt_nda
 
 
 def initialize_noise_latents(latent_shape, device):
+    """
+    Initialize random noise latents for image generation with float16.
+
+    Args:
+        latent_shape (tuple): The shape of the latent space.
+        device (torch.device): The device to create the tensor on.
+
+    Returns:
+        torch.Tensor: Initialized noise latents.
+    """
     return (
         torch.randn(
             [
@@ -63,6 +89,23 @@ def ldm_conditional_sample_one_mask(
     label_dict_remap_json,
     num_inference_steps=1000,
 ):
+    """
+    Generate a single synthetic mask using a latent diffusion model.
+
+    Args:
+        autoencoder (nn.Module): The autoencoder model.
+        diffusion_unet (nn.Module): The diffusion U-Net model.
+        noise_scheduler: The noise scheduler for the diffusion process.
+        scale_factor (float): Scaling factor for the latent space.
+        anatomy_size (torch.Tensor): Tensor specifying the desired anatomy sizes.
+        device (torch.device): The device to run the computation on.
+        latent_shape (tuple): The shape of the latent space.
+        label_dict_remap_json (str): Path to the JSON file for label remapping.
+        num_inference_steps (int): Number of inference steps for the diffusion process.
+
+    Returns:
+        torch.Tensor: The generated synthetic mask.
+    """
     with torch.no_grad(), torch.cuda.amp.autocast():
         # Generate random noise
         latents = initialize_noise_latents(latent_shape, device)
@@ -115,6 +158,28 @@ def ldm_conditional_sample_one_image(
     noise_factor,
     num_inference_steps=1000,
 ):
+    """
+    Generate a single synthetic image using a latent diffusion model with controlnet.
+
+    Args:
+        autoencoder (nn.Module): The autoencoder model.
+        diffusion_unet (nn.Module): The diffusion U-Net model.
+        controlnet (nn.Module): The controlnet model.
+        noise_scheduler: The noise scheduler for the diffusion process.
+        scale_factor (float): Scaling factor for the latent space.
+        device (torch.device): The device to run the computation on.
+        comebine_label_or (torch.Tensor): The combined label tensor.
+        top_region_index_tensor (torch.Tensor): Tensor specifying the top region index.
+        bottom_region_index_tensor (torch.Tensor): Tensor specifying the bottom region index.
+        spacing_tensor (torch.Tensor): Tensor specifying the spacing.
+        latent_shape (tuple): The shape of the latent space.
+        output_size (tuple): The desired output size of the image.
+        noise_factor (float): Factor to scale the initial noise.
+        num_inference_steps (int): Number of inference steps for the diffusion process.
+
+    Returns:
+        tuple: A tuple containing the synthetic image and its corresponding label.
+    """
     # CT image intensity range
     a_min = -1000
     a_max = 1000
@@ -200,7 +265,17 @@ def ldm_conditional_sample_one_image(
 
 
 def filter_mask_with_organs(comebine_label, anatomy_list):
-    # final output mask file has shape of output_size, contaisn labels in anatomy_list
+    """
+    Filter a mask to only include specified organs.
+
+    Args:
+        comebine_label (torch.Tensor): The input mask.
+        anatomy_list (list): List of organ labels to keep.
+
+    Returns:
+        torch.Tensor: The filtered mask.
+    """
+    # final output mask file has shape of output_size, contains labels in anatomy_list
     # it is already interpolated to target size
     comebine_label = comebine_label.long()
     # filter out the organs that are not in anatomy_list
@@ -216,6 +291,16 @@ def filter_mask_with_organs(comebine_label, anatomy_list):
 
 
 def crop_img_body_mask(synthetic_images, comebine_label):
+    """
+    Crop the synthetic image using a body mask.
+
+    Args:
+        synthetic_images (torch.Tensor): The synthetic images.
+        comebine_label (torch.Tensor): The body mask.
+
+    Returns:
+        torch.Tensor: The cropped synthetic images.
+    """
     synthetic_images[comebine_label == 0] = -1000
     return synthetic_images
 
@@ -228,6 +313,20 @@ def check_input(
     spacing,
     controllable_anatomy_size=[("pancreas", 0.5)],
 ):
+    """
+    Validate input parameters for image generation.
+
+    Args:
+        body_region (list): List of body regions.
+        anatomy_list (list): List of anatomical structures.
+        label_dict_json (str): Path to the label dictionary JSON file.
+        output_size (tuple): Desired output size of the image.
+        spacing (tuple): Desired voxel spacing.
+        controllable_anatomy_size (list): List of tuples specifying controllable anatomy sizes.
+
+    Raises:
+        ValueError: If any input parameter is invalid.
+    """
     # check output_size and spacing format
     if output_size[0] != output_size[1]:
         raise ValueError(f"The first two components of output_size need to be equal, yet got {output_size}.")
@@ -322,6 +421,12 @@ def check_input(
 
 
 class LDMSampler:
+    """
+    A sampler class for generating synthetic medical images and masks using latent diffusion models.
+
+    Attributes:
+        Various attributes related to model configuration, input parameters, and generation settings.
+    """
     def __init__(
         self,
         body_region,
@@ -354,6 +459,12 @@ class LDMSampler:
         mask_generation_num_inference_steps=None,
         random_seed=None,
     ) -> None:
+        """
+        Initialize the LDMSampler with various parameters and models.
+
+        Args:
+            Various parameters related to model configuration, input settings, and output specifications.
+        """
         if random_seed is not None:
             set_determinism(seed=random_seed)
 
@@ -423,6 +534,12 @@ class LDMSampler:
         print("LDM sampler initialized.")
 
     def sample_multiple_images(self, num_img):
+        """
+        Generate multiple synthetic images and masks.
+
+        Args:
+            num_img (int): Number of images to generate.
+        """
         if len(self.controllable_anatomy_size) > 0:
             # we will use mask generation instead of finding candidate masks
             # create a dummy selected_mask_files for placeholder
@@ -523,6 +640,16 @@ class LDMSampler:
         return
 
     def select_mask(self, candidate_mask_files, num_img):
+        """
+        Select mask files for image generation.
+
+        Args:
+            candidate_mask_files (list): List of candidate mask files.
+            num_img (int): Number of images to generate.
+
+        Returns:
+            list: Selected mask files with augmentation flags.
+        """
         selected_mask_files = []
         random.shuffle(candidate_mask_files)
 
@@ -538,6 +665,18 @@ class LDMSampler:
         bottom_region_index_tensor,
         spacing_tensor,
     ):
+        """
+        Generate a single pair of synthetic image and mask.
+
+        Args:
+            comebine_label_or_aug (torch.Tensor): Combined label tensor or augmented label.
+            top_region_index_tensor (torch.Tensor): Tensor specifying the top region index.
+            bottom_region_index_tensor (torch.Tensor): Tensor specifying the bottom region index.
+            spacing_tensor (torch.Tensor): Tensor specifying the spacing.
+
+        Returns:
+            tuple: A tuple containing the synthetic image and its corresponding label.
+        """
         # generate image/label pairs
         synthetic_images, synthetic_labels = ldm_conditional_sample_one_image(
             autoencoder=self.autoencoder,
@@ -561,6 +700,15 @@ class LDMSampler:
         self,
         controllable_anatomy_size,
     ):
+        """
+        Prepare anatomy size conditions for mask generation.
+
+        Args:
+            controllable_anatomy_size (list): List of tuples specifying controllable anatomy sizes.
+
+        Returns:
+            list: Prepared anatomy size conditions.
+        """
         anatomy_size_idx = {
             "gallbladder": 0,
             "liver": 1,
@@ -604,6 +752,15 @@ class LDMSampler:
         return candidate_condition
 
     def prepare_one_mask_and_meta_info(self, anatomy_size_condtion):
+        """
+        Prepare a single mask and its associated meta information.
+
+        Args:
+            anatomy_size_condtion (list): Anatomy size conditions.
+
+        Returns:
+            tuple: A tuple containing the prepared mask and associated tensors.
+        """
         comebine_label_or = self.sample_one_mask(anatomy_size=anatomy_size_condtion)
         # TODO: current mask generation model only can generate 256^3 volumes with 1.5 mm spacing.
         affine = torch.zeros((4, 4))
@@ -623,6 +780,15 @@ class LDMSampler:
         return comebine_label_or, top_region_index_tensor, bottom_region_index_tensor, spacing_tensor
 
     def sample_one_mask(self, anatomy_size):
+        """
+        Generate a single synthetic mask.
+
+        Args:
+            anatomy_size (list): Anatomy size specifications.
+
+        Returns:
+            torch.Tensor: The generated synthetic mask.
+        """
         # generate one synthetic mask
         synthetic_mask = ldm_conditional_sample_one_mask(
             self.mask_generation_autoencoder,
@@ -638,6 +804,19 @@ class LDMSampler:
         return synthetic_mask
 
     def ensure_output_size_and_spacing(self, labels, check_contains_target_labels=True):
+        """
+        Ensure the output mask has the correct size and spacing.
+
+        Args:
+            labels (torch.Tensor): Input label tensor.
+            check_contains_target_labels (bool): Whether to check if the resampled mask contains target labels.
+
+        Returns:
+            torch.Tensor: Resampled label tensor.
+
+        Raises:
+            ValueError: If the resampled mask doesn't contain required class labels.
+        """
         current_spacing = [labels.affine[0, 0], labels.affine[1, 1], labels.affine[2, 2]]
         current_shape = list(labels.squeeze().shape)
 
@@ -670,6 +849,15 @@ class LDMSampler:
         return labels
 
     def read_mask_information(self, mask_file):
+        """
+        Read mask information from a file.
+
+        Args:
+            mask_file (str): Path to the mask file.
+
+        Returns:
+            tuple: A tuple containing the mask tensor and associated information.
+        """
         val_data = self.val_transforms(mask_file)
 
         for key in [
@@ -688,6 +876,18 @@ class LDMSampler:
         )
 
     def find_closest_masks(self, num_img):
+        """
+        Find the closest matching masks from the database.
+
+        Args:
+            num_img (int): Number of images to generate.
+
+        Returns:
+            list: List of closest matching mask candidates.
+
+        Raises:
+            ValueError: If suitable candidates cannot be found.
+        """
         # first check the database based on anatomy list
         candidates = find_masks(
             self.body_region,
@@ -738,5 +938,14 @@ class LDMSampler:
         return final_candidates
 
     def quality_check(self, image):
+        """
+        Perform a quality check on the generated image. This version disabled quality check and always return True.
+
+        Args:
+            image (torch.Tensor): The generated image.
+
+        Returns:
+            bool: True if the image passes the quality check, False otherwise.
+        """
         # This version disabled quality check
         return True

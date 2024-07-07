@@ -24,13 +24,38 @@ from torch import Tensor
 
 
 def define_instance(args, instance_def_key):
+    """
+    Define and instantiate an object based on the provided arguments and instance definition key.
+
+    This function uses a ConfigParser to parse the arguments and instantiate an object
+    defined by the instance_def_key.
+
+    Args:
+        args: An object containing the arguments to be parsed.
+        instance_def_key (str): The key used to retrieve the instance definition from the parsed content.
+
+    Returns:
+        The instantiated object as defined by the instance_def_key in the parsed configuration.
+    """
     parser = ConfigParser(vars(args))
     parser.parse(True)
     return parser.get_parsed_content(instance_def_key, instantiate=True)
 
 
 def remap_labels(mask, label_dict_remap_json):
-    """Remap labels in the synthetic mask according to the provided label dictionary."""
+    """
+    Remap labels in the mask according to the provided label dictionary.
+
+    This function reads a JSON file containing label mapping information and applies
+    the mapping to the input mask.
+
+    Args:
+        mask (Tensor): The input mask tensor to be remapped.
+        label_dict_remap_json (str): Path to the JSON file containing the label mapping dictionary.
+
+    Returns:
+        Tensor: The remapped mask tensor.
+    """
     with open(label_dict_remap_json, "r") as f:
         mapping_dict = json.load(f)
     mapper = MapLabelValue(
@@ -42,6 +67,17 @@ def remap_labels(mask, label_dict_remap_json):
 
 
 def get_index_arr(img):
+    """
+    Generate an index array for the given image.
+
+    This function creates a 3D array of indices corresponding to the dimensions of the input image.
+
+    Args:
+        img (ndarray): The input image array.
+
+    Returns:
+        ndarray: A 3D array containing the indices for each dimension of the input image.
+    """
     return np.moveaxis(
         np.moveaxis(
             np.stack(np.meshgrid(np.arange(img.shape[0]), np.arange(img.shape[1]), np.arange(img.shape[2]))), 0, 3
@@ -52,7 +88,22 @@ def get_index_arr(img):
 
 
 def supress_non_largest_components(img, target_label, default_val=0):
-    """As a last step, supress all non largest components"""
+    """
+    Suppress all components except the largest one(s) for specified target labels.
+
+    This function identifies the largest component(s) for each target label and
+    suppresses all other smaller components.
+
+    Args:
+        img (ndarray): The input image array.
+        target_label (list): List of label values to process.
+        default_val (int, optional): Value to assign to suppressed voxels. Defaults to 0.
+
+    Returns:
+        tuple: A tuple containing:
+            - ndarray: Modified image with non-largest components suppressed.
+            - int: Number of voxels that were changed.
+    """
     index_arr = get_index_arr(img)
     img_mod = copy.deepcopy(img)
     new_background = np.zeros(img.shape, dtype=np.bool_)
@@ -131,16 +182,45 @@ def dilate_one_img(mask_t: Tensor, filter_size: int | Sequence[int] = 3, pad_val
     )
 
 
-def organ_fill_by_closing(data, target_label, device):
+def organ_fill_by_closing(data, target_label, device, close_times = 2, filter_size=3, pad_value=0.0):
+    """
+    Fill holes in an organ mask using morphological closing operations.
+
+    This function performs a series of dilation and erosion operations to fill holes
+    in the organ mask identified by the target label.
+
+    Args:
+        data (ndarray): The input data containing organ labels.
+        target_label (int): The label of the organ to be processed.
+        device (str): The device to perform the operations on (e.g., 'cuda:0').
+        close_times (int, optional): Number of times to perform the closing operation. Defaults to 2.
+        filter_size (int, optional): Size of the filter for dilation and erosion. Defaults to 3.
+        pad_value (float, optional): Value used for padding in dilation and erosion. Defaults to 0.0.
+
+    Returns:
+        ndarray: Boolean mask of the filled organ.
+    """
     mask = (data == target_label).astype(np.uint8)
-    mast = torch.from_numpy(mask).to(device)
-    for _ in range(2):
-        mask = dilate_one_img(mast, filter_size=3, pad_value=0.0)
-        mask = erode_one_img(mask, filter_size=3, pad_value=0.0)
+    mask = torch.from_numpy(mask).to(device)
+    for _ in range(close_times):
+        mask = dilate_one_img(mask, filter_size=filter_size, pad_value=pad_value)
+        mask = erode_one_img(mask, filter_size=filter_size, pad_value=pad_value)
     return mask.cpu().numpy().astype(np.bool_)
 
 
 def organ_fill_by_removed_mask(data, target_label, remove_mask, device):
+    """
+    Fill an organ mask in regions where it was previously removed.
+
+    Args:
+        data (ndarray): The input data containing organ labels.
+        target_label (int): The label of the organ to be processed.
+        remove_mask (ndarray): Boolean mask indicating regions where the organ was removed.
+        device (str): The device to perform the operations on (e.g., 'cuda:0').
+
+    Returns:
+        ndarray: Boolean mask of the filled organ in previously removed regions.
+    """
     mask = (data == target_label).astype(np.uint8)
     mask = dilate_one_img(torch.from_numpy(mask).to(device), filter_size=3, pad_value=0.0)
     mask = dilate_one_img(mask, filter_size=3, pad_value=0.0)
@@ -149,6 +229,15 @@ def organ_fill_by_removed_mask(data, target_label, remove_mask, device):
 
 
 def get_body_region_index_from_mask(input_mask):
+    """
+    Determine the top and bottom body region indices from an input mask.
+
+    Args:
+        input_mask (Tensor): Input mask tensor containing body region labels.
+
+    Returns:
+        tuple: Two lists representing the top and bottom region indices.
+    """
     region_indices = {}
     # head and neck
     region_indices["region_0"] = [22, 120]
@@ -179,6 +268,20 @@ def get_body_region_index_from_mask(input_mask):
 
 
 def general_mask_generation_post_process(volume_t, target_tumor_label=None, device="cuda:0"):
+    """
+    Perform post-processing on a generated mask volume.
+
+    This function applies various refinement steps to improve the quality of the generated mask,
+    including body mask refinement, tumor prediction refinement, and organ-specific processing.
+
+    Args:
+        volume_t (ndarray): Input volume containing organ and tumor labels.
+        target_tumor_label (int, optional): Label of the target tumor. Defaults to None.
+        device (str, optional): Device to perform operations on. Defaults to "cuda:0".
+
+    Returns:
+        ndarray: Post-processed volume with refined organ and tumor labels.
+    """
     # assume volume_t is np array with shape (H,W,D)
     hepatic_vessel = volume_t == 25
     airway = volume_t == 132
@@ -377,6 +480,15 @@ class MapLabelValue:
             self.dtype = get_equivalent_dtype(dtype, data_type=np.ndarray)
 
     def __call__(self, img: NdarrayOrTensor):
+        """
+        Apply the label mapping to the input image.
+
+        Args:
+            img (NdarrayOrTensor): Input image to be remapped.
+
+        Returns:
+            NdarrayOrTensor: Remapped image.
+        """
         if self.use_numpy:
             img_np, *_ = convert_data_type(img, np.ndarray)
             _out_shape = img_np.shape
@@ -399,6 +511,18 @@ class MapLabelValue:
 
 
 def load_autoencoder_ckpt(load_autoencoder_path):
+    """
+    Load and preprocess an autoencoder checkpoint.
+
+    This function loads a checkpoint file and adjusts the state dict keys
+    to match the expected format for the autoencoder.
+
+    Args:
+        load_autoencoder_path (str): Path to the autoencoder checkpoint file.
+
+    Returns:
+        dict: Processed state dictionary for the autoencoder.
+    """
     checkpoint_autoencoder = torch.load(load_autoencoder_path)
     new_state_dict = {}
     for k, v in checkpoint_autoencoder.items():
@@ -424,8 +548,17 @@ def load_autoencoder_ckpt(load_autoencoder_path):
 
 def binarize_labels(x, bits=8):
     """
-    x: the input tensor with shape (B, 1, H, W, D)
-    bits: the num of channel to represent the data.
+    Convert input tensor to binary representation.
+
+    This function takes an input tensor and converts it to a binary representation
+    using the specified number of bits.
+
+    Args:
+        x (Tensor): Input tensor with shape (B, 1, H, W, D).
+        bits (int, optional): Number of bits to use for binary representation. Defaults to 8.
+
+    Returns:
+        Tensor: Binary representation of the input tensor with shape (B, bits, H, W, D).
     """
     mask = 2 ** torch.arange(bits).to(x.device, x.dtype)
     return x.unsqueeze(-1).bitwise_and(mask).ne(0).byte().squeeze(1).permute(0, 4, 1, 2, 3)

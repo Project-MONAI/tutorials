@@ -137,81 +137,79 @@ def ldm_conditional_sample_one_image(
 
     recon_model = ReconModel(autoencoder=autoencoder, scale_factor=scale_factor).to(device)
 
-    with torch.no_grad():
-        with torch.cuda.amp.autocast():
-            print("Start generating latent features...")
-            start_time = time.time()
-            # generate segmentation mask
-            comebine_label = comebine_label_or.to(device)
-            if (
-                output_size[0] != comebine_label.shape[2]
-                or output_size[1] != comebine_label.shape[3]
-                or output_size[2] != comebine_label.shape[4]
-            ):
-                print(
-                    "output_size is not a desired value. Need to interpolate the mask to match with output_size. The result image will be very low quality."
-                )
-                comebine_label = torch.nn.functional.interpolate(comebine_label, size=output_size, mode="nearest")
-
-            controlnet_cond_vis = binarize_labels(comebine_label.as_tensor().long()).half()
-
-            # Generate random noise
-            latents = (
-                torch.randn(
-                    [
-                        1,
-                    ]
-                    + list(latent_shape)
-                )
-                .half()
-                .to(device)
-                * noise_factor
+    with torch.no_grad(), torch.cuda.amp.autocast():
+        print("Start generating latent features...")
+        start_time = time.time()
+        # generate segmentation mask
+        comebine_label = comebine_label_or.to(device)
+        if (
+            output_size[0] != comebine_label.shape[2]
+            or output_size[1] != comebine_label.shape[3]
+            or output_size[2] != comebine_label.shape[4]
+        ):
+            print(
+                "output_size is not a desired value. Need to interpolate the mask to match with output_size. The result image will be very low quality."
             )
+            comebine_label = torch.nn.functional.interpolate(comebine_label, size=output_size, mode="nearest")
 
-            # synthesize latents
-            noise_scheduler.set_timesteps(num_inference_steps=num_inference_steps)
-            for t in tqdm(noise_scheduler.timesteps, ncols=110):
-                # Get controlnet output
-                down_block_res_samples, mid_block_res_sample = controlnet(
-                    x=latents,
-                    timesteps=torch.Tensor((t,)).to(device),
-                    controlnet_cond=controlnet_cond_vis,
-                )
-                latent_model_input = latents
-                noise_pred = diffusion_unet(
-                    x=latent_model_input,
-                    timesteps=torch.Tensor((t,)).to(device),
-                    top_region_index_tensor=top_region_index_tensor,
-                    bottom_region_index_tensor=bottom_region_index_tensor,
-                    spacing_tensor=spacing_tensor,
-                    down_block_additional_residuals=down_block_res_samples,
-                    mid_block_additional_residual=mid_block_res_sample,
-                )
-                latents, _ = noise_scheduler.step(noise_pred, t, latents)
-            end_time = time.time()
-            print(f"Latent features generation time: {end_time - start_time} seconds")
+        controlnet_cond_vis = binarize_labels(comebine_label.as_tensor().long()).half()
 
-            # decode latents to synthesized images
-            print("Start decoding latent features into images...")
-            start_time = time.time()
-            synthetic_images = sliding_window_inference(
-                inputs=latents,
-                roi_size=(
-                    min(output_size[0] // 4 // 4 * 3, 96),
-                    min(output_size[1] // 4 // 4 * 3, 96),
-                    min(output_size[2] // 4 // 4 * 3, 96),
-                ),
-                sw_batch_size=1,
-                predictor=recon_model,
-                mode="gaussian",
-                overlap=2.0 / 3.0,
-                sw_device=device,
-                device=device,
+        # Generate random noise
+        latents = (
+            torch.randn(
+                [
+                    1,
+                ]
+                + list(latent_shape)
             )
-            end_time = time.time()
-            print(f"Image decoding time: {end_time - start_time} seconds")
+            .half()
+            .to(device)
+            * noise_factor
+        )
 
+        # synthesize latents
+        noise_scheduler.set_timesteps(num_inference_steps=num_inference_steps)
+        for t in tqdm(noise_scheduler.timesteps, ncols=110):
+            # Get controlnet output
+            down_block_res_samples, mid_block_res_sample = controlnet(
+                x=latents,
+                timesteps=torch.Tensor((t,)).to(device),
+                controlnet_cond=controlnet_cond_vis,
+            )
+            latent_model_input = latents
+            noise_pred = diffusion_unet(
+                x=latent_model_input,
+                timesteps=torch.Tensor((t,)).to(device),
+                top_region_index_tensor=top_region_index_tensor,
+                bottom_region_index_tensor=bottom_region_index_tensor,
+                spacing_tensor=spacing_tensor,
+                down_block_additional_residuals=down_block_res_samples,
+                mid_block_additional_residual=mid_block_res_sample,
+            )
+            latents, _ = noise_scheduler.step(noise_pred, t, latents)
+        end_time = time.time()
+        print(f"Latent features generation time: {end_time - start_time} seconds")
+
+        # decode latents to synthesized images
+        print("Start decoding latent features into images...")
+        start_time = time.time()
+        synthetic_images = sliding_window_inference(
+            inputs=latents,
+            roi_size=(
+                min(output_size[0] // 4 // 4 * 3, 96),
+                min(output_size[1] // 4 // 4 * 3, 96),
+                min(output_size[2] // 4 // 4 * 3, 96),
+            ),
+            sw_batch_size=1,
+            predictor=recon_model,
+            mode="gaussian",
+            overlap=2.0 / 3.0,
+            sw_device=device,
+            device=device,
+        )
         synthetic_images = torch.clip(synthetic_images, b_min, b_max).cpu()
+        end_time = time.time()
+        print(f"Image decoding time: {end_time - start_time} seconds")
 
         ## post processing:
         # project output to [0, 1]

@@ -665,15 +665,15 @@ class LDMSampler:
             print(f"Output size: {current_shape} -> {self.output_size}")
             spacing = monai.transforms.Spacing(pixdim=tuple(self.spacing), mode="nearest")
             pad_crop = monai.transforms.ResizeWithPadOrCrop(spatial_size=tuple(self.output_size))
-            resampled_labels = pad_crop(spacing(labels.squeeze(0))).unsqueeze(0).to(labels.dtype)
+            labels = pad_crop(spacing(labels.squeeze(0))).unsqueeze(0).to(labels.dtype)
 
-            contained_labels = torch.unique(resampled_labels)
+            contained_labels = torch.unique(labels)
             if check_contains_target_labels:
                 # check if the resampled mask still contains those target labels
                 for anatomy_label in self.anatomy_list:
                     if anatomy_label not in contained_labels:
                         raise ValueError(
-                            "Resampled mask does not contain required class labels. Please tune spacing and output size."
+                            f"Resampled mask does not contain required class labels {anatomy_label}. Please tune spacing and output size."
                         )
         return labels
 

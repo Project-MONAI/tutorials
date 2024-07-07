@@ -55,7 +55,16 @@ def ldm_conditional_sample_one_mask(
         with torch.cuda.amp.autocast():
 
             # Generate random noise
-            latents = torch.randn([1,]+ list(latent_shape)).half().to(device)
+            latents = (
+                torch.randn(
+                    [
+                        1,
+                    ]
+                    + list(latent_shape)
+                )
+                .half()
+                .to(device)
+            )
             anatomy_size = torch.FloatTensor(anatomy_size).unsqueeze(0).unsqueeze(0).half().to(device)
             # synthesize masks
             noise_scheduler.set_timesteps(num_inference_steps=num_inference_steps)

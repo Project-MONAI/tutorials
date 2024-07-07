@@ -12,9 +12,9 @@
 
 import json
 import os
-from monai.apps.utils import extractall
 from typing import Sequence
 
+from monai.apps.utils import extractall
 from monai.utils import ensure_tuple_rep
 
 

@@ -8,28 +8,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 
-from typing import Sequence
-import json
-
-import torch
-import torch.nn.functional as F
-from torch import Tensor
-
 import copy
+import json
+from typing import Sequence
+
 import numpy as np
 import skimage
-from scipy import stats
-
-from monai.utils import (
-    TransformBackends,
-    convert_data_type,
-    convert_to_dst_type,
-    get_equivalent_dtype,
-    ensure_tuple_rep,
-)
-from monai.config import DtypeLike, NdarrayOrTensor
+import torch
 from monai.apps.generation.maisi.utils.morphological_ops import dilate, erode
 from monai.bundle import ConfigParser
+from monai.config import DtypeLike, NdarrayOrTensor
+from monai.utils import TransformBackends, convert_data_type, convert_to_dst_type, get_equivalent_dtype
+from scipy import stats
+from torch import Tensor
 
 
 def define_instance(args, instance_def_key):
@@ -58,12 +49,6 @@ def get_index_arr(img):
         0,
         1,
     )
-
-
-def define_instance(args, instance_def_key):
-    parser = ConfigParser(vars(args))
-    parser.parse(True)
-    return parser.get_parsed_content(instance_def_key, instantiate=True)
 
 
 def supress_non_largest_components(img, target_label, default_val=0):
@@ -268,9 +253,9 @@ def general_mask_generation_post_process(volume_t, target_tumor_label=None, devi
                 .numpy()
             )
             lung_remove_mask = dia_lung_tumor_mask.astype(np.uint8) - (data == 23).astype(np.uint8).astype(np.uint8)
-            data[organ_fill_by_removed_mask(data, target_label=mode, remove_mask=lung_remove_mask, device=device)] = (
-                mode
-            )
+            data[
+                organ_fill_by_removed_mask(data, target_label=mode, remove_mask=lung_remove_mask, device=device)
+            ] = mode
         dia_lung_tumor_mask = (
             dilate_one_img(torch.from_numpy(dia_lung_tumor_mask).to(device), filter_size=3, pad_value=0.0).cpu().numpy()
         )

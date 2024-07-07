@@ -9,24 +9,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import random
-from datetime import datetime
 import json
+import random
 import time
-
+from datetime import datetime
 
 import monai
 import torch
-from monai.transforms import Compose, SaveImage
+from generative.inferers import LatentDiffusionInferer
 from monai.data import MetaTensor
 from monai.inferers import sliding_window_inference
+from monai.transforms import Compose, SaveImage
 from monai.utils import set_determinism
 from tqdm import tqdm
-from generative.metrics import FIDMetric
-from generative.inferers import LatentDiffusionInferer
-from .utils import binarize_labels, general_mask_generation_post_process, get_body_region_index_from_mask, remap_labels
-from .find_masks import find_masks
+
 from .augmentation import augmentation
+from .find_masks import find_masks
+from .utils import binarize_labels, general_mask_generation_post_process, get_body_region_index_from_mask, remap_labels
 
 
 class ReconModel(torch.nn.Module):
@@ -65,7 +64,6 @@ def ldm_conditional_sample_one_mask(
     num_inference_steps=1000,
 ):
     with torch.no_grad(), torch.cuda.amp.autocast():
-
         # Generate random noise
         latents = initialize_noise_latents(latent_shape, device)
         anatomy_size = torch.FloatTensor(anatomy_size).unsqueeze(0).unsqueeze(0).half().to(device)
@@ -356,7 +354,6 @@ class LDMSampler:
         mask_generation_num_inference_steps=None,
         random_seed=None,
     ) -> None:
-
         if random_seed is not None:
             set_determinism(seed=random_seed)
 
@@ -481,7 +478,7 @@ class LDMSampler:
                 if need_resample:
                     comebine_label_or = self.ensure_output_size_and_spacing(comebine_label_or)
                 # mask augmentation
-                if if_aug == True:
+                if if_aug:
                     comebine_label_or = augmentation(comebine_label_or, self.output_size)
             end_time = time.time()
             print(f"Mask preparation time: {end_time - start_time} seconds.")

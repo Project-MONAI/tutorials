@@ -55,16 +55,7 @@ def ldm_conditional_sample_one_mask(
         with torch.cuda.amp.autocast():
 
             # Generate random noise
-            latents = (
-                torch.randn(
-                    [
-                        1,
-                    ]
-                    + list(latent_shape)
-                )
-                .half()
-                .to(device)
-            )
+            latents = torch.randn([1,]+ list(latent_shape)).half().to(device)
             anatomy_size = torch.FloatTensor(anatomy_size).unsqueeze(0).unsqueeze(0).half().to(device)
             # synthesize masks
             noise_scheduler.set_timesteps(num_inference_steps=num_inference_steps)
@@ -92,18 +83,12 @@ def ldm_conditional_sample_one_mask(
 
             ###### post process #####
             data = synthetic_mask.squeeze().cpu().detach().numpy()
-            if anatomy_size[0, 0, 5].item() != -1.0:
-                target_tumor_label = 23
-            elif anatomy_size[0, 0, 6].item() != -1.0:
-                target_tumor_label = 24
-            elif anatomy_size[0, 0, 7].item() != -1.0:
-                target_tumor_label = 26
-            elif anatomy_size[0, 0, 8].item() != -1.0:
-                target_tumor_label = 27
-            elif anatomy_size[0, 0, 9].item() != -1.0:
-                target_tumor_label = 128
-            else:
-                target_tumor_label = None
+
+            labels = [23, 24, 26, 27, 128]
+            target_tumor_label = None
+            for index, size in enumerate(anatomy_size[5:10]):
+                if size.item() != -1.0:
+                    target_tumor_label = labels[index]
 
             print("target_tumor_label for postprocess:", target_tumor_label)
             data = general_mask_generation_post_process(data, target_tumor_label=target_tumor_label, device=device)

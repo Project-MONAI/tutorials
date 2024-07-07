@@ -19,7 +19,7 @@
     "spacing": [
         1.5,
         1.5,
-        2.0
+        3.0
     ],
     "mask_generation_latent_shape": [
         4,

@@ -39,7 +39,9 @@ class ReconModel(torch.nn.Module):
         recon_pt_nda = self.autoencoder.decode_stage_2_outputs(z / self.scale_factor)
         return recon_pt_nda
 
-
+def initialize_noise_latents(latent_shape, device):
+    return torch.randn([1,]+ list(latent_shape)).half().to(device)
+    
 def ldm_conditional_sample_one_mask(
     autoencoder,
     diffusion_unet,
@@ -54,16 +56,7 @@ def ldm_conditional_sample_one_mask(
     with torch.no_grad(), torch.cuda.amp.autocast():
 
         # Generate random noise
-        latents = (
-            torch.randn(
-                [
-                    1,
-                ]
-                + list(latent_shape)
-            )
-            .half()
-            .to(device)
-        )
+        latents = initialize_noise_latents(latent_shape, device)
         anatomy_size = torch.FloatTensor(anatomy_size).unsqueeze(0).unsqueeze(0).half().to(device)
         # synthesize masks
         noise_scheduler.set_timesteps(num_inference_steps=num_inference_steps)
@@ -79,16 +72,15 @@ def ldm_conditional_sample_one_mask(
         synthetic_mask = torch.softmax(synthetic_mask, dim=1)
         synthetic_mask = torch.argmax(synthetic_mask, dim=1, keepdim=True)
         # mapping raw index to 132 labels
-        print(torch.unique(synthetic_mask))
         synthetic_mask = remap_labels(synthetic_mask, label_dict_remap_json)
-        print(torch.unique(synthetic_mask))
 
         ###### post process #####
         data = synthetic_mask.squeeze().cpu().detach().numpy()
 
         labels = [23, 24, 26, 27, 128]
         target_tumor_label = None
-        for index, size in enumerate(anatomy_size[5:10]):
+        for index, size in enumerate(anatomy_size[0,0,5:10]):
+            print(size.item())
             if size.item() != -1.0:
                 target_tumor_label = labels[index]
 
@@ -142,17 +134,7 @@ def ldm_conditional_sample_one_image(
         controlnet_cond_vis = binarize_labels(comebine_label.as_tensor().long()).half()
 
         # Generate random noise
-        latents = (
-            torch.randn(
-                [
-                    1,
-                ]
-                + list(latent_shape)
-            )
-            .half()
-            .to(device)
-            * noise_factor
-        )
+        latents = initialize_noise_latents(latent_shape, device) * noise_factor
 
         # synthesize latents
         noise_scheduler.set_timesteps(num_inference_steps=num_inference_steps)
@@ -649,7 +631,6 @@ class LDMSampler:
         return synthetic_mask
 
     def ensure_output_size_and_spacing(self, labels, check_contains_target_labels=True):
-        print(torch.unique(labels))
         current_spacing = [labels.affine[0, 0], labels.affine[1, 1], labels.affine[2, 2]]
         current_shape = list(labels.squeeze().shape)
 

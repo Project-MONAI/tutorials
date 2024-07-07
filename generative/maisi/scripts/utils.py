@@ -9,6 +9,7 @@
 # See the License for the specific language governing permissions and
 
 from typing import Sequence
+import json
 
 import torch
 import torch.nn.functional as F
@@ -45,7 +46,7 @@ def remap_labels(mask, label_dict_remap_json):
         target_labels=[pair[1] for pair in mapping_dict.values()],
         dtype=torch.uint8,
     )
-    return mapper(mask[0, ...])[None, ...].to(device)
+    return mapper(mask[0, ...])[None, ...].to(mask.device)
 
 
 def get_index_arr(img):

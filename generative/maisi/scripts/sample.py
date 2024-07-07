@@ -39,9 +39,20 @@ class ReconModel(torch.nn.Module):
         recon_pt_nda = self.autoencoder.decode_stage_2_outputs(z / self.scale_factor)
         return recon_pt_nda
 
+
 def initialize_noise_latents(latent_shape, device):
-    return torch.randn([1,]+ list(latent_shape)).half().to(device)
-    
+    return (
+        torch.randn(
+            [
+                1,
+            ]
+            + list(latent_shape)
+        )
+        .half()
+        .to(device)
+    )
+
+
 def ldm_conditional_sample_one_mask(
     autoencoder,
     diffusion_unet,
@@ -79,7 +90,7 @@ def ldm_conditional_sample_one_mask(
 
         labels = [23, 24, 26, 27, 128]
         target_tumor_label = None
-        for index, size in enumerate(anatomy_size[0,0,5:10]):
+        for index, size in enumerate(anatomy_size[0, 0, 5:10]):
             print(size.item())
             if size.item() != -1.0:
                 target_tumor_label = labels[index]

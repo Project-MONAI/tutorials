@@ -24,7 +24,7 @@ from monai.utils import set_determinism
 from tqdm import tqdm
 from generative.metrics import FIDMetric
 from generative.inferers import LatentDiffusionInferer
-from .utils import binarize_labels, MapLabelValue, general_mask_generation_post_process, get_body_region_index_from_mask
+from .utils import binarize_labels, general_mask_generation_post_process, get_body_region_index_from_mask, remap_labels
 from .find_masks import find_masks
 from .augmentation import augmentation
 
@@ -54,16 +54,7 @@ def ldm_conditional_sample_one_mask(
     with torch.no_grad(), torch.cuda.amp.autocast():
 
         # Generate random noise
-        latents = (
-            torch.randn(
-                [
-                    1,
-                ]
-                + list(latent_shape)
-            )
-            .half()
-            .to(device)
-        )
+        latents = torch.randn([1,]+ list(latent_shape)).half().to(device)
         anatomy_size = torch.FloatTensor(anatomy_size).unsqueeze(0).unsqueeze(0).half().to(device)
         # synthesize masks
         noise_scheduler.set_timesteps(num_inference_steps=num_inference_steps)
@@ -79,15 +70,7 @@ def ldm_conditional_sample_one_mask(
         synthetic_mask = torch.softmax(synthetic_mask, dim=1)
         synthetic_mask = torch.argmax(synthetic_mask, dim=1, keepdim=True)
         # mapping raw index to 132 labels
-        with open(label_dict_remap_json, "r") as f:
-            mapping_dict = json.load(f)
-        mapping = [v for _, v in mapping_dict.items()]
-        mapper = MapLabelValue(
-            orig_labels=[pair[0] for pair in mapping],
-            target_labels=[pair[1] for pair in mapping],
-            dtype=torch.uint8,
-        )
-        synthetic_mask = mapper(synthetic_mask[0, ...])[None, ...].to(device)
+        synthetic_mask = remap_labels(synthetic_mask, label_dict_json)
 
         ###### post process #####
         data = synthetic_mask.squeeze().cpu().detach().numpy()
@@ -655,6 +638,7 @@ class LDMSampler:
         return synthetic_mask
 
     def ensure_output_size_and_spacing(self, labels, check_contains_target_labels=True):
+        print(torch.unique(labels))
         current_spacing = [labels.affine[0, 0], labels.affine[1, 1], labels.affine[2, 2]]
         current_shape = list(labels.squeeze().shape)
 

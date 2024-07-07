@@ -36,6 +36,17 @@ def define_instance(args, instance_def_key):
     parser.parse(True)
     return parser.get_parsed_content(instance_def_key, instantiate=True)
 
+def remap_labels(mask, label_dict_json):
+    """Remap labels in the synthetic mask according to the provided label dictionary."""
+    with open(label_dict_json, "r") as f:
+        mapping_dict = json.load(f)
+    mapper = MapLabelValue(
+        orig_labels=[pair[0] for pair in mapping_dict.values()],
+        target_labels=[pair[1] for pair in mapping_dict.values()],
+        dtype=torch.uint8,
+    )
+    return mapper(mask[0, ...])[None, ...].to(device)
+
 
 def get_index_arr(img):
     return np.moveaxis(

@@ -672,7 +672,7 @@ class LDMSampler:
         if need_resample:
             print("Resampling mask to target shape and spacing")
             print(f"Resize Spacing: {current_spacing} -> {self.spacing}")
-            print(f"Output size: {current_shape} -> {self.output_size}")            
+            print(f"Output size: {current_shape} -> {self.output_size}")
             spacing = monai.transforms.Spacing(pixdim=tuple(self.spacing), mode="nearest")
             pad = monai.transforms.SpatialPad(spatial_size=tuple(self.output_size))
             crop = monai.transforms.CenterSpatialCrop(roi_size=tuple(self.output_size))

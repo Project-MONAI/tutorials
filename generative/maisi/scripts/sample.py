@@ -36,6 +36,7 @@ class ReconModel(torch.nn.Module):
         autoencoder: The autoencoder model used for decoding.
         scale_factor: Scaling factor applied to the input before decoding.
     """
+
     def __init__(self, autoencoder, scale_factor):
         super().__init__()
         self.autoencoder = autoencoder
@@ -427,6 +428,7 @@ class LDMSampler:
     Attributes:
         Various attributes related to model configuration, input parameters, and generation settings.
     """
+
     def __init__(
         self,
         body_region,

@@ -182,7 +182,7 @@ def dilate_one_img(mask_t: Tensor, filter_size: int | Sequence[int] = 3, pad_val
     )
 
 
-def organ_fill_by_closing(data, target_label, device, close_times = 2, filter_size=3, pad_value=0.0):
+def organ_fill_by_closing(data, target_label, device, close_times=2, filter_size=3, pad_value=0.0):
     """
     Fill holes in an organ mask using morphological closing operations.
 

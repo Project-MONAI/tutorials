@@ -333,7 +333,7 @@ def check_input(
                 raise ValueError(
                     f"The components in anatomy_list have to be chosen from {label_dict.keys()}, yet got {anatomy}."
                 )
-    print(f"The generate results will have voxel size to be {spacing}mm, and volume size to be {output_size}.")
+    print(f"The generate results will have voxel size to be {spacing}mm, volume size to be {output_size}.")
 
     return
 
@@ -674,16 +674,16 @@ class LDMSampler:
             print(f"Resize Spacing: {current_spacing} -> {self.spacing}")
             print(f"Output size: {current_shape} -> {self.output_size}")            
             spacing = monai.transforms.Spacing(pixdim=tuple(self.spacing), mode="nearest")
-            pad = monai.transforms.SpatialPad(spatial_size=tuple(self.output_size))
-            crop = monai.transforms.CenterSpatialCrop(roi_size=tuple(self.output_size))
-            labels = crop(pad(spacing(labels.squeeze(0)))).unsqueeze(0)
-            contained_labels = torch.unique(labels)
+            pad_crop = monai.transforms.ResizeWithPadOrCrop(spatial_size=tuple(self.output_size))
+            resampled_labels = pad_crop(spacing(labels.squeeze(0))).unsqueeze(0).to(labels.dtype)
+            
+            contained_labels = torch.unique(resampled_labels)
             if check_contains_target_labels:
                 # check if the resampled mask still contains those target labels
                 for anatomy_label in self.anatomy_list:
                     if anatomy_label not in contained_labels:
                         raise ValueError(
-                            "Resampled mask does not contain required class labels. Please tune spacing and output size"
+                            "Resampled mask does not contain required class labels. Please tune spacing and output size."
                         )
         return labels
 

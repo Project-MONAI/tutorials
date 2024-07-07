@@ -90,7 +90,7 @@ def ldm_conditional_sample_one_mask(
 
         labels = [23, 24, 26, 27, 128]
         target_tumor_label = None
-        for index, size in enumerate(anatomy_size[0,0,5:10]):
+        for index, size in enumerate(anatomy_size[0, 0, 5:10]):
             if size.item() != -1.0:
                 target_tumor_label = labels[index]
 

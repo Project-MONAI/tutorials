@@ -34,7 +34,7 @@ def main():
     parser.add_argument(
         "-e",
         "--environment-file",
-        default="./config/environment_maisi_controlnet_train.json",
+        default="./configs/environment_maisi_controlnet_train.json",
         help="environment json file that stores environment path",
     )
     parser.add_argument(

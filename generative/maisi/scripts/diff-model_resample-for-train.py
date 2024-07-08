@@ -18,9 +18,7 @@ def create_transforms(new_dim):
             monai.transforms.LoadImaged(keys=["image", "label"]),
             monai.transforms.EnsureChannelFirstd(keys=["image", "label"]),
             monai.transforms.Orientationd(keys=["image", "label"], axcodes="RAS"),
-            monai.transforms.EnsureTyped(
-                keys=["image", "label"], dtype=[torch.float32, torch.short]
-            ),
+            monai.transforms.EnsureTyped(keys=["image", "label"], dtype=[torch.float32, torch.short]),
             monai.transforms.Resized(
                 keys=["image", "label"],
                 spatial_size=new_dim,
@@ -57,12 +55,8 @@ def process_string(data):
 
     filepath, index = data
 
-    out_filepath_base = os.path.join(
-        output_dir, filepath.replace(".gz", "").replace(".nii", "")
-    )
-    if os.path.isfile(out_filepath_base + "_image.nii.gz") and os.path.isfile(
-        out_filepath_base + "_label.nii.gz"
-    ):
+    out_filepath_base = os.path.join(output_dir, filepath.replace(".gz", "").replace(".nii", ""))
+    if os.path.isfile(out_filepath_base + "_image.nii.gz") and os.path.isfile(out_filepath_base + "_label.nii.gz"):
         return
 
     test_data = {"image": os.path.join(dataroot, filepath)}

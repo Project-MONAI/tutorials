@@ -10,34 +10,28 @@
 # limitations under the License.
 
 import argparse
-from argparse import Namespace
+import copy
 import json
 import logging
-from pathlib import Path
-import time
-from datetime import timedelta
-from typing import Any
 import os
 import sys
-import copy
+import time
+from argparse import Namespace
+from datetime import timedelta
+from pathlib import Path
+from typing import Any
+
 import torch
 import torch.distributed as dist
 import torch.nn.functional as F
-import logging
-from monai.utils import RankFilter
-from monai.data import DataLoader, CacheDataset, partition_dataset
+from monai.bundle import ConfigParser
+from monai.data import CacheDataset, DataLoader, partition_dataset
 from monai.networks.utils import copy_model_state
+from monai.transforms import Compose, EnsureTyped, Lambdad, LoadImaged, Orientationd
+from monai.utils import RankFilter
 from torch.cuda.amp import GradScaler, autocast
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
-from monai.transforms import (
-    Compose,
-    EnsureTyped,
-    Lambdad,
-    LoadImaged,
-    Orientationd,
-)
-from monai.bundle import ConfigParser
 from utils import binarize_labels
 
 

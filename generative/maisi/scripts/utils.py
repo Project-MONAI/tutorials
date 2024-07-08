@@ -95,9 +95,7 @@ def binarize_labels(x: Tensor, bits: int = 8) -> Tensor:
         Tensor: encoded mask
     """
     mask = 2 ** torch.arange(bits).to(x.device, x.dtype)
-    return (
-        x.unsqueeze(-1).bitwise_and(mask).ne(0).byte().squeeze(1).permute(0, 4, 1, 2, 3)
-    )
+    return x.unsqueeze(-1).bitwise_and(mask).ne(0).byte().squeeze(1).permute(0, 4, 1, 2, 3)
 
 
 def setup_ddp(rank: int, world_size: int) -> torch.device:

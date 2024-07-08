@@ -387,7 +387,7 @@ def check_input(
 
     if len(controllable_anatomy_size) > 0:
         print(
-            f"controllable_anatomy_size is not empty. We will ignore body_region and anatomy_list and synthesize based on controllable_anatomy_size ({controllable_anatomy_size})."
+            f"`controllable_anatomy_size` is not empty.\nWe will ignore `body_region` and `anatomy_list` and synthesize based on `controllable_anatomy_size`: ({controllable_anatomy_size})."
         )
     else:
         print(

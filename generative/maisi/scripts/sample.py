@@ -391,7 +391,7 @@ def check_input(
         )
     else:
         print(
-            f"controllable_anatomy_size is empty. We will synthesize based on body_region ({body_region}) and anatomy_list ({anatomy_list})."
+            f"`controllable_anatomy_size` is empty.\nWe will synthesize based on `body_region`: ({body_region}) and `anatomy_list`: ({anatomy_list})."
         )
         # check body_region format
         available_body_region = [

@@ -160,8 +160,8 @@ def ldm_conditional_sample_one_image(
     output_size,
     noise_factor,
     num_inference_steps=1000,
-    autoencoder_sliding_window_infer_size = [96,96,96],
-    autoencoder_sliding_window_infer_overlap = 0.6667,
+    autoencoder_sliding_window_infer_size=[96, 96, 96],
+    autoencoder_sliding_window_infer_overlap=0.6667,
 ):
     """
     Generate a single synthetic image using a latent diffusion model with controlnet.
@@ -258,7 +258,7 @@ def ldm_conditional_sample_one_image(
                 overlap=autoencoder_sliding_window_infer_overlap,
                 sw_device=device,
                 device=torch.device("cpu"),
-                progress=True
+                progress=True,
             )
         synthetic_images = torch.clip(synthetic_images, b_min, b_max).cpu()
         end_time = time.time()
@@ -471,8 +471,8 @@ class LDMSampler:
         num_inference_steps=None,
         mask_generation_num_inference_steps=None,
         random_seed=None,
-        autoencoder_sliding_window_infer_size=[96,96,96],
-        autoencoder_sliding_window_infer_overlap=0.6667
+        autoencoder_sliding_window_infer_size=[96, 96, 96],
+        autoencoder_sliding_window_infer_overlap=0.6667,
     ) -> None:
         """
         Initialize the LDMSampler with various parameters and models.
@@ -520,11 +520,15 @@ class LDMSampler:
         self.mask_generation_num_inference_steps = (
             mask_generation_num_inference_steps if mask_generation_num_inference_steps is not None else 1000
         )
-        
+
         if any(size % 16 != 0 for size in autoencoder_sliding_window_infer_size):
-            raise ValueError(f"autoencoder_sliding_window_infer_size must be divisible by 16.\n Got {autoencoder_sliding_window_infer_size}")
+            raise ValueError(
+                f"autoencoder_sliding_window_infer_size must be divisible by 16.\n Got {autoencoder_sliding_window_infer_size}"
+            )
         if not (0 <= autoencoder_sliding_window_infer_overlap <= 1):
-            raise ValueError(f"Value of autoencoder_sliding_window_infer_overlap must be between 0 and 1.\n Got {autoencoder_sliding_window_infer_overlap}")
+            raise ValueError(
+                f"Value of autoencoder_sliding_window_infer_overlap must be between 0 and 1.\n Got {autoencoder_sliding_window_infer_overlap}"
+            )
         self.autoencoder_sliding_window_infer_size = autoencoder_sliding_window_infer_size
         self.autoencoder_sliding_window_infer_overlap = autoencoder_sliding_window_infer_overlap
 
@@ -716,8 +720,7 @@ class LDMSampler:
             noise_factor=self.noise_factor,
             num_inference_steps=self.num_inference_steps,
             autoencoder_sliding_window_infer_size=self.autoencoder_sliding_window_infer_size,
-            autoencoder_sliding_window_infer_overlap=self.autoencoder_sliding_window_infer_overlap
-            
+            autoencoder_sliding_window_infer_overlap=self.autoencoder_sliding_window_infer_overlap,
         )
         return synthetic_images, synthetic_labels
 

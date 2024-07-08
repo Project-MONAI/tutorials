@@ -28,6 +28,7 @@ torch.manual_seed(0)
 np.random.seed(0)
 set_determinism(seed=0)
 
+
 def load_autoencoder(autoencoder_root, device):
     """
     Load the autoencoder model and its checkpoints.
@@ -228,7 +229,16 @@ def process_file(filepath, dataroot, output_dir, pl_root, transforms):
     return f"Finished {filepath}"
 
 
-def create_training_data(save_embedding, dataroot, filenames_filepath, output_root_embedding, autoencoder_root, list_filepath, output_dir, pl_root):
+def create_training_data(
+    save_embedding,
+    dataroot,
+    filenames_filepath,
+    output_root_embedding,
+    autoencoder_root,
+    list_filepath,
+    output_dir,
+    pl_root,
+):
     # Load autoencoder if saving embeddings
     autoencoder = None
     if save_embedding:
@@ -308,4 +318,13 @@ if __name__ == "__main__":
     output_dir = "/mnt/drive2/data_128"
     pl_root = "/mnt/drive2/V2_pseudo_12Feb2024"
 
-    create_training_data(save_embedding, dataroot, filenames_filepath, output_root_embedding, autoencoder_root, list_filepath, output_dir, pl_root)
+    create_training_data(
+        save_embedding,
+        dataroot,
+        filenames_filepath,
+        output_root_embedding,
+        autoencoder_root,
+        list_filepath,
+        output_dir,
+        pl_root,
+    )

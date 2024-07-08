@@ -356,9 +356,9 @@ def general_mask_generation_post_process(volume_t, target_tumor_label=None, devi
                 .numpy()
             )
             lung_remove_mask = dia_lung_tumor_mask.astype(np.uint8) - (data == 23).astype(np.uint8).astype(np.uint8)
-            data[organ_fill_by_removed_mask(data, target_label=mode, remove_mask=lung_remove_mask, device=device)] = (
-                mode
-            )
+            data[
+                organ_fill_by_removed_mask(data, target_label=mode, remove_mask=lung_remove_mask, device=device)
+            ] = mode
         dia_lung_tumor_mask = (
             dilate_one_img(torch.from_numpy(dia_lung_tumor_mask).to(device), filter_size=3, pad_value=0.0).cpu().numpy()
         )

@@ -9,6 +9,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import json
 import random
 import time
@@ -566,6 +567,7 @@ class LDMSampler:
         Args:
             num_img (int): Number of images to generate.
         """
+        output_filenames = []
         if len(self.controllable_anatomy_size) > 0:
             # we will use mask generation instead of finding candidate masks
             # create a dummy selected_mask_files for placeholder
@@ -650,6 +652,7 @@ class LDMSampler:
                         separate_folder=False,
                     )
                     img_saver(synthetic_images[0])
+                    synthetic_images_filename = os.path.join(self.output_dir,"sample_"+output_postfix + "_image"+self.image_output_ext)
                     # filter out the organs that are not in anatomy_list
                     synthetic_labels = filter_mask_with_organs(synthetic_labels, self.anatomy_list)
                     label_saver = SaveImage(
@@ -659,13 +662,15 @@ class LDMSampler:
                         separate_folder=False,
                     )
                     label_saver(synthetic_labels[0])
+                    synthetic_labels_filename = os.path.join(self.output_dir,"sample_"+output_postfix + "_label"+self.label_output_ext)
+                    output_filenames.append([synthetic_images_filename, synthetic_labels_filename])
                     to_generate = False
                 else:
                     logging.info(
                         "Generated image/label pair did not pass quality check, will re-generate another pair."
                     )
                     try_time += 1
-        return
+        return output_filenames
 
     def select_mask(self, candidate_mask_files, num_img):
         """

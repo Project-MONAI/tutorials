@@ -269,9 +269,7 @@ def create_training_data(save_embedding, dataroot, filenames_filepath, output_ro
         for _s in range(3):
             affine[_s, _s] = spacing[_s]
 
-        if
-
- save_embedding:
+        if save_embedding:
             try:
                 out_path = Path(out_filename)
                 out_path.parent.mkdir(parents=True, exist_ok=True)

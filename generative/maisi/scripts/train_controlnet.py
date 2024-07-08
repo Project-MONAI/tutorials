@@ -40,7 +40,7 @@ def main():
     parser.add_argument(
         "-c",
         "--config-file",
-        default="./config/config_maisi_controlnet_train.json",
+        default="./configs/config_maisi_controlnet_train.json",
         help="config json file that stores hyper-parameters",
     )
     parser.add_argument("-g", "--gpus", default=1, type=int, help="number of gpus per node")

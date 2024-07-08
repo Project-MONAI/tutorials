@@ -10,11 +10,8 @@
 # limitations under the License.
 
 import fire
-import glob
 import json
-import math
 import os
-import random
 import yaml
 
 from datetime import datetime, timedelta
@@ -22,29 +19,18 @@ from pathlib import Path
 
 import monai
 from monai.data import (
-    DataLoader,
-    Dataset,
-    DistributedSampler,
     ThreadDataLoader,
-    create_test_image_3d,
-    decollate_batch,
-    list_data_collate,
     partition_dataset,
 )
 from monai.transforms import Compose
-from monai.utils import first, set_determinism
+from monai.utils import first
 
 import torch
-import torch.nn as nn
-import torch.optim as optim
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel
-from torch.utils.data import DataLoader, TensorDataset, random_split
 from torch.cuda.amp import GradScaler, autocast
-import torch.nn.functional as F
 
 from inferer import DiffusionInferer, LatentDiffusionInferer
-from generative.losses import PatchAdversarialLoss, PerceptualLoss
 from custom_network_diffusion import CustomDiffusionModelUNet
 from generative.networks.schedulers import DDPMScheduler, DDIMScheduler
 

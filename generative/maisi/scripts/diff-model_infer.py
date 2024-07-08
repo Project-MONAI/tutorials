@@ -19,10 +19,9 @@ import fire
 
 from monai.utils import set_determinism
 from inferer import DiffusionInferer, LatentDiffusionInferer
-from custom_network import AutoencoderKLCKModified
 from custom_network_tp import AutoencoderKLCKModified_TP
 from custom_network_diffusion import CustomDiffusionModelUNet
-from generative.networks.schedulers import DDPMScheduler, DDIMScheduler
+from generative.networks.schedulers import DDPMScheduler
 
 
 def main(

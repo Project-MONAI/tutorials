@@ -18,6 +18,8 @@ import numpy as np
 import torch
 import torch.distributed as dist
 import torch.nn.functional as F
+
+import monai
 from monai.transforms import Compose
 from monai.utils import set_determinism
 
@@ -228,23 +230,17 @@ def process_file(filepath, dataroot, output_dir, pl_root, transforms):
     return f"Finished {filepath}"
 
 
-def create_training_data(save_embedding, dataroot, filenames_filepath, output_root_embedding, autoencoder_root, list_filepath, output_dir, pl_root):
+def create_training_data(dataroot, filenames_filepath, output_root_embedding, autoencoder_root, list_filepath, output_dir, pl_root):
     # Load autoencoder if saving embeddings
-    autoencoder = None
-    if save_embedding:
-        autoencoder = load_autoencoder(autoencoder_root, device)
+    autoencoder = load_autoencoder(autoencoder_root, device)
 
-    if local_rank == 0:
-        if not os.path.exists(output_root_embedding):
-            os.makedirs(output_root_embedding)
+    if not os.path.exists(output_root_embedding):
+        os.makedirs(output_root_embedding)
 
     filenames_raw = get_filenames(filenames_filepath)
     transforms = create_transforms()
 
     for _iter in range(len(filenames_raw)):
-        if _iter % world_size != local_rank:
-            continue
-
         filepath = filenames_raw[_iter]
         out_filename_base = filepath.replace("_image.nii.gz", "")
         out_filename_base = os.path.join(output_root_embedding, out_filename_base)
@@ -269,26 +265,25 @@ def create_training_data(save_embedding, dataroot, filenames_filepath, output_ro
         for _s in range(3):
             affine[_s, _s] = spacing[_s]
 
-        if save_embedding:
-            try:
-                out_path = Path(out_filename)
-                out_path.parent.mkdir(parents=True, exist_ok=True)
-                print(f"out_filename: {out_filename}")
+        try:
+            out_path = Path(out_filename)
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            print(f"out_filename: {out_filename}")
 
-                with torch.cuda.amp.autocast():
-                    with torch.no_grad():
-                        pt_nda = torch.from_numpy(nda).float().to(device)
-                        pt_nda.unsqueeze_(0).unsqueeze_(0)
+            with torch.cuda.amp.autocast():
+                with torch.no_grad():
+                    pt_nda = torch.from_numpy(nda).float().to(device)
+                    pt_nda.unsqueeze_(0).unsqueeze_(0)
 
-                        z = autoencoder.encode_stage_2_inputs(pt_nda)
-                        print(f"z: {z.size()}, {z.dtype}, {z.is_cuda} {1 / torch.std(z)} {torch.mean(z)}")
+                    z = autoencoder.encode_stage_2_inputs(pt_nda)
+                    print(f"z: {z.size()}, {z.dtype}, {z.is_cuda} {1 / torch.std(z)} {torch.mean(z)}")
 
-                        out_nda = z.squeeze().cpu().detach().numpy()
-                        out_nda = out_nda.transpose(1, 2, 3, 0)
-                        out_img = nib.Nifti1Image(np.float32(out_nda), affine=affine)
-                        nib.save(out_img, out_filename)
-            except Exception as e:
-                print(f"Error processing {filepath}: {e}")
+                    out_nda = z.squeeze().cpu().detach().numpy()
+                    out_nda = out_nda.transpose(1, 2, 3, 0)
+                    out_img = nib.Nifti1Image(np.float32(out_nda), affine=affine)
+                    nib.save(out_img, out_filename)
+        except Exception as e:
+            print(f"Error processing {filepath}: {e}")
 
     with open(list_filepath, "r") as file:
         filepaths = file.readlines()
@@ -299,13 +294,12 @@ def create_training_data(save_embedding, dataroot, filenames_filepath, output_ro
 
 
 if __name__ == "__main__":
-    save_embedding = True
-    dataroot = "/mnt/drive2/data_128"
-    filenames_filepath = "/mnt/drive2/data_128/filenames_image_nii_autopet.txt"
-    output_root_embedding = "/mnt/drive2/encoding_128"
+    dataroot = "/dataroot"
+    filenames_filepath = "/filenames_image_nii.txt"
+    output_root_embedding = "/dataroot/encoding_128"
     autoencoder_root = "/workspace/monai/generative/from_canz"
-    list_filepath = "/localhome/local-dongy/projects/monai/generative/utils/lists/filenames_nii_common.txt"
+    list_filepath = "/dataroot/filenames_nii_common.txt"
     output_dir = "/mnt/drive2/data_128"
     pl_root = "/mnt/drive2/V2_pseudo_12Feb2024"
 
-    create_training_data(save_embedding, dataroot, filenames_filepath, output_root_embedding, autoencoder_root, list_filepath, output_dir, pl_root)
+    create_training_data(dataroot, filenames_filepath, output_root_embedding, autoencoder_root, list_filepath, output_dir, pl_root)

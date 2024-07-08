@@ -14,6 +14,7 @@ import random
 import time
 from datetime import datetime
 import math
+import logging
 
 import monai
 import torch
@@ -137,7 +138,7 @@ def ldm_conditional_sample_one_mask(
             if size.item() != -1.0:
                 target_tumor_label = labels[index]
 
-        print("target_tumor_label for postprocess:", target_tumor_label)
+        logging.info("target_tumor_label for postprocess:", target_tumor_label)
         data = general_mask_generation_post_process(data, target_tumor_label=target_tumor_label, device=device)
         synthetic_mask = torch.from_numpy(data).unsqueeze(0).unsqueeze(0).to(device)
 
@@ -194,7 +195,7 @@ def ldm_conditional_sample_one_image(
     recon_model = ReconModel(autoencoder=autoencoder, scale_factor=scale_factor).to(device)
 
     with torch.no_grad(), torch.cuda.amp.autocast():
-        print("---- Start generating latent features... ----")
+        logging.info("---- Start generating latent features... ----")
         start_time = time.time()
         # generate segmentation mask
         comebine_label = comebine_label_or.to(device)
@@ -203,7 +204,7 @@ def ldm_conditional_sample_one_image(
             or output_size[1] != comebine_label.shape[3]
             or output_size[2] != comebine_label.shape[4]
         ):
-            print(
+            logging.info(
                 "output_size is not a desired value. Need to interpolate the mask to match with output_size. The result image will be very low quality."
             )
             comebine_label = torch.nn.functional.interpolate(comebine_label, size=output_size, mode="nearest")
@@ -234,12 +235,12 @@ def ldm_conditional_sample_one_image(
             )
             latents, _ = noise_scheduler.step(noise_pred, t, latents)
         end_time = time.time()
-        print(f"---- Latent features generation time: {end_time - start_time} seconds ----")
+        logging.info(f"---- Latent features generation time: {end_time - start_time} seconds ----")
         del noise_pred
         torch.cuda.empty_cache()
 
         # decode latents to synthesized images
-        print("---- Start decoding latent features into images... ----")
+        logging.info("---- Start decoding latent features into images... ----")
         start_time = time.time()
         if math.prod(latent_shape[1:]) < math.prod(autoencoder_sliding_window_infer_size):
             synthetic_images = recon_model(latents)
@@ -261,7 +262,7 @@ def ldm_conditional_sample_one_image(
             )
         synthetic_images = torch.clip(synthetic_images, b_min, b_max).cpu()
         end_time = time.time()
-        print(f"---- Image decoding time: {end_time - start_time} seconds ----")
+        logging.info(f"---- Image decoding time: {end_time - start_time} seconds ----")
 
         ## post processing:
         # project output to [0, 1]
@@ -396,11 +397,11 @@ def check_input(
         raise ValueError(f"Only one controllable tumor is supported. Yet got {controllable_tumor}.")
 
     if len(controllable_anatomy_size) > 0:
-        print(
+        logging.info(
             f"`controllable_anatomy_size` is not empty.\nWe will ignore `body_region` and `anatomy_list` and synthesize based on `controllable_anatomy_size`: ({controllable_anatomy_size})."
         )
     else:
-        print(
+        logging.info(
             f"`controllable_anatomy_size` is empty.\nWe will synthesize based on `body_region`: ({body_region}) and `anatomy_list`: ({anatomy_list})."
         )
         # check body_region format
@@ -426,7 +427,7 @@ def check_input(
                 raise ValueError(
                     f"The components in anatomy_list have to be chosen from {label_dict.keys()}, yet got {anatomy}."
                 )
-    print(f"The generate results will have voxel size to be {spacing}mm, volume size to be {output_size}.")
+    logging.info(f"The generate results will have voxel size to be {spacing}mm, volume size to be {output_size}.")
 
     return
 
@@ -509,7 +510,7 @@ class LDMSampler:
         self.noise_factor = 1.0
         self.controllable_anatomy_size = controllable_anatomy_size
         if len(self.controllable_anatomy_size):
-            print("controllable_anatomy_size is given, mask generation is triggered!")
+            logging.info("controllable_anatomy_size is given, mask generation is triggered!")
             # overwrite the anatomy_list by given organs in self.controllable_anatomy_size
             self.anatomy_list = [label_dict[organ_and_size[0]] for organ_and_size in self.controllable_anatomy_size]
         self.image_output_ext = image_output_ext
@@ -552,7 +553,7 @@ class LDMSampler:
                 monai.transforms.Lambdad(keys="spacing", func=lambda x: x * 1e2),
             ]
         )
-        print("LDM sampler initialized.")
+        logging.info("LDM sampler initialized.")
 
     def sample_multiple_images(self, num_img):
         """
@@ -582,18 +583,18 @@ class LDMSampler:
             if len(candidate_mask_files) < num_img:
                 # if we cannot find enough masks based on the exact match of anatomy list, spacing, and output size,
                 # then we will try to find the closest mask in terms of  spacing, and output size.
-                print("Resample mask file to get desired output size and spacing")
+                logging.info("Resample mask file to get desired output size and spacing")
                 candidate_mask_files = self.find_closest_masks(num_img)
                 need_resample = True
 
             selected_mask_files = self.select_mask(candidate_mask_files, num_img)
-            print(f"Images will be generated based on {selected_mask_files}.")
+            logging.info(f"Images will be generated based on {selected_mask_files}.")
             if len(selected_mask_files) != num_img:
                 raise ValueError(
                     f"len(selected_mask_files) ({len(selected_mask_files)}) != num_img ({num_img}). This should not happen. Please revisit function select_mask(self, candidate_mask_files, num_img)."
                 )
         for item in selected_mask_files:
-            print("---- Start preparing masks... ----")
+            logging.info("---- Start preparing masks... ----")
             start_time = time.time()
             if len(self.controllable_anatomy_size) > 0:
                 # generate a synthetic mask
@@ -619,7 +620,7 @@ class LDMSampler:
                 if if_aug:
                     comebine_label_or = augmentation(comebine_label_or, self.output_size)
             end_time = time.time()
-            print(f"---- Mask preparation time: {end_time - start_time} seconds ----")
+            logging.info(f"---- Mask preparation time: {end_time - start_time} seconds ----")
             torch.cuda.empty_cache()
             # generate image/label pairs
             to_generate = True
@@ -656,7 +657,7 @@ class LDMSampler:
                     label_saver(synthetic_labels[0])
                     to_generate = False
                 else:
-                    print("Generated image/label pair did not pass quality check, will re-generate another pair.")
+                    logging.info("Generated image/label pair did not pass quality check, will re-generate another pair.")
                     try_time += 1
         return
 
@@ -746,7 +747,7 @@ class LDMSampler:
             "bone lesion": 9,
         }
         provide_anatomy_size = [None for _ in range(10)]
-        print("controllable_anatomy_size:", controllable_anatomy_size)
+        logging.info("controllable_anatomy_size:", controllable_anatomy_size)
         for element in controllable_anatomy_size:
             anatomy_name, anatomy_size = element
             provide_anatomy_size[anatomy_size_idx[anatomy_name]] = anatomy_size
@@ -765,14 +766,14 @@ class LDMSampler:
                 diff += abs(provide_size - db_size)
             candidate_list.append((size, diff))
         candidate_condition = sorted(candidate_list, key=lambda x: x[1])[0][0]
-        # print("provide_anatomy_size:", provide_anatomy_size)
-        # print("candidate_condition:", candidate_condition)
+        # logging.info("provide_anatomy_size:", provide_anatomy_size)
+        # logging.info("candidate_condition:", candidate_condition)
 
         # overwrite the anatomy size provided by users
         for element in controllable_anatomy_size:
             anatomy_name, anatomy_size = element
             candidate_condition[anatomy_size_idx[anatomy_name]] = anatomy_size
-        # print("final candidate_condition:", candidate_condition)
+        # logging.info("final candidate_condition:", candidate_condition)
         return candidate_condition
 
     def prepare_one_mask_and_meta_info(self, anatomy_size_condtion):
@@ -855,9 +856,9 @@ class LDMSampler:
                 need_resample = True
         # resample to target size and spacing
         if need_resample:
-            print("Resampling mask to target shape and spacing")
-            print(f"Resize Spacing: {current_spacing} -> {self.spacing}")
-            print(f"Output size: {current_shape} -> {self.output_size}")
+            logging.info("Resampling mask to target shape and spacing")
+            logging.info(f"Resize Spacing: {current_spacing} -> {self.spacing}")
+            logging.info(f"Output size: {current_shape} -> {self.output_size}")
             spacing = monai.transforms.Spacing(pixdim=tuple(self.spacing), mode="nearest")
             pad_crop = monai.transforms.ResizeWithPadOrCrop(spatial_size=tuple(self.output_size))
             labels = pad_crop(spacing(labels.squeeze(0))).unsqueeze(0).to(labels.dtype)

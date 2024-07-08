@@ -231,7 +231,9 @@ def process_file(filepath, dataroot, output_dir, pl_root, transforms):
     return f"Finished {filepath}"
 
 
-def create_training_data(dataroot, filenames_filepath, output_root_embedding, autoencoder_root, list_filepath, output_dir, pl_root):
+def create_training_data(
+    dataroot, filenames_filepath, output_root_embedding, autoencoder_root, list_filepath, output_dir, pl_root
+):
     # Load autoencoder if saving embeddings
     autoencoder = load_autoencoder(autoencoder_root, device)
 
@@ -303,4 +305,6 @@ if __name__ == "__main__":
     output_dir = "/mnt/drive2/data_128"
     pl_root = "/mnt/drive2/V2_pseudo_12Feb2024"
 
-    create_training_data(dataroot, filenames_filepath, output_root_embedding, autoencoder_root, list_filepath, output_dir, pl_root)
+    create_training_data(
+        dataroot, filenames_filepath, output_root_embedding, autoencoder_root, list_filepath, output_dir, pl_root
+    )

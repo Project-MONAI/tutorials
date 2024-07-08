@@ -652,7 +652,9 @@ class LDMSampler:
                         separate_folder=False,
                     )
                     img_saver(synthetic_images[0])
-                    synthetic_images_filename = os.path.join(self.output_dir,"sample_"+output_postfix + "_image"+self.image_output_ext)
+                    synthetic_images_filename = os.path.join(
+                        self.output_dir, "sample_" + output_postfix + "_image" + self.image_output_ext
+                    )
                     # filter out the organs that are not in anatomy_list
                     synthetic_labels = filter_mask_with_organs(synthetic_labels, self.anatomy_list)
                     label_saver = SaveImage(
@@ -662,7 +664,9 @@ class LDMSampler:
                         separate_folder=False,
                     )
                     label_saver(synthetic_labels[0])
-                    synthetic_labels_filename = os.path.join(self.output_dir,"sample_"+output_postfix + "_label"+self.label_output_ext)
+                    synthetic_labels_filename = os.path.join(
+                        self.output_dir, "sample_" + output_postfix + "_label" + self.label_output_ext
+                    )
                     output_filenames.append([synthetic_images_filename, synthetic_labels_filename])
                     to_generate = False
                 else:

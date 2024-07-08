@@ -25,6 +25,7 @@ from scipy import stats
 from torch import Tensor
 from monai.transforms import AsDiscrete
 
+
 def find_label_center_loc(x):
     """
     Find the center location of non-zero elements in a binary mask.
@@ -69,8 +70,9 @@ def normalize_label_to_uint8(colorize, label, n_label):
     draw_img = (label * 255).astype(np.uint8)
 
     return draw_img
-    
-def visualize_one_slice_in_3d(image, axis: int = 2, center=None, mask_bool = True, n_label=105, colorize=None):
+
+
+def visualize_one_slice_in_3d(image, axis: int = 2, center=None, mask_bool=True, n_label=105, colorize=None):
     """
     Extract and visualize a 2D slice from a 3D image or label tensor.
 
@@ -80,7 +82,7 @@ def visualize_one_slice_in_3d(image, axis: int = 2, center=None, mask_bool = Tru
         center (int, optional): Index of the slice to extract. If None, the middle slice is used.
         mask_bool (bool, optional): If True, treat the input as a label mask and normalize it. Defaults to True.
         n_label (int, optional): Number of labels in the mask. Used only if mask_bool is True. Defaults to 105.
-        colorize (torch.Tensor, optional): Colorization weights for label normalization. 
+        colorize (torch.Tensor, optional): Colorization weights for label normalization.
                                            Expected shape: [3, n_label, 1, 1] if provided.
 
     Returns:
@@ -105,7 +107,7 @@ def visualize_one_slice_in_3d(image, axis: int = 2, center=None, mask_bool = Tru
         draw_img = normalize_label_to_uint8(colorize, draw_img, n_label)
     else:
         draw_img = draw_img.squeeze().cpu().numpy().astype(np.float32)
-        draw_img = np.stack((draw_img,)*3, axis=-1)
+        draw_img = np.stack((draw_img,) * 3, axis=-1)
     return draw_img
 
 
@@ -122,7 +124,8 @@ def show_image(image, title="mask"):
     plt.title(title)
     plt.imshow(image)
     plt.show()
-    
+
+
 def to_shape(a, shape):
     """
     Pad an image to a desired shape.
@@ -158,8 +161,8 @@ def to_shape(a, shape):
         mode="constant",
     )
 
-def get_xyz_plot(image, center_loc_axis, mask_bool = True, n_label=105, colorize=None, target_class_index=0
-        ):
+
+def get_xyz_plot(image, center_loc_axis, mask_bool=True, n_label=105, colorize=None, target_class_index=0):
     """
     Generate a concatenated XYZ plot of 2D slices from a 3D image.
 
@@ -180,17 +183,22 @@ def get_xyz_plot(image, center_loc_axis, mask_bool = True, n_label=105, colorize
     Note:
         The output image is padded to ensure all slices have the same dimensions.
     """
-    target_shape = list(image.shape[1:]) # [1,H,W,D]
+    target_shape = list(image.shape[1:])  # [1,H,W,D]
     img_list = []
 
     for axis in range(3):
         center = center_loc_axis[axis]
 
         img = visualize_one_slice_in_3d(
-            torch.flip(image.unsqueeze(0), [-3, -2, -1]), axis, center=center, mask_bool = mask_bool, n_label=n_label, colorize=colorize
+            torch.flip(image.unsqueeze(0), [-3, -2, -1]),
+            axis,
+            center=center,
+            mask_bool=mask_bool,
+            n_label=n_label,
+            colorize=colorize,
         )
         img = img.transpose([2, 1, 0])
-        
+
         img = to_shape(img, (3, max(target_shape), max(target_shape)))
         img_list.append(img)
         img = np.concatenate(img_list, axis=2).transpose([1, 2, 0])

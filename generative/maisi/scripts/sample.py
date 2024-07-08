@@ -661,7 +661,9 @@ class LDMSampler:
                     label_saver(synthetic_labels[0])
                     to_generate = False
                 else:
-                    logging.info("Generated image/label pair did not pass quality check, will re-generate another pair.")
+                    logging.info(
+                        "Generated image/label pair did not pass quality check, will re-generate another pair."
+                    )
                     try_time += 1
         return
 

@@ -35,7 +35,7 @@ from custom_network_diffusion import CustomDiffusionModelUNet
 from generative.networks.schedulers import DDPMScheduler, DDIMScheduler
 
 
-def main(
+def diff_model_train(
     ckpt_folder="./models",
     ckpt_prefix="unet3d",
     data_root="./data",
@@ -383,4 +383,4 @@ def main(
 
 
 if __name__ == "__main__":
-    fire.Fire(main)
+    diff_model_train()

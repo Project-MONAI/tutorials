@@ -24,7 +24,7 @@ from custom_network_diffusion import CustomDiffusionModelUNet
 from generative.networks.schedulers import DDPMScheduler
 
 
-def main(
+def diff_model_infer(
     ckpt_filepath="",
     random_seed=random.randint(0, 99999),
     output_prefix="unet_3d",
@@ -486,4 +486,4 @@ def main(
 
 
 if __name__ == "__main__":
-    fire.Fire(main)
+    diff_model_infer()

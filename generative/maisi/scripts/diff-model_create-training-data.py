@@ -9,7 +9,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import copy
 import json
 import os
 from pathlib import Path
@@ -28,24 +27,6 @@ from custom_network_tp import AutoencoderKLCKModified_TP
 torch.manual_seed(0)
 np.random.seed(0)
 set_determinism(seed=0)
-
-# Configuration parameters
-save_embedding = True
-dataroot = "/mnt/drive2/data_128"
-filenames_filepath = "/mnt/drive2/data_128/filenames_image_nii_autopet.txt"
-output_root_embedding = "/mnt/drive2/encoding_128"
-autoencoder_root = "/workspace/monai/generative/from_canz"
-
-# Initialize distributed processing
-dist.init_process_group(backend="nccl", init_method="env://")
-local_rank = dist.get_rank()
-world_size = dist.get_world_size()
-device = torch.device("cuda", local_rank)
-torch.cuda.set_device(device)
-
-print(f"Using {device}.")
-print(f"world_size -> {world_size}.")
-
 
 def load_autoencoder(autoencoder_root, device):
     """
@@ -121,32 +102,133 @@ def get_filenames(filenames_filepath):
     return filenames_raw
 
 
-def create_transforms():
+def create_transforms(dim=None):
     """
     Create a set of MONAI transforms for preprocessing.
+
+    Args:
+        dim (tuple, optional): New dimensions for resizing. Defaults to None.
 
     Returns:
         Compose: Composed MONAI transforms.
     """
-    return Compose(
-        [
-            monai.transforms.LoadImaged(keys="image"),
-            monai.transforms.EnsureChannelFirstd(keys="image"),
-            monai.transforms.Orientationd(keys="image", axcodes="RAS"),
-            monai.transforms.ScaleIntensityRanged(
-                keys="image",
-                a_min=-1000,
-                a_max=1000,
-                b_min=0,
-                b_max=1,
-                clip=True,
-            ),
-            monai.transforms.EnsureTyped(keys="image", dtype=torch.float32),
-        ]
-    )
+    if dim:
+        return Compose(
+            [
+                monai.transforms.LoadImaged(keys=["image", "label"]),
+                monai.transforms.EnsureChannelFirstd(keys=["image", "label"]),
+                monai.transforms.Orientationd(keys=["image", "label"], axcodes="RAS"),
+                monai.transforms.EnsureTyped(keys=["image", "label"], dtype=[torch.float32, torch.short]),
+                monai.transforms.Resized(
+                    keys=["image", "label"],
+                    spatial_size=dim,
+                    mode=["trilinear", "nearest"],
+                ),
+            ]
+        )
+    else:
+        return Compose(
+            [
+                monai.transforms.LoadImaged(keys="image"),
+                monai.transforms.EnsureChannelFirstd(keys="image"),
+                monai.transforms.Orientationd(keys="image", axcodes="RAS"),
+                monai.transforms.ScaleIntensityRanged(
+                    keys="image",
+                    a_min=-1000,
+                    a_max=1000,
+                    b_min=0,
+                    b_max=1,
+                    clip=True,
+                ),
+                monai.transforms.EnsureTyped(keys="image", dtype=torch.float32),
+            ]
+        )
 
 
-def main():
+def round_number(number):
+    """
+    Round the number to the nearest multiple of 128, with a minimum value of 128.
+
+    Args:
+        number (float): Number to be rounded.
+
+    Returns:
+        int: Rounded number.
+    """
+    new_number = max(round(float(number) / 128.0), 1.0) * 128.0
+    return int(new_number)
+
+
+def process_file(filepath, dataroot, output_dir, pl_root, transforms):
+    """
+    Process a single file for data transformation and saving.
+
+    Args:
+        filepath (str): Filepath to process.
+        dataroot (str): Root directory for the data.
+        output_dir (str): Output directory for the transformed data.
+        pl_root (str): Root directory for the pseudo labels.
+        transforms (Compose): MONAI transforms to apply.
+    """
+    print(f"Processing: {filepath}")
+
+    out_filepath_base = os.path.join(output_dir, filepath.replace(".gz", "").replace(".nii", ""))
+    if os.path.isfile(out_filepath_base + "_image.nii.gz") and os.path.isfile(out_filepath_base + "_label.nii.gz"):
+        return
+
+    test_data = {"image": os.path.join(dataroot, filepath)}
+
+    data = transforms(test_data)
+    nda = data["image"]
+
+    dim = nda.meta["dim"]
+    dim = dim[1:4]
+    dim = [int(dim[_i]) for _i in range(3)]
+
+    spacing = nda.meta["pixdim"]
+    spacing = spacing[1:4]
+    spacing = [float(spacing[_i]) for _i in range(3)]
+
+    print(dim, spacing)
+
+    new_dim = [round_number(dim[_i]) for _i in range(3)]
+    new_dim = tuple(new_dim)
+    new_transforms = create_transforms(new_dim)
+
+    new_test_data = {
+        "image": os.path.join(dataroot, filepath),
+        "label": os.path.join(pl_root, filepath),
+    }
+
+    new_data = new_transforms(new_test_data)
+    nda_image = new_data["image"]
+    nda_label = new_data["label"]
+
+    affine = nda_image.meta["affine"]
+    affine = affine.numpy()
+
+    print("new", nda_image.size(), nda_label.size(), affine)
+
+    nda_image = nda_image.numpy().squeeze().astype(np.int16)
+    out_filename = out_filepath_base + f"_image.nii.gz"
+    out_path = Path(out_filename)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_img = nib.Nifti1Image(nda_image, affine=affine)
+    nib.save(out_img, out_filename)
+    print(f"out_filename: {out_filename}")
+
+    nda_label = nda_label.numpy().squeeze().astype(np.uint8)
+    out_filename = out_filepath_base + f"_label.nii.gz"
+    out_path = Path(out_filename)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_img = nib.Nifti1Image(nda_label, affine=affine)
+    nib.save(out_img, out_filename)
+    print(f"out_filename: {out_filename}")
+
+    return f"Finished {filepath}"
+
+
+def create_training_data(save_embedding, dataroot, filenames_filepath, output_root_embedding, autoencoder_root, list_filepath, output_dir, pl_root):
     # Load autoencoder if saving embeddings
     autoencoder = None
     if save_embedding:
@@ -187,7 +269,9 @@ def main():
         for _s in range(3):
             affine[_s, _s] = spacing[_s]
 
-        if save_embedding:
+        if
+
+ save_embedding:
             try:
                 out_path = Path(out_filename)
                 out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -208,6 +292,22 @@ def main():
             except Exception as e:
                 print(f"Error processing {filepath}: {e}")
 
+    with open(list_filepath, "r") as file:
+        filepaths = file.readlines()
+    filepaths = [_item.strip() for _item in filepaths]
+
+    for filepath in filepaths:
+        process_file(filepath, dataroot, output_dir, pl_root, transforms)
+
 
 if __name__ == "__main__":
-    main()
+    save_embedding = True
+    dataroot = "/mnt/drive2/data_128"
+    filenames_filepath = "/mnt/drive2/data_128/filenames_image_nii_autopet.txt"
+    output_root_embedding = "/mnt/drive2/encoding_128"
+    autoencoder_root = "/workspace/monai/generative/from_canz"
+    list_filepath = "/localhome/local-dongy/projects/monai/generative/utils/lists/filenames_nii_common.txt"
+    output_dir = "/mnt/drive2/data_128"
+    pl_root = "/mnt/drive2/V2_pseudo_12Feb2024"
+
+    create_training_data(save_embedding, dataroot, filenames_filepath, output_root_embedding, autoencoder_root, list_filepath, output_dir, pl_root)

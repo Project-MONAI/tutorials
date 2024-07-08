@@ -13,6 +13,7 @@ import json
 import random
 import time
 from datetime import datetime
+import math
 
 import monai
 import torch
@@ -158,6 +159,8 @@ def ldm_conditional_sample_one_image(
     output_size,
     noise_factor,
     num_inference_steps=1000,
+    autoencoder_sliding_window_infer_size = [96,96,96],
+    autoencoder_sliding_window_infer_overlap = 0.6667,
 ):
     """
     Generate a single synthetic image using a latent diffusion model with controlnet.
@@ -232,24 +235,30 @@ def ldm_conditional_sample_one_image(
             latents, _ = noise_scheduler.step(noise_pred, t, latents)
         end_time = time.time()
         print(f"---- Latent features generation time: {end_time - start_time} seconds ----")
+        del noise_pred
+        torch.cuda.empty_cache()
 
         # decode latents to synthesized images
         print("---- Start decoding latent features into images... ----")
         start_time = time.time()
-        synthetic_images = sliding_window_inference(
-            inputs=latents,
-            roi_size=(
-                min(output_size[0] // 4 // 4 * 3, 96),
-                min(output_size[1] // 4 // 4 * 3, 96),
-                min(output_size[2] // 4 // 4 * 3, 96),
-            ),
-            sw_batch_size=1,
-            predictor=recon_model,
-            mode="gaussian",
-            overlap=2.0 / 3.0,
-            sw_device=device,
-            device=device,
-        )
+        if math.prod(latent_shape[1:]) < math.prod(autoencoder_sliding_window_infer_size):
+            synthetic_images = recon_model(latents)
+        else:
+            synthetic_images = sliding_window_inference(
+                inputs=latents,
+                roi_size=(
+                    min(output_size[0] // 4 // 4 * 3, autoencoder_sliding_window_infer_size[0]),
+                    min(output_size[1] // 4 // 4 * 3, autoencoder_sliding_window_infer_size[1]),
+                    min(output_size[2] // 4 // 4 * 3, autoencoder_sliding_window_infer_size[2]),
+                ),
+                sw_batch_size=1,
+                predictor=recon_model,
+                mode="gaussian",
+                overlap=autoencoder_sliding_window_infer_overlap,
+                sw_device=device,
+                device=torch.device("cpu"),
+                progress=True
+            )
         synthetic_images = torch.clip(synthetic_images, b_min, b_max).cpu()
         end_time = time.time()
         print(f"---- Image decoding time: {end_time - start_time} seconds ----")
@@ -261,6 +270,7 @@ def ldm_conditional_sample_one_image(
         synthetic_images = synthetic_images * (a_max - a_min) + a_min
         # regularize background intensities
         synthetic_images = crop_img_body_mask(synthetic_images, comebine_label)
+        torch.cuda.empty_cache()
 
     return synthetic_images, comebine_label
 
@@ -460,6 +470,8 @@ class LDMSampler:
         num_inference_steps=None,
         mask_generation_num_inference_steps=None,
         random_seed=None,
+        autoencoder_sliding_window_infer_size=[96,96,96],
+        autoencoder_sliding_window_infer_overlap=0.6667
     ) -> None:
         """
         Initialize the LDMSampler with various parameters and models.
@@ -507,6 +519,13 @@ class LDMSampler:
         self.mask_generation_num_inference_steps = (
             mask_generation_num_inference_steps if mask_generation_num_inference_steps is not None else 1000
         )
+        
+        if any(size % 16 != 0 for size in autoencoder_sliding_window_infer_size):
+            raise ValueError(f"autoencoder_sliding_window_infer_size must be divisible by 16.\n Got {autoencoder_sliding_window_infer_size}")
+        if not (0 <= autoencoder_sliding_window_infer_overlap <= 1):
+            raise ValueError(f"Value of autoencoder_sliding_window_infer_overlap must be between 0 and 1.\n Got {autoencoder_sliding_window_infer_overlap}")
+        self.autoencoder_sliding_window_infer_size = autoencoder_sliding_window_infer_size
+        self.autoencoder_sliding_window_infer_overlap = autoencoder_sliding_window_infer_overlap
 
         # quality check disabled for this version
         self.quality_check_args = quality_check_args
@@ -695,6 +714,9 @@ class LDMSampler:
             output_size=self.output_size,
             noise_factor=self.noise_factor,
             num_inference_steps=self.num_inference_steps,
+            autoencoder_sliding_window_infer_size=self.autoencoder_sliding_window_infer_size,
+            autoencoder_sliding_window_infer_overlap=self.autoencoder_sliding_window_infer_overlap
+            
         )
         return synthetic_images, synthetic_labels
 

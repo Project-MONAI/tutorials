@@ -5,7 +5,6 @@
     "controllable_anatomy_size": [["hepatic tumor", 0.3], ["liver", 0.5]],
     "num_inference_steps": 1000,
     "mask_generation_num_inference_steps": 1000,
-    "random_seed": null,
     "output_size": [
         256,
         256,

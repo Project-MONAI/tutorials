@@ -1,5 +1,5 @@
 
-# MonAI Example:  Implementing 2D Classification Model with MedNIST Dataset Using FEDn
+# MONAI Example:  Implementing 2D Classification Model with MedNIST Dataset Using FEDn
 
 This example provides a step-by-step guide to deploying and running a 2D classification model using the MedNIST dataset in a federated environment with the [FEDn framework](https://www.scaleoutsystems.com/framework) developed by [Scaleout Systems](https://www.scaleoutsystems.com/). This example builds on the centralized [example](https://github.com/Project-MONAI/tutorials/blob/main/2d_classification/mednist_tutorial.ipynb) from the MONAI project and adapts it for federated learning settings, utilizing the same code for ease of transition.
 

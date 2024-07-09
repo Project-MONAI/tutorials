@@ -33,7 +33,8 @@ jobs:
         pip uninstall -y monai-weekly # make sure there's no existing installation
         BUILD_MONAI=0 python -m pip install git+https://github.com/Project-MONAI/MONAI#egg=MONAI
         python -m pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/main/requirements-dev.txt
-        python -m pip install -U --extra-index-url https://urm.nvidia.com/artifactory/api/pypi/sw-dlmed-pypi-local/simple torch torchvision torchaudio xformers==0.0.26+622595c.d20240617
+        python -m pip install -U torch torchvision torchaudio
+        python -m pip install git+https://github.com/facebookresearch/xformers.git@622595c2d4d47c22377eb92423b106577bf6f6cf#egg=xformers  # xformers==0.0.26
     - uses: actions/checkout@v3
     - name: Notebook quick check
       shell: bash

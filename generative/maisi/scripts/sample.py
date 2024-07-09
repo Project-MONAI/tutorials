@@ -113,7 +113,7 @@ def ldm_conditional_sample_one_mask(
         torch.Tensor: The generated synthetic mask.
     """
     recon_model = ReconModel(autoencoder=autoencoder, scale_factor=scale_factor).to(device)
-    
+
     with torch.no_grad(), torch.cuda.amp.autocast():
         # Generate random noise
         latents = initialize_noise_latents(latent_shape, device)
@@ -132,21 +132,25 @@ def ldm_conditional_sample_one_mask(
         if math.prod(latent_shape[1:]) < math.prod(autoencoder_sliding_window_infer_size):
             synthetic_mask = recon_model(latents).cpu().detach()
         else:
-            synthetic_mask = sliding_window_inference(
-                inputs=latents,
-                roi_size=(
-                    autoencoder_sliding_window_infer_size[0],
-                    autoencoder_sliding_window_infer_size[1],
-                    autoencoder_sliding_window_infer_size[2],
-                ),
-                sw_batch_size=1,
-                predictor=recon_model,
-                mode="gaussian",
-                overlap=autoencoder_sliding_window_infer_overlap,
-                sw_device=device,
-                device=torch.device("cpu"),
-                progress=True,
-            ).cpu().detach()
+            synthetic_mask = (
+                sliding_window_inference(
+                    inputs=latents,
+                    roi_size=(
+                        autoencoder_sliding_window_infer_size[0],
+                        autoencoder_sliding_window_infer_size[1],
+                        autoencoder_sliding_window_infer_size[2],
+                    ),
+                    sw_batch_size=1,
+                    predictor=recon_model,
+                    mode="gaussian",
+                    overlap=autoencoder_sliding_window_infer_overlap,
+                    sw_device=device,
+                    device=torch.device("cpu"),
+                    progress=True,
+                )
+                .cpu()
+                .detach()
+            )
         synthetic_mask = torch.softmax(synthetic_mask, dim=1)
         synthetic_mask = torch.argmax(synthetic_mask, dim=1, keepdim=True)
         # mapping raw index to 132 labels

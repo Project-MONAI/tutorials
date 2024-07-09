@@ -8,7 +8,7 @@ The VAE training dataset used in MAISI contains 37243 CT training data and 1963 
 ### 2 Diffusion model training Data
 ### 3 ControlNet model training Data
 
-The ControlNet training dataset used in MAISI contains 6330 CT volumes (5058 and 1272 volumes are used for training and validation, respectively) across 20 datasets and covers different body regions and diseases. 
+The ControlNet training dataset used in MAISI contains 6330 CT volumes (5058 and 1272 volumes are used for training and validation, respectively) across 20 datasets and covers different body regions and diseases.
 
 The table below summarizes the number of volumes for each dataset.
 

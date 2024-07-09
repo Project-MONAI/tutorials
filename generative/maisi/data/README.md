@@ -7,8 +7,33 @@ The VAE training dataset used in MAISI contains 37243 CT training data and 1963 
 
 ### 2 Diffusion model training Data
 ### 3 ControlNet model training Data
-The preprocessed subset of [C4KC-KiTS](https://www.cancerimagingarchive.net/collection/c4kc-kits/) dataset used in this
-finetuning config is provided in `./dataset/C4KC-KiTS_subset`. The URL is specified at `large_files.yml`. The structure of example folder in the preprocessed dataset is:
+
+The ControlNet training dataset used in MAISI contains 6330 CT volumes (5058 and 1272 volumes are used for training and validation, respectively) across 20 datasets and covers different body regions and diseases. 
+
+The table below summarizes the number of volumes for each dataset.
+
+|Index| Dataset name|Number of volumes|
+|:-----|:-----|:-----|
+1 | AbdomenCT-1K | 789
+2 | AeroPath | 15
+3 | AMOS22 | 240
+4 | Bone-Lesion	| 237
+5 | BTCV | 48
+6 | CT-ORG | 94
+7 | CTPelvic1K-CLINIC | 94
+8 | LIDC | 422
+9 | MSD Task03 | 105
+10 | MSD Task06 | 50
+11 | MSD Task07 | 225
+12 | MSD Task08 | 235
+13 | MSD Task09 | 33
+14 | MSD Task10 | 101
+15 | Multi-organ-Abdominal-CT | 64
+16 | Pancreas-CT | 51
+17 | StonyBrook-CT | 1258
+18 | TCIA_Colon | 1436
+19 | TotalSegmentatorV2 | 654
+20| VerSe | 179
 
 ### 4. Questions and bugs
 

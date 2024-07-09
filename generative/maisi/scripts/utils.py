@@ -24,8 +24,7 @@ from monai.apps.generation.maisi.utils.morphological_ops import dilate, erode
 from monai.bundle import ConfigParser
 from monai.config import DtypeLike, NdarrayOrTensor
 from monai.data import CacheDataset, DataLoader, partition_dataset
-from monai.transforms import (Compose, EnsureTyped, Lambdad, LoadImaged,
-                              Orientationd)
+from monai.transforms import Compose, EnsureTyped, Lambdad, LoadImaged, Orientationd
 from monai.utils import TransformBackends, convert_data_type, convert_to_dst_type, get_equivalent_dtype
 from scipy import stats
 from torch import Tensor

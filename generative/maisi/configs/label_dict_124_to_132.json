@@ -1,0 +1,502 @@
+{
+  "background": [
+    0,
+    0
+  ],
+  "liver": [
+    1,
+    1
+  ],
+  "spleen": [
+    2,
+    3
+  ],
+  "pancreas": [
+    3,
+    4
+  ],
+  "right kidney": [
+    4,
+    5
+  ],
+  "aorta": [
+    5,
+    6
+  ],
+  "inferior vena cava": [
+    6,
+    7
+  ],
+  "right adrenal gland": [
+    7,
+    8
+  ],
+  "left adrenal gland": [
+    8,
+    9
+  ],
+  "gallbladder": [
+    9,
+    10
+  ],
+  "esophagus": [
+    10,
+    11
+  ],
+  "stomach": [
+    11,
+    12
+  ],
+  "duodenum": [
+    12,
+    13
+  ],
+  "left kidney": [
+    13,
+    14
+  ],
+  "bladder": [
+    14,
+    15
+  ],
+  "portal vein and splenic vein": [
+    15,
+    17
+  ],
+  "small bowel": [
+    16,
+    19
+  ],
+  "brain": [
+    17,
+    22
+  ],
+  "lung tumor": [
+    18,
+    23
+  ],
+  "pancreatic tumor": [
+    19,
+    24
+  ],
+  "hepatic vessel": [
+    20,
+    25
+  ],
+  "hepatic tumor": [
+    21,
+    26
+  ],
+  "colon cancer primaries": [
+    22,
+    27
+  ],
+  "left lung upper lobe": [
+    23,
+    28
+  ],
+  "left lung lower lobe": [
+    24,
+    29
+  ],
+  "right lung upper lobe": [
+    25,
+    30
+  ],
+  "right lung middle lobe": [
+    26,
+    31
+  ],
+  "right lung lower lobe": [
+    27,
+    32
+  ],
+  "vertebrae L5": [
+    28,
+    33
+  ],
+  "vertebrae L4": [
+    29,
+    34
+  ],
+  "vertebrae L3": [
+    30,
+    35
+  ],
+  "vertebrae L2": [
+    31,
+    36
+  ],
+  "vertebrae L1": [
+    32,
+    37
+  ],
+  "vertebrae T12": [
+    33,
+    38
+  ],
+  "vertebrae T11": [
+    34,
+    39
+  ],
+  "vertebrae T10": [
+    35,
+    40
+  ],
+  "vertebrae T9": [
+    36,
+    41
+  ],
+  "vertebrae T8": [
+    37,
+    42
+  ],
+  "vertebrae T7": [
+    38,
+    43
+  ],
+  "vertebrae T6": [
+    39,
+    44
+  ],
+  "vertebrae T5": [
+    40,
+    45
+  ],
+  "vertebrae T4": [
+    41,
+    46
+  ],
+  "vertebrae T3": [
+    42,
+    47
+  ],
+  "vertebrae T2": [
+    43,
+    48
+  ],
+  "vertebrae T1": [
+    44,
+    49
+  ],
+  "vertebrae C7": [
+    45,
+    50
+  ],
+  "vertebrae C6": [
+    46,
+    51
+  ],
+  "vertebrae C5": [
+    47,
+    52
+  ],
+  "vertebrae C4": [
+    48,
+    53
+  ],
+  "vertebrae C3": [
+    49,
+    54
+  ],
+  "vertebrae C2": [
+    50,
+    55
+  ],
+  "vertebrae C1": [
+    51,
+    56
+  ],
+  "trachea": [
+    52,
+    57
+  ],
+  "left iliac artery": [
+    53,
+    58
+  ],
+  "right iliac artery": [
+    54,
+    59
+  ],
+  "left iliac vena": [
+    55,
+    60
+  ],
+  "right iliac vena": [
+    56,
+    61
+  ],
+  "colon": [
+    57,
+    62
+  ],
+  "left rib 1": [
+    58,
+    63
+  ],
+  "left rib 2": [
+    59,
+    64
+  ],
+  "left rib 3": [
+    60,
+    65
+  ],
+  "left rib 4": [
+    61,
+    66
+  ],
+  "left rib 5": [
+    62,
+    67
+  ],
+  "left rib 6": [
+    63,
+    68
+  ],
+  "left rib 7": [
+    64,
+    69
+  ],
+  "left rib 8": [
+    65,
+    70
+  ],
+  "left rib 9": [
+    66,
+    71
+  ],
+  "left rib 10": [
+    67,
+    72
+  ],
+  "left rib 11": [
+    68,
+    73
+  ],
+  "left rib 12": [
+    69,
+    74
+  ],
+  "right rib 1": [
+    70,
+    75
+  ],
+  "right rib 2": [
+    71,
+    76
+  ],
+  "right rib 3": [
+    72,
+    77
+  ],
+  "right rib 4": [
+    73,
+    78
+  ],
+  "right rib 5": [
+    74,
+    79
+  ],
+  "right rib 6": [
+    75,
+    80
+  ],
+  "right rib 7": [
+    76,
+    81
+  ],
+  "right rib 8": [
+    77,
+    82
+  ],
+  "right rib 9": [
+    78,
+    83
+  ],
+  "right rib 10": [
+    79,
+    84
+  ],
+  "right rib 11": [
+    80,
+    85
+  ],
+  "right rib 12": [
+    81,
+    86
+  ],
+  "left humerus": [
+    82,
+    87
+  ],
+  "right humerus": [
+    83,
+    88
+  ],
+  "left scapula": [
+    84,
+    89
+  ],
+  "right scapula": [
+    85,
+    90
+  ],
+  "left clavicula": [
+    86,
+    91
+  ],
+  "right clavicula": [
+    87,
+    92
+  ],
+  "left femur": [
+    88,
+    93
+  ],
+  "right femur": [
+    89,
+    94
+  ],
+  "left hip": [
+    90,
+    95
+  ],
+  "right hip": [
+    91,
+    96
+  ],
+  "sacrum": [
+    92,
+    97
+  ],
+  "left gluteus maximus": [
+    93,
+    98
+  ],
+  "right gluteus maximus": [
+    94,
+    99
+  ],
+  "left gluteus medius": [
+    95,
+    100
+  ],
+  "right gluteus medius": [
+    96,
+    101
+  ],
+  "left gluteus minimus": [
+    97,
+    102
+  ],
+  "right gluteus minimus": [
+    98,
+    103
+  ],
+  "left autochthon": [
+    99,
+    104
+  ],
+  "right autochthon": [
+    100,
+    105
+  ],
+  "left iliopsoas": [
+    101,
+    106
+  ],
+  "right iliopsoas": [
+    102,
+    107
+  ],
+  "left atrial appendage": [
+    103,
+    108
+  ],
+  "brachiocephalic trunk": [
+    104,
+    109
+  ],
+  "left brachiocephalic vein": [
+    105,
+    110
+  ],
+  "right brachiocephalic vein": [
+    106,
+    111
+  ],
+  "left common carotid artery": [
+    107,
+    112
+  ],
+  "right common carotid artery": [
+    108,
+    113
+  ],
+  "costal cartilages": [
+    109,
+    114
+  ],
+  "heart": [
+    110,
+    115
+  ],
+  "prostate": [
+    111,
+    118
+  ],
+  "pulmonary vein": [
+    112,
+    119
+  ],
+  "skull": [
+    113,
+    120
+  ],
+  "spinal cord": [
+    114,
+    121
+  ],
+  "sternum": [
+    115,
+    122
+  ],
+  "left subclavian artery": [
+    116,
+    123
+  ],
+  "right subclavian artery": [
+    117,
+    124
+  ],
+  "superior vena cava": [
+    118,
+    125
+  ],
+  "thyroid gland": [
+    119,
+    126
+  ],
+  "vertebrae S1": [
+    120,
+    127
+  ],
+  "bone lesion": [
+    121,
+    128
+  ],
+  "kidney mass": [
+    122,
+    129
+  ],
+  "airway": [
+    123,
+    132
+  ],
+  "body": [
+    124,
+    200
+  ]
+}

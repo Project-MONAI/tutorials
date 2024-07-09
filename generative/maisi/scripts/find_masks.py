@@ -12,9 +12,9 @@
 
 import json
 import os
-from monai.apps.utils import extractall
 from typing import Sequence
 
+from monai.apps.utils import extractall
 from monai.utils import ensure_tuple_rep
 
 
@@ -58,8 +58,8 @@ def find_masks(
     spacing: Sequence[float] | float = 1.0,
     output_size: Sequence[int] = [512, 512, 512],
     check_spacing_and_output_size: bool = False,
-    database_filepath: str = "./data/database.json",
-    mask_foldername: str = "./data/masks/",
+    database_filepath: str = "./configs/database.json",
+    mask_foldername: str = "./datasets/masks/",
 ):
     """
     Find candidate masks that fullfills all the requirements.
@@ -90,14 +90,14 @@ def find_masks(
         zip_file_path = mask_foldername + ".zip"
 
         if not os.path.isfile(zip_file_path):
-            raise ValueError(f"Please download {zip_file_path} following the instruction in ./data/README.md.")
+            raise ValueError(f"Please download {zip_file_path} following the instruction in ./datasets/README.md.")
 
-        print(f"Extracting {zip_file_path}...")
-        extractall(filepath=mask_foldername, output_dir=mask_foldername)
+        print(f"Extracting {zip_file_path} to {os.path.dirname(zip_file_path)}")
+        extractall(filepath=zip_file_path, output_dir=os.path.dirname(zip_file_path), file_type="zip")
         print(f"Unzipped {zip_file_path} to {mask_foldername}.")
 
     if not os.path.isfile(database_filepath):
-        raise ValueError(f"Please download {database_filepath} following the instruction in ./data/README.md.")
+        raise ValueError(f"Please download {database_filepath} following the instruction in ./datasets/README.md.")
     with open(database_filepath, "r") as f:
         db = json.load(f)
 

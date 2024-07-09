@@ -17,6 +17,6 @@
         1.5,
         2.0
     ],
-    "autoencoder_sliding_window_infer_size": [80,80,80],
+    "autoencoder_sliding_window_infer_size": [48,48,48],
     "autoencoder_sliding_window_infer_overlap": 0.25
 }

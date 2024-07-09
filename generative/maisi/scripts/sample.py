@@ -19,7 +19,7 @@ from datetime import datetime
 
 import monai
 import torch
-from generative.inferers import LatentDiffusionInferer
+from generative.inferers import LatentDiffusionInferer, DiffusionInferer
 from monai.data import MetaTensor
 from monai.inferers import sliding_window_inference
 from monai.transforms import Compose, SaveImage
@@ -92,6 +92,8 @@ def ldm_conditional_sample_one_mask(
     latent_shape,
     label_dict_remap_json,
     num_inference_steps=1000,
+    autoencoder_sliding_window_infer_size=[96, 96, 96],
+    autoencoder_sliding_window_infer_overlap=0.6667,
 ):
     """
     Generate a single synthetic mask using a latent diffusion model.
@@ -110,21 +112,41 @@ def ldm_conditional_sample_one_mask(
     Returns:
         torch.Tensor: The generated synthetic mask.
     """
+    recon_model = ReconModel(autoencoder=autoencoder, scale_factor=scale_factor).to(device)
+    
     with torch.no_grad(), torch.cuda.amp.autocast():
         # Generate random noise
         latents = initialize_noise_latents(latent_shape, device)
         anatomy_size = torch.FloatTensor(anatomy_size).unsqueeze(0).unsqueeze(0).half().to(device)
-        # synthesize masks
+        # synthesize latents
         noise_scheduler.set_timesteps(num_inference_steps=num_inference_steps)
-        inferer_ddpm = LatentDiffusionInferer(noise_scheduler, scale_factor=scale_factor)
-        synthetic_mask = inferer_ddpm.sample(
+        inferer_ddpm = DiffusionInferer(noise_scheduler)
+        latents = inferer_ddpm.sample(
             input_noise=latents,
-            autoencoder_model=autoencoder,
             diffusion_model=diffusion_unet,
             scheduler=noise_scheduler,
             verbose=True,
             conditioning=anatomy_size.to(device),
         )
+        # decode latents to synthesized masks
+        if math.prod(latent_shape[1:]) < math.prod(autoencoder_sliding_window_infer_size):
+            synthetic_mask = recon_model(latents).cpu().detach()
+        else:
+            synthetic_mask = sliding_window_inference(
+                inputs=latents,
+                roi_size=(
+                    autoencoder_sliding_window_infer_size[0],
+                    autoencoder_sliding_window_infer_size[1],
+                    autoencoder_sliding_window_infer_size[2],
+                ),
+                sw_batch_size=1,
+                predictor=recon_model,
+                mode="gaussian",
+                overlap=autoencoder_sliding_window_infer_overlap,
+                sw_device=device,
+                device=torch.device("cpu"),
+                progress=True,
+            ).cpu().detach()
         synthetic_mask = torch.softmax(synthetic_mask, dim=1)
         synthetic_mask = torch.argmax(synthetic_mask, dim=1, keepdim=True)
         # mapping raw index to 132 labels
@@ -839,6 +861,8 @@ class LDMSampler:
             self.mask_generation_latent_shape,
             label_dict_remap_json=self.label_dict_remap_json,
             num_inference_steps=self.mask_generation_num_inference_steps,
+            autoencoder_sliding_window_infer_size=self.autoencoder_sliding_window_infer_size,
+            autoencoder_sliding_window_infer_overlap=self.autoencoder_sliding_window_infer_overlap,
         )
         return synthetic_mask
 

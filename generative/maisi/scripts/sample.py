@@ -108,6 +108,8 @@ def ldm_conditional_sample_one_mask(
         latent_shape (tuple): The shape of the latent space.
         label_dict_remap_json (str): Path to the JSON file for label remapping.
         num_inference_steps (int): Number of inference steps for the diffusion process.
+        autoencoder_sliding_window_infer_size (list, optional): Size of the sliding window for inference. Defaults to [96, 96, 96].
+        autoencoder_sliding_window_infer_overlap (float, optional): Overlap ratio for sliding window inference. Defaults to 0.6667.
 
     Returns:
         torch.Tensor: The generated synthetic mask.
@@ -208,6 +210,8 @@ def ldm_conditional_sample_one_image(
         output_size (tuple): The desired output size of the image.
         noise_factor (float): Factor to scale the initial noise.
         num_inference_steps (int): Number of inference steps for the diffusion process.
+        autoencoder_sliding_window_infer_size (list, optional): Size of the sliding window for inference. Defaults to [96, 96, 96].
+        autoencoder_sliding_window_infer_overlap (float, optional): Overlap ratio for sliding window inference. Defaults to 0.6667.
 
     Returns:
         tuple: A tuple containing the synthetic image and its corresponding label.

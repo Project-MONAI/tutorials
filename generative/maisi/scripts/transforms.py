@@ -120,7 +120,7 @@ def define_vae_transform(
     select_channel: int = 0,
 ) -> tuple:
     """
-    Define the VAE transform pipeline for training and validation.
+    Define the MAISI VAE transform pipeline for training or validation.
 
     Args:
         is_train (bool): Whether it's for training or not. If True, the output transform will consider data_aug, the cropping will use "patch_size" for random cropping. If False, the output transform will alwasy treat "data_aug" as False, will use "val_patch_size" for central cropping.
@@ -239,7 +239,7 @@ def define_vae_transform(
 
 class VAE_Transform:
     """
-    A class to handle VAE transformations for different modalities.
+    A class to handle MAISI VAE transformations for different modalities.
     """
 
     def __init__(
@@ -283,8 +283,8 @@ class VAE_Transform:
         self.transform_dict = {}
 
         for modality in ["ct", "mri"]:
-            self.transform_dict[modality] = define_vae_transform(
-                is_train=is_train,
+            self.transform_dict[modality]= define_vae_transform(
+                is_train =is_train,
                 modality=modality,
                 data_aug=data_aug,
                 k=k,

@@ -111,7 +111,7 @@ def define_vae_transform(
     k: int = 4,
     patch_size: List[int] = [128, 128, 128],
     val_patch_size: Optional[List[int]] = None,
-    compute_dtype: torch.dtype = torch.float32,
+    output_dtype: torch.dtype = torch.float32,
     spacing_type: str = "original",
     spacing: Optional[List[float]] = None,
     image_keys: List[str] = ["image"],
@@ -127,9 +127,9 @@ def define_vae_transform(
         modality (str): The imaging modality, either 'ct' or 'mri'.
         data_aug (bool): Whether to apply random data augmentation.
         k (int, optional): Patches should be divisible by k. Defaults to 4.
-        patch_size (List[int], optional): Size of the patches. Defaults to [128, 128, 128].
-        val_patch_size (Optional[List[int]], optional): Size of validation patches. Defaults to None.
-        compute_dtype (torch.dtype, optional): Final data type. Defaults to torch.float32.
+        patch_size (List[int], optional): Size of the patches. Defaults to [128, 128, 128]. Will random crop patch for training.
+        val_patch_size (Optional[List[int]], optional): Size of validation patches. Defaults to None. If None, will use the whole volume for validation. If given, will central crop a patch for validation.
+        output_dtype (torch.dtype, optional): Output data type. Defaults to torch.float32.
         spacing_type (str, optional): Type of spacing. Defaults to "original". Choose from ["original", "fixed", "rand_zoom"].
         spacing (Optional[List[float]], optional): Spacing values. Defaults to None.
         image_keys (List[str], optional): List of image keys. Defaults to ["image"].
@@ -138,7 +138,7 @@ def define_vae_transform(
         select_channel (int, optional): Channel to select for multi-channel MRI. Defaults to 0.
 
     Returns:
-        tuple: A tuple containing Composed Transform train_transforms and val_transforms.
+        tuple: A tuple containing Composed Transform train_transforms or val_transforms depending on 'is_train'.
     """
     modality = modality.lower()  # Normalize modality to lowercase
     if modality not in SUPPORT_MODALITIES:
@@ -223,7 +223,7 @@ def define_vae_transform(
             else [ResizeWithPadOrCropd(keys=keys, allow_missing_keys=True, spatial_size=val_patch_size)]
         )
 
-    final_transform = [EnsureTyped(keys=keys, dtype=compute_dtype, allow_missing_keys=True)]
+    final_transform = [EnsureTyped(keys=keys, dtype=output_dtype, allow_missing_keys=True)]
 
     if is_train:
         train_transforms = Compose(
@@ -249,7 +249,7 @@ class VAE_Transform:
         k: int = 4,
         patch_size: List[int] = [128, 128, 128],
         val_patch_size: Optional[List[int]] = None,
-        compute_dtype: torch.dtype = torch.float32,
+        output_dtype: torch.dtype = torch.float32,
         spacing_type: str = "original",
         spacing: Optional[List[float]] = None,
         image_keys: List[str] = ["image"],
@@ -264,9 +264,9 @@ class VAE_Transform:
             is_train (bool): Whether it's for training or not. If True, the output transform will consider data_aug, the cropping will use "patch_size" for random cropping. If False, the output transform will alwasy treat "data_aug" as False, will use "val_patch_size" for central cropping.
             data_aug (bool): Whether to apply random data augmentation for training.
             k (int, optional): Patches should be divisible by k. Defaults to 4.
-            patch_size (List[int], optional): Size of the patches. Defaults to [128, 128, 128].
-            val_patch_size (Optional[List[int]], optional): Size of validation patches. Defaults to None.
-            compute_dtype (torch.dtype, optional): Final data type. Defaults to torch.float32.
+            patch_size (List[int], optional): Size of the patches. Defaults to [128, 128, 128]. Will random crop patch for training.
+            val_patch_size (Optional[List[int]], optional): Size of validation patches. Defaults to None. If None, will use the whole volume for validation. If given, will central crop a patch for validation.
+            output_dtype (torch.dtype, optional): Output data type. Defaults to torch.float32.
             spacing_type (str, optional): Type of spacing. Defaults to "original". Choose from ["original", "fixed", "rand_zoom"].
             spacing (Optional[List[float]], optional): Spacing values. Defaults to None.
             image_keys (List[str], optional): List of image keys. Defaults to ["image"].
@@ -290,7 +290,7 @@ class VAE_Transform:
                 k=k,
                 patch_size=patch_size,
                 val_patch_size=val_patch_size,
-                compute_dtype=compute_dtype,
+                output_dtype=output_dtype,
                 spacing_type=spacing_type,
                 spacing=spacing,
                 image_keys=image_keys,

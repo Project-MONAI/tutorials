@@ -91,7 +91,7 @@ def define_random_intensity_transform(modality: str, image_keys: List[str] = ["i
         return []
 
 
-def define_transform(
+def define_vae_transform(
     modality: str,
     data_aug: bool,
     k: int = 4,
@@ -255,7 +255,7 @@ class VAE_Transform:
         self.val_transform_dict = {}
 
         for modality in ["ct", "mri"]:
-            self.train_transform_dict[modality], self.val_transform_dict[modality] = define_transform(
+            self.train_transform_dict[modality], self.val_transform_dict[modality] = define_vae_transform(
                 modality=modality,
                 data_aug=data_aug,
                 k=k,

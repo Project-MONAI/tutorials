@@ -283,8 +283,8 @@ class VAE_Transform:
         self.transform_dict = {}
 
         for modality in ["ct", "mri"]:
-            self.transform_dict[modality]= define_vae_transform(
-                is_train =is_train,
+            self.transform_dict[modality] = define_vae_transform(
+                is_train=is_train,
                 modality=modality,
                 data_aug=data_aug,
                 k=k,

@@ -101,6 +101,7 @@ def define_random_intensity_transform(modality: str, image_keys: List[str] = ["i
 
 
 def define_vae_transform(
+    is_train: bool,
     modality: str,
     data_aug: bool,
     k: int = 4,
@@ -118,6 +119,7 @@ def define_vae_transform(
     Define the VAE transform pipeline for training and validation.
 
     Args:
+        is_train (bool): Whether it's for training or not. If True, the output transform will consider data_aug, the cropping will use "patch_size" for random cropping. If False, the output transform will alwasy treat "data_aug" as False, will use "val_patch_size" for central cropping.
         modality (str): The imaging modality, either 'ct' or 'mri'.
         data_aug (bool): Whether to apply random data augmentation.
         k (int, optional): Patches should be divisible by k. Defaults to 4.
@@ -162,7 +164,7 @@ def define_vae_transform(
         )
 
     random_transform = []
-    if data_aug:
+    if is_train and data_aug:
         random_transform.extend(define_random_intensity_transform(modality, image_keys=image_keys))
         random_transform.extend(
             [RandFlipd(keys=keys, allow_missing_keys=True, prob=0.5, spatial_axis=axis) for axis in range(3)]
@@ -201,29 +203,32 @@ def define_vae_transform(
                 ]
             )
 
-    train_crop = [
-        SpatialPadd(keys=keys, spatial_size=patch_size, allow_missing_keys=True),
-        RandSpatialCropd(
-            keys=keys, roi_size=patch_size, allow_missing_keys=True, random_size=False, random_center=True
-        ),
-    ]
-
-    val_crop = (
-        [DivisiblePadd(keys=keys, allow_missing_keys=True, k=k)]
-        if val_patch_size is None
-        else [ResizeWithPadOrCropd(keys=keys, allow_missing_keys=True, spatial_size=val_patch_size)]
-    )
+    if is_train:
+        train_crop = [
+            SpatialPadd(keys=keys, spatial_size=patch_size, allow_missing_keys=True),
+            RandSpatialCropd(
+                keys=keys, roi_size=patch_size, allow_missing_keys=True, random_size=False, random_center=True
+            ),
+        ]
+    else:
+        val_crop = (
+            [DivisiblePadd(keys=keys, allow_missing_keys=True, k=k)]
+            if val_patch_size is None
+            else [ResizeWithPadOrCropd(keys=keys, allow_missing_keys=True, spatial_size=val_patch_size)]
+        )
 
     final_transform = [EnsureTyped(keys=keys, dtype=compute_dtype, allow_missing_keys=True)]
 
-    train_transforms = Compose(
-        common_transform + random_transform + train_crop + final_transform
-        if data_aug
-        else common_transform + train_crop + final_transform
-    )
-    val_transforms = Compose(common_transform + val_crop + final_transform)
-
-    return train_transforms, val_transforms
+    if is_train:
+        train_transforms = Compose(
+            common_transform + random_transform + train_crop + final_transform
+            if data_aug
+            else common_transform + train_crop + final_transform
+        )
+        return train_transforms
+    else:
+        val_transforms = Compose(common_transform + val_crop + final_transform)
+        return val_transforms
 
 
 class VAE_Transform:
@@ -269,11 +274,11 @@ class VAE_Transform:
             )
 
         self.is_train = is_train
-        self.train_transform_dict = {}
-        self.val_transform_dict = {}
+        self.transform_dict = {}
 
         for modality in ["ct", "mri"]:
-            self.train_transform_dict[modality], self.val_transform_dict[modality] = define_vae_transform(
+            self.transform_dict[modality]= define_vae_transform(
+                is_train =is_train,
                 modality=modality,
                 data_aug=data_aug,
                 k=k,
@@ -307,5 +312,5 @@ class VAE_Transform:
         if modality not in ["ct", "mri"]:
             warnings.warn(f"Intensity transform only support {SUPPORT_MODALITIES}. Got {modality}. Will not do any intensity transform and will use original intensities.")
 
-        transform = self.train_transform_dict[modality] if self.is_train else self.val_transform_dict[modality]
+        transform = self.transform_dict[modality]
         return transform(img)

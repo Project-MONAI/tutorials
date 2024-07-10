@@ -40,7 +40,7 @@ from monai.transforms import (
     SpatialPadd,
 )
 
-
+SUPPORT_MODALITIES = ['ct','mri']
 def define_fixed_intensity_transform(modality: str, image_keys: List[str] = ["image"]) -> List:
     """
     Define fixed intensity transform based on the modality.
@@ -52,6 +52,11 @@ def define_fixed_intensity_transform(modality: str, image_keys: List[str] = ["im
     Returns:
         List: A list of intensity transforms.
     """
+    if modality not in SUPPORT_MODALITIES:
+        warnings.warn(f"No intensity transform is applied. Modality has to be in {SUPPORT_MODALITIES}. Got {modality}.")
+        
+    modality = modality.lower()  # Normalize modality to lowercase
+    
     intensity_transforms = {
         "mri": [
             ScaleIntensityRangePercentilesd(keys=image_keys, lower=0.0, upper=99.5, b_min=0.0, b_max=1, clip=False)
@@ -59,8 +64,7 @@ def define_fixed_intensity_transform(modality: str, image_keys: List[str] = ["im
         "ct": [ScaleIntensityRanged(keys=image_keys, a_min=-1000, a_max=1000, b_min=0.0, b_max=1.0, clip=True)],
     }
 
-    if modality not in intensity_transforms:
-        warnings.warn(f"No intensity transform is applied. Modality has to be in ['ct','mri']. Got {modality}.")
+    if modality not in intensity_transforms:        
         return []
 
     return intensity_transforms[modality]
@@ -77,6 +81,10 @@ def define_random_intensity_transform(modality: str, image_keys: List[str] = ["i
     Returns:
         List: A list of random intensity transforms.
     """
+    modality = modality.lower()  # Normalize modality to lowercase
+    if modality not in SUPPORT_MODALITIES:
+        warnings.warn(f"No intensity transform is applied. Modality has to be in {SUPPORT_MODALITIES}. Got {modality}.")
+    
     if modality == "ct":
         return []  # CT HU intensity is stable across different datasets
     elif modality == "mri":
@@ -87,7 +95,6 @@ def define_random_intensity_transform(modality: str, image_keys: List[str] = ["i
             RandHistogramShiftd(keys=image_keys, prob=0.05, num_control_points=10),
         ]
     else:
-        warnings.warn(f"No random intensity transform is applied. Modality has to be in ['ct','mri']. Got {modality}.")
         return []
 
 
@@ -106,7 +113,7 @@ def define_vae_transform(
     select_channel: int = 0,
 ) -> tuple:
     """
-    Define the transform pipeline for training and validation.
+    Define the VAE transform pipeline for training and validation.
 
     Args:
         modality (str): The imaging modality, either 'ct' or 'mri'.
@@ -125,8 +132,12 @@ def define_vae_transform(
     Returns:
         tuple: A tuple containing train_transforms and val_transforms.
     """
-    if spacing_type not in ["original", "fixed", "rand"]:
-        raise ValueError(f"spacing_type has to be chosen from ['original', 'fixed', 'rand']. Got {spacing_type}.")
+    modality = modality.lower()  # Normalize modality to lowercase
+    if modality not in SUPPORT_MODALITIES:
+        warnings.warn(f"No intensity transform is applied. Modality has to be in {SUPPORT_MODALITIES}. Got {modality}.")
+        
+    if spacing_type not in ["original", "fixed", "rand_zoom"]:
+        raise ValueError(f"spacing_type has to be chosen from ['original', 'fixed', 'rand_zoom']. Got {spacing_type}.")
 
     keys = image_keys + label_keys + additional_keys
     interp_mode = ["bilinear"] * len(image_keys) + ["nearest"] * len(label_keys)
@@ -163,7 +174,7 @@ def define_vae_transform(
             ]
         )
 
-        if spacing_type == "rand":
+        if spacing_type == "rand_zoom":
             random_transform.extend(
                 [
                     RandZoomd(
@@ -250,6 +261,9 @@ class VAE_Transform:
             additional_keys (List[str], optional): List of additional keys. Defaults to [].
             select_channel (int, optional): Channel to select for multi-channel MRI. Defaults to 0.
         """
+        if spacing_type not in ["original", "fixed", "rand_zoom"]:
+            raise ValueError(f"spacing_type has to be chosen from ['original', 'fixed', 'rand_zoom']. Got {spacing_type}.")
+        
         self.is_train = is_train
         self.train_transform_dict = {}
         self.val_transform_dict = {}
@@ -285,8 +299,9 @@ class VAE_Transform:
             ValueError: If the modality is not 'ct' or 'mri'.
         """
         modality = fixed_modality or img["class"]
+        modality = modality.lower()  # Normalize modality to lowercase
         if modality not in ["ct", "mri"]:
-            raise ValueError(f"modality has to be chosen from ['ct','mri']. Got {modality}.")
+            raise ValueError(f"modality has to be chosen from {SUPPORT_MODALITIES}. Got {modality}.")
 
         transform = self.train_transform_dict[modality] if self.is_train else self.val_transform_dict[modality]
         return transform(img)

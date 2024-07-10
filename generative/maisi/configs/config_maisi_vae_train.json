@@ -1,5 +1,5 @@
 {
-    "data_option":{   
+    "data_option":{
         "data_aug": true,
         "spacing_type": "rand_zoom",
         "spacing": null,

@@ -124,7 +124,7 @@ def define_vae_transform(
         patch_size (List[int], optional): Size of the patches. Defaults to [128, 128, 128].
         val_patch_size (Optional[List[int]], optional): Size of validation patches. Defaults to None.
         compute_dtype (torch.dtype, optional): Final data type. Defaults to torch.float32.
-        spacing_type (str, optional): Type of spacing. Defaults to "original".
+        spacing_type (str, optional): Type of spacing. Defaults to "original". Choose from ["original", "fixed", "rand_zoom"].
         spacing (Optional[List[float]], optional): Spacing values. Defaults to None.
         image_keys (List[str], optional): List of image keys. Defaults to ["image"].
         label_keys (List[str], optional): List of label keys. Defaults to [].
@@ -132,7 +132,7 @@ def define_vae_transform(
         select_channel (int, optional): Channel to select for multi-channel MRI. Defaults to 0.
 
     Returns:
-        tuple: A tuple containing train_transforms and val_transforms.
+        tuple: A tuple containing Composed Transform train_transforms and val_transforms.
     """
     modality = modality.lower()  # Normalize modality to lowercase
     if modality not in SUPPORT_MODALITIES:
@@ -250,13 +250,13 @@ class VAE_Transform:
         Initialize the VAE_Transform.
 
         Args:
-            is_train (bool): Whether it's for training or not.
+            is_train (bool): Whether it's for training or not. If True, the output transform will consider data_aug, the cropping will use "patch_size" for random cropping. If False, the output transform will alwasy treat "data_aug" as False, will use "val_patch_size" for central cropping.
             data_aug (bool): Whether to apply random data augmentation for training.
             k (int, optional): Patches should be divisible by k. Defaults to 4.
             patch_size (List[int], optional): Size of the patches. Defaults to [128, 128, 128].
             val_patch_size (Optional[List[int]], optional): Size of validation patches. Defaults to None.
             compute_dtype (torch.dtype, optional): Final data type. Defaults to torch.float32.
-            spacing_type (str, optional): Type of spacing. Defaults to "original".
+            spacing_type (str, optional): Type of spacing. Defaults to "original". Choose from ["original", "fixed", "rand_zoom"].
             spacing (Optional[List[float]], optional): Spacing values. Defaults to None.
             image_keys (List[str], optional): List of image keys. Defaults to ["image"].
             label_keys (List[str], optional): List of label keys. Defaults to [].
@@ -297,7 +297,7 @@ class VAE_Transform:
             fixed_modality (Optional[str], optional): Fixed modality to use. Defaults to None.
 
         Returns:
-            dict: Transformed image dictionary.
+            Composed Transform
 
         Raises:
             ValueError: If the modality is not 'ct' or 'mri'.

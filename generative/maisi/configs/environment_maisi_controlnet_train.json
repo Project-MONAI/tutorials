@@ -1,0 +1,11 @@
+{
+    "model_dir": "./models/",
+    "output_dir": "./output",
+    "tfevent_path": "./outputs/tfevent",
+    "trained_autoencoder_path": "./models/autoencoder_epoch273.pt",
+    "trained_diffusion_path": "./models/input_unet3d_data-all_steps1000size512ddpm_random_current_inputx_v1.pt",
+    "trained_controlnet_path": "./models/controlnet-20datasets-e20wl100fold0bc_noi_dia_fsize_current.pt",
+    "exp_name": "controlnet_kits_finetune",
+    "data_base_dir": ["./datasets/C4KC-KiTS_subset"],
+    "json_data_list": ["./datasets/C4KC-KiTS_subset.json"]
+}

@@ -1,0 +1,22 @@
+{
+    "num_output_samples": 1,
+    "body_region": ["abdomen"],
+    "anatomy_list": ["liver"],
+    "controllable_anatomy_size": [["hepatic tumor", 0.3], ["liver", 0.5]],
+    "num_inference_steps": 1000,
+    "mask_generation_num_inference_steps": 1000,
+    "output_size": [
+        256,
+        256,
+        256
+    ],
+    "image_output_ext": ".nii.gz",
+    "label_output_ext": ".nii.gz",
+    "spacing": [
+        1.5,
+        1.5,
+        2.0
+    ],
+    "autoencoder_sliding_window_infer_size": [48,48,48],
+    "autoencoder_sliding_window_infer_overlap": 0.25
+}

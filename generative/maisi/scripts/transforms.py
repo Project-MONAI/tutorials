@@ -55,7 +55,7 @@ def define_fixed_intensity_transform(modality: str, image_keys: List[str] = ["im
         List: A list of intensity transforms.
     """
     if modality not in SUPPORT_MODALITIES:
-        warnings.warn(f"No intensity transform is applied. Modality has to be in {SUPPORT_MODALITIES}. Got {modality}.")
+        warnings.warn(f"Intensity transform only support {SUPPORT_MODALITIES}. Got {modality}. Will not do any intensity transform and will use original intensities.")
 
     modality = modality.lower()  # Normalize modality to lowercase
 
@@ -85,7 +85,7 @@ def define_random_intensity_transform(modality: str, image_keys: List[str] = ["i
     """
     modality = modality.lower()  # Normalize modality to lowercase
     if modality not in SUPPORT_MODALITIES:
-        warnings.warn(f"No intensity transform is applied. Modality has to be in {SUPPORT_MODALITIES}. Got {modality}.")
+        warnings.warn(f"Intensity transform only support {SUPPORT_MODALITIES}. Got {modality}. Will not do any intensity transform and will use original intensities.")
 
     if modality == "ct":
         return []  # CT HU intensity is stable across different datasets
@@ -136,7 +136,7 @@ def define_vae_transform(
     """
     modality = modality.lower()  # Normalize modality to lowercase
     if modality not in SUPPORT_MODALITIES:
-        warnings.warn(f"No intensity transform is applied. Modality has to be in {SUPPORT_MODALITIES}. Got {modality}.")
+        warnings.warn(f"Intensity transform only support {SUPPORT_MODALITIES}. Got {modality}. Will not do any intensity transform and will use original intensities.")
 
     if spacing_type not in ["original", "fixed", "rand_zoom"]:
         raise ValueError(f"spacing_type has to be chosen from ['original', 'fixed', 'rand_zoom']. Got {spacing_type}.")
@@ -305,7 +305,7 @@ class VAE_Transform:
         modality = fixed_modality or img["class"]
         modality = modality.lower()  # Normalize modality to lowercase
         if modality not in ["ct", "mri"]:
-            raise ValueError(f"modality has to be chosen from {SUPPORT_MODALITIES}. Got {modality}.")
+            warnings.warn(f"Intensity transform only support {SUPPORT_MODALITIES}. Got {modality}. Will not do any intensity transform and will use original intensities.")
 
         transform = self.train_transform_dict[modality] if self.is_train else self.val_transform_dict[modality]
         return transform(img)

@@ -23,64 +23,12 @@ import monai
 from monai.transforms import Compose
 from monai.utils import set_determinism
 
-from custom_network_tp import AutoencoderKLCKModified_TP
+from scripts.utils import define_instance, load_autoencoder_ckpt
 
 # Set the random seed for reproducibility
 torch.manual_seed(0)
 np.random.seed(0)
 set_determinism(seed=0)
-
-
-def load_autoencoder(autoencoder_path: str, device: torch.device) -> torch.nn.Module:
-    """
-    Load the autoencoder model and its checkpoints.
-
-    Args:
-        autoencoder_path (str): Path to the autoencoder checkpoint file.
-        device (torch.device): Device to load the model onto.
-
-    Returns:
-        torch.nn.Module: Loaded autoencoder model.
-    """
-    autoencoder = AutoencoderKLCKModified_TP(
-        spatial_dims=3,
-        in_channels=1,
-        out_channels=1,
-        num_channels=(64, 128, 256),
-        latent_channels=4,
-        attention_levels=(False, False, False),
-        num_res_blocks=(2, 2, 2),
-        norm_num_groups=32,
-        norm_eps=1e-06,
-        with_encoder_nonlocal_attn=False,
-        with_decoder_nonlocal_attn=False,
-        use_checkpointing=False,
-        use_convtranspose=False,
-    )
-    autoencoder.to(device)
-
-    checkpoint_autoencoder = torch.load(autoencoder_path, map_location=device)
-    new_state_dict = {}
-    for k, v in checkpoint_autoencoder.items():
-        if "decoder" in k and "conv" in k:
-            new_key = (
-                k.replace("conv.weight", "conv.conv.weight")
-                if "conv.weight" in k
-                else k.replace("conv.bias", "conv.conv.bias")
-            )
-        elif "encoder" in k and "conv" in k:
-            new_key = (
-                k.replace("conv.weight", "conv.conv.weight")
-                if "conv.weight" in k
-                else k.replace("conv.bias", "conv.conv.bias")
-            )
-        else:
-            new_key = k
-        new_state_dict[new_key] = v
-
-    autoencoder.load_state_dict(new_state_dict)
-    print("checkpoints loaded.")
-    return autoencoder
 
 
 def get_filenames(filenames_filepath: str) -> list:
@@ -147,12 +95,12 @@ def create_transforms(dim: tuple = None) -> Compose:
         )
 
 
-def round_number(number: float) -> int:
+def round_number(number: int) -> int:
     """
     Round the number to the nearest multiple of 128, with a minimum value of 128.
 
     Args:
-        number (float): Number to be rounded.
+        number (int): Number to be rounded.
 
     Returns:
         int: Rounded number.
@@ -256,7 +204,9 @@ def diff_model_create_training_data(env_config: dict, model_config_path: str) ->
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Load autoencoder if saving embeddings
-    autoencoder = load_autoencoder(autoencoder_path, device)
+    autoencoder = define_instance(args, "autoencoder_def").to(device)
+    checkpoint_autoencoder = load_autoencoder_ckpt(autoencoder_path)
+    autoencoder.load_state_dict(checkpoint_autoencoder)
 
     if not os.path.exists(output_root_embedding):
         os.makedirs(output_root_embedding)

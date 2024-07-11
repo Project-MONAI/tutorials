@@ -30,8 +30,6 @@ import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel
 from torch.cuda.amp import GradScaler, autocast
 
-from inferer import DiffusionInferer, LatentDiffusionInferer
-from custom_network_diffusion import CustomDiffusionModelUNet
 from generative.networks.schedulers import DDPMScheduler, DDIMScheduler
 
 

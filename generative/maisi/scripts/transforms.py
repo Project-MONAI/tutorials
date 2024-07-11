@@ -107,7 +107,7 @@ def define_random_intensity_transform(modality: str, image_keys: List[str] = ["i
 def define_vae_transform(
     is_train: bool,
     modality: str,
-    data_aug: bool,
+    random_aug: bool,
     k: int = 4,
     patch_size: List[int] = [128, 128, 128],
     val_patch_size: Optional[List[int]] = None,
@@ -123,9 +123,9 @@ def define_vae_transform(
     Define the MAISI VAE transform pipeline for training or validation.
 
     Args:
-        is_train (bool): Whether it's for training or not. If True, the output transform will consider data_aug, the cropping will use "patch_size" for random cropping. If False, the output transform will alwasy treat "data_aug" as False, will use "val_patch_size" for central cropping.
+        is_train (bool): Whether it's for training or not. If True, the output transform will consider random_aug, the cropping will use "patch_size" for random cropping. If False, the output transform will alwasy treat "random_aug" as False, will use "val_patch_size" for central cropping.
         modality (str): The imaging modality, either 'ct' or 'mri'.
-        data_aug (bool): Whether to apply random data augmentation.
+        random_aug (bool): Whether to apply random data augmentation.
         k (int, optional): Patches should be divisible by k. Defaults to 4.
         patch_size (List[int], optional): Size of the patches. Defaults to [128, 128, 128]. Will random crop patch for training.
         val_patch_size (Optional[List[int]], optional): Size of validation patches. Defaults to None. If None, will use the whole volume for validation. If given, will central crop a patch for validation.
@@ -170,7 +170,7 @@ def define_vae_transform(
         )
 
     random_transform = []
-    if is_train and data_aug:
+    if is_train and random_aug:
         random_transform.extend(define_random_intensity_transform(modality, image_keys=image_keys))
         random_transform.extend(
             [RandFlipd(keys=keys, allow_missing_keys=True, prob=0.5, spatial_axis=axis) for axis in range(3)]
@@ -228,7 +228,7 @@ def define_vae_transform(
     if is_train:
         train_transforms = Compose(
             common_transform + random_transform + train_crop + final_transform
-            if data_aug
+            if random_aug
             else common_transform + train_crop + final_transform
         )
         return train_transforms
@@ -245,7 +245,7 @@ class VAE_Transform:
     def __init__(
         self,
         is_train: bool,
-        data_aug: bool,
+        random_aug: bool,
         k: int = 4,
         patch_size: List[int] = [128, 128, 128],
         val_patch_size: Optional[List[int]] = None,
@@ -261,8 +261,8 @@ class VAE_Transform:
         Initialize the VAE_Transform.
 
         Args:
-            is_train (bool): Whether it's for training or not. If True, the output transform will consider data_aug, the cropping will use "patch_size" for random cropping. If False, the output transform will alwasy treat "data_aug" as False, will use "val_patch_size" for central cropping.
-            data_aug (bool): Whether to apply random data augmentation for training.
+            is_train (bool): Whether it's for training or not. If True, the output transform will consider random_aug, the cropping will use "patch_size" for random cropping. If False, the output transform will alwasy treat "random_aug" as False, will use "val_patch_size" for central cropping.
+            random_aug (bool): Whether to apply random data augmentation for training.
             k (int, optional): Patches should be divisible by k. Defaults to 4.
             patch_size (List[int], optional): Size of the patches. Defaults to [128, 128, 128]. Will random crop patch for training.
             val_patch_size (Optional[List[int]], optional): Size of validation patches. Defaults to None. If None, will use the whole volume for validation. If given, will central crop a patch for validation.
@@ -286,7 +286,7 @@ class VAE_Transform:
             self.transform_dict[modality] = define_vae_transform(
                 is_train=is_train,
                 modality=modality,
-                data_aug=data_aug,
+                random_aug=random_aug,
                 k=k,
                 patch_size=patch_size,
                 val_patch_size=val_patch_size,

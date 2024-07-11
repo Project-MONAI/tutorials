@@ -1,6 +1,6 @@
 {
     "data_option":{
-        "data_aug": true,
+        "random_aug": true,
         "spacing_type": "rand_zoom",
         "spacing": null,
         "select_channel": 0
@@ -16,9 +16,9 @@
         "kl_weight": 1e-7,
         "adv_weight": 0.1,
         "recon_loss": "l1",
-        "val_interval": 1,
+        "val_interval": 10,
         "cache": 0.5,
         "amp": true,
-        "n_epochs": 2000
+        "n_epochs": 12000
     }
 }

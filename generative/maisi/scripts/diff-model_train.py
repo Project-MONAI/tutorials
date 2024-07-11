@@ -1,6 +1,6 @@
 # Copyright (c) MONAI Consortium
 # Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
+# You may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #     http://www.apache.org/licenses/LICENSE-2.0
 # Unless required by applicable law or agreed to in writing, software
@@ -35,39 +35,31 @@ from custom_network_diffusion import CustomDiffusionModelUNet
 from generative.networks.schedulers import DDPMScheduler, DDIMScheduler
 
 
-def diff_model_train(
-    ckpt_folder="./models",
-    ckpt_prefix="unet3d",
-    data_root="./data",
-    data_list="./dataset_image.json",
-    data_list_order="sorted",
-    ignore_prev_loss=False,
-    output_size=512,
-    pretrained_ckpt_filepath="scratch",
-    lr=1e-4,
-    num_epochs=100,
-    num_training_data=1024,
-    num_train_timesteps=1e3,
-    scheduler_method="ddpm",
-):
+def diff_model_train(env_config_path: str, model_config_path: str) -> None:
     """
     Main function to train a diffusion model.
 
     Args:
-        ckpt_folder (str): Directory to save checkpoints.
-        ckpt_prefix (str): Prefix for checkpoint filenames.
-        data_root (str): Root directory of the dataset.
-        data_list (str): Path to the dataset list file.
-        data_list_order (str): Order of the data list ('sorted' or 'random').
-        ignore_prev_loss (bool): Flag to ignore previous loss.
-        output_size (int): Output size of the images.
-        pretrained_ckpt_filepath (str): Path to the pretrained checkpoint file.
-        lr (float): Learning rate for the optimizer.
-        num_epochs (int): Number of training epochs.
-        num_training_data (int): Number of training data samples.
-        num_train_timesteps (int): Number of training timesteps for the scheduler.
-        scheduler_method (str): Scheduler method ('ddpm' or 'ddim').
+        env_config_path (str): Path to the environment configuration file.
+        model_config_path (str): Path to the model configuration file.
     """
+    # Load environment configuration
+    with open(env_config_path, 'r') as f:
+        env_config = json.load(f)
+
+    # Load model configuration
+    with open(model_config_path, 'r') as f:
+        model_config = json.load(f)
+
+    ckpt_folder = env_config["model_dir"]
+    data_root = env_config["data_base_dir"][0]
+    data_list = env_config["json_data_list"][0]
+    pretrained_ckpt_filepath = env_config["trained_autoencoder_path"]
+
+    lr = model_config["diffusion_unet_train"]["lr"]
+    num_epochs = model_config["diffusion_unet_train"]["n_epochs"]
+    num_train_timesteps = model_config["noise_scheduler"]["num_train_timesteps"]
+
     dist.init_process_group(backend="nccl", init_method="env://", timeout=timedelta(seconds=7200))
 
     local_rank = int(os.environ["LOCAL_RANK"])
@@ -78,18 +70,12 @@ def diff_model_train(
 
     if local_rank == 0:
         print(f"[config] ckpt_folder -> {ckpt_folder}.")
-        print(f"[config] ckpt_prefix -> {ckpt_prefix}.")
         print(f"[config] data_root -> {data_root}.")
         print(f"[config] data_list -> {data_list}.")
-        print(f"[config] data_list_order -> {data_list_order}.")
-        print(f"[config] ignore_prev_loss -> {ignore_prev_loss}.")
         print(f"[config] lr -> {lr}.")
         print(f"[config] num_epochs -> {num_epochs}.")
-        print(f"[config] num_training_data -> {num_training_data}.")
         print(f"[config] num_train_timesteps -> {num_train_timesteps}.")
-        print(f"[config] output_size -> {output_size}.")
         print(f"[config] pretrained_ckpt_filepath -> {pretrained_ckpt_filepath}.")
-        print(f"[config] scheduler_method -> {scheduler_method}.")
 
         Path(ckpt_folder).mkdir(parents=True, exist_ok=True)
 
@@ -121,40 +107,13 @@ def diff_model_train(
             }
         )
 
-    if isinstance(num_training_data, str) and num_training_data.lower() == "all":
-        train_files = files
-        train_files = partition_dataset(
-            data=train_files,
-            shuffle=True,
-            num_partitions=dist.get_world_size(),
-            even_divisible=True,
-        )[local_rank]
-    else:
-        if data_list_order.lower() == "sorted":
-            with open("analyze_data_z.yaml") as file:
-                _analyze_data = yaml.load(file, Loader=yaml.FullLoader)
-            case_names = _analyze_data.keys()
-            sorted_case_names = sorted(case_names, key=_analyze_data.get)
-
-            case_names_subset = sorted_case_names[-num_training_data:]
-            print(f"case_names_subset {len(case_names_subset)}")
-
-            train_files = []
-            for case_name in case_names_subset:
-                for _ii in range(len(files)):
-                    if case_name + ".nii.gz" in files[_ii]["image"]:
-                        train_files.append(files[_ii])
-                        break
-            print(f"train_files {len(train_files)}")
-        elif data_list_order.lower() == "random":
-            train_files = files[:num_training_data]
-
-        train_files = partition_dataset(
-            data=train_files,
-            shuffle=True,
-            num_partitions=dist.get_world_size(),
-            even_divisible=True,
-        )[local_rank]
+    train_files = files
+    train_files = partition_dataset(
+        data=train_files,
+        shuffle=True,
+        num_partitions=dist.get_world_size(),
+        even_divisible=True,
+    )[local_rank]
 
     train_transforms = Compose(
         [
@@ -187,22 +146,22 @@ def diff_model_train(
         num_workers=2,
     )
 
-    num_images_per_batch = 1
+    num_images_per_batch = model_config["diffusion_unet_train"]["batch_size"]
     print(f"num_images_per_batch -> {num_images_per_batch}.")
     train_loader = ThreadDataLoader(train_ds, num_workers=6, batch_size=num_images_per_batch, shuffle=True)
 
     unet = CustomDiffusionModelUNet(
-        spatial_dims=3,
-        in_channels=4,
-        out_channels=4,
-        num_channels=(64, 128, 256, 512),
-        attention_levels=(False, False, True, True),
-        num_head_channels=(0, 0, 32, 32),
-        num_res_blocks=2,
-        use_flash_attention=True,
-        input_top_region_index=True,
-        input_bottom_region_index=True,
-        input_spacing=True,
+        spatial_dims=model_config["spatial_dims"],
+        in_channels=model_config["latent_channels"],
+        out_channels=model_config["latent_channels"],
+        num_channels=model_config["diffusion_unet_def"]["num_channels"],
+        attention_levels=model_config["diffusion_unet_def"]["attention_levels"],
+        num_head_channels=model_config["diffusion_unet_def"]["num_head_channels"],
+        num_res_blocks=model_config["diffusion_unet_def"]["num_res_blocks"],
+        use_flash_attention=model_config["diffusion_unet_def"]["use_flash_attention"],
+        input_top_region_index=model_config["diffusion_unet_def"]["include_top_region_index_input"],
+        input_bottom_region_index=model_config["diffusion_unet_def"]["include_bottom_region_index_input"],
+        input_spacing=model_config["diffusion_unet_def"]["include_spacing_input"],
     )
     unet.to(device)
     unet = torch.nn.SyncBatchNorm.convert_sync_batchnorm(unet)
@@ -221,21 +180,22 @@ def diff_model_train(
             unet.load_state_dict(checkpoint_unet["unet_state_dict"], strict=True)
         print(f"pretrained checkpoint {pretrained_ckpt_filepath} loaded.")
 
+    scheduler_method = model_config["noise_scheduler"]["schedule"]
     if scheduler_method == "ddpm":
         scheduler = DDPMScheduler(
             num_train_timesteps=num_train_timesteps,
-            schedule="scaled_linear_beta",
-            beta_start=0.0015,
-            beta_end=0.0195,
-            clip_sample=False,
+            schedule=model_config["noise_scheduler"]["schedule"],
+            beta_start=model_config["noise_scheduler"]["beta_start"],
+            beta_end=model_config["noise_scheduler"]["beta_end"],
+            clip_sample=model_config["noise_scheduler"]["clip_sample"],
         )
     elif scheduler_method == "ddim":
         scheduler = DDIMScheduler(
             num_train_timesteps=num_train_timesteps,
-            schedule="scaled_linear_beta",
-            beta_start=0.0001,
-            beta_end=0.02,
-            clip_sample=False,
+            schedule=model_config["noise_scheduler"]["schedule"],
+            beta_start=model_config["noise_scheduler"]["beta_start"],
+            beta_end=model_config["noise_scheduler"]["beta_end"],
+            clip_sample=model_config["noise_scheduler"]["clip_sample"],
         )
     print(f"scheduler_method -> {scheduler_method}.")
 
@@ -264,6 +224,7 @@ def diff_model_train(
 
     loss_pt = torch.nn.L1Loss()
 
+    ignore_prev_loss = False
     if ignore_prev_loss:
         best_loss = 1e4
     else:
@@ -359,10 +320,10 @@ def diff_model_train(
                     "num_train_timesteps": num_train_timesteps,
                     "scale_factor": scale_factor,
                     "scheduler_method": scheduler_method,
-                    "output_size": output_size,
+                    "output_size": model_config["diffusion_unet_def"]["num_channels"][-1],
                     "unet_state_dict": unet_state_dict,
                 },
-                f"{ckpt_folder}/{ckpt_prefix}_current.pt",
+                f"{ckpt_folder}/{model_config['diffusion_unet_train']['ckpt_prefix']}_current.pt",
             )
 
             if loss_torch_epoch < best_loss:
@@ -375,12 +336,20 @@ def diff_model_train(
                         "num_train_timesteps": num_train_timesteps,
                         "scale_factor": scale_factor,
                         "scheduler_method": scheduler_method,
-                        "output_size": output_size,
+                        "output_size": model_config["diffusion_unet_def"]["num_channels"][-1],
                         "unet_state_dict": unet_state_dict,
                     },
-                    f"{ckpt_folder}/{ckpt_prefix}_best.pt",
+                    f"{ckpt_folder}/{model_config['diffusion_unet_train']['ckpt_prefix']}_best.pt",
                 )
 
 
 if __name__ == "__main__":
-    diff_model_train()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Diffusion Model Training")
+    parser.add_argument('--env_config', type=str, required=True, help='Path to environment configuration file')
+    parser.add_argument('--model_config', type=str, required=True, help='Path to model configuration file')
+
+    args = parser.parse_args()
+
+    diff_model_train(args.env_config, args.model_config)

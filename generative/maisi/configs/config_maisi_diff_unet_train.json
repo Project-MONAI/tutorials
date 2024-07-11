@@ -1,0 +1,8 @@
+{
+    "model_dir": "./models/",
+    "output_dir": "./output",
+    "trained_autoencoder_path": "./models/autoencoder_epoch273.pt",
+    "trained_diffusion_path": "./models",
+    "data_base_dir": ["./datasets/C4KC-KiTS_subset"],
+    "json_data_list": ["./datasets/C4KC-KiTS_subset.json"]
+}

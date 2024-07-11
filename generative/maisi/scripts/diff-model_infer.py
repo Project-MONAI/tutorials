@@ -15,7 +15,7 @@ import torch
 import nibabel as nib
 import numpy as np
 from datetime import datetime
-import fire
+import json
 
 from monai.utils import set_determinism
 from inferer import DiffusionInferer, LatentDiffusionInferer
@@ -24,37 +24,37 @@ from custom_network_diffusion import CustomDiffusionModelUNet
 from generative.networks.schedulers import DDPMScheduler
 
 
-def diff_model_infer(
-    ckpt_filepath="",
-    random_seed=random.randint(0, 99999),
-    output_prefix="unet_3d",
-    output_size=512,
-    amp=True,
-    a_min=-1000,
-    a_max=1000,
-    b_min=0,
-    b_max=1,
-):
+def diff_model_infer(env_config_path: str, model_config_path: str, ckpt_filepath: str, amp: bool = True):
     """
     Main function to run the diffusion model.
 
     Args:
+        env_config_path (str): Path to the environment configuration file.
+        model_config_path (str): Path to the model configuration file.
         ckpt_filepath (str): Path to the checkpoint file.
-        random_seed (int): Random seed for reproducibility.
-        output_prefix (str): Prefix for output filenames.
-        output_size (int or tuple): Output size of the images.
         amp (bool): Flag to enable automatic mixed precision.
-        a_min (int): Minimum intensity value for scaling.
-        a_max (int): Maximum intensity value for scaling.
-        b_min (int): Minimum value for normalization.
-        b_max (int): Maximum value for normalization.
     """
+    # Load environment configuration
+    with open(env_config_path, 'r') as f:
+        env_config = json.load(f)
+
+    # Load model configuration
+    with open(model_config_path, 'r') as f:
+        model_config = json.load(f)
+
+    random_seed = random.randint(0, 99999)
+    output_prefix = "unet_3d"
+    a_min = -1000
+    a_max = 1000
+    b_min = 0
+    b_max = 1
+
     print(f"a_min: {a_min}, a_max: {a_max}, b_min: {b_min}, b_max: {b_max}.")
 
     # Initialize distributed processing
-    rank = int(os.environ.get("OMPI_COMM_WORLD_RANK"))
-    local_rank = int(os.environ.get("OMPI_COMM_WORLD_LOCAL_RANK"))
-    world_size = int(os.environ.get("OMPI_COMM_WORLD_SIZE"))
+    rank = int(os.environ.get("OMPI_COMM_WORLD_RANK", 0))
+    local_rank = int(os.environ.get("OMPI_COMM_WORLD_LOCAL_RANK", 0))
+    world_size = int(os.environ.get("OMPI_COMM_WORLD_SIZE", 1))
     device = torch.device("cuda", local_rank)
     torch.cuda.set_device(device)
     print(f"Using {device}.")
@@ -83,13 +83,13 @@ def diff_model_infer(
 
     # Initialize autoencoder
     autoencoder = AutoencoderKLCKModified_TP(
-        spatial_dims=3,
-        in_channels=1,
-        out_channels=1,
-        num_channels=(64, 128, 256),
-        latent_channels=4,
-        attention_levels=(False, False, False),
-        num_res_blocks=(2, 2, 2),
+        spatial_dims=model_config["spatial_dims"],
+        in_channels=model_config["image_channels"],
+        out_channels=model_config["image_channels"],
+        num_channels=model_config["diffusion_unet_def"]["num_channels"],
+        latent_channels=model_config["latent_channels"],
+        attention_levels=model_config["diffusion_unet_def"]["attention_levels"],
+        num_res_blocks=model_config["diffusion_unet_def"]["num_res_blocks"],
         norm_num_groups=32,
         norm_eps=1e-06,
         with_encoder_nonlocal_attn=False,
@@ -101,17 +101,17 @@ def diff_model_infer(
 
     # Initialize UNet model
     unet = CustomDiffusionModelUNet(
-        spatial_dims=3,
-        in_channels=4,
-        out_channels=4,
-        num_channels=(64, 128, 256, 512),
-        attention_levels=(False, False, True, True),
-        num_head_channels=(0, 0, 32, 32),
-        num_res_blocks=2,
-        use_flash_attention=True,
-        input_top_region_index=True,
-        input_bottom_region_index=True,
-        input_spacing=True,
+        spatial_dims=model_config["spatial_dims"],
+        in_channels=model_config["latent_channels"],
+        out_channels=model_config["latent_channels"],
+        num_channels=model_config["diffusion_unet_def"]["num_channels"],
+        attention_levels=model_config["diffusion_unet_def"]["attention_levels"],
+        num_head_channels=model_config["diffusion_unet_def"]["num_head_channels"],
+        num_res_blocks=model_config["diffusion_unet_def"]["num_res_blocks"],
+        use_flash_attention=model_config["diffusion_unet_def"]["use_flash_attention"],
+        input_top_region_index=model_config["diffusion_unet_def"]["include_top_region_index_input"],
+        input_bottom_region_index=model_config["diffusion_unet_def"]["include_bottom_region_index_input"],
+        input_spacing=model_config["diffusion_unet_def"]["include_spacing_input"],
     )
     unet.to(device)
 
@@ -125,10 +125,10 @@ def diff_model_infer(
 
     scheduler = DDPMScheduler(
         num_train_timesteps=num_train_timesteps,
-        schedule="scaled_linear_beta",
-        beta_start=0.0015,
-        beta_end=0.0195,
-        clip_sample=False,
+        schedule=model_config["noise_scheduler"]["schedule"],
+        beta_start=model_config["noise_scheduler"]["beta_start"],
+        beta_end=model_config["noise_scheduler"]["beta_end"],
+        clip_sample=model_config["noise_scheduler"]["clip_sample"],
     )
     scheduler.set_timesteps(num_inference_steps=num_train_timesteps)
 
@@ -136,7 +136,7 @@ def diff_model_infer(
     inferer = LatentDiffusionInferer(scheduler, scale_factor=scale_factor)
     print(f"scale_factor -> {scale_factor}.")
 
-    checkpoint_autoencoder = torch.load("/workspace/monai/generative/from_canz/autoencoder_epoch273.pt")
+    checkpoint_autoencoder = torch.load(env_config["trained_autoencoder_path"])
     new_state_dict = {}
     for k, v in checkpoint_autoencoder.items():
         if "decoder" in k and "conv" in k:
@@ -184,7 +184,7 @@ def diff_model_infer(
             noise = torch.randn(
                 (
                     1,
-                    4,
+                    model_config["latent_channels"],
                     output_size[0] // 4,
                     output_size[1] // 4,
                     output_size[2] // 4,
@@ -477,13 +477,20 @@ def diff_model_infer(
             new_image = nib.Nifti1Image(data, affine=out_affine)
 
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        nib.save(
-            new_image,
-            f"./predictions/{output_prefix}_seed{rand_seed}_size{output_size[0]:d}x{output_size[1]:d}x{output_size[2]:d}_spacing{out_spacing[0]:.2f}x{out_spacing[1]:.2f}x{out_spacing[2]:.2f}_{timestamp}.nii.gz",
-        )
-
-    return
+        output_path = f"./predictions/{output_prefix}_seed{rand_seed}_size{output_size[0]:d}x{output_size[1]:d}x{output_size[2]:d}_spacing{out_spacing[0]:.2f}x{out_spacing[1]:.2f}x{out_spacing[2]:.2f}_{timestamp}.nii.gz"
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        nib.save(new_image, output_path)
 
 
 if __name__ == "__main__":
-    diff_model_infer()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Diffusion Model Inference")
+    parser.add_argument('--env_config', type=str, required=True, help='Path to environment configuration file')
+    parser.add_argument('--model_config', type=str, required=True, help='Path to model configuration file')
+    parser.add_argument('--ckpt_filepath', type=str, required=True, help='Path to checkpoint file')
+    parser.add_argument('--amp', type=bool, default=True, help='Flag to enable automatic mixed precision')
+
+    args = parser.parse_args()
+
+    diff_model_infer(args.env_config, args.model_config, args.ckpt_filepath, args.amp)

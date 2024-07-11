@@ -31,12 +31,12 @@ np.random.seed(0)
 set_determinism(seed=0)
 
 
-def load_autoencoder(autoencoder_root, device):
+def load_autoencoder(autoencoder_path: str, device: torch.device) -> torch.nn.Module:
     """
     Load the autoencoder model and its checkpoints.
 
     Args:
-        autoencoder_root (str): Path to the autoencoder root directory.
+        autoencoder_path (str): Path to the autoencoder checkpoint file.
         device (torch.device): Device to load the model onto.
 
     Returns:
@@ -59,8 +59,7 @@ def load_autoencoder(autoencoder_root, device):
     )
     autoencoder.to(device)
 
-    checkpoint_path = os.path.join(autoencoder_root, "autoencoder_epoch273.pt")
-    checkpoint_autoencoder = torch.load(checkpoint_path, map_location=device)
+    checkpoint_autoencoder = torch.load(autoencoder_path, map_location=device)
     new_state_dict = {}
     for k, v in checkpoint_autoencoder.items():
         if "decoder" in k and "conv" in k:
@@ -84,7 +83,7 @@ def load_autoencoder(autoencoder_root, device):
     return autoencoder
 
 
-def get_filenames(filenames_filepath):
+def get_filenames(filenames_filepath: str) -> list:
     """
     Get the list of filenames from the provided filepath.
 
@@ -105,7 +104,7 @@ def get_filenames(filenames_filepath):
     return filenames_raw
 
 
-def create_transforms(dim=None):
+def create_transforms(dim: tuple = None) -> Compose:
     """
     Create a set of MONAI transforms for preprocessing.
 
@@ -148,7 +147,7 @@ def create_transforms(dim=None):
         )
 
 
-def round_number(number):
+def round_number(number: float) -> int:
     """
     Round the number to the nearest multiple of 128, with a minimum value of 128.
 
@@ -162,7 +161,7 @@ def round_number(number):
     return int(new_number)
 
 
-def process_file(filepath, dataroot, output_dir, pl_root, transforms):
+def process_file(filepath: str, dataroot: str, output_dir: str, pl_root: str, transforms: Compose) -> str:
     """
     Process a single file for data transformation and saving.
 
@@ -172,6 +171,9 @@ def process_file(filepath, dataroot, output_dir, pl_root, transforms):
         output_dir (str): Output directory for the transformed data.
         pl_root (str): Root directory for the pseudo labels.
         transforms (Compose): MONAI transforms to apply.
+
+    Returns:
+        str: Processing status message.
     """
     print(f"Processing: {filepath}")
 
@@ -231,11 +233,30 @@ def process_file(filepath, dataroot, output_dir, pl_root, transforms):
     return f"Finished {filepath}"
 
 
-def diff_model_create_training_data(
-    dataroot, filenames_filepath, output_root_embedding, autoencoder_root, list_filepath, output_dir, pl_root
-):
+def diff_model_create_training_data(env_config: dict, model_config_path: str) -> None:
+    """
+    Create training data for the diffusion model.
+
+    Args:
+        env_config (dict): Environment configuration.
+        model_config_path (str): Path to the model configuration file.
+    """
+    # Load model configuration
+    with open(model_config_path, 'r') as f:
+        model_config = json.load(f)
+
+    dataroot = env_config["data_base_dir"][0]
+    filenames_filepath = env_config["json_data_list"][0]
+    output_root_embedding = env_config["output_dir"]
+    autoencoder_path = env_config["trained_autoencoder_path"]
+    list_filepath = filenames_filepath
+    output_dir = env_config["output_dir"]
+    pl_root = env_config["tfevent_path"]
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     # Load autoencoder if saving embeddings
-    autoencoder = load_autoencoder(autoencoder_root, device)
+    autoencoder = load_autoencoder(autoencoder_path, device)
 
     if not os.path.exists(output_root_embedding):
         os.makedirs(output_root_embedding)
@@ -297,14 +318,16 @@ def diff_model_create_training_data(
 
 
 if __name__ == "__main__":
-    dataroot = "/dataroot"
-    filenames_filepath = "/filenames_image_nii.txt"
-    output_root_embedding = "/dataroot/encoding_128"
-    autoencoder_root = "/workspace/monai/generative/from_canz"
-    list_filepath = "/dataroot/filenames_nii_common.txt"
-    output_dir = "/mnt/drive2/data_128"
-    pl_root = "/mnt/drive2/V2_pseudo_12Feb2024"
+    import argparse
 
-    diff_model_create_training_data(
-        dataroot, filenames_filepath, output_root_embedding, autoencoder_root, list_filepath, output_dir, pl_root
-    )
+    parser = argparse.ArgumentParser(description="Diffusion Model Training Data Creation")
+    parser.add_argument('--env_config', type=str, required=True, help='Path to environment configuration file')
+    parser.add_argument('--model_config', type=str, required=True, help='Path to model configuration file')
+
+    args = parser.parse_args()
+
+    # Load environment configuration
+    with open(args.env_config, 'r') as f:
+        env_config = json.load(f)
+
+    diff_model_create_training_data(env_config, args.model_config)

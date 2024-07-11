@@ -98,7 +98,7 @@ def diff_model_create_training_data(env_config_path: str, model_config_path: str
     # Load environment configuration
     with open(env_config_path, "r") as f:
         env_config = json.load(f)
-    
+
     for k, v in env_config.items():
         setattr(args, k, v)
 

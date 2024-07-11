@@ -703,6 +703,7 @@ def load_autoencoder_ckpt(load_autoencoder_path):
     checkpoint_autoencoder = new_state_dict
     return checkpoint_autoencoder
 
+
 def KL_loss(z_mu, z_sigma):
     """
     Compute the Kullback-Leibler (KL) divergence loss for a variational autoencoder (VAE).
@@ -723,6 +724,7 @@ def KL_loss(z_mu, z_sigma):
     )
     return torch.sum(kl_loss) / kl_loss.shape[0]
 
+
 def dynamic_infer(inferer, model, images):
     """
     Perform dynamic inference using a model and an inferer, typically a monai SlidingWindowInferer.
@@ -742,4 +744,3 @@ def dynamic_infer(inferer, model, images):
         return model(images)
     else:
         return inferer(network=model, inputs=images)
-

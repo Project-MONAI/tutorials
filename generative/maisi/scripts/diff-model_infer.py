@@ -35,11 +35,11 @@ def diff_model_infer(env_config_path: str, model_config_path: str, ckpt_filepath
         amp (bool): Flag to enable automatic mixed precision.
     """
     # Load environment configuration
-    with open(env_config_path, 'r') as f:
+    with open(env_config_path, "r") as f:
         env_config = json.load(f)
 
     # Load model configuration
-    with open(model_config_path, 'r') as f:
+    with open(model_config_path, "r") as f:
         model_config = json.load(f)
 
     random_seed = random.randint(0, 99999)
@@ -486,10 +486,10 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Diffusion Model Inference")
-    parser.add_argument('--env_config', type=str, required=True, help='Path to environment configuration file')
-    parser.add_argument('--model_config', type=str, required=True, help='Path to model configuration file')
-    parser.add_argument('--ckpt_filepath', type=str, required=True, help='Path to checkpoint file')
-    parser.add_argument('--amp', type=bool, default=True, help='Flag to enable automatic mixed precision')
+    parser.add_argument("--env_config", type=str, required=True, help="Path to environment configuration file")
+    parser.add_argument("--model_config", type=str, required=True, help="Path to model configuration file")
+    parser.add_argument("--ckpt_filepath", type=str, required=True, help="Path to checkpoint file")
+    parser.add_argument("--amp", type=bool, default=True, help="Flag to enable automatic mixed precision")
 
     args = parser.parse_args()
 

@@ -242,7 +242,7 @@ def diff_model_create_training_data(env_config: dict, model_config_path: str) ->
         model_config_path (str): Path to the model configuration file.
     """
     # Load model configuration
-    with open(model_config_path, 'r') as f:
+    with open(model_config_path, "r") as f:
         model_config = json.load(f)
 
     dataroot = env_config["data_base_dir"][0]
@@ -321,13 +321,13 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Diffusion Model Training Data Creation")
-    parser.add_argument('--env_config', type=str, required=True, help='Path to environment configuration file')
-    parser.add_argument('--model_config', type=str, required=True, help='Path to model configuration file')
+    parser.add_argument("--env_config", type=str, required=True, help="Path to environment configuration file")
+    parser.add_argument("--model_config", type=str, required=True, help="Path to model configuration file")
 
     args = parser.parse_args()
 
     # Load environment configuration
-    with open(args.env_config, 'r') as f:
+    with open(args.env_config, "r") as f:
         env_config = json.load(f)
 
     diff_model_create_training_data(env_config, args.model_config)

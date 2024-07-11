@@ -44,11 +44,11 @@ def diff_model_train(env_config_path: str, model_config_path: str) -> None:
         model_config_path (str): Path to the model configuration file.
     """
     # Load environment configuration
-    with open(env_config_path, 'r') as f:
+    with open(env_config_path, "r") as f:
         env_config = json.load(f)
 
     # Load model configuration
-    with open(model_config_path, 'r') as f:
+    with open(model_config_path, "r") as f:
         model_config = json.load(f)
 
     ckpt_folder = env_config["model_dir"]
@@ -347,8 +347,8 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Diffusion Model Training")
-    parser.add_argument('--env_config', type=str, required=True, help='Path to environment configuration file')
-    parser.add_argument('--model_config', type=str, required=True, help='Path to model configuration file')
+    parser.add_argument("--env_config", type=str, required=True, help="Path to environment configuration file")
+    parser.add_argument("--model_config", type=str, required=True, help="Path to model configuration file")
 
     args = parser.parse_args()
 

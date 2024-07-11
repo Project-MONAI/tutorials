@@ -9,6 +9,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
 import json
 import os
 from pathlib import Path
@@ -23,33 +24,12 @@ import monai
 from monai.transforms import Compose
 from monai.utils import set_determinism
 
-from scripts.utils import define_instance, load_autoencoder_ckpt
+from utils import define_instance, load_autoencoder_ckpt
 
 # Set the random seed for reproducibility
 torch.manual_seed(0)
 np.random.seed(0)
 set_determinism(seed=0)
-
-
-def get_filenames(filenames_filepath: str) -> list:
-    """
-    Get the list of filenames from the provided filepath.
-
-    Args:
-        filenames_filepath (str): Path to the filenames file.
-
-    Returns:
-        list: List of filenames.
-    """
-    if filenames_filepath.endswith(".txt"):
-        with open(filenames_filepath, "r") as file:
-            lines = file.readlines()
-        filenames_raw = [_item.strip() for _item in lines]
-    else:
-        with open(filenames_filepath, "r") as file:
-            data = json.load(file)
-        filenames_raw = data
-    return filenames_raw
 
 
 def create_transforms(dim: tuple = None) -> Compose:
@@ -65,23 +45,10 @@ def create_transforms(dim: tuple = None) -> Compose:
     if dim:
         return Compose(
             [
-                monai.transforms.LoadImaged(keys=["image", "label"]),
-                monai.transforms.EnsureChannelFirstd(keys=["image", "label"]),
-                monai.transforms.Orientationd(keys=["image", "label"], axcodes="RAS"),
-                monai.transforms.EnsureTyped(keys=["image", "label"], dtype=[torch.float32, torch.short]),
-                monai.transforms.Resized(
-                    keys=["image", "label"],
-                    spatial_size=dim,
-                    mode=["trilinear", "nearest"],
-                ),
-            ]
-        )
-    else:
-        return Compose(
-            [
                 monai.transforms.LoadImaged(keys="image"),
                 monai.transforms.EnsureChannelFirstd(keys="image"),
                 monai.transforms.Orientationd(keys="image", axcodes="RAS"),
+                monai.transforms.EnsureTyped(keys="image", dtype=torch.float32),
                 monai.transforms.ScaleIntensityRanged(
                     keys="image",
                     a_min=-1000,
@@ -90,22 +57,31 @@ def create_transforms(dim: tuple = None) -> Compose:
                     b_max=1,
                     clip=True,
                 ),
-                monai.transforms.EnsureTyped(keys="image", dtype=torch.float32),
+                monai.transforms.Resized(keys="image", spatial_size=dim, mode="trilinear"),
+            ]
+        )
+    else:
+        return Compose(
+            [
+                monai.transforms.LoadImaged(keys="image"),
+                monai.transforms.EnsureChannelFirstd(keys="image"),
+                monai.transforms.Orientationd(keys="image", axcodes="RAS"),
             ]
         )
 
 
-def round_number(number: int) -> int:
+def round_number(number: int, base_number: int = 128) -> int:
     """
-    Round the number to the nearest multiple of 128, with a minimum value of 128.
+    Round the number to the nearest multiple of the base number, with a minimum value of the base number.
 
     Args:
         number (int): Number to be rounded.
+        base_number (int): Number to be common divisor.
 
     Returns:
         int: Rounded number.
     """
-    new_number = max(round(float(number) / 128.0), 1.0) * 128.0
+    new_number = max(round(float(number) / float(base_number)), 1.0) * float(base_number)
     return int(new_number)
 
 
@@ -170,18 +146,10 @@ def process_file(filepath: str, dataroot: str, output_dir: str, pl_root: str, tr
     nib.save(out_img, out_filename)
     print(f"out_filename: {out_filename}")
 
-    nda_label = nda_label.numpy().squeeze().astype(np.uint8)
-    out_filename = out_filepath_base + f"_label.nii.gz"
-    out_path = Path(out_filename)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_img = nib.Nifti1Image(nda_label, affine=affine)
-    nib.save(out_img, out_filename)
-    print(f"out_filename: {out_filename}")
-
     return f"Finished {filepath}"
 
 
-def diff_model_create_training_data(env_config: dict, model_config_path: str) -> None:
+def diff_model_create_training_data(env_config_path: str, model_config_path: str) -> None:
     """
     Create training data for the diffusion model.
 
@@ -189,55 +157,86 @@ def diff_model_create_training_data(env_config: dict, model_config_path: str) ->
         env_config (dict): Environment configuration.
         model_config_path (str): Path to the model configuration file.
     """
+    args = argparse.Namespace()
+
+    # Load environment configuration
+    with open(env_config_path, "r") as f:
+        env_config = json.load(f)
+    
+    for k, v in env_config.items():
+        setattr(args, k, v)
+
     # Load model configuration
     with open(model_config_path, "r") as f:
         model_config = json.load(f)
 
-    dataroot = env_config["data_base_dir"][0]
-    filenames_filepath = env_config["json_data_list"][0]
-    output_root_embedding = env_config["output_dir"]
-    autoencoder_path = env_config["trained_autoencoder_path"]
-    list_filepath = filenames_filepath
-    output_dir = env_config["output_dir"]
-    pl_root = env_config["tfevent_path"]
+    for k, v in model_config.items():
+        setattr(args, k, v)
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    dist.init_process_group(backend="nccl", init_method="env://")
+    local_rank = dist.get_rank()
+    world_size = dist.get_world_size()
+    device = torch.device("cuda", local_rank)
+    torch.cuda.set_device(device)
+    print(f"Using device {device}")
 
     # Load autoencoder if saving embeddings
     autoencoder = define_instance(args, "autoencoder_def").to(device)
-    checkpoint_autoencoder = load_autoencoder_ckpt(autoencoder_path)
-    autoencoder.load_state_dict(checkpoint_autoencoder)
+    try:
+        checkpoint_autoencoder = load_autoencoder_ckpt(args.trained_autoencoder_path)
+        autoencoder.load_state_dict(checkpoint_autoencoder)
+    except:
+        print("The trained_autoencoder_path does not exist!")
 
-    if not os.path.exists(output_root_embedding):
-        os.makedirs(output_root_embedding)
+    if not os.path.exists(args.embedding_base_dir):
+        os.makedirs(args.embedding_base_dir)
 
-    filenames_raw = get_filenames(filenames_filepath)
-    transforms = create_transforms()
+    with open(args.json_data_list, "r") as file:
+        json_data = json.load(file)
+    filenames_raw = json_data["training"]
+    filenames_raw = [_item["image"] for _item in filenames_raw]
+    print(f"filenames_raw: {filenames_raw}")
+
+    plain_transforms = create_transforms(dim=None)
 
     for _iter in range(len(filenames_raw)):
+        if _iter % world_size != local_rank:
+            continue
+
         filepath = filenames_raw[_iter]
-        out_filename_base = filepath.replace("_image.nii.gz", "")
-        out_filename_base = os.path.join(output_root_embedding, out_filename_base)
+        out_filename_base = filepath.replace(".gz", "").replace(".nii", "")
+        out_filename_base = os.path.join(args.embedding_base_dir, out_filename_base)
         out_filename = out_filename_base + f"_emb.nii.gz"
 
         if os.path.isfile(out_filename):
             continue
-        else:
-            print(f"{out_filename} does not exist.")
 
-        test_data = {"image": os.path.join(dataroot, filepath)}
-        transformed_data = transforms(test_data)
+        test_data = {"image": os.path.join(args.data_base_dir, filepath)}
+        transformed_data = plain_transforms(test_data)
         nda = transformed_data["image"]
 
-        spacing = nda.meta["pixdim"][1:4]
+        dim = nda.meta["dim"]
+        dim = dim[1:4]
+        dim = [int(dim[_i]) for _i in range(3)]
+
+        spacing = nda.meta["pixdim"]
+        spacing = spacing[1:4]
         spacing = [float(spacing[_i]) for _i in range(3)]
 
-        nda = nda.numpy().squeeze()
-        print(f"nda: {nda.shape} {nda.dtype} {np.amax(nda)} {np.amin(nda)}")
+        print("old", dim, spacing)
 
-        affine = np.eye(4)
-        for _s in range(3):
-            affine[_s, _s] = spacing[_s]
+        new_dim = [round_number(dim[_i]) for _i in range(3)]
+        new_dim = tuple(new_dim)
+        new_transforms = create_transforms(new_dim)
+
+        new_data = new_transforms(test_data)
+        nda_image = new_data["image"]
+
+        new_affine = nda_image.meta["affine"]
+        new_affine = new_affine.numpy()
+
+        nda_image = nda_image.numpy().squeeze()
+        print("new", nda_image.shape, new_affine)
 
         try:
             out_path = Path(out_filename)
@@ -246,25 +245,18 @@ def diff_model_create_training_data(env_config: dict, model_config_path: str) ->
 
             with torch.cuda.amp.autocast():
                 with torch.no_grad():
-                    pt_nda = torch.from_numpy(nda).float().to(device)
+                    pt_nda = torch.from_numpy(nda_image).float().to(device)
                     pt_nda.unsqueeze_(0).unsqueeze_(0)
 
                     z = autoencoder.encode_stage_2_inputs(pt_nda)
-                    print(f"z: {z.size()}, {z.dtype}, {z.is_cuda} {1 / torch.std(z)} {torch.mean(z)}")
+                    print(f"z: {z.size()}, {z.dtype}")
 
                     out_nda = z.squeeze().cpu().detach().numpy()
                     out_nda = out_nda.transpose(1, 2, 3, 0)
-                    out_img = nib.Nifti1Image(np.float32(out_nda), affine=affine)
+                    out_img = nib.Nifti1Image(np.float32(out_nda), affine=new_affine)
                     nib.save(out_img, out_filename)
         except Exception as e:
             print(f"Error processing {filepath}: {e}")
-
-    with open(list_filepath, "r") as file:
-        filepaths = file.readlines()
-    filepaths = [_item.strip() for _item in filepaths]
-
-    for filepath in filepaths:
-        process_file(filepath, dataroot, output_dir, pl_root, transforms)
 
 
 if __name__ == "__main__":
@@ -275,9 +267,4 @@ if __name__ == "__main__":
     parser.add_argument("--model_config", type=str, required=True, help="Path to model configuration file")
 
     args = parser.parse_args()
-
-    # Load environment configuration
-    with open(args.env_config, "r") as f:
-        env_config = json.load(f)
-
-    diff_model_create_training_data(env_config, args.model_config)
+    diff_model_create_training_data(args.env_config, args.model_config)

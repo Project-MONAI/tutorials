@@ -3,6 +3,31 @@
     "spatial_dims": 3,
     "image_channels": 1,
     "latent_channels": 4,
+    "autoencoder_def": {
+        "_target_": "monai.apps.generation.maisi.networks.autoencoderkl_maisi.AutoencoderKlMaisi",
+        "spatial_dims": "@spatial_dims",
+        "in_channels": "@image_channels",
+        "out_channels": "@image_channels",
+        "latent_channels": "@latent_channels",
+        "num_channels": [
+            64,
+            128,
+            256
+        ],
+        "num_res_blocks": [2,2,2],
+        "num_splits": 16,
+        "norm_num_groups": 32,
+        "norm_eps": 1e-06,
+        "attention_levels": [
+            false,
+            false,
+            false
+        ],
+        "with_encoder_nonlocal_attn": false,
+        "with_decoder_nonlocal_attn": false,
+        "use_checkpointing": false,
+        "use_convtranspose": false
+    },
     "diffusion_unet_def": {
         "_target_": "monai.apps.generation.maisi.networks.diffusion_model_unet_maisi.DiffusionModelUNetMaisi",
         "spatial_dims": "@spatial_dims",
@@ -42,8 +67,8 @@
     },
     "diffusion_unet_train": {
         "batch_size": 1,
-        "cache_rate": 0.0,
-        "lr": 1e-5,
+        "cache_rate": 0,
+        "lr": 0.00001,
         "n_epochs": 100,
         "weighted_loss": 100
     }

@@ -46,7 +46,7 @@ def diff_model_train(env_config_path: str, model_config_path: str) -> None:
     # Load environment configuration
     with open(env_config_path, "r") as f:
         env_config = json.load(f)
-    
+
     for k, v in env_config.items():
         setattr(args, k, v)
 
@@ -87,9 +87,7 @@ def diff_model_train(env_config_path: str, model_config_path: str) -> None:
     with open(args.json_data_list, "r") as file:
         json_data = json.load(file)
     filenames_train = json_data["training"]
-    filenames_train = [
-        _item["image"].replace(".nii.gz", "_emb.nii.gz") for _item in filenames_train
-    ]
+    filenames_train = [_item["image"].replace(".nii.gz", "_emb.nii.gz") for _item in filenames_train]
 
     if local_rank == 0:
         print(f"num_files_train: {len(filenames_train)}")
@@ -235,18 +233,14 @@ def diff_model_train(env_config_path: str, model_config_path: str) -> None:
                     device=images.device,
                 ).long()
 
-                noisy_latent = noise_scheduler.add_noise(
-                    original_samples=images,
-                    noise=noise,
-                    timesteps=timesteps
-                )
+                noisy_latent = noise_scheduler.add_noise(original_samples=images, noise=noise, timesteps=timesteps)
 
                 noise_pred = unet(
                     x=noisy_latent,
                     timesteps=timesteps,
                     top_region_index_tensor=top_region_index_tensor,
                     bottom_region_index_tensor=bottom_region_index_tensor,
-                    spacing_tensor=spacing_tensor
+                    spacing_tensor=spacing_tensor,
                 )
 
                 loss = loss_pt(noise_pred.float(), noise.float())

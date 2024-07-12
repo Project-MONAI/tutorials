@@ -188,7 +188,6 @@ def diff_model_train(env_config_path: str, model_config_path: str) -> None:
     lr_scheduler = torch.optim.lr_scheduler.PolynomialLR(optimizer, total_iters=total_steps, power=2.0)
 
     loss_pt = torch.nn.L1Loss()
-    best_loss = 1e4
 
     scaler = GradScaler()
 

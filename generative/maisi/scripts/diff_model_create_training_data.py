@@ -196,8 +196,6 @@ def diff_model_create_training_data(env_config_path: str, model_config_path: str
 
 
 if __name__ == "__main__":
-    import argparse
-
     parser = argparse.ArgumentParser(description="Diffusion Model Training Data Creation")
     parser.add_argument("--env_config", type=str, required=True, help="Path to environment configuration file")
     parser.add_argument("--model_config", type=str, required=True, help="Path to model configuration file")

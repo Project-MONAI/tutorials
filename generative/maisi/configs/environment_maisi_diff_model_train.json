@@ -3,6 +3,9 @@
     "embedding_base_dir": "./embeddings",
     "json_data_list": "./dataset.json",
     "model_dir": "./models",
+    "model_filename": "diff_unet_ckpt.pt",
     "output_dir": "./predictions",
-    "trained_autoencoder_path": "./models/autoencoder_epoch273.pt"
+    "output_prefix": "unet_3d",
+    "trained_autoencoder_path": "./models/autoencoder_epoch273.pt",
+    "existing_ckpt_filepath": null
 }

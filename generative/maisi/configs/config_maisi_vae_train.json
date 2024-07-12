@@ -7,10 +7,10 @@
     },
     "autoencoder_train": {
         "batch_size": 1,
-        "patch_size": [64,64,64],
+        "patch_size": [64, 64, 64],
         "val_batch_size": 1,
         "val_patch_size": null,
-        "val_sliding_window_patch_size": [128,128,64],
+        "val_sliding_window_patch_size": [96, 96, 64],
         "lr": 1e-4,
         "perceptual_weight": 0.3,
         "kl_weight": 1e-7,

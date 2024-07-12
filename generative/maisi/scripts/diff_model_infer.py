@@ -30,8 +30,8 @@ from utils import define_instance, load_autoencoder_ckpt
 class ReconModel(torch.nn.Module):
     def __init__(self, autoencoder, scale_factor):
         super().__init__()
-        self.autoencoder=autoencoder
-        self.scale_factor=scale_factor
+        self.autoencoder = autoencoder
+        self.scale_factor = scale_factor
 
     def forward(self, z):
         recon_pt_nda = self.autoencoder.decode_stage_2_outputs(z / self.scale_factor)
@@ -51,7 +51,7 @@ def diff_model_infer(env_config_path: str, model_config_path: str):
     # Load environment configuration
     with open(env_config_path, "r") as f:
         env_config = json.load(f)
-    
+
     for k, v in env_config.items():
         setattr(args, k, v)
 
@@ -61,7 +61,7 @@ def diff_model_infer(env_config_path: str, model_config_path: str):
 
     for k, v in model_config.items():
         setattr(args, k, v)
-   
+
     a_min = -1000
     a_max = 1000
     b_min = 0

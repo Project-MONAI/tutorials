@@ -117,6 +117,7 @@ def diff_model_infer(env_config_path: str, model_config_path: str):
     elif isinstance(args.diffusion_unet_def["attention_levels"], list):
         num_downsample_level = max(num_downsample_level, len(args.diffusion_unet_def["attention_levels"]))
     print(f"num_downsample_level -> {num_downsample_level}.")
+
     divisor = 2 ** (num_downsample_level - 2)
     print(f"divisor -> {divisor}.")
 

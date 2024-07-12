@@ -18,7 +18,6 @@ import nibabel as nib
 import numpy as np
 import torch
 import torch.distributed as dist
-import torch.nn.functional as F
 
 import monai
 from monai.transforms import Compose
@@ -27,8 +26,6 @@ from monai.utils import set_determinism
 from utils import define_instance, load_autoencoder_ckpt
 
 # Set the random seed for reproducibility
-torch.manual_seed(0)
-np.random.seed(0)
 set_determinism(seed=0)
 
 

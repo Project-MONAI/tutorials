@@ -23,7 +23,7 @@ import monai
 from monai.transforms import Compose
 from monai.utils import set_determinism
 
-from utils import define_instance, load_autoencoder_ckpt
+from .utils import define_instance, load_autoencoder_ckpt
 
 # Set the random seed for reproducibility
 set_determinism(seed=0)

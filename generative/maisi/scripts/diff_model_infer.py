@@ -24,18 +24,8 @@ from tqdm import tqdm
 from monai.inferers import sliding_window_inference
 from monai.utils import set_determinism
 
-from utils import define_instance, load_autoencoder_ckpt
-
-
-class ReconModel(torch.nn.Module):
-    def __init__(self, autoencoder, scale_factor):
-        super().__init__()
-        self.autoencoder = autoencoder
-        self.scale_factor = scale_factor
-
-    def forward(self, z):
-        recon_pt_nda = self.autoencoder.decode_stage_2_outputs(z / self.scale_factor)
-        return recon_pt_nda
+from .sample import ReconModel
+from .utils import define_instance, load_autoencoder_ckpt
 
 
 def diff_model_infer(env_config_path: str, model_config_path: str):

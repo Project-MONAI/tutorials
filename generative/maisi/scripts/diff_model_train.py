@@ -30,7 +30,7 @@ import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel
 from torch.cuda.amp import GradScaler, autocast
 
-from utils import define_instance
+from .utils import define_instance
 
 
 def diff_model_train(env_config_path: str, model_config_path: str) -> None:

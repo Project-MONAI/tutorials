@@ -62,9 +62,31 @@ torchrun \
   <img src="./figs/val_diffusion.png" alt="latent diffusion validation curve" width="45%" >
 </p>
 
-#### [3.3 3D ControNet Training](./train_controlnet.py)
+#### [3.3 3D ControNet Training](./scripts/train_controlnet.py)
 
+We provide a [training config](./configs/config_maisi_controlnet_train.json) executing finetuning for pretrained ControlNet with with a new class (i.e., Kidney Tumor). When finetuning with other new class names, please update the `weighted_loss_label` in training config  and [label_dict.json](./configs/label_dict.json) accordingly. There are 8 dummy labels as placeholders in default `label_dict.json` that can be used for finetuning. Preprocessed dataset for controNet training and more deatils anout data preparation can be found in the [README](./data/README.md).
 
+#### Training configuration
+The training was performed with the following:
+- GPU: at least 60GB GPU memory for 512 x 512 x 512 volume
+- Actual Model Input (the size of image embedding in latent space): 128 x 128 x 128
+- AMP: True
+
+#### Execute training:
+To train with a single GPU, please run:
+```bash
+python ./scripts/train_controlnet.py -c ./config/config_maisi_controlnet_train.json -e ./config/environment_maisi_controlnet_train.json -g 1
+```
+
+The training script also enables multi-GPU training. For instance, if you are using eight GPUs, you can run the training script with the following command:
+```bash
+export NUM_GPUS_PER_NODE=8
+torchrun \
+    --nproc_per_node=${NUM_GPUS_PER_NODE} \
+    --nnodes=1 \
+    --master_addr=localhost --master_port=1234 \
+    train_diffusion.py -c ./config/config_maisi_controlnet_train.json -e ./config/environment_maisi_controlnet_train.json -g ${NUM_GPUS_PER_NODE}
+```
 ### 4. Questions and bugs
 
 - For questions relating to the use of MONAI, please use our [Discussions tab](https://github.com/Project-MONAI/MONAI/discussions) on the main repository of MONAI.

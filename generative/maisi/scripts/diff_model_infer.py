@@ -61,9 +61,8 @@ def load_models(args: argparse.Namespace, device: torch.device, logger: logging.
     try:
         checkpoint_autoencoder = load_autoencoder_ckpt(args.trained_autoencoder_path)
         autoencoder.load_state_dict(checkpoint_autoencoder)
-    except Exception as e:
+    except Exception:
         logger.error("The trained_autoencoder_path does not exist!")
-        raise e
 
     unet = define_instance(args, "diffusion_unet_def").to(device)
     checkpoint = torch.load(f"{args.model_dir}/{args.model_filename}", map_location=device)
@@ -131,13 +130,7 @@ def run_inference(
         np.ndarray: Generated synthetic image data.
     """
     noise = torch.randn(
-        (
-            1,
-            args.diffusion_unet_inference["latent_channels"],
-            output_size[0] // divisor,
-            output_size[1] // divisor,
-            output_size[2] // divisor,
-        ),
+        (1, args.latent_channels, output_size[0] // divisor, output_size[1] // divisor, output_size[2] // divisor),
         device=device,
     )
     logger.info(f"noise: {noise.device}, {noise.dtype}, {type(noise)}")
@@ -216,9 +209,9 @@ def diff_model_infer(env_config_path: str, model_config_path: str, model_def_pat
         model_config_path (str): Path to the model configuration file.
         model_def_path (str): Path to the model definition file.
     """
-    logger = setup_logging()
     args = load_config(env_config_path, model_config_path, model_def_path)
     local_rank, world_size, device = initialize_distributed()
+    logger = setup_logging()
     random_seed = set_random_seed(
         args.diffusion_unet_inference["random_seed"] + local_rank
         if args.diffusion_unet_inference["random_seed"]
@@ -296,7 +289,7 @@ if __name__ == "__main__":
         help="Path to model training/inference configuration",
     )
     parser.add_argument(
-        "--model_def", type=str, default="./configs/config_maisi.json", help="Path to model configuration file"
+        "--model_def", type=str, default="./configs/config_maisi.json", help="Path to model definition file"
     )
 
     args = parser.parse_args()

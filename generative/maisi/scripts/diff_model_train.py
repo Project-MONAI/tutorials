@@ -48,7 +48,9 @@ def load_filenames(data_list_path: str) -> list:
     return [_item["image"].replace(".nii.gz", "_emb.nii.gz") for _item in filenames_train]
 
 
-def prepare_data(train_files: list, device: torch.device, cache_rate: float, num_workers: int = 2) -> ThreadDataLoader:
+def prepare_data(
+    train_files: list, device: torch.device, cache_rate: float, num_workers: int = 2, batch_size: int = 1
+) -> ThreadDataLoader:
     """
     Prepare training data.
 
@@ -57,6 +59,7 @@ def prepare_data(train_files: list, device: torch.device, cache_rate: float, num
         device (torch.device): Device to use for training.
         cache_rate (float): Cache rate for dataset.
         num_workers (int): Number of workers for data loading.
+        batch_size (int): Mini-batch size.
 
     Returns:
         ThreadDataLoader: Data loader for training.
@@ -82,8 +85,7 @@ def prepare_data(train_files: list, device: torch.device, cache_rate: float, num
         data=train_files, transform=train_transforms, cache_rate=cache_rate, num_workers=num_workers
     )
 
-    num_images_per_batch = args.diffusion_unet_train["batch_size"]
-    return ThreadDataLoader(train_ds, num_workers=6, batch_size=num_images_per_batch, shuffle=True)
+    return ThreadDataLoader(train_ds, num_workers=6, batch_size=batch_size, shuffle=True)
 
 
 def load_unet(args: argparse.Namespace, device: torch.device, logger: logging.Logger) -> torch.nn.Module:
@@ -314,8 +316,8 @@ def diff_model_train(env_config_path: str, model_config_path: str, model_def_pat
         model_def_path (str): Path to the model definition file.
     """
     args = load_config(env_config_path, model_config_path, model_def_path)
-    logger = setup_logging()
     local_rank, world_size, device = initialize_distributed()
+    logger = setup_logging()
 
     logger.info(f"Using {device} of {world_size}")
 
@@ -348,7 +350,9 @@ def diff_model_train(env_config_path: str, model_config_path: str, model_def_pat
         data=train_files, shuffle=True, num_partitions=dist.get_world_size(), even_divisible=True
     )[local_rank]
 
-    train_loader = prepare_data(train_files, device, args.diffusion_unet_train["cache_rate"])
+    train_loader = prepare_data(
+        train_files, device, args.diffusion_unet_train["cache_rate"], args.diffusion_unet_train["batch_size"]
+    )
 
     unet = load_unet(args, device, logger)
     noise_scheduler = define_instance(args, "noise_scheduler")
@@ -415,7 +419,7 @@ if __name__ == "__main__":
         help="Path to model training/inference configuration",
     )
     parser.add_argument(
-        "--model_def", type=str, default="./configs/config_maisi.json", help="Path to model configuration file"
+        "--model_def", type=str, default="./configs/config_maisi.json", help="Path to model definition file"
     )
 
     args = parser.parse_args()

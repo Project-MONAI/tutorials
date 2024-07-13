@@ -4,7 +4,7 @@ This example shows the use cases of training and validating Nvidia MAISI (Medica
 ## MAISI Model Highlight
 - A Foundation VAE model for latent feature compression that works for both CT and MRI with flexible volume size and voxel size
 - A Foundation Diffusion model that can generate large CT volumes up to 512x512x768 size, with flexible volume size and voxel size
-- A ControlNet that to generate image/mask pairs that can improve downstream tasks, with cControllable organ/tumor size
+- A ControlNet to generate image/mask pairs that can improve downstream tasks, with controllable organ/tumor size
 
 ## Example Results and Evaluation
 

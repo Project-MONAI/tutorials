@@ -2,7 +2,7 @@
 This example shows the use cases of training and validating Nvidia MAISI (Medical AI for Synthetic Imaging), a 3D Latent Diffusion Model that can generate large CT images with paired segmentation masks, variable volume size and voxel size, as well as controllable organ/tumor size.
 
 ## MAISI Model Highlight
-- A Foundation VAE model for latent feature compression that works for both CT and MRI
+- A Foundation VAE model for latent feature compression that works for both CT and MRI with flexible volume size and voxel size
 - A Foundation Diffusion model that can generate large CT volumes up to 512x512x768 size, with flexible volume size and voxel size
 - A ControlNet that to generate image/mask pairs that can improve downstream tasks, with cControllable organ/tumor size
 

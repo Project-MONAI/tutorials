@@ -14,7 +14,7 @@ The VAE training dataset used in MAISI contains 37243 CT training data and 1963 
 
 We provide the preprocessed subset of [C4KC-KiTS](https://www.cancerimagingarchive.net/collection/c4kc-kits/) dataset used in the finetuning config `environment_maisi_controlnet_train.json`. The dataset and coresponding JSON data list can be downloaded from [this link](https://drive.google.com/drive/folders/1iMStdYxcl26dEXgJEXOjkWvx-I2fYZ2u?usp=sharing) and should be saved in `maisi/dataset/` folder.
 
-The structure of example folder in the preprocessed dataset is: 
+The structure of example folder in the preprocessed dataset is:
 ```
             |-*arterial*.nii.gz     # original image
             |-*arterial_emb*.nii.gz     # encoded image embedding
@@ -37,7 +37,7 @@ The JSON file has the following structure:
         {
             "image": "*/*arterial_emb*.nii.gz",  # relative path to the image embedding file
             "label": "*/mask_combined_label*.nii.gz",  # relative path to the combined label file
-            "dim": [512, 512, 512],  # the dimension of image 
+            "dim": [512, 512, 512],  # the dimension of image
             "spacing": [1.0, 1.0, 1.0],  # the spacing of image
             "top_region_index": [0, 1, 0, 0],  # the top region index of the image
             "bottom_region_index": [0, 0, 0, 1],  # the bottom region index of the image

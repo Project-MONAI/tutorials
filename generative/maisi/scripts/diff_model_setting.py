@@ -21,14 +21,17 @@ import torch.distributed as dist
 from monai.utils import RankFilter
 
 
-def setup_logging() -> logging.Logger:
+def setup_logging(logger_name: str = "") -> logging.Logger:
     """
     Setup the logging configuration.
+
+    Args:
+        logger_name (str): logger name.
 
     Returns:
         logging.Logger: Configured logger.
     """
-    logger = logging.getLogger("diff_model_create_training_data")
+    logger = logging.getLogger(logger_name)
     logger.addFilter(RankFilter())
     logging.basicConfig(
         level=logging.INFO,

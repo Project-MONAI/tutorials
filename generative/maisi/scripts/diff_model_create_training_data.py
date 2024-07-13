@@ -170,7 +170,7 @@ def diff_model_create_training_data(env_config_path: str, model_config_path: str
     """
     args = load_config(env_config_path, model_config_path, model_def_path)
     local_rank, world_size, device = initialize_distributed()
-    logger = setup_logging()
+    logger = setup_logging("creating training data")
     logger.info(f"Using device {device}")
 
     autoencoder = define_instance(args, "autoencoder_def").to(device)

@@ -211,7 +211,7 @@ def diff_model_infer(env_config_path: str, model_config_path: str, model_def_pat
     """
     args = load_config(env_config_path, model_config_path, model_def_path)
     local_rank, world_size, device = initialize_distributed()
-    logger = setup_logging()
+    logger = setup_logging("inference")
     random_seed = set_random_seed(
         args.diffusion_unet_inference["random_seed"] + local_rank
         if args.diffusion_unet_inference["random_seed"]

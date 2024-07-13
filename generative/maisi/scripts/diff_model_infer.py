@@ -96,9 +96,19 @@ def prepare_tensors(args: argparse.Namespace, device: torch.device) -> tuple:
     return top_region_index_tensor, bottom_region_index_tensor, spacing_tensor
 
 
-def run_inference(args: argparse.Namespace, device: torch.device, autoencoder: torch.nn.Module, unet: torch.nn.Module, 
-                  scale_factor: float, top_region_index_tensor: torch.Tensor, bottom_region_index_tensor: torch.Tensor, 
-                  spacing_tensor: torch.Tensor, output_size: tuple, divisor: int, logger: logging.Logger) -> np.ndarray:
+def run_inference(
+    args: argparse.Namespace,
+    device: torch.device,
+    autoencoder: torch.nn.Module,
+    unet: torch.nn.Module,
+    scale_factor: float,
+    top_region_index_tensor: torch.Tensor,
+    bottom_region_index_tensor: torch.Tensor,
+    spacing_tensor: torch.Tensor,
+    output_size: tuple,
+    divisor: int,
+    logger: logging.Logger,
+) -> np.ndarray:
     """
     Run the inference to generate synthetic images.
 
@@ -119,7 +129,13 @@ def run_inference(args: argparse.Namespace, device: torch.device, autoencoder: t
         np.ndarray: Generated synthetic image data.
     """
     noise = torch.randn(
-        (1, args.diffusion_unet_inference["latent_channels"], output_size[0] // divisor, output_size[1] // divisor, output_size[2] // divisor),
+        (
+            1,
+            args.diffusion_unet_inference["latent_channels"],
+            output_size[0] // divisor,
+            output_size[1] // divisor,
+            output_size[2] // divisor,
+        ),
         device=device,
     )
     logger.info(f"noise: {noise.device}, {noise.dtype}, {type(noise)}")
@@ -165,7 +181,9 @@ def run_inference(args: argparse.Namespace, device: torch.device, autoencoder: t
         return np.int16(data)
 
 
-def save_image(data: np.ndarray, output_size: tuple, out_spacing: tuple, output_path: str, logger: logging.Logger) -> None:
+def save_image(
+    data: np.ndarray, output_size: tuple, out_spacing: tuple, output_path: str, logger: logging.Logger
+) -> None:
     """
     Save the generated synthetic image to a file.
 
@@ -199,7 +217,11 @@ def diff_model_infer(env_config_path: str, model_config_path: str, model_def_pat
     logger = setup_logging()
     args = load_config(env_config_path, model_config_path, model_def_path)
     local_rank, world_size, device = initialize_distributed()
-    random_seed = set_random_seed(args.diffusion_unet_inference["random_seed"] + local_rank if args.diffusion_unet_inference["random_seed"] else None)
+    random_seed = set_random_seed(
+        args.diffusion_unet_inference["random_seed"] + local_rank
+        if args.diffusion_unet_inference["random_seed"]
+        else None
+    )
     logger.info(f"Using {device} of {world_size} with random seed: {random_seed}")
 
     output_size = tuple(args.diffusion_unet_inference["dim"])
@@ -215,12 +237,31 @@ def diff_model_infer(env_config_path: str, model_config_path: str, model_def_pat
         logger.info(f"[config] out_spacing -> {out_spacing}.")
 
     autoencoder, unet, scale_factor = load_models(args, device, logger)
-    num_downsample_level = max(1, len(args.diffusion_unet_def["num_channels"]) if isinstance(args.diffusion_unet_def["num_channels"], list) else len(args.diffusion_unet_def["attention_levels"]))
+    num_downsample_level = max(
+        1,
+        (
+            len(args.diffusion_unet_def["num_channels"])
+            if isinstance(args.diffusion_unet_def["num_channels"], list)
+            else len(args.diffusion_unet_def["attention_levels"])
+        ),
+    )
     divisor = 2 ** (num_downsample_level - 2)
     logger.info(f"num_downsample_level -> {num_downsample_level}, divisor -> {divisor}.")
 
     top_region_index_tensor, bottom_region_index_tensor, spacing_tensor = prepare_tensors(args, device)
-    data = run_inference(args, device, autoencoder, unet, scale_factor, top_region_index_tensor, bottom_region_index_tensor, spacing_tensor, output_size, divisor, logger)
+    data = run_inference(
+        args,
+        device,
+        autoencoder,
+        unet,
+        scale_factor,
+        top_region_index_tensor,
+        bottom_region_index_tensor,
+        spacing_tensor,
+        output_size,
+        divisor,
+        logger,
+    )
 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     output_path = f"{args.output_dir}/{output_prefix}_seed{random_seed}_size{output_size[0]:d}x{output_size[1]:d}x{output_size[2]:d}_spacing{out_spacing[0]:.2f}x{out_spacing[1]:.2f}x{out_spacing[2]:.2f}_{timestamp}.nii.gz"

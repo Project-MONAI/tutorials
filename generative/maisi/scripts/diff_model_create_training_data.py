@@ -98,8 +98,15 @@ def load_filenames(data_list_path: str) -> list:
     return [_item["image"] for _item in filenames_raw]
 
 
-def process_file(filepath: str, args: argparse.Namespace, autoencoder: torch.nn.Module, device: torch.device, 
-                 plain_transforms: Compose, new_transforms: Compose, logger: logging.Logger) -> None:
+def process_file(
+    filepath: str,
+    args: argparse.Namespace,
+    autoencoder: torch.nn.Module,
+    device: torch.device,
+    plain_transforms: Compose,
+    new_transforms: Compose,
+    logger: logging.Logger,
+) -> None:
     """
     Process a single file to create training data.
 
@@ -188,7 +195,12 @@ def diff_model_create_training_data(env_config_path: str, model_config_path: str
             continue
 
         filepath = filenames_raw[_iter]
-        new_dim = tuple(round_number(int(plain_transforms({"image": os.path.join(args.data_base_dir, filepath)})["image"].meta["dim"][_i])) for _i in range(1, 4))
+        new_dim = tuple(
+            round_number(
+                int(plain_transforms({"image": os.path.join(args.data_base_dir, filepath)})["image"].meta["dim"][_i])
+            )
+            for _i in range(1, 4)
+        )
         new_transforms = create_transforms(new_dim)
 
         process_file(filepath, args, autoencoder, device, plain_transforms, new_transforms, logger)

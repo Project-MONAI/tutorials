@@ -123,7 +123,9 @@ def load_unet(args: argparse.Namespace, device: torch.device, logger: logging.Lo
     return unet
 
 
-def calculate_scale_factor(train_loader: ThreadDataLoader, device: torch.device, logger: logging.Logger) -> torch.Tensor:
+def calculate_scale_factor(
+    train_loader: ThreadDataLoader, device: torch.device, logger: logging.Logger
+) -> torch.Tensor:
     """
     Calculate the scaling factor for the dataset.
 
@@ -343,7 +345,6 @@ def diff_model_train(env_config_path: str, model_config_path: str, model_def_pat
 
         Path(args.model_dir).mkdir(parents=True, exist_ok=True)
 
-
     filenames_train = load_filenames(args.json_data_list)
     if local_rank == 0:
         logger.info(f"num_files_train: {len(filenames_train)}")
@@ -379,7 +380,9 @@ def diff_model_train(env_config_path: str, model_config_path: str, model_def_pat
     scale_factor = calculate_scale_factor(train_loader, device, logger)
     optimizer = create_optimizer(unet, args.diffusion_unet_train["lr"])
 
-    total_steps = (args.diffusion_unet_train["n_epochs"] * len(train_loader.dataset)) / args.diffusion_unet_train["batch_size"]
+    total_steps = (args.diffusion_unet_train["n_epochs"] * len(train_loader.dataset)) / args.diffusion_unet_train[
+        "batch_size"
+    ]
     lr_scheduler = create_lr_scheduler(optimizer, total_steps)
     loss_pt = torch.nn.L1Loss()
     scaler = GradScaler()
@@ -389,9 +392,20 @@ def diff_model_train(env_config_path: str, model_config_path: str, model_def_pat
 
     for epoch in range(args.diffusion_unet_train["n_epochs"]):
         loss_torch = train_one_epoch(
-            epoch, unet, train_loader, optimizer, lr_scheduler, loss_pt, scaler,
-            scale_factor, noise_scheduler, args.diffusion_unet_train["batch_size"],
-            args.noise_scheduler["num_train_timesteps"], device, logger, local_rank
+            epoch,
+            unet,
+            train_loader,
+            optimizer,
+            lr_scheduler,
+            loss_pt,
+            scaler,
+            scale_factor,
+            noise_scheduler,
+            args.diffusion_unet_train["batch_size"],
+            args.noise_scheduler["num_train_timesteps"],
+            device,
+            logger,
+            local_rank,
         )
 
         loss_torch = loss_torch.tolist()
@@ -399,7 +413,15 @@ def diff_model_train(env_config_path: str, model_config_path: str, model_def_pat
             loss_torch_epoch = loss_torch[0] / loss_torch[1]
             logger.info(f"epoch {epoch + 1} average loss: {loss_torch_epoch:.4f}.")
 
-            save_checkpoint(epoch, unet, loss_torch_epoch, args.noise_scheduler["num_train_timesteps"], scale_factor, args.model_dir, args)
+            save_checkpoint(
+                epoch,
+                unet,
+                loss_torch_epoch,
+                args.noise_scheduler["num_train_timesteps"],
+                scale_factor,
+                args.model_dir,
+                args,
+            )
 
 
 if __name__ == "__main__":

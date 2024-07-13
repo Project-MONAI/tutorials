@@ -33,11 +33,7 @@ from torch.cuda.amp import GradScaler, autocast
 from .utils import define_instance
 
 
-def diff_model_train(
-    env_config_path: str,
-    model_config_path: str,
-    model_def_path: str
-) -> None:
+def diff_model_train(env_config_path: str, model_config_path: str, model_def_path: str) -> None:
     """
     Main function to train a diffusion model.
 

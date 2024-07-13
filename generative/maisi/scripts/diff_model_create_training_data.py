@@ -83,11 +83,7 @@ def round_number(number: int, base_number: int = 128) -> int:
 
 
 @torch.inference_mode()
-def diff_model_create_training_data(
-    env_config_path: str,
-    model_config_path: str,
-    model_def_path: str
-) -> None:
+def diff_model_create_training_data(env_config_path: str, model_config_path: str, model_def_path: str) -> None:
     """
     Create training data for the diffusion model.
 
@@ -206,9 +202,7 @@ def diff_model_create_training_data(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Diffusion Model Training Data Creation"
-    )
+    parser = argparse.ArgumentParser(description="Diffusion Model Training Data Creation")
     parser.add_argument(
         "--env_config",
         type=str,

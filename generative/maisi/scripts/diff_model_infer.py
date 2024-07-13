@@ -29,11 +29,7 @@ from .utils import define_instance, load_autoencoder_ckpt
 
 
 @torch.inference_mode()
-def diff_model_infer(
-    env_config_path: str,
-    model_config_path: str,
-    model_def_path: str
-) -> None:
+def diff_model_infer(env_config_path: str, model_config_path: str, model_def_path: str) -> None:
     """
     Main function to run the diffusion model.
 

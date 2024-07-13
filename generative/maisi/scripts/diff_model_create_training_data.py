@@ -17,7 +17,6 @@ from pathlib import Path
 import nibabel as nib
 import numpy as np
 import torch
-import torch.distributed as dist
 import logging
 import monai
 from monai.transforms import Compose
@@ -129,7 +128,6 @@ def process_file(filepath: str, args: argparse.Namespace, autoencoder: torch.nn.
 
     logger.info(f"old dim: {dim}, old spacing: {spacing}")
 
-    new_dim = tuple(round_number(dim[_i]) for _i in range(3))
     new_data = new_transforms(test_data)
     nda_image = new_data["image"]
 

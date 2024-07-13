@@ -9,15 +9,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import argparse
+import logging
 import os
 import random
-import torch
+from datetime import datetime
+
 import nibabel as nib
 import numpy as np
-import logging
-
-from datetime import datetime
+import torch
 from tqdm import tqdm
 
 from monai.inferers import sliding_window_inference
@@ -264,7 +266,18 @@ def diff_model_infer(env_config_path: str, model_config_path: str, model_def_pat
     )
 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    output_path = f"{args.output_dir}/{output_prefix}_seed{random_seed}_size{output_size[0]:d}x{output_size[1]:d}x{output_size[2]:d}_spacing{out_spacing[0]:.2f}x{out_spacing[1]:.2f}x{out_spacing[2]:.2f}_{timestamp}.nii.gz"
+    output_path = "{0}/{1}_seed{2}_size{3:d}x{4:d}x{5:d}_spacing{6:.2f}x{7:.2f}x{8:.2f}_{9}.nii.gz".format(
+        args.output_dir,
+        output_prefix,
+        random_seed,
+        output_size[0],
+        output_size[1],
+        output_size[2],
+        out_spacing[0],
+        out_spacing[1],
+        out_spacing[2],
+        timestamp,
+    )
     save_image(data, output_size, out_spacing, output_path, logger)
 
 
@@ -283,10 +296,7 @@ if __name__ == "__main__":
         help="Path to model training/inference configuration",
     )
     parser.add_argument(
-        "--model_def",
-        type=str,
-        default="./configs/config_maisi.json",
-        help="Path to model configuration file",
+        "--model_def", type=str, default="./configs/config_maisi.json", help="Path to model configuration file"
     )
 
     args = parser.parse_args()

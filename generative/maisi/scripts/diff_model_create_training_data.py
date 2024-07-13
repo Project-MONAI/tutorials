@@ -9,15 +9,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import argparse
 import json
+import logging
 import os
 from pathlib import Path
 
 import nibabel as nib
 import numpy as np
 import torch
-import logging
+
 import monai
 from monai.transforms import Compose
 from monai.utils import set_determinism
@@ -47,12 +50,7 @@ def create_transforms(dim: tuple = None) -> Compose:
                 monai.transforms.Orientationd(keys="image", axcodes="RAS"),
                 monai.transforms.EnsureTyped(keys="image", dtype=torch.float32),
                 monai.transforms.ScaleIntensityRanged(
-                    keys="image",
-                    a_min=-1000,
-                    a_max=1000,
-                    b_min=0,
-                    b_max=1,
-                    clip=True,
+                    keys="image", a_min=-1000, a_max=1000, b_min=0, b_max=1, clip=True
                 ),
                 monai.transforms.Resized(keys="image", spatial_size=dim, mode="trilinear"),
             ]
@@ -121,7 +119,7 @@ def process_file(
     """
     out_filename_base = filepath.replace(".gz", "").replace(".nii", "")
     out_filename_base = os.path.join(args.embedding_base_dir, out_filename_base)
-    out_filename = out_filename_base + f"_emb.nii.gz"
+    out_filename = out_filename_base + "_emb.nii.gz"
 
     if os.path.isfile(out_filename):
         return
@@ -221,10 +219,7 @@ if __name__ == "__main__":
         help="Path to model training/inference configuration",
     )
     parser.add_argument(
-        "--model_def",
-        type=str,
-        default="./configs/config_maisi.json",
-        help="Path to model configuration file",
+        "--model_def", type=str, default="./configs/config_maisi.json", help="Path to model configuration file"
     )
 
     args = parser.parse_args()

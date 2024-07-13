@@ -9,22 +9,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import argparse
 import json
-import os
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
+
+import torch
+import torch.distributed as dist
+from torch.cuda.amp import GradScaler, autocast
+from torch.nn.parallel import DistributedDataParallel
 
 import monai
 from monai.data import ThreadDataLoader, partition_dataset
 from monai.transforms import Compose
 from monai.utils import first
-
-import torch
-import torch.distributed as dist
-from torch.nn.parallel import DistributedDataParallel
-from torch.cuda.amp import GradScaler, autocast
 
 from .diff_model_setting import initialize_distributed, load_config, setup_logging
 from .utils import define_instance
@@ -64,17 +66,12 @@ def prepare_data(train_files: list, device: torch.device, cache_rate: float, num
             monai.transforms.LoadImaged(keys=["image"]),
             monai.transforms.EnsureChannelFirstd(keys=["image"]),
             monai.transforms.Lambdad(
-                keys="top_region_index",
-                func=lambda x: torch.FloatTensor(json.load(open(x))["top_region_index"]),
+                keys="top_region_index", func=lambda x: torch.FloatTensor(json.load(open(x))["top_region_index"])
             ),
             monai.transforms.Lambdad(
-                keys="bottom_region_index",
-                func=lambda x: torch.FloatTensor(json.load(open(x))["bottom_region_index"]),
+                keys="bottom_region_index", func=lambda x: torch.FloatTensor(json.load(open(x))["bottom_region_index"])
             ),
-            monai.transforms.Lambdad(
-                keys="spacing",
-                func=lambda x: torch.FloatTensor(json.load(open(x))["spacing"]),
-            ),
+            monai.transforms.Lambdad(keys="spacing", func=lambda x: torch.FloatTensor(json.load(open(x))["spacing"])),
             monai.transforms.Lambdad(keys="top_region_index", func=lambda x: x * 1e2),
             monai.transforms.Lambdad(keys="bottom_region_index", func=lambda x: x * 1e2),
             monai.transforms.Lambdad(keys="spacing", func=lambda x: x * 1e2),
@@ -82,10 +79,7 @@ def prepare_data(train_files: list, device: torch.device, cache_rate: float, num
     )
 
     train_ds = monai.data.CacheDataset(
-        data=train_files,
-        transform=train_transforms,
-        cache_rate=cache_rate,
-        num_workers=num_workers,
+        data=train_files, transform=train_transforms, cache_rate=cache_rate, num_workers=num_workers
     )
 
     num_images_per_batch = args.diffusion_unet_train["batch_size"]
@@ -144,7 +138,7 @@ def calculate_scale_factor(
 
     dist.barrier()
     dist.all_reduce(scale_factor, op=torch.distributed.ReduceOp.AVG)
-    logger.info(f"Rank {local_rank}: scale_factor -> {scale_factor}.")
+    logger.info(f"scale_factor -> {scale_factor}.")
     return scale_factor
 
 
@@ -216,7 +210,7 @@ def train_one_epoch(
     """
     if local_rank == 0:
         current_lr = optimizer.param_groups[0]["lr"]
-        logger.info(f"Epoch {epoch + 1}/{num_epochs}, lr {current_lr}.")
+        logger.info(f"Epoch {epoch + 1}, lr {current_lr}.")
 
     _iter = 0
     loss_torch = torch.zeros(2, dtype=torch.float, device=device)
@@ -237,22 +231,10 @@ def train_one_epoch(
 
         with autocast(enabled=True):
             noise = torch.randn(
-                (
-                    num_images_per_batch,
-                    4,
-                    images.size(-3),
-                    images.size(-2),
-                    images.size(-1),
-                ),
-                device=device,
+                (num_images_per_batch, 4, images.size(-3), images.size(-2), images.size(-1)), device=device
             )
 
-            timesteps = torch.randint(
-                0,
-                num_train_timesteps,
-                (images.shape[0],),
-                device=images.device,
-            ).long()
+            timesteps = torch.randint(0, num_train_timesteps, (images.shape[0],), device=images.device).long()
 
             noisy_latent = noise_scheduler.add_noise(original_samples=images, noise=noise, timesteps=timesteps)
 
@@ -277,7 +259,9 @@ def train_one_epoch(
 
         if local_rank == 0:
             logger.info(
-                f"[{str(datetime.now())[:19]}] epoch {epoch + 1}, iter {_iter}/{len(train_loader)}, loss: {loss.item():.4f}, lr: {current_lr:.12f}."
+                "[{0}] epoch {1}, iter {2}/{3}, loss: {4:.4f}, lr: {5:.12f}.".format(
+                    str(datetime.now())[:19], epoch + 1, _iter, len(train_loader), loss.item(), current_lr
+                )
             )
 
     if torch.cuda.device_count() > 1:
@@ -357,19 +341,11 @@ def diff_model_train(env_config_path: str, model_config_path: str, model_def_pat
 
         str_info = os.path.join(args.embedding_base_dir, filenames_train[_i]) + ".json"
         train_files.append(
-            {
-                "image": str_img,
-                "top_region_index": str_info,
-                "bottom_region_index": str_info,
-                "spacing": str_info,
-            }
+            {"image": str_img, "top_region_index": str_info, "bottom_region_index": str_info, "spacing": str_info}
         )
 
     train_files = partition_dataset(
-        data=train_files,
-        shuffle=True,
-        num_partitions=dist.get_world_size(),
-        even_divisible=True,
+        data=train_files, shuffle=True, num_partitions=dist.get_world_size(), even_divisible=True
     )[local_rank]
 
     train_loader = prepare_data(train_files, device, args.diffusion_unet_train["cache_rate"])
@@ -439,10 +415,7 @@ if __name__ == "__main__":
         help="Path to model training/inference configuration",
     )
     parser.add_argument(
-        "--model_def",
-        type=str,
-        default="./configs/config_maisi.json",
-        help="Path to model configuration file",
+        "--model_def", type=str, default="./configs/config_maisi.json", help="Path to model configuration file"
     )
 
     args = parser.parse_args()

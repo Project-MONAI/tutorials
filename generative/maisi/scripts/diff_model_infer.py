@@ -10,168 +10,129 @@
 # limitations under the License.
 
 import argparse
-import json
 import os
 import random
 import torch
-import torch.distributed as dist
 import nibabel as nib
 import numpy as np
+import logging
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from tqdm import tqdm
 
 from monai.inferers import sliding_window_inference
 from monai.utils import set_determinism
 
+from .diff_model_setting import initialize_distributed, load_config, setup_logging
 from .sample import ReconModel
 from .utils import define_instance, load_autoencoder_ckpt
 
 
-@torch.inference_mode()
-def diff_model_infer(
-    env_config_path: str,
-    model_config_path: str,
-    model_def_path: str
-) -> None:
+def set_random_seed(seed: int) -> int:
     """
-    Main function to run the diffusion model.
+    Set random seed for reproducibility.
 
     Args:
-        env_config_path (str): Path to the environment configuration file.
-        model_config_path (str): Path to the model configuration file.
+        seed (int): Random seed.
+
+    Returns:
+        int: Set random seed.
     """
-    args = argparse.Namespace()
-
-    # Load environment configuration
-    with open(env_config_path, "r") as f:
-        env_config = json.load(f)
-
-    for k, v in env_config.items():
-        setattr(args, k, v)
-
-    # Load model configuration
-    with open(model_config_path, "r") as f:
-        model_config = json.load(f)
-
-    for k, v in model_config.items():
-        setattr(args, k, v)
-
-    # Load model definition
-    with open(model_def_path, "r") as f:
-        model_def = json.load(f)
-
-    for k, v in model_def.items():
-        setattr(args, k, v)
-
-    a_min = -1000
-    a_max = 1000
-    b_min = 0
-    b_max = 1
-    print(f"a_min: {a_min}, a_max: {a_max}, b_min: {b_min}, b_max: {b_max}.")
-
-    dist.init_process_group(backend="nccl", init_method="env://", timeout=timedelta(seconds=7200))
-
-    local_rank = int(os.environ["LOCAL_RANK"])
-    world_size = int(dist.get_world_size())
-    device = torch.device("cuda", local_rank)
-    torch.cuda.set_device(device)
-    print(f"Using {device} of {world_size}")
-
-    # Set random seed for reproducibility
-    if args.diffusion_unet_inference["random_seed"] == None:
-        random_seed = random.randint(0, 99999)
-    else:
-        random_seed = args.diffusion_unet_inference["random_seed"] + local_rank
+    random_seed = random.randint(0, 99999) if seed is None else seed
     set_determinism(random_seed)
-    print(f"random seed: {random_seed}")
+    return random_seed
 
-    output_size = tuple(args.diffusion_unet_inference["dim"])
-    out_spacing = tuple(args.diffusion_unet_inference["spacing"])
 
-    ckpt_filepath = f"{args.model_dir}/{args.model_filename}"
-    output_prefix = args.output_prefix
+def load_models(args: argparse.Namespace, device: torch.device, logger: logging.Logger) -> tuple:
+    """
+    Load the autoencoder and UNet models.
 
-    if local_rank == 0:
-        print(f"[config] ckpt_filepath -> {ckpt_filepath}.")
-        print(f"[config] random_seed -> {random_seed}.")
-        print(f"[config] output_prefix -> {output_prefix}.")
-        print(f"[config] output_size -> {output_size}.")
-        print(f"[config] out_spacing -> {out_spacing}.")
+    Args:
+        args (argparse.Namespace): Configuration arguments.
+        device (torch.device): Device to load models on.
+        logger (logging.Logger): Logger for logging information.
 
-    # Initialize autoencoder
+    Returns:
+        tuple: Loaded autoencoder, UNet model, and scale factor.
+    """
     autoencoder = define_instance(args, "autoencoder_def").to(device)
     try:
         checkpoint_autoencoder = load_autoencoder_ckpt(args.trained_autoencoder_path)
         autoencoder.load_state_dict(checkpoint_autoencoder)
-    except:
-        print("The trained_autoencoder_path does not exist!")
+    except Exception as e:
+        logger.error("The trained_autoencoder_path does not exist!")
+        raise e
 
-    # Initialize UNet model
     unet = define_instance(args, "diffusion_unet_def").to(device)
-    checkpoint = torch.load(f"{ckpt_filepath}", map_location=device)
+    checkpoint = torch.load(f"{args.model_dir}/{args.model_filename}", map_location=device)
     unet.load_state_dict(checkpoint["unet_state_dict"], strict=True)
-    print(f"checkpoints {ckpt_filepath} loaded.")
+    logger.info(f"checkpoints {args.model_dir}/{args.model_filename} loaded.")
 
-    num_downsample_level = 1
-    if isinstance(args.diffusion_unet_def["num_channels"], list):
-        num_downsample_level = max(num_downsample_level, len(args.diffusion_unet_def["num_channels"]))
-    elif isinstance(args.diffusion_unet_def["attention_levels"], list):
-        num_downsample_level = max(num_downsample_level, len(args.diffusion_unet_def["attention_levels"]))
-    print(f"num_downsample_level -> {num_downsample_level}.")
+    scale_factor = checkpoint["scale_factor"]
+    logger.info(f"scale_factor -> {scale_factor}.")
 
-    divisor = 2 ** (num_downsample_level - 2)
-    print(f"divisor -> {divisor}.")
+    return autoencoder, unet, scale_factor
 
-    num_train_timesteps = checkpoint["num_train_timesteps"]
-    print(f"num_train_timesteps -> {num_train_timesteps}.")
 
+def prepare_tensors(args: argparse.Namespace, device: torch.device) -> tuple:
+    """
+    Prepare necessary tensors for inference.
+
+    Args:
+        args (argparse.Namespace): Configuration arguments.
+        device (torch.device): Device to load tensors on.
+
+    Returns:
+        tuple: Prepared top_region_index_tensor, bottom_region_index_tensor, and spacing_tensor.
+    """
+    top_region_index_tensor = np.array(args.diffusion_unet_inference["top_region_index"]).astype(float) * 1e2
+    bottom_region_index_tensor = np.array(args.diffusion_unet_inference["bottom_region_index"]).astype(float) * 1e2
+    spacing_tensor = np.array(args.diffusion_unet_inference["spacing"]).astype(float) * 1e2
+
+    top_region_index_tensor = torch.from_numpy(top_region_index_tensor[np.newaxis, :]).half().to(device)
+    bottom_region_index_tensor = torch.from_numpy(bottom_region_index_tensor[np.newaxis, :]).half().to(device)
+    spacing_tensor = torch.from_numpy(spacing_tensor[np.newaxis, :]).half().to(device)
+
+    return top_region_index_tensor, bottom_region_index_tensor, spacing_tensor
+
+
+def run_inference(args: argparse.Namespace, device: torch.device, autoencoder: torch.nn.Module, unet: torch.nn.Module, 
+                  scale_factor: float, top_region_index_tensor: torch.Tensor, bottom_region_index_tensor: torch.Tensor, 
+                  spacing_tensor: torch.Tensor, output_size: tuple, divisor: int, logger: logging.Logger) -> np.ndarray:
+    """
+    Run the inference to generate synthetic images.
+
+    Args:
+        args (argparse.Namespace): Configuration arguments.
+        device (torch.device): Device to run inference on.
+        autoencoder (torch.nn.Module): Autoencoder model.
+        unet (torch.nn.Module): UNet model.
+        scale_factor (float): Scale factor for the model.
+        top_region_index_tensor (torch.Tensor): Top region index tensor.
+        bottom_region_index_tensor (torch.Tensor): Bottom region index tensor.
+        spacing_tensor (torch.Tensor): Spacing tensor.
+        output_size (tuple): Output size of the synthetic image.
+        divisor (int): Divisor for downsample level.
+        logger (logging.Logger): Logger for logging information.
+
+    Returns:
+        np.ndarray: Generated synthetic image data.
+    """
+    noise = torch.randn(
+        (1, args.diffusion_unet_inference["latent_channels"], output_size[0] // divisor, output_size[1] // divisor, output_size[2] // divisor),
+        device=device,
+    )
+    logger.info(f"noise: {noise.device}, {noise.dtype}, {type(noise)}")
+
+    image = noise
     noise_scheduler = define_instance(args, "noise_scheduler")
     noise_scheduler.set_timesteps(num_inference_steps=args.diffusion_unet_inference["num_inference_steps"])
 
-    scale_factor = checkpoint["scale_factor"]
-    print(f"scale_factor -> {scale_factor}.")
-
+    recon_model = ReconModel(autoencoder=autoencoder, scale_factor=scale_factor).to(device)
     autoencoder.eval()
     unet.eval()
 
-    recon_model = ReconModel(autoencoder=autoencoder, scale_factor=scale_factor).to(device)
-
     with torch.cuda.amp.autocast(enabled=True):
-        noise = torch.randn(
-            (
-                1,
-                model_config["latent_channels"],
-                output_size[0] // divisor,
-                output_size[1] // divisor,
-                output_size[2] // divisor,
-            ),
-            device=device,
-        )
-        print("noise:", noise.device, noise.dtype, type(noise))
-
-        top_region_index_tensor = np.array([0, 1, 0, 0]).astype(float)
-        bottom_region_index_tensor = np.array([0, 0, 1, 0]).astype(float)
-        spacing_tensor = np.array(out_spacing).astype(float)
-
-        top_region_index_tensor = top_region_index_tensor * 1e2
-        print(f"top_region_index_tensor: {top_region_index_tensor}.")
-        bottom_region_index_tensor = bottom_region_index_tensor * 1e2
-        print(f"bottom_region_index_tensor: {bottom_region_index_tensor}.")
-        spacing_tensor = spacing_tensor * 1e2
-        print(f"spacing_tensor: {spacing_tensor}.")
-
-        top_region_index_tensor = top_region_index_tensor[np.newaxis, :]
-        bottom_region_index_tensor = bottom_region_index_tensor[np.newaxis, :]
-        spacing_tensor = spacing_tensor[np.newaxis, :]
-
-        top_region_index_tensor = torch.from_numpy(top_region_index_tensor).half().to(device)
-        bottom_region_index_tensor = torch.from_numpy(bottom_region_index_tensor).half().to(device)
-        spacing_tensor = torch.from_numpy(spacing_tensor).half().to(device)
-
-        image = noise
-
-        # synthesize latents
         for t in tqdm(noise_scheduler.timesteps, ncols=110):
             model_output = unet(
                 x=image,
@@ -198,20 +159,72 @@ def diff_model_infer(
         )
 
         data = synthetic_images.squeeze().cpu().detach().numpy()
+        a_min, a_max, b_min, b_max = -1000, 1000, 0, 1
         data = (data - b_min) / (b_max - b_min) * (a_max - a_min) + a_min
         data = np.clip(data, a_min, a_max)
-        data = np.int16(data)
+        return np.int16(data)
 
-        out_affine = np.eye(4)
-        for _k in range(3):
-            out_affine[_k, _k] = out_spacing[_k]
-        new_image = nib.Nifti1Image(data, affine=out_affine)
+
+def save_image(data: np.ndarray, output_size: tuple, out_spacing: tuple, output_path: str, logger: logging.Logger) -> None:
+    """
+    Save the generated synthetic image to a file.
+
+    Args:
+        data (np.ndarray): Synthetic image data.
+        output_size (tuple): Output size of the image.
+        out_spacing (tuple): Spacing of the output image.
+        output_path (str): Path to save the output image.
+        logger (logging.Logger): Logger for logging information.
+    """
+    out_affine = np.eye(4)
+    for i in range(3):
+        out_affine[i, i] = out_spacing[i]
+
+    new_image = nib.Nifti1Image(data, affine=out_affine)
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    nib.save(new_image, output_path)
+    logger.info(f"Saved {output_path}.")
+
+
+@torch.inference_mode()
+def diff_model_infer(env_config_path: str, model_config_path: str, model_def_path: str) -> None:
+    """
+    Main function to run the diffusion model inference.
+
+    Args:
+        env_config_path (str): Path to the environment configuration file.
+        model_config_path (str): Path to the model configuration file.
+        model_def_path (str): Path to the model definition file.
+    """
+    logger = setup_logging()
+    args = load_config(env_config_path, model_config_path, model_def_path)
+    local_rank, world_size, device = initialize_distributed()
+    random_seed = set_random_seed(args.diffusion_unet_inference["random_seed"] + local_rank if args.diffusion_unet_inference["random_seed"] else None)
+    logger.info(f"Using {device} of {world_size} with random seed: {random_seed}")
+
+    output_size = tuple(args.diffusion_unet_inference["dim"])
+    out_spacing = tuple(args.diffusion_unet_inference["spacing"])
+    output_prefix = args.output_prefix
+    ckpt_filepath = f"{args.model_dir}/{args.model_filename}"
+
+    if local_rank == 0:
+        logger.info(f"[config] ckpt_filepath -> {ckpt_filepath}.")
+        logger.info(f"[config] random_seed -> {random_seed}.")
+        logger.info(f"[config] output_prefix -> {output_prefix}.")
+        logger.info(f"[config] output_size -> {output_size}.")
+        logger.info(f"[config] out_spacing -> {out_spacing}.")
+
+    autoencoder, unet, scale_factor = load_models(args, device, logger)
+    num_downsample_level = max(1, len(args.diffusion_unet_def["num_channels"]) if isinstance(args.diffusion_unet_def["num_channels"], list) else len(args.diffusion_unet_def["attention_levels"]))
+    divisor = 2 ** (num_downsample_level - 2)
+    logger.info(f"num_downsample_level -> {num_downsample_level}, divisor -> {divisor}.")
+
+    top_region_index_tensor, bottom_region_index_tensor, spacing_tensor = prepare_tensors(args, device)
+    data = run_inference(args, device, autoencoder, unet, scale_factor, top_region_index_tensor, bottom_region_index_tensor, spacing_tensor, output_size, divisor, logger)
 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     output_path = f"{args.output_dir}/{output_prefix}_seed{random_seed}_size{output_size[0]:d}x{output_size[1]:d}x{output_size[2]:d}_spacing{out_spacing[0]:.2f}x{out_spacing[1]:.2f}x{out_spacing[2]:.2f}_{timestamp}.nii.gz"
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    nib.save(new_image, output_path)
-    print(f"Saved {output_path}.")
+    save_image(data, output_size, out_spacing, output_path, logger)
 
 
 if __name__ == "__main__":
@@ -236,4 +249,4 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    diff_model_infer(args.env_config, args.model_config)
+    diff_model_infer(args.env_config, args.model_config, args.model_def)

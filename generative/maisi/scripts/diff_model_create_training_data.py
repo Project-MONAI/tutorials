@@ -82,13 +82,19 @@ def round_number(number: int, base_number: int = 128) -> int:
     return int(new_number)
 
 
-def diff_model_create_training_data(env_config_path: str, model_config_path: str) -> None:
+@torch.inference_mode()
+def diff_model_create_training_data(
+    env_config_path: str,
+    model_config_path: str,
+    model_def_path: str
+) -> None:
     """
     Create training data for the diffusion model.
 
     Args:
         env_config (dict): Environment configuration.
         model_config_path (str): Path to the model configuration file.
+        model_def_path (str): Path to the model definition file.
     """
     args = argparse.Namespace()
 
@@ -104,6 +110,13 @@ def diff_model_create_training_data(env_config_path: str, model_config_path: str
         model_config = json.load(f)
 
     for k, v in model_config.items():
+        setattr(args, k, v)
+
+    # Load vae model configuration
+    with open(model_def_path, "r") as f:
+        model_def = json.load(f)
+
+    for k, v in model_def.items():
         setattr(args, k, v)
 
     dist.init_process_group(backend="nccl", init_method="env://")
@@ -169,6 +182,7 @@ def diff_model_create_training_data(env_config_path: str, model_config_path: str
         new_affine = new_affine.numpy()
 
         nda_image = nda_image.numpy().squeeze()
+
         print("new", nda_image.shape, new_affine)
 
         try:
@@ -177,25 +191,42 @@ def diff_model_create_training_data(env_config_path: str, model_config_path: str
             print(f"out_filename: {out_filename}")
 
             with torch.cuda.amp.autocast():
-                with torch.no_grad():
-                    pt_nda = torch.from_numpy(nda_image).float().to(device)
-                    pt_nda.unsqueeze_(0).unsqueeze_(0)
+                pt_nda = torch.from_numpy(nda_image).float().to(device)
+                pt_nda.unsqueeze_(0).unsqueeze_(0)
 
-                    z = autoencoder.encode_stage_2_inputs(pt_nda)
-                    print(f"z: {z.size()}, {z.dtype}")
+                z = autoencoder.encode_stage_2_inputs(pt_nda)
+                print(f"z: {z.size()}, {z.dtype}")
 
-                    out_nda = z.squeeze().cpu().detach().numpy()
-                    out_nda = out_nda.transpose(1, 2, 3, 0)
-                    out_img = nib.Nifti1Image(np.float32(out_nda), affine=new_affine)
-                    nib.save(out_img, out_filename)
+                out_nda = z.squeeze().cpu().detach().numpy()
+                out_nda = out_nda.transpose(1, 2, 3, 0)
+                out_img = nib.Nifti1Image(np.float32(out_nda), affine=new_affine)
+                nib.save(out_img, out_filename)
         except Exception as e:
             print(f"Error processing {filepath}: {e}")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Diffusion Model Training Data Creation")
-    parser.add_argument("--env_config", type=str, required=True, help="Path to environment configuration file")
-    parser.add_argument("--model_config", type=str, required=True, help="Path to model configuration file")
+    parser = argparse.ArgumentParser(
+        description="Diffusion Model Training Data Creation"
+    )
+    parser.add_argument(
+        "--env_config",
+        type=str,
+        default="./configs/environment_maisi_diff_model_train.json",
+        help="Path to environment configuration file",
+    )
+    parser.add_argument(
+        "--model_config",
+        type=str,
+        default="./configs/config_maisi_diff_model_train.json",
+        help="Path to model training/inference configuration",
+    )
+    parser.add_argument(
+        "--model_def",
+        type=str,
+        default="./configs/config_maisi.json",
+        help="Path to model configuration file",
+    )
 
     args = parser.parse_args()
-    diff_model_create_training_data(args.env_config, args.model_config)
+    diff_model_create_training_data(args.env_config, args.model_config, args.model_def)

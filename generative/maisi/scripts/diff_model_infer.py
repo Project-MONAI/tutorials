@@ -28,7 +28,12 @@ from .sample import ReconModel
 from .utils import define_instance, load_autoencoder_ckpt
 
 
-def diff_model_infer(env_config_path: str, model_config_path: str):
+@torch.inference_mode()
+def diff_model_infer(
+    env_config_path: str,
+    model_config_path: str,
+    model_def_path: str
+) -> None:
     """
     Main function to run the diffusion model.
 
@@ -50,6 +55,13 @@ def diff_model_infer(env_config_path: str, model_config_path: str):
         model_config = json.load(f)
 
     for k, v in model_config.items():
+        setattr(args, k, v)
+
+    # Load model definition
+    with open(model_def_path, "r") as f:
+        model_def = json.load(f)
+
+    for k, v in model_def.items():
         setattr(args, k, v)
 
     a_min = -1000
@@ -125,88 +137,103 @@ def diff_model_infer(env_config_path: str, model_config_path: str):
 
     recon_model = ReconModel(autoencoder=autoencoder, scale_factor=scale_factor).to(device)
 
-    with torch.no_grad():
-        with torch.cuda.amp.autocast(enabled=True):
-            noise = torch.randn(
-                (
-                    1,
-                    model_config["latent_channels"],
-                    output_size[0] // divisor,
-                    output_size[1] // divisor,
-                    output_size[2] // divisor,
-                )
-            ).to(device)
-            print("noise:", noise.device, noise.dtype, type(noise))
+    with torch.cuda.amp.autocast(enabled=True):
+        noise = torch.randn(
+            (
+                1,
+                model_config["latent_channels"],
+                output_size[0] // divisor,
+                output_size[1] // divisor,
+                output_size[2] // divisor,
+            ),
+            device=device,
+        )
+        print("noise:", noise.device, noise.dtype, type(noise))
 
-            top_region_index_tensor = np.array([0, 1, 0, 0]).astype(float)
-            bottom_region_index_tensor = np.array([0, 0, 1, 0]).astype(float)
-            spacing_tensor = np.array(out_spacing).astype(float)
+        top_region_index_tensor = np.array([0, 1, 0, 0]).astype(float)
+        bottom_region_index_tensor = np.array([0, 0, 1, 0]).astype(float)
+        spacing_tensor = np.array(out_spacing).astype(float)
 
-            top_region_index_tensor = top_region_index_tensor * 1e2
-            print(f"top_region_index_tensor: {top_region_index_tensor}.")
-            bottom_region_index_tensor = bottom_region_index_tensor * 1e2
-            print(f"bottom_region_index_tensor: {bottom_region_index_tensor}.")
-            spacing_tensor = spacing_tensor * 1e2
-            print(f"spacing_tensor: {spacing_tensor}.")
+        top_region_index_tensor = top_region_index_tensor * 1e2
+        print(f"top_region_index_tensor: {top_region_index_tensor}.")
+        bottom_region_index_tensor = bottom_region_index_tensor * 1e2
+        print(f"bottom_region_index_tensor: {bottom_region_index_tensor}.")
+        spacing_tensor = spacing_tensor * 1e2
+        print(f"spacing_tensor: {spacing_tensor}.")
 
-            top_region_index_tensor = top_region_index_tensor[np.newaxis, :]
-            bottom_region_index_tensor = bottom_region_index_tensor[np.newaxis, :]
-            spacing_tensor = spacing_tensor[np.newaxis, :]
+        top_region_index_tensor = top_region_index_tensor[np.newaxis, :]
+        bottom_region_index_tensor = bottom_region_index_tensor[np.newaxis, :]
+        spacing_tensor = spacing_tensor[np.newaxis, :]
 
-            top_region_index_tensor = torch.from_numpy(top_region_index_tensor).half().to(device)
-            bottom_region_index_tensor = torch.from_numpy(bottom_region_index_tensor).half().to(device)
-            spacing_tensor = torch.from_numpy(spacing_tensor).half().to(device)
+        top_region_index_tensor = torch.from_numpy(top_region_index_tensor).half().to(device)
+        bottom_region_index_tensor = torch.from_numpy(bottom_region_index_tensor).half().to(device)
+        spacing_tensor = torch.from_numpy(spacing_tensor).half().to(device)
 
-            image = noise
+        image = noise
 
-            # synthesize latents
-            for t in tqdm(noise_scheduler.timesteps, ncols=110):
-                model_output = unet(
-                    x=image,
-                    timesteps=torch.Tensor((t,)).to(device),
-                    top_region_index_tensor=top_region_index_tensor,
-                    bottom_region_index_tensor=bottom_region_index_tensor,
-                    spacing_tensor=spacing_tensor,
-                )
-                image, _ = noise_scheduler.step(model_output, t, image)
-
-            synthetic_images = sliding_window_inference(
-                inputs=image,
-                roi_size=(
-                    min(output_size[0] // divisor // 4 * 3, 96),
-                    min(output_size[1] // divisor // 4 * 3, 96),
-                    min(output_size[2] // divisor // 4 * 3, 96),
-                ),
-                sw_batch_size=1,
-                predictor=recon_model,
-                mode="gaussian",
-                overlap=2.0 / 3.0,
-                sw_device=device,
-                device=device,
+        # synthesize latents
+        for t in tqdm(noise_scheduler.timesteps, ncols=110):
+            model_output = unet(
+                x=image,
+                timesteps=torch.Tensor((t,)).to(device),
+                top_region_index_tensor=top_region_index_tensor,
+                bottom_region_index_tensor=bottom_region_index_tensor,
+                spacing_tensor=spacing_tensor,
             )
+            image, _ = noise_scheduler.step(model_output, t, image)
 
-            data = synthetic_images.squeeze().cpu().detach().numpy()
-            data = (data - b_min) / (b_max - b_min) * (a_max - a_min) + a_min
-            data = np.clip(data, a_min, a_max)
-            data = np.int16(data)
+        synthetic_images = sliding_window_inference(
+            inputs=image,
+            roi_size=(
+                min(output_size[0] // divisor // 4 * 3, 96),
+                min(output_size[1] // divisor // 4 * 3, 96),
+                min(output_size[2] // divisor // 4 * 3, 96),
+            ),
+            sw_batch_size=1,
+            predictor=recon_model,
+            mode="gaussian",
+            overlap=2.0 / 3.0,
+            sw_device=device,
+            device=device,
+        )
 
-            out_affine = np.eye(4)
-            for _k in range(3):
-                out_affine[_k, _k] = out_spacing[_k]
-            new_image = nib.Nifti1Image(data, affine=out_affine)
+        data = synthetic_images.squeeze().cpu().detach().numpy()
+        data = (data - b_min) / (b_max - b_min) * (a_max - a_min) + a_min
+        data = np.clip(data, a_min, a_max)
+        data = np.int16(data)
 
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        output_path = f"{args.output_dir}/{output_prefix}_seed{random_seed}_size{output_size[0]:d}x{output_size[1]:d}x{output_size[2]:d}_spacing{out_spacing[0]:.2f}x{out_spacing[1]:.2f}x{out_spacing[2]:.2f}_{timestamp}.nii.gz"
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        nib.save(new_image, output_path)
-        print(f"Saved {output_path}.")
+        out_affine = np.eye(4)
+        for _k in range(3):
+            out_affine[_k, _k] = out_spacing[_k]
+        new_image = nib.Nifti1Image(data, affine=out_affine)
+
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    output_path = f"{args.output_dir}/{output_prefix}_seed{random_seed}_size{output_size[0]:d}x{output_size[1]:d}x{output_size[2]:d}_spacing{out_spacing[0]:.2f}x{out_spacing[1]:.2f}x{out_spacing[2]:.2f}_{timestamp}.nii.gz"
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    nib.save(new_image, output_path)
+    print(f"Saved {output_path}.")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Diffusion Model Inference")
-    parser.add_argument("--env_config", type=str, required=True, help="Path to environment configuration file")
-    parser.add_argument("--model_config", type=str, required=True, help="Path to model configuration file")
+    parser.add_argument(
+        "--env_config",
+        type=str,
+        default="./configs/environment_maisi_diff_model_train.json",
+        help="Path to environment configuration file",
+    )
+    parser.add_argument(
+        "--model_config",
+        type=str,
+        default="./configs/config_maisi_diff_model_train.json",
+        help="Path to model training/inference configuration",
+    )
+    parser.add_argument(
+        "--model_def",
+        type=str,
+        default="./configs/config_maisi.json",
+        help="Path to model configuration file",
+    )
 
     args = parser.parse_args()
-
     diff_model_infer(args.env_config, args.model_config)

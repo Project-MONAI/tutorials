@@ -33,7 +33,11 @@ from torch.cuda.amp import GradScaler, autocast
 from .utils import define_instance
 
 
-def diff_model_train(env_config_path: str, model_config_path: str) -> None:
+def diff_model_train(
+    env_config_path: str,
+    model_config_path: str,
+    model_def_path: str
+) -> None:
     """
     Main function to train a diffusion model.
 
@@ -55,6 +59,13 @@ def diff_model_train(env_config_path: str, model_config_path: str) -> None:
         model_config = json.load(f)
 
     for k, v in model_config.items():
+        setattr(args, k, v)
+
+    # Load vae model configuration
+    with open(model_def_path, "r") as f:
+        model_def = json.load(f)
+
+    for k, v in model_def.items():
         setattr(args, k, v)
 
     ckpt_folder = args.model_dir
@@ -218,12 +229,15 @@ def diff_model_train(env_config_path: str, model_config_path: str) -> None:
 
             with autocast(enabled=True):
                 noise = torch.randn(
-                    num_images_per_batch,
-                    4,
-                    images.size(-3),
-                    images.size(-2),
-                    images.size(-1),
-                ).to(device)
+                    (
+                        num_images_per_batch,
+                        4,
+                        images.size(-3),
+                        images.size(-2),
+                        images.size(-1),
+                    ),
+                    device=device,
+                )
 
                 timesteps = torch.randint(
                     0,
@@ -283,9 +297,24 @@ def diff_model_train(env_config_path: str, model_config_path: str) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Diffusion Model Training")
-    parser.add_argument("--env_config", type=str, required=True, help="Path to environment configuration file")
-    parser.add_argument("--model_config", type=str, required=True, help="Path to model configuration file")
+    parser.add_argument(
+        "--env_config",
+        type=str,
+        default="./configs/environment_maisi_diff_model_train.json",
+        help="Path to environment configuration file",
+    )
+    parser.add_argument(
+        "--model_config",
+        type=str,
+        default="./configs/config_maisi_diff_model_train.json",
+        help="Path to model training/inference configuration",
+    )
+    parser.add_argument(
+        "--model_def",
+        type=str,
+        default="./configs/config_maisi.json",
+        help="Path to model configuration file",
+    )
 
     args = parser.parse_args()
-
     diff_model_train(args.env_config, args.model_config)

@@ -37,7 +37,7 @@ Please refer to [maisi_inference_tutorial.ipynb](maisi_inference_tutorial.ipynb)
 Training data preparation can be found in [./data/README.md](./data/README.md)
 
 #### [3.1 3D Autoencoder Training](./train_autoencoder.py)
-Please refer to [maisi_train_vae_tutorial.ipynb](maisi_train_vae_tutorial.ipynb) for the tutorial for MAISI model inference.
+Please refer to [maisi_train_vae_tutorial.ipynb](maisi_train_vae_tutorial.ipynb) for the tutorial for MAISI VAE model training.
 
 #### [3.2 3D Latent Diffusion Training](./train_diffusion.py)
 The training script uses the batch size and patch size defined in the configuration files. If you have a different GPU memory size, you should adjust the `"batch_size"` and `"patch_size"` parameters in the `"diffusion_train"` to match your GPU. Note that the `"patch_size"` needs to be divisible by 16.

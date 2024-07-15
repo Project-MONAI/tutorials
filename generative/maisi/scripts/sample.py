@@ -810,14 +810,12 @@ class LDMSampler:
                 diff += abs(provide_size - db_size)
             candidate_list.append((size, diff))
         candidate_condition = sorted(candidate_list, key=lambda x: x[1])[0][0]
-        # logging.info("provide_anatomy_size:", provide_anatomy_size)
-        # logging.info("candidate_condition:", candidate_condition)
 
         # overwrite the anatomy size provided by users
         for element in controllable_anatomy_size:
             anatomy_name, anatomy_size = element
             candidate_condition[anatomy_size_idx[anatomy_name]] = anatomy_size
-        # logging.info("final candidate_condition:", candidate_condition)
+
         return candidate_condition
 
     def prepare_one_mask_and_meta_info(self, anatomy_size_condtion):

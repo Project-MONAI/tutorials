@@ -29,6 +29,8 @@ MAISI is based on the following papers:
 
 ### 1. Installation
 Please refer to the [Installation of MONAI Generative Model](../README.md)
+MAISI depends on [xFormers](https://github.com/facebookresearch/xformers) library, which unfortunately does not yet support ARM64.
+We will update after xFormers supports ARM64.
 
 ### 2. Model inference and example outputs
 Please refer to [maisi_inference_tutorial.ipynb](maisi_inference_tutorial.ipynb) for the tutorial for MAISI model inference.

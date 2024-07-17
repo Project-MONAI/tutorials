@@ -28,8 +28,9 @@ MAISI is based on the following papers:
 [**ControlNet:**  Lvmin Zhang, Anyi Rao, Maneesh Agrawala; “Adding Conditional Control to Text-to-Image Diffusion Models.” ICCV 2023.](https://openaccess.thecvf.com/content/ICCV2023/papers/Zhang_Adding_Conditional_Control_to_Text-to-Image_Diffusion_Models_ICCV_2023_paper.pdf)
 
 ### 1. Installation
-Please refer to the [Installation of MONAI Generative Model](../README.md)
-MAISI depends on [xFormers](https://github.com/facebookresearch/xformers) library, which unfortunately does not yet support ARM64.
+Please refer to the [Installation of MONAI Generative Model](../README.md).
+
+Note: MAISI depends on [xFormers](https://github.com/facebookresearch/xformers) library, which unfortunately does not yet support ARM64.
 We will update after xFormers supports ARM64.
 
 ### 2. Model inference and example outputs

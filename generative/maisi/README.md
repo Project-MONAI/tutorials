@@ -78,7 +78,7 @@ The training was performed with the following:
 #### Execute training:
 To train with a single GPU, please run:
 ```bash
-python ./scripts/train_controlnet.py -c ./config/config_maisi_controlnet_train.json -e ./config/environment_maisi_controlnet_train.json -g 1
+python ./scripts/train_controlnet.py -c ./config/config_maisi.json -t ./config/config_maisi_controlnet_train.json -e ./config/environment_maisi_controlnet_train.json -g 1
 ```
 
 The training script also enables multi-GPU training. For instance, if you are using eight GPUs, you can run the training script with the following command:
@@ -88,7 +88,7 @@ torchrun \
     --nproc_per_node=${NUM_GPUS_PER_NODE} \
     --nnodes=1 \
     --master_addr=localhost --master_port=1234 \
-    train_diffusion.py -c ./config/config_maisi_controlnet_train.json -e ./config/environment_maisi_controlnet_train.json -g ${NUM_GPUS_PER_NODE}
+    ./scripts/train_controlnet.py -c ./config/config_maisi.json -t ./config/config_maisi_controlnet_train.json -e ./config/environment_maisi_controlnet_train.json -g ${NUM_GPUS_PER_NODE}
 ```
 ### 4. Questions and bugs
 

@@ -40,8 +40,14 @@ def main():
     parser.add_argument(
         "-c",
         "--config-file",
+        default="./configs/config_maisi.json",
+        help="config json file that stores network hyper-parameters",
+    )
+    parser.add_argument(
+        "-t",
+        "--training-config",
         default="./configs/config_maisi_controlnet_train.json",
-        help="config json file that stores hyper-parameters",
+        help="config json file that stores training hyper-parameters",
     )
     parser.add_argument("-g", "--gpus", default=1, type=int, help="number of gpus per node")
     args = parser.parse_args()
@@ -66,10 +72,13 @@ def main():
 
     env_dict = json.load(open(args.environment_file, "r"))
     config_dict = json.load(open(args.config_file, "r"))
+    training_config_dict = json.load(open(args.training_config, "r"))
 
     for k, v in env_dict.items():
         setattr(args, k, v)
     for k, v in config_dict.items():
+        setattr(args, k, v)
+    for k, v in training_config_dict.items():
         setattr(args, k, v)
 
     # initialize tensorboard writer

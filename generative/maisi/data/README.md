@@ -6,10 +6,25 @@ Disclaimer: We are not the host of the data. Please make sure to read the requir
 For the released Foundation autoencoder model weights in MAISI, we used 37243 CT training data and 1963 CT validation data from chest, abdomen, head and neck region; and 17887 MRI training data and 940 MRI validation data from brain, skul-stripped brain, chest, and below-abdomen region.  The training data come from [TCIA Covid 19 Chest CT](https://wiki.cancerimagingarchive.net/display/Public/CT+Images+in+COVID-19#70227107b92475d33ae7421a9b9c426f5bb7d5b3), [TCIA Colon Abdomen CT](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=3539213), [MSD03 Liver Abdomen CT](http://medicaldecathlon.com/), [LIDC chest CT](https://www.cancerimagingarchive.net/collection/lidc-idri/), [TCIA Stony Brook Covid Chest CT](https://www.cancerimagingarchive.net/collection/covid-19-ny-sbu/), [NLST Chest CT](https://www.cancerimagingarchive.net/collection/nlst/), [TCIA Upenn GBM Brain MR](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=70225642), [Aomic Brain MR](https://openneuro.org/datasets/ds003097/versions/1.2.1), [QTIM Brain MR](https://openneuro.org/datasets/ds004169/versions/1.0.7), [TCIA Acrin Chest MR](https://www.cancerimagingarchive.net/collection/acrin-contralateral-breast-mr/), [TCIA Prostate MR Below-Abdomen MR](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=68550661#68550661a2c52df5969d435eae49b9669bea21a6).
 
 In total, we have
-- number of CT training data: 37243
-- number of MRI training data: 17887
-- number of CT validation data:1963
-- number of MRI validation data: 940
+| Index | Dataset Name                                   | Number of Training Data | Number of Validation Data |
+|-------|------------------------------------------------|-------------------------|---------------------------|
+| 1     | Covid 19 Chest CT                              | 722                     | 49                        |
+| 2     | TCIA Colon Abdomen CT                          | 1522                    | 77                        |
+| 3     | MSD03 Liver Abdomen CT                         | 104                     | 0                         |
+| 4     | LIDC chest CT                                  | 450                     | 24                        |
+| 5     | TCIA Stony Brook Covid Chest CT                | 2644                    | 139                       |
+| 6     | NLST Chest CT                                  | 31801                   | 1674                      |
+| 7     | TCIA Upenn GBM Brain MR (skull-stripped)       | 2550                    | 134                       |
+| 8     | Aomic Brain MR                                 | 2630                    | 138                       |
+| 9     | QTIM Brain MR                                  | 1275                    | 67                        |
+| 10    | Acrin Chest MR                                 | 6599                    | 347                       |
+| 11    | TCIA Prostate MR Below-Abdomen MR              | 928                     | 49                        |
+| 12    | Aomic Brain MR, skull-stripped                 | 2630                    | 138                       |
+| 13    | QTIM Brain MR, skull-stripped                  | 1275                    | 67                        |
+|-------|------------------------------------------------|-------------------------|---------------------------|
+|       | Total CT                                       | 37243                   | 1963                      |
+|       | Total MRI                                      | 17887                   | 940                       |
+
 
 ### 2 Diffusion model training Data
 

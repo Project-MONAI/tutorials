@@ -115,7 +115,7 @@ def main():
         logger.info("trained diffusion model is not loaded.")
         scale_factor = 1.0
         logger.info(f"set scale_factor -> {scale_factor}.")
-   
+
     # define ControlNet
     controlnet = define_instance(args, "controlnet_def").to(device)
     # copy weights from the DM to the controlnet

@@ -1,5 +1,5 @@
 # Medical AI for Synthetic Imaging (MAISI)
-This example shows the use cases of training and validating Nvidia MAISI (Medical AI for Synthetic Imaging), a 3D Latent Diffusion Model that can generate large CT images with paired segmentation masks, variable volume size and voxel size, as well as controllable organ/tumor size.
+This example shows the use cases of training and validating NVIDIA MAISI (Medical AI for Synthetic Imaging), a 3D Latent Diffusion Model that can generate large CT images with paired segmentation masks, variable volume size and voxel size, as well as controllable organ/tumor size.
 
 ## MAISI Model Highlight
 - A Foundation VAE model for latent feature compression that works for both CT and MRI with flexible volume size and voxel size
@@ -9,7 +9,7 @@ This example shows the use cases of training and validating Nvidia MAISI (Medica
 ## Example Results and Evaluation
 
 ## MAISI Model Workflow
-The training and inference workflow of MAISI is depicted in the figure below. It begins by training an autoencoder in pixel space to encode images into latent features. Following that, it trains a diffusion model in the latent space to denoise the noisy latent features. During inference, it first generates latent features from random noise by applying multiple denoising steps using the trained diffusion model. Finally, it decodes the denoised latent features into images using the trained autoencoder.
+The training and inference workflows of MAISI are depicted in the figure below. It begins by training an autoencoder in pixel space to encode images into latent features. Following that, it trains a diffusion model in the latent space to denoise the noisy latent features. During inference, it first generates latent features from random noise by applying multiple denoising steps using the trained diffusion model. Finally, it decodes the denoised latent features into images using the trained autoencoder.
 <p align="center">
   <img src="./figures/maisi_train.jpg" alt="MAISI training scheme">
   <br>

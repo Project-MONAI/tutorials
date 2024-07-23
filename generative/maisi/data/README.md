@@ -21,7 +21,6 @@ In total, we have
 | 11    | TCIA Prostate MR Below-Abdomen MR              | 928                     | 49                        |
 | 12    | Aomic Brain MR, skull-stripped                 | 2630                    | 138                       |
 | 13    | QTIM Brain MR, skull-stripped                  | 1275                    | 67                        |
-|-------|------------------------------------------------|-------------------------|---------------------------|
 |       | Total CT                                       | 37243                   | 1963                      |
 |       | Total MRI                                      | 17887                   | 940                       |
 

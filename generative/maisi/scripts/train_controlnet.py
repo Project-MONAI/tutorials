@@ -26,7 +26,7 @@ from monai.utils import RankFilter
 from torch.cuda.amp import GradScaler, autocast
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
-from utils import binarize_labels, define_instance, prepare_maisi_controlnet_json_dataloader, setup_ddp
+from .utils import binarize_labels, define_instance, prepare_maisi_controlnet_json_dataloader, setup_ddp
 
 
 def main():
@@ -102,20 +102,28 @@ def main():
     # define diffusion Model
     unet = define_instance(args, "diffusion_unet_def").to(device)
     # load trained diffusion model
-    if not os.path.exists(args.trained_diffusion_path):
-        raise ValueError("Please download the trained diffusion unet checkpoint.")
-    diffusion_model_ckpt = torch.load(args.trained_diffusion_path, map_location=device)
-    unet.load_state_dict(diffusion_model_ckpt["unet_state_dict"])
-    # load scale factor
-    scale_factor = diffusion_model_ckpt["scale_factor"]
-    logger.info(f"Load trained diffusion model from {args.trained_diffusion_path}.")
-    logger.info(f"loaded scale_factor from diffusion model ckpt -> {scale_factor}.")
+    if args.trained_diffusion_path is not None:
+        if not os.path.exists(args.trained_diffusion_path):
+            raise ValueError("Please download the trained diffusion unet checkpoint.")
+        diffusion_model_ckpt = torch.load(args.trained_diffusion_path, map_location=device)
+        unet.load_state_dict(diffusion_model_ckpt["unet_state_dict"])
+        # load scale factor from diffusion model checkpoint
+        scale_factor = diffusion_model_ckpt["scale_factor"]
+        logger.info(f"Load trained diffusion model from {args.trained_diffusion_path}.")
+        logger.info(f"loaded scale_factor from diffusion model ckpt -> {scale_factor}.")
+    else:
+        logger.info("trained diffusion model is not loaded.")
+        scale_factor = 1.0
+        logger.info(f"set scale_factor -> {scale_factor}.")
+   
     # define ControlNet
     controlnet = define_instance(args, "controlnet_def").to(device)
     # copy weights from the DM to the controlnet
     copy_model_state(controlnet, unet.state_dict())
     # load trained controlnet model if it is provided
     if args.trained_controlnet_path is not None:
+        if not os.path.exists(args.trained_controlnet_path):
+            raise ValueError("Please download the trained ControlNet checkpoint.")
         controlnet.load_state_dict(
             torch.load(args.trained_controlnet_path, map_location=device)["controlnet_state_dict"]
         )
@@ -146,7 +154,7 @@ def main():
     total_step = 0
     best_loss = 1e4
 
-    if weighted_loss > 0:
+    if weighted_loss > 1.0:
         logger.info(f"apply weighted loss = {weighted_loss} on labels: {weighted_loss_label}")
 
     controlnet.train()

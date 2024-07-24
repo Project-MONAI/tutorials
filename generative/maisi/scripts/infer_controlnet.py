@@ -32,6 +32,7 @@ else:
     from .sample import ldm_conditional_sample_one_image
     from .utils import define_instance, load_autoencoder_ckpt, prepare_maisi_controlnet_json_dataloader, setup_ddp
 
+
 def main():
     parser = argparse.ArgumentParser(description="maisi.controlnet.infer")
     parser.add_argument(
@@ -96,7 +97,7 @@ def main():
     )
 
     # Step 2: define AE, diffusion model and controlnet
-     # define AE
+    # define AE
     autoencoder = define_instance(args, "autoencoder_def").to(device)
     # load trained diffusion model
     if args.trained_autoencoder_path is not None:
@@ -107,7 +108,7 @@ def main():
         logger.info(f"Load trained diffusion model from {args.trained_autoencoder_path}.")
     else:
         logger.info("trained autoencoder model is not loaded.")
-       
+
     # define diffusion Model
     unet = define_instance(args, "diffusion_unet_def").to(device)
     # load trained diffusion model
@@ -159,7 +160,7 @@ def main():
             dim = batch["dim"]
             output_size = (dim[0].item(), dim[1].item(), dim[2].item())
             latent_shape = (args.latent_channels, output_size[0] // 4, output_size[1] // 4, output_size[2] // 4)
-    
+
             # generate a single synthetic image using a latent diffusion model with controlnet.
             synthetic_images, _ = ldm_conditional_sample_one_image(
                 autoencoder,
@@ -172,12 +173,12 @@ def main():
                 top_region_index_tensor,
                 bottom_region_index_tensor,
                 spacing_tensor,
-                latent_shape = latent_shape,
-                output_size = output_size,
-                noise_factor = 1.0,
+                latent_shape=latent_shape,
+                output_size=output_size,
+                noise_factor=1.0,
                 num_inference_steps=1000,
                 # reduce it when GPU memory is limited
-                autoencoder_sliding_window_infer_size= [80, 80, 80], 
+                autoencoder_sliding_window_infer_size=[80, 80, 80],
             )
             # save image/label pairs
             labels = decollate_batch(batch)[0]["label"]
@@ -195,7 +196,7 @@ def main():
                 output_postfix=output_postfix + "_label",
                 separate_folder=False,
             )
-            label_saver(labels)        
+            label_saver(labels)
     if use_ddp:
         dist.destroy_process_group()
 

@@ -29,12 +29,22 @@ from tqdm import tqdm
 if __package__ in (None, ""):
     from augmentation import augmentation
     from find_masks import find_masks
-    from utils import binarize_labels, general_mask_generation_post_process, get_body_region_index_from_mask, remap_labels
+    from utils import (
+        binarize_labels,
+        general_mask_generation_post_process,
+        get_body_region_index_from_mask,
+        remap_labels,
+    )
 
 else:
     from .augmentation import augmentation
     from .find_masks import find_masks
-    from .utils import binarize_labels, general_mask_generation_post_process, get_body_region_index_from_mask, remap_labels
+    from .utils import (
+        binarize_labels,
+        general_mask_generation_post_process,
+        get_body_region_index_from_mask,
+        remap_labels,
+    )
 
 
 class ReconModel(torch.nn.Module):

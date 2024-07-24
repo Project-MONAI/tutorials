@@ -26,9 +26,15 @@ from monai.transforms import Compose, SaveImage
 from monai.utils import set_determinism
 from tqdm import tqdm
 
-from .augmentation import augmentation
-from .find_masks import find_masks
-from .utils import binarize_labels, general_mask_generation_post_process, get_body_region_index_from_mask, remap_labels
+if __package__ in (None, ""):
+    from augmentation import augmentation
+    from find_masks import find_masks
+    from utils import binarize_labels, general_mask_generation_post_process, get_body_region_index_from_mask, remap_labels
+
+else:
+    from .augmentation import augmentation
+    from .find_masks import find_masks
+    from .utils import binarize_labels, general_mask_generation_post_process, get_body_region_index_from_mask, remap_labels
 
 
 class ReconModel(torch.nn.Module):
@@ -269,7 +275,6 @@ def ldm_conditional_sample_one_image(
         logging.info(f"---- Latent features generation time: {end_time - start_time} seconds ----")
         del noise_pred
         torch.cuda.empty_cache()
-
         # decode latents to synthesized images
         logging.info("---- Start decoding latent features into images... ----")
         start_time = time.time()

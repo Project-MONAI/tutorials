@@ -21,7 +21,10 @@ import torch
 from monai.transforms import Rand3DElastic, RandAffine, RandZoom
 from torch import Tensor
 
-from .utils import dilate_one_img, erode_one_img
+if __package__ in (None, ""):
+    from utils import dilate_one_img, erode_one_img
+else:
+    from .utils import dilate_one_img, erode_one_img
 
 MAX_COUNT = 100
 

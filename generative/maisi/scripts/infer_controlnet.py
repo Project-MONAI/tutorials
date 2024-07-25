@@ -176,9 +176,9 @@ def main():
                 latent_shape=latent_shape,
                 output_size=output_size,
                 noise_factor=1.0,
-                num_inference_steps=1000,
+                num_inference_steps=args.controlnet_infer["num_inference_steps"],
                 # reduce it when GPU memory is limited
-                autoencoder_sliding_window_infer_size=[80, 80, 80],
+                autoencoder_sliding_window_infer_size=args.controlnet_infer["autoencoder_sliding_window_infer_size"],
             )
             # save image/label pairs
             labels = decollate_batch(batch)[0]["label"]

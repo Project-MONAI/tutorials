@@ -26,8 +26,11 @@ from monai.utils import RankFilter
 from torch.cuda.amp import GradScaler, autocast
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
-from .utils import binarize_labels, define_instance, prepare_maisi_controlnet_json_dataloader, setup_ddp
 
+if __package__ in (None, ""):
+    from utils import binarize_labels, define_instance, prepare_maisi_controlnet_json_dataloader, setup_ddp
+else:
+    from .utils import binarize_labels, define_instance, prepare_maisi_controlnet_json_dataloader, setup_ddp
 
 def main():
     parser = argparse.ArgumentParser(description="maisi.controlnet.training")

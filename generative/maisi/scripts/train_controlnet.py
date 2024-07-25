@@ -9,6 +9,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import argparse
 import json
 import logging
@@ -27,10 +29,7 @@ from torch.cuda.amp import GradScaler, autocast
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
 
-if __package__ in (None, ""):
-    from utils import binarize_labels, define_instance, prepare_maisi_controlnet_json_dataloader, setup_ddp
-else:
-    from .utils import binarize_labels, define_instance, prepare_maisi_controlnet_json_dataloader, setup_ddp
+from .utils import binarize_labels, define_instance, prepare_maisi_controlnet_json_dataloader, setup_ddp
 
 
 def main():

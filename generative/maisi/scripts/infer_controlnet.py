@@ -25,12 +25,8 @@ from monai.networks.utils import copy_model_state
 from monai.transforms import SaveImage
 from monai.utils import RankFilter
 
-if __package__ in (None, ""):
-    from sample import ldm_conditional_sample_one_image
-    from utils import define_instance, load_autoencoder_ckpt, prepare_maisi_controlnet_json_dataloader, setup_ddp
-else:
-    from .sample import ldm_conditional_sample_one_image
-    from .utils import define_instance, load_autoencoder_ckpt, prepare_maisi_controlnet_json_dataloader, setup_ddp
+from .sample import ldm_conditional_sample_one_image
+from .utils import define_instance, load_autoencoder_ckpt, prepare_maisi_controlnet_json_dataloader, setup_ddp
 
 
 def main():

@@ -32,6 +32,7 @@ if __package__ in (None, ""):
 else:
     from .utils import binarize_labels, define_instance, prepare_maisi_controlnet_json_dataloader, setup_ddp
 
+
 def main():
     parser = argparse.ArgumentParser(description="maisi.controlnet.training")
     parser.add_argument(

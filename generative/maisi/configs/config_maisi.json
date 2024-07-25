@@ -30,7 +30,10 @@
         "with_encoder_nonlocal_attn": false,
         "with_decoder_nonlocal_attn": false,
         "use_checkpointing": false,
-        "use_convtranspose": false
+        "use_convtranspose": false,
+        "norm_float16": true,
+        "num_splits": 16,
+        "dim_split": 1
     },
     "diffusion_unet_def": {
         "_target_": "monai.apps.generation.maisi.networks.diffusion_model_unet_maisi.DiffusionModelUNetMaisi",

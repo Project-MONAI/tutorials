@@ -15,11 +15,9 @@ import logging
 import os
 import sys
 from datetime import datetime
-from pathlib import Path
 
 import torch
 import torch.distributed as dist
-import torch.nn.functional as F
 from monai.data import decollate_batch, MetaTensor
 from monai.networks.utils import copy_model_state
 from monai.transforms import SaveImage
@@ -28,7 +26,7 @@ from monai.utils import RankFilter
 from .sample import ldm_conditional_sample_one_image
 from .utils import define_instance, load_autoencoder_ckpt, prepare_maisi_controlnet_json_dataloader, setup_ddp
 
-
+@torch.inference_mode()
 def main():
     parser = argparse.ArgumentParser(description="maisi.controlnet.infer")
     parser.add_argument(
@@ -95,7 +93,7 @@ def main():
     # Step 2: define AE, diffusion model and controlnet
     # define AE
     autoencoder = define_instance(args, "autoencoder_def").to(device)
-    # load trained diffusion model
+    # load trained autoencoder model
     if args.trained_autoencoder_path is not None:
         if not os.path.exists(args.trained_autoencoder_path):
             raise ValueError("Please download the autoencoder checkpoint.")
@@ -144,55 +142,53 @@ def main():
     controlnet.eval()
     unet.eval()
 
-    with torch.no_grad():
-        for batch in val_loader:
-            # get label mask
-            labels = batch["label"].to(device)
-            # get corresponding conditions
-            top_region_index_tensor = batch["top_region_index"].to(device)
-            bottom_region_index_tensor = batch["bottom_region_index"].to(device)
-            spacing_tensor = batch["spacing"].to(device)
-            # get target dimension
-            dim = batch["dim"]
-            output_size = (dim[0].item(), dim[1].item(), dim[2].item())
-            latent_shape = (args.latent_channels, output_size[0] // 4, output_size[1] // 4, output_size[2] // 4)
-
-            # generate a single synthetic image using a latent diffusion model with controlnet.
-            synthetic_images, _ = ldm_conditional_sample_one_image(
-                autoencoder,
-                unet,
-                controlnet,
-                noise_scheduler,
-                scale_factor,
-                device,
-                labels,
-                top_region_index_tensor,
-                bottom_region_index_tensor,
-                spacing_tensor,
-                latent_shape=latent_shape,
-                output_size=output_size,
-                noise_factor=1.0,
-                num_inference_steps=args.controlnet_infer["num_inference_steps"],
-                # reduce it when GPU memory is limited
-                autoencoder_sliding_window_infer_size=args.controlnet_infer["autoencoder_sliding_window_infer_size"],
-            )
-            # save image/label pairs
-            labels = decollate_batch(batch)[0]["label"]
-            output_postfix = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-            labels.meta["filename_or_obj"] = "sample.nii.gz"
-            synthetic_images = MetaTensor(synthetic_images.squeeze(0), meta=labels.meta)
-            img_saver = SaveImage(
-                output_dir=args.output_dir,
-                output_postfix=output_postfix + "_image",
-                separate_folder=False,
-            )
-            img_saver(synthetic_images)
-            label_saver = SaveImage(
-                output_dir=args.output_dir,
-                output_postfix=output_postfix + "_label",
-                separate_folder=False,
-            )
-            label_saver(labels)
+    for batch in val_loader:
+        # get label mask
+        labels = batch["label"].to(device)
+        # get corresponding conditions
+        top_region_index_tensor = batch["top_region_index"].to(device)
+        bottom_region_index_tensor = batch["bottom_region_index"].to(device)
+        spacing_tensor = batch["spacing"].to(device)
+        # get target dimension
+        dim = batch["dim"]
+        output_size = (dim[0].item(), dim[1].item(), dim[2].item())
+        latent_shape = (args.latent_channels, output_size[0] // 4, output_size[1] // 4, output_size[2] // 4)
+        # generate a single synthetic image using a latent diffusion model with controlnet.
+        synthetic_images, _ = ldm_conditional_sample_one_image(
+            autoencoder,
+            unet,
+            controlnet,
+            noise_scheduler,
+            scale_factor,
+            device,
+            labels,
+            top_region_index_tensor,
+            bottom_region_index_tensor,
+            spacing_tensor,
+            latent_shape=latent_shape,
+            output_size=output_size,
+            noise_factor=1.0,
+            num_inference_steps=args.controlnet_infer["num_inference_steps"],
+            # reduce it when GPU memory is limited
+            autoencoder_sliding_window_infer_size=args.controlnet_infer["autoencoder_sliding_window_infer_size"],
+        )
+        # save image/label pairs
+        labels = decollate_batch(batch)[0]["label"]
+        output_postfix = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        labels.meta["filename_or_obj"] = "sample.nii.gz"
+        synthetic_images = MetaTensor(synthetic_images.squeeze(0), meta=labels.meta)
+        img_saver = SaveImage(
+            output_dir=args.output_dir,
+            output_postfix=output_postfix + "_image",
+            separate_folder=False,
+        )
+        img_saver(synthetic_images)
+        label_saver = SaveImage(
+            output_dir=args.output_dir,
+            output_postfix=output_postfix + "_label",
+            separate_folder=False,
+        )
+        label_saver(labels)
     if use_ddp:
         dist.destroy_process_group()
 

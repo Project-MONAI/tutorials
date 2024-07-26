@@ -67,9 +67,9 @@ torchrun \
 
 #### [3.3 3D ControNet Training](./scripts/train_controlnet.py)
 
-We provide a [training config](./configs/config_maisi_controlnet_train.json) executing finetuning for pretrained ControlNet with a new class (i.e., Kidney Tumor). 
-When finetuning with other new class names, please update the `weighted_loss_label` in training config  
-and [label_dict.json](./configs/label_dict.json) accordingly. There are 8 dummy labels as placeholders in default `label_dict.json` that can be used for finetuning. 
+We provide a [training config](./configs/config_maisi_controlnet_train.json) executing finetuning for pretrained ControlNet with a new class (i.e., Kidney Tumor).
+When finetuning with other new class names, please update the `weighted_loss_label` in training config
+and [label_dict.json](./configs/label_dict.json) accordingly. There are 8 dummy labels as placeholders in default `label_dict.json` that can be used for finetuning.
 Preprocessed dataset for controNet training and more deatils anout data preparation can be found in the [README](./data/README.md).
 
 #### Training configuration

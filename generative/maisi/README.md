@@ -56,8 +56,8 @@ Preprocessed dataset for ControNet training and more details anout data preparat
 
 #### Training configuration
 The training was performed with the following:
-- GPU: at least 60GB GPU memory for 512 x 512 x 512 volume
-- Actual Model Input (the size of image embedding in latent space): 128 x 128 x 128
+- GPU: at least 60GB GPU memory for 512 &times; 512 &times; 512 volume
+- Actual Model Input (the size of image embedding in latent space): 128 &times; 128 &times; 128
 - AMP: True
 
 #### Execute training:

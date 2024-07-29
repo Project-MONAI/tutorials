@@ -16,10 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python 3.8
+    - name: Set up Python 3.9
       uses: actions/setup-python@v3
       with:
-        python-version: 3.8
+        python-version: 3.9
     - name: cache weekly timestamp
       id: pip-cache
       run: |
@@ -32,6 +32,7 @@ jobs:
         key: ${{ runner.os }}-pip-${{ steps.pip-cache.outputs.datew }}
     - name: Install dependencies
       run: |
+        find  /opt/hostedtoolcache/* -maxdepth 0 ! -name 'Python' -exec rm -rf {} \;
         python -m pip install --upgrade pip wheel
         python -m pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/dev/requirements-dev.txt
         python -m pip install -r requirements.txt

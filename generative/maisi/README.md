@@ -1,8 +1,8 @@
 # Medical AI for Synthetic Imaging (MAISI)
-This example demonstrates the applications of training and validating NVIDIA MAISI (Medical AI for Synthetic Imaging), a 3D Latent Diffusion Model (LDM) capable of generating large CT images accompanied by corresponding segmentation masks. It supports variable volume size and voxel spacing and allows for the precise control of organ/tumor size.
+This example demonstrates the applications of training and validating NVIDIA MAISI, a 3D Latent Diffusion Model (LDM) capable of generating large CT images accompanied by corresponding segmentation masks. It supports variable volume size and voxel spacing and allows for the precise control of organ/tumor size.
 
 ## MAISI Model Highlight
-- A Foundation VAE model for latent feature compression that works for both CT and MRI with flexible volume size and voxel size
+- A Foundation Variational Auto-Encoder (VAE) model for latent feature compression that works for both CT and MRI with flexible volume size and voxel size
 - A Foundation Diffusion model that can generate large CT volumes up to 512 &times; 512 &times; 768 size, with flexible volume size and voxel size
 - A ControlNet to generate image/mask pairs that can improve downstream tasks, with controllable organ/tumor size
 
@@ -30,8 +30,8 @@ MAISI is based on the following papers:
 ### 1. Installation
 Please refer to the [Installation of MONAI Generative Model](../README.md).
 
-Note: MAISI depends on [xFormers](https://github.com/facebookresearch/xformers) library, which unfortunately does not yet support ARM64.
-We will update after xFormers supports ARM64.
+Note: MAISI depends on [xFormers](https://github.com/facebookresearch/xformers) library.
+ARM64 users can build xFormers from the [source](https://github.com/facebookresearch/xformers?tab=readme-ov-file#installing-xformers) if the available wheel does not meet their requirements.
 
 ### 2. Model inference and example outputs
 Please refer to [maisi_inference_tutorial.ipynb](maisi_inference_tutorial.ipynb) for the tutorial for MAISI model inference.
@@ -47,20 +47,20 @@ Please refer to [maisi_train_vae_tutorial.ipynb](maisi_train_vae_tutorial.ipynb)
 
 Please refer to [maisi_diff_unet_training_tutorial.ipynb](maisi_diff_unet_training_tutorial.ipynb) for the tutorial for MAISI VAE model training.
 
-#### [3.3 3D ControNet Training](./scripts/train_controlnet.py)
+#### [3.3 3D ControlNet Training](./scripts/train_controlnet.py)
 
 We provide a [training config](./configs/config_maisi_controlnet_train.json) executing finetuning for pretrained ControlNet with a new class (i.e., Kidney Tumor).
 When finetuning with other new class names, please update the `weighted_loss_label` in training config
 and [label_dict.json](./configs/label_dict.json) accordingly. There are 8 dummy labels as placeholders in default `label_dict.json` that can be used for finetuning.
-Preprocessed dataset for ControNet training and more details anout data preparation can be found in the [README](./data/README.md).
+Preprocessed dataset for ControlNet training and more details anout data preparation can be found in the [README](./data/README.md).
 
-#### Training configuration
+#### Training Configuration
 The training was performed with the following:
 - GPU: at least 60GB GPU memory for 512 &times; 512 &times; 512 volume
-- Actual Model Input (the size of image embedding in latent space): 128 &times; 128 &times; 128
+- Actual Model Input (the size of image embedding in latent space) for the latent diffusion model: 128 &times; 128 &times; 128 for 512 &times; 512 &times; 512 volume
 - AMP: True
 
-#### Execute training:
+#### Execute Training:
 To train with a single GPU, please run:
 ```bash
 python -m scripts.train_controlnet -c ./configs/config_maisi.json -t ./configs/config_maisi_controlnet_train.json -e ./configs/environment_maisi_controlnet_train.json -g 1
@@ -77,7 +77,7 @@ torchrun \
 ```
 Please also check [maisi_train_controlnet_tutorial.ipynb](./maisi_train_controlnet_tutorial.ipynb) for more details about data preparation and training parameters.
 
-### 4. Questions and bugs
+### 4. Questions and Bugs
 
 - For questions relating to the use of MONAI, please use our [Discussions tab](https://github.com/Project-MONAI/MONAI/discussions) on the main repository of MONAI.
 - For bugs relating to MONAI functionality, please create an issue on the [main repository](https://github.com/Project-MONAI/MONAI/issues).

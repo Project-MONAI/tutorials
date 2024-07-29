@@ -1,6 +1,6 @@
 # Medical AI for Synthetic Imaging (MAISI) Data Preparation
 
-Disclaimer: We are not the host of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the dataset!
+Disclaimer: We are not the hosts of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the datasets!
 
 ### 1 VAE training Data
 For the released Foundation autoencoder model weights in MAISI, we used 37243 CT training data and 1963 CT validation data from chest, abdomen, head and neck region; and 17887 MRI training data and 940 MRI validation data from brain, skull-stripped brain, chest, and below-abdomen region.  The training data come from [TCIA Covid 19 Chest CT](https://wiki.cancerimagingarchive.net/display/Public/CT+Images+in+COVID-19#70227107b92475d33ae7421a9b9c426f5bb7d5b3), [TCIA Colon Abdomen CT](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=3539213), [MSD03 Liver Abdomen CT](http://medicaldecathlon.com/), [LIDC chest CT](https://www.cancerimagingarchive.net/collection/lidc-idri/), [TCIA Stony Brook Covid Chest CT](https://www.cancerimagingarchive.net/collection/covid-19-ny-sbu/), [NLST Chest CT](https://www.cancerimagingarchive.net/collection/nlst/), [TCIA Upenn GBM Brain MR](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=70225642), [Aomic Brain MR](https://openneuro.org/datasets/ds003097/versions/1.2.1), [QTIM Brain MR](https://openneuro.org/datasets/ds004169/versions/1.0.7), [TCIA Acrin Chest MR](https://www.cancerimagingarchive.net/collection/acrin-contralateral-breast-mr/), [TCIA Prostate MR Below-Abdomen MR](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=68550661#68550661a2c52df5969d435eae49b9669bea21a6).
@@ -65,14 +65,15 @@ The table below provides a summary of the number of volumes for each dataset.
 We provide the preprocessed subset of [C4KC-KiTS](https://www.cancerimagingarchive.net/collection/c4kc-kits/) dataset used in the finetuning config `environment_maisi_controlnet_train.json`. The dataset and corresponding JSON data list can be downloaded from [this link](https://drive.google.com/drive/folders/1iMStdYxcl26dEXgJEXOjkWvx-I2fYZ2u?usp=sharing) and should be saved in `maisi/dataset/` folder.
 
 The structure of example folder in the preprocessed dataset is:
-```
-            |-*arterial*.nii.gz     # original image
-            |-*arterial_emb*.nii.gz     # encoded image embedding
-KiTS-000* --|-mask*.nii.gz      # original labels
-            |-mask_pseudo_label*.nii.gz     # pseudo labels
-            |-mask_combined_label*.nii.gz     # combined mask of original and pseudo labels
 
 ```
+            |-*arterial*.nii.gz               # original image
+            |-*arterial_emb*.nii.gz           # encoded image embedding
+KiTS-000* --|-mask*.nii.gz                    # original labels
+            |-mask_pseudo_label*.nii.gz       # pseudo labels
+            |-mask_combined_label*.nii.gz     # combined mask of original and pseudo labels
+```
+
 An example combined mask of original and pseudo labels is shown below:
 ![example_combined_mask](../figures/example_combined_mask.png)
 

@@ -45,7 +45,7 @@ Please refer to [maisi_train_vae_tutorial.ipynb](maisi_train_vae_tutorial.ipynb)
 
 #### [3.2 3D Latent Diffusion Training](./scripts/diff_model_train.py)
 
-Please refer to [maisi_diff_unet_training_tutorial.ipynb](maisi_diff_unet_training_tutorial.ipynb) for the tutorial for MAISI VAE model training.
+Please refer to [maisi_diff_unet_training_tutorial.ipynb](maisi_diff_unet_training_tutorial.ipynb) for the tutorial for MAISI diffusion model training.
 
 #### [3.3 3D ControlNet Training](./scripts/train_controlnet.py)
 

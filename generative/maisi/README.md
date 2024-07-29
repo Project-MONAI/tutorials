@@ -57,7 +57,7 @@ Preprocessed dataset for ControlNet training and more details anout data prepara
 #### Training Configuration
 The training was performed with the following:
 - GPU: at least 60GB GPU memory for 512 &times; 512 &times; 512 volume
-- Actual Model Input (the size of image embedding in latent space) for the latent diffusion model: 128 &times; 128 &times; 128 for 512 &times; 512 &times; 512 volume
+- Actual Model Input (the size of 3D image feature in latent space) for the latent diffusion model: 128 &times; 128 &times; 128 for 512 &times; 512 &times; 512 volume
 - AMP: True
 
 #### Execute Training:

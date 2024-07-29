@@ -1,9 +1,9 @@
 # Medical AI for Synthetic Imaging (MAISI)
-This example shows the use cases of training and validating NVIDIA MAISI (Medical AI for Synthetic Imaging), a 3D Latent Diffusion Model that can generate large CT images with paired segmentation masks, variable volume size and voxel size, as well as controllable organ/tumor size.
+This example demonstrates the applications of training and validating NVIDIA MAISI (Medical AI for Synthetic Imaging), a 3D Latent Diffusion Model (LDM) capable of generating large CT images accompanied by corresponding segmentation masks. It supports variable volume size and voxel spacing and allows for the precise control of organ/tumor size.
 
 ## MAISI Model Highlight
 - A Foundation VAE model for latent feature compression that works for both CT and MRI with flexible volume size and voxel size
-- A Foundation Diffusion model that can generate large CT volumes up to 512x512x768 size, with flexible volume size and voxel size
+- A Foundation Diffusion model that can generate large CT volumes up to 512 &times; 512 &times; 768 size, with flexible volume size and voxel size
 - A ControlNet to generate image/mask pairs that can improve downstream tasks, with controllable organ/tumor size
 
 ## Example Results and Evaluation
@@ -40,30 +40,12 @@ Please refer to [maisi_inference_tutorial.ipynb](maisi_inference_tutorial.ipynb)
 Training data preparation can be found in [./data/README.md](./data/README.md)
 
 #### [3.1 3D Autoencoder Training](./train_autoencoder.py)
+
 Please refer to [maisi_train_vae_tutorial.ipynb](maisi_train_vae_tutorial.ipynb) for the tutorial for MAISI VAE model training.
 
-#### [3.2 3D Latent Diffusion Training](./train_diffusion.py)
-The training script uses the batch size and patch size defined in the configuration files. If you have a different GPU memory size, you should adjust the `"batch_size"` and `"patch_size"` parameters in the `"diffusion_train"` to match your GPU. Note that the `"patch_size"` needs to be divisible by 16.
+#### [3.2 3D Latent Diffusion Training](./scripts/diff_model_train.py)
 
-To train with single 32G GPU, please run:
-```bash
-python train_diffusion.py -c ./config/config_maisi.json -e ./config/environment.json -g 1
-```
-
-The training script also enables multi-GPU training. For instance, if you are using eight 32G GPUs, you can run the training script with the following command:
-```bash
-export NUM_GPUS_PER_NODE=8
-torchrun \
-    --nproc_per_node=${NUM_GPUS_PER_NODE} \
-    --nnodes=1 \
-    --master_addr=localhost --master_port=1234 \
-    train_diffusion.py -c ./config/config_maisi.json -e ./config/environment.json -g ${NUM_GPUS_PER_NODE}
-```
-<p align="center">
-  <img src="./figs/train_diffusion.png" alt="latent diffusion train curve" width="45%" >
-&nbsp; &nbsp; &nbsp; &nbsp;
-  <img src="./figs/val_diffusion.png" alt="latent diffusion validation curve" width="45%" >
-</p>
+Please refer to [maisi_diff_unet_training_tutorial.ipynb](maisi_diff_unet_training_tutorial.ipynb) for the tutorial for MAISI VAE model training.
 
 #### [3.3 3D ControNet Training](./scripts/train_controlnet.py)
 

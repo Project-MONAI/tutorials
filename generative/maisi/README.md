@@ -39,7 +39,7 @@ Please refer to [maisi_inference_tutorial.ipynb](maisi_inference_tutorial.ipynb)
 ### 3. Training example
 Training data preparation can be found in [./data/README.md](./data/README.md)
 
-#### [3.1 3D Autoencoder Training](./train_autoencoder.py)
+#### [3.1 3D Autoencoder Training](./maisi_train_vae_tutorial.ipynb)
 
 Please refer to [maisi_train_vae_tutorial.ipynb](maisi_train_vae_tutorial.ipynb) for the tutorial for MAISI VAE model training.
 

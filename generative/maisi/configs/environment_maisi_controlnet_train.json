@@ -1,6 +1,6 @@
 {
     "model_dir": "./models/",
-    "output_dir": "./output",
+    "output_dir": "./outputs",
     "tfevent_path": "./outputs/tfevent",
     "trained_autoencoder_path": "./models/autoencoder_epoch273.pt",
     "trained_diffusion_path": "./models/input_unet3d_data-all_steps1000size512ddpm_random_current_inputx_v1.pt",

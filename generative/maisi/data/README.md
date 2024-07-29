@@ -27,16 +27,16 @@ In total, we included:
 
 ### 2 Diffusion model training Data
 
-The Diffusion model training dataset used in MAISI contains 10,277 CT volumes across 23 datasets and covers different body regions and disease patterns.
+The training dataset for the Diffusion model used in MAISI comprises 10,277 CT volumes from 24 distinct datasets, encompassing various body regions and disease patterns.
 
-The table below summarizes the number of volumes for each dataset.
+The table below provides a summary of the number of volumes for each dataset.
 
 |Index| Dataset name|Number of volumes|
 |:-----|:-----|:-----|
 1  | AbdomenCT-1K | 789
 2  | AeroPath | 15
 3  | AMOS22 | 240
-4  | AutoPET23 | 200
+4  | autoPET23 | 200
 5  | Bone-Lesion | 223
 6  | BTCV | 48
 7  | COVID-19 | 524

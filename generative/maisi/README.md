@@ -79,7 +79,7 @@ Please also check [maisi_train_controlnet_tutorial.ipynb](./maisi_train_controln
 
 ### 4. License
 
-The code is released under Apache 2.0 License. 
+The code is released under Apache 2.0 License.
 
 The model weight is released under [NSCLv1 License](./LICENSE.weights).
 

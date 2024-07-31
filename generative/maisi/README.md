@@ -77,7 +77,13 @@ torchrun \
 ```
 Please also check [maisi_train_controlnet_tutorial.ipynb](./maisi_train_controlnet_tutorial.ipynb) for more details about data preparation and training parameters.
 
-### 4. Questions and Bugs
+### 4. License
+
+The code is released under Apache 2.0 License. 
+
+The model weight is released under [NSCLv1 License](./LICENSE.weights).
+
+### 5. Questions and Bugs
 
 - For questions relating to the use of MONAI, please use our [Discussions tab](https://github.com/Project-MONAI/MONAI/discussions) on the main repository of MONAI.
 - For bugs relating to MONAI functionality, please create an issue on the [main repository](https://github.com/Project-MONAI/MONAI/issues).

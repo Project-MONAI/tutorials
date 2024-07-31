@@ -51,7 +51,7 @@ Please refer to [maisi_diff_unet_training_tutorial.ipynb](maisi_diff_unet_traini
 
 We provide a [training config](./configs/config_maisi_controlnet_train.json) executing finetuning for pretrained ControlNet with a new class (i.e., Kidney Tumor).
 When finetuning with other new class names, please update the `weighted_loss_label` in training config
-and [label_dict.json](./configs/label_dict.json) accordingly. There are 8 dummy labels as deletable placeholders in default `label_dict.json` that can be used for finetuning. Users may apply any placeholder labels for fine-tuning purposes. If there are more than 8 new labels needed in finetuning, users can freely define numeric label index less than 256. The current ControlNet implementation can support up to 256 labels (0~255).
+and [label_dict.json](./configs/label_dict.json) accordingly. There are 8 dummy labels as deletable placeholders in default `label_dict.json` that can be used for finetuning. Users may apply any placeholder labels for fine-tuning purpose. If there are more than 8 new labels needed in finetuning, users can freely define numeric label indices less than 256. The current ControlNet implementation can support up to 256 labels (0~255).
 Preprocessed dataset for ControlNet training and more details anout data preparation can be found in the [README](./data/README.md).
 
 #### Training Configuration

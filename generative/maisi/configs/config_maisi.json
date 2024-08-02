@@ -92,11 +92,11 @@
         "conditioning_embedding_num_channels": [8, 32, 64]
     },
     "mask_generation_autoencoder_def": {
-        "_target_": "generative.networks.nets.AutoencoderKL",
-        "spatial_dims": 3,
+        "_target_": "monai.apps.generation.maisi.networks.autoencoderkl_maisi.AutoencoderKlMaisi",
+        "spatial_dims": "@spatial_dims",
         "in_channels": 8,
         "out_channels": 125,
-        "latent_channels": 4,
+        "latent_channels": "@latent_channels",
         "num_channels": [
             32,
             64,
@@ -114,10 +114,13 @@
         "with_decoder_nonlocal_attn": false,
         "use_flash_attention": false,
         "use_checkpointing": true,
-        "use_convtranspose": true
+        "use_convtranspose": true,
+        "norm_float16": true,
+        "num_splits": 8,
+        "dim_split": 1
     },
     "mask_generation_diffusion_def": {
-        "_target_": "generative.networks.nets.DiffusionModelUNet",
+        "_target_": "monai.apps.generation.maisi.networks.diffusion_model_unet_maisi.DiffusionModelUNetMaisi",
         "spatial_dims": 3,
         "in_channels": 4,
         "out_channels": 4,
@@ -132,7 +135,7 @@
     },
     "mask_generation_scale_factor": 1.0055984258651733,
     "noise_scheduler": {
-        "_target_": "generative.networks.schedulers.DDPMScheduler",
+        "_target_": "monai.networks.schedulers.ddpm.DDPMScheduler",
         "num_train_timesteps": 1000,
         "beta_start": 0.0015,
         "beta_end": 0.0195,
@@ -140,7 +143,7 @@
         "clip_sample": false
     },
     "mask_generation_noise_scheduler": {
-        "_target_": "generative.networks.schedulers.DDPMScheduler",
+        "_target_": "monai.networks.schedulers.ddpm.DDPMScheduler",
         "num_train_timesteps": 1000,
         "beta_start": 0.0015,
         "beta_end": 0.0195,

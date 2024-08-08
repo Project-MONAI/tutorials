@@ -18,11 +18,11 @@ from pathlib import Path
 
 import torch
 import torch.nn.functional as F
-from generative.inferers import LatentDiffusionInferer
-from generative.networks.schedulers import DDPMScheduler
+from monai.inferers import LatentDiffusionInferer
+from monai.networks.schedulers import DDPMScheduler
 from monai.config import print_config
 from monai.utils import first, set_determinism
-from torch.cuda.amp import GradScaler, autocast
+from torch.amp import GradScaler, autocast
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
 from utils import define_instance, prepare_brats2d_dataloader, setup_ddp
@@ -114,7 +114,7 @@ def main():
     # and the results will not differ from those obtained when it is not used._
 
     with torch.no_grad():
-        with autocast(enabled=True):
+        with autocast("cuda", enabled=True):
             check_data = first(train_loader)
             z = autoencoder.encode_stage_2_inputs(check_data["image"].to(device))
             if rank == 0:
@@ -196,7 +196,7 @@ def main():
             images = batch["image"].to(device)
             optimizer_diff.zero_grad(set_to_none=True)
 
-            with autocast(enabled=True):
+            with autocast("cuda", enabled=True):
                 # Generate random noise
                 noise_shape = [images.shape[0]] + list(z.shape[1:])
                 noise = torch.randn(noise_shape, dtype=images.dtype).to(device)
@@ -239,7 +239,7 @@ def main():
             unet.eval()
             val_recon_epoch_loss = 0
             with torch.no_grad():
-                with autocast(enabled=True):
+                with autocast("cuda", enabled=True):
                     # compute val loss
                     for step, batch in enumerate(val_loader):
                         images = batch["image"].to(device)

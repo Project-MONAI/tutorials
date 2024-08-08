@@ -1,13 +1,16 @@
 # MONAI Generative Model Example
-This folder contains examples for training and validating a MONAI Generative Model.
-
-The examples are designed as demonstration to showcase the training process for this type of network using MONAI Generative models. To achieve optimal performance, it is recommended that users to adjust the network and hyper-parameters based on their device and training dataset.
+This folder contains examples for training and validating generative models in MONAI. The examples are designed as demonstration to showcase the training process for these types of networks. To achieve optimal performance, it is recommended that users to adjust the network and hyper-parameters based on their device and training dataset.
 
 ## Installation
+
+Some tutorials here require extra components on top of what is installed with base MONAI:
+
 ```
-pip install lpips
-pip install monai-generative==0.2.3
+pip install monai[lpips]
 ```
+
+The MONAI GenerateModels package is no longer required, however this can be installed with `pip install monai-generative==0.2.3`.
+
 
 ## [Brats 3D latent diffusion model](./3d_ldm/README.md)
 Example shows the use cases of training and validating a 3D Latent Diffusion Model on Brats 2016&2017 data.

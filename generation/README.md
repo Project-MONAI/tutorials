@@ -14,7 +14,7 @@ The MONAI GenerateModels package is no longer required, however this can be inst
 ----
 
 ## [MedNIST 2D latent diffusion model notebook](./2d_ldm/2d_ldm_tutorial.ipynb)
-Example notebook demonstrating diffusion with MedNIST toy dataset. 
+Example notebook demonstrating diffusion with MedNIST toy dataset.
 
 ## [Brats 2D latent diffusion model](./2d_ldm/README.md)
 Example shows the use cases of training and validating a 2D Latent Diffusion Model on axial slices from Brats 2016&2017 data.

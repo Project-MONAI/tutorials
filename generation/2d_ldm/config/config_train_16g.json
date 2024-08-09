@@ -33,7 +33,7 @@
         "perceptual_weight": 1.0,
         "kl_weight": 1e-6,
         "recon_loss": "l1",
-        "n_epochs": 1000,
+        "max_epochs": 1000,
         "val_interval": 1
     },
     "diffusion_def": {
@@ -50,7 +50,7 @@
         "batch_size": 50,
         "patch_size": [256,256],
         "lr": 1e-5,
-        "n_epochs": 1500,
+        "max_epochs": 1500,
         "val_interval": 2,
         "lr_scheduler_milestones": [1000]
     },

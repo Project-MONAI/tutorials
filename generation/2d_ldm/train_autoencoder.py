@@ -172,12 +172,12 @@ def main():
 
     # Step 4: training
     autoencoder_warm_up_n_epochs = 5
-    n_epochs = args.autoencoder_train["n_epochs"]
+    max_epochs = args.autoencoder_train["max_epochs"]
     val_interval = args.autoencoder_train["val_interval"]
     best_val_recon_epoch_loss = 100.0
     total_step = 0
 
-    for epoch in range(n_epochs):
+    for epoch in range(max_epochs):
         # train
         autoencoder.train()
         discriminator.train()

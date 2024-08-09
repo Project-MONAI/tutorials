@@ -10,7 +10,7 @@
         "in_channels": "$@image_channels",
         "out_channels": "@image_channels",
         "latent_channels": "@latent_channels",
-        "num_channels": [
+        "channels": [
             64,
             128,
             256
@@ -33,7 +33,7 @@
         "perceptual_weight": 0.001,
         "kl_weight": 1e-7,
         "recon_loss": "l1",
-        "n_epochs": 1000,
+        "max_epochs": 1000,
         "val_interval": 10
     },
     "diffusion_def": {
@@ -41,7 +41,7 @@
         "spatial_dims": "@spatial_dims",
         "in_channels": "@latent_channels",
         "out_channels": "@latent_channels",
-        "num_channels":[256, 256, 512],
+        "channels":[256, 256, 512],
         "attention_levels":[false, true, true],
         "num_head_channels":[0, 64, 64],
         "num_res_blocks": 2
@@ -50,7 +50,7 @@
         "batch_size": 3,
         "patch_size": [144,176,112],
         "lr": 1e-5,
-        "n_epochs": 10000,
+        "max_epochs": 10000,
         "val_interval": 2
     },
     "NoiseScheduler": {

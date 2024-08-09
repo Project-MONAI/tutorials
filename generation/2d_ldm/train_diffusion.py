@@ -75,7 +75,7 @@ def main():
     set_determinism(42)
 
     # Step 1: set data loader
-    size_divisible = 2 ** (len(args.autoencoder_def["num_channels"]) + len(args.diffusion_def["num_channels"]) - 2)
+    size_divisible = 2 ** (len(args.autoencoder_def["channels"]) + len(args.diffusion_def["channels"]) - 2)
     train_loader, val_loader = prepare_brats2d_dataloader(
         args,
         args.diffusion_train["batch_size"],
@@ -179,14 +179,14 @@ def main():
     )
 
     # Step 4: training
-    n_epochs = args.diffusion_train["n_epochs"]
+    max_epochs = args.diffusion_train["max_epochs"]
     val_interval = args.diffusion_train["val_interval"]
     autoencoder.eval()
     scaler = GradScaler()
     total_step = 0
     best_val_recon_epoch_loss = 100.0
 
-    for epoch in range(start_epoch, n_epochs):
+    for epoch in range(start_epoch, max_epochs):
         unet.train()
         lr_scheduler.step()
         if ddp_bool:

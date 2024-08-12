@@ -19,6 +19,6 @@
         "val_interval": 10,
         "cache": 0.5,
         "amp": true,
-        "n_epochs": 2
+        "n_epochs": 1
     }
 }

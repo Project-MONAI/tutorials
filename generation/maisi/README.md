@@ -34,6 +34,8 @@ Note: MAISI depends on [xFormers](https://github.com/facebookresearch/xformers) 
 ARM64 users can build xFormers from the [source](https://github.com/facebookresearch/xformers?tab=readme-ov-file#installing-xformers) if the available wheel does not meet their requirements.
 
 ### 2. Model Inference
+The information used for both training and inference, like network definition, is stored in [./configs/config_maisi.json](./configs/config_maisi.json). Training and inference should use the same [./configs/config_maisi.json](./configs/config_maisi.json).
+
 The information for the inference input, like body region and anatomy to generate, is stored in [./configs/config_infer.json](./configs/config_infer.json). Please feel free to play with it. Here are the details of the parameters.
 
 - `"num_output_samples"`: int, the number of output image/mask pairs it will generate.
@@ -58,7 +60,30 @@ python -m scripts.inference -c ./configs/config_maisi.json -i ./configs/config_i
 ### 3. Training example
 Training data preparation can be found in [./data/README.md](./data/README.md)
 
+The information used for both training and inference, like network definition, is stored in [./configs/config_maisi.json](./configs/config_maisi.json). Training and inference should use the same [./configs/config_maisi.json](./configs/config_maisi.json).
+
 #### [3.1 3D Autoencoder Training](./maisi_train_vae_tutorial.ipynb)
+The information for the training hyperparameters and data processing parameters, like learning rate and patch size, are stored in [./configs/config_maisi_vae_train.json](./configs/config_maisi_vae_train.json). The provided configuration works for 16G V100 GPU. Please feel free to tune the parameters for your datasets and device.
+
+Dataset preprocessing:
+- `"random_aug"`: bool, whether to add random data augmentation for training data.
+- `"spacing_type"`: choose from `"original"` (no resampling involved), `"fixed"` (all images resampled to same voxel size), and `"rand_zoom"` (images randomly zoomed, valid when `"random_aug"` is True).
+- `"spacing"`: None or list of three floats. If `"spacing_type"` is `"fixed"`, all the images will be interpolated to the voxel size of `"spacing"`.
+- `"select_channel"`: int, if multi-channel MRI, which channel it will select.
+
+Training configs:
+- `"batch_size"`: training batch size. Please consider increasing it if GPU memory is larger than 16G.
+- `"patch_size"`: training patch size. For the released model, we first trained the autoencoder with small patch size [64,64,64], then continued training with patch size of [128,128,128].
+- `"val_patch_size"`: Size of validation patches. If None, will use the whole volume for validation. If given, will central crop a patch for validation.
+- `"val_sliding_window_patch_size"`: if the validation patch is too large, will use sliding window inference. Please consider increasing it if GPU memory is larger than 16G.
+- `"val_batch_size"`: validation batch size.
+- `"perceptual_weight"`: perceptual loss weight.
+- `"kl_weight"`: KL loss weight, important hyper-parameter. If too large, decoder cannot recon good results from latent space. If too small, latent space will not be regularized enough for the diffusion model.
+- `"adv_weight"`: adversavarial loss weight.
+- `"recon_loss"`: choose from 'l1' and l2'.
+- `"val_interval"`:int, do validation every `"val_interval"` epoches.
+- `"cache"`: float between 0 and 1, dataloader cache, choose small value if CPU memory is small.
+- `"n_epochs"`: int, number of epochs to train. Please adjust it based on the size of your datasets. We used 280 epochs for the released model on 58k data.
 
 Please refer to [maisi_train_vae_tutorial.ipynb](maisi_train_vae_tutorial.ipynb) for the tutorial for MAISI VAE model training.
 

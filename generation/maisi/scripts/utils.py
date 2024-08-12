@@ -670,7 +670,8 @@ class MapLabelValue:
 
 def load_autoencoder_ckpt(load_autoencoder_path):
     """
-    Load and preprocess an autoencoder checkpoint.
+    Load a state dict from an autoencoder checkpoint trained with
+    [MONAI Generative](https://github.com/Project-MONAI/GenerativeModels).
 
     This function loads a checkpoint file and adjusts the state dict keys
     to match the expected format for the autoencoder.
@@ -702,6 +703,78 @@ def load_autoencoder_ckpt(load_autoencoder_path):
             new_state_dict[k] = v
     checkpoint_autoencoder = new_state_dict
     return checkpoint_autoencoder
+
+def load_diffusion_ckpt(new_state_dict: dict, old_state_dict: dict, verbose=False) -> dict:
+        """
+        Load a state dict from a DiffusionModelUNet trained with
+        [MONAI Generative](https://github.com/Project-MONAI/GenerativeModels).
+
+        Args:
+            new_state_dict: state dict from the new model.
+            old_state_dict: state dict from the old model.
+        """
+
+        # if all keys match, just load the state dict
+        # if all(k in new_state_dict for k in old_state_dict):
+        #     print("All keys match, loading state dict.")
+        #     self.load_state_dict(old_state_dict)
+        #     return
+
+        if verbose:
+            # print all new_state_dict keys that are not in old_state_dict
+            for k in new_state_dict:
+                if k not in old_state_dict:
+                    print(f"New key {k} not found in old state dict")
+            # and vice versa
+            print("----------------------------------------------")
+            for k in old_state_dict:
+                if k not in new_state_dict:
+                    print(f"Old key {k} not found in new state dict")
+
+        # copy over all matching keys
+        for k in new_state_dict:
+            if k in old_state_dict:
+
+                # new_state_dict[k] = old_state_dict[k]
+                new_state_dict[k] = old_state_dict.pop(k)
+
+
+        # fix the attention blocks
+        # attention_blocks = [k.replace(".attn1.qkv.weight", "") for k in new_state_dict if "attn1.qkv.weight" in k]
+        attention_blocks = [k.replace(".attn.to_k.weight", "") for k in new_state_dict if "attn.to_k.weight" in k]
+        for block in attention_blocks:
+            # new_state_dict[f"{block}.attn1.qkv.weight"] = torch.cat(
+            #     [
+            #         old_state_dict[f"{block}.attn1.to_q.weight"],
+            #         old_state_dict[f"{block}.attn1.to_k.weight"],
+            #         old_state_dict[f"{block}.attn1.to_v.weight"],
+            #     ],
+            #     dim=0,
+            # )
+            new_state_dict[f"{block}.attn.to_q.weight"] = old_state_dict.pop(f"{block}.to_q.weight")
+            new_state_dict[f"{block}.attn.to_k.weight"] = old_state_dict.pop(f"{block}.to_k.weight")
+            new_state_dict[f"{block}.attn.to_v.weight"] = old_state_dict.pop(f"{block}.to_v.weight")
+            new_state_dict[f"{block}.attn.to_q.bias"] = old_state_dict.pop(f"{block}.to_q.bias")
+            new_state_dict[f"{block}.attn.to_k.bias"] = old_state_dict.pop(f"{block}.to_k.bias")
+            new_state_dict[f"{block}.attn.to_v.bias"] = old_state_dict.pop(f"{block}.to_v.bias")
+            
+            # projection
+            # new_state_dict[f"{block}.attn1.out_proj.weight"] = old_state_dict[f"{block}.attn1.to_out.0.weight"]
+            # new_state_dict[f"{block}.attn1.out_proj.bias"] = old_state_dict[f"{block}.attn1.to_out.0.bias"]
+
+            # new_state_dict[f"{block}.attn2.out_proj.weight"] = old_state_dict[f"{block}.attn2.to_out.0.weight"]
+            # new_state_dict[f"{block}.attn2.out_proj.bias"] = old_state_dict[f"{block}.attn2.to_out.0.bias"]
+            new_state_dict[f"{block}.attn.out_proj.weight"] = old_state_dict.pop(f"{block}.proj_attn.weight")
+            new_state_dict[f"{block}.attn.out_proj.bias"] = old_state_dict.pop(f"{block}.proj_attn.bias")
+
+        # fix the upsample conv blocks which were renamed postconv
+        for k in new_state_dict:
+            if "postconv" in k:
+                old_name = k.replace("postconv", "conv")
+                # new_state_dict[k] = old_state_dict[old_name]
+                new_state_dict[k] = old_state_dict.pop(old_name)
+        print(old_state_dict.keys(), 'remaining***********')
+        return new_state_dict
 
 
 def KL_loss(z_mu, z_sigma):

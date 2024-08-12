@@ -77,7 +77,7 @@ def main():
     set_determinism(42)
 
     # Step 1: set data loader
-    size_divisible = 2 ** (len(args.autoencoder_def["num_channels"]) + len(args.diffusion_def["num_channels"]) - 2)
+    size_divisible = 2 ** (len(args.autoencoder_def["channels"]) + len(args.diffusion_def["channels"]) - 2)
     train_loader, val_loader = prepare_dataloader(
         args,
         args.diffusion_train["batch_size"],

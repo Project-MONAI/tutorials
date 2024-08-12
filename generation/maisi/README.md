@@ -33,7 +33,7 @@ Please refer to the [Installation of MONAI Generative Model](../README.md).
 Note: MAISI depends on [xFormers](https://github.com/facebookresearch/xformers) library.
 ARM64 users can build xFormers from the [source](https://github.com/facebookresearch/xformers?tab=readme-ov-file#installing-xformers) if the available wheel does not meet their requirements.
 
-### 2. Model inference and example outputs
+### 2. Model Inference
 The information for the inference input, like body region and anatomy to generate, is stored in [./configs/config_infer.json](./configs/config_infer.json). Please feel free to play with it. Here are the details of the parameters.
 
 - `"num_output_samples"`: int, the number of output image/mask pairs it will generate.

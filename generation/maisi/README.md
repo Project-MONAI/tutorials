@@ -34,7 +34,8 @@ Note: MAISI depends on [xFormers](https://github.com/facebookresearch/xformers) 
 ARM64 users can build xFormers from the [source](https://github.com/facebookresearch/xformers?tab=readme-ov-file#installing-xformers) if the available wheel does not meet their requirements.
 
 ### 2. Model inference and example outputs
-The information for the inference input, like body region and anatomy to generate, is stored in "./configs/config_infer.json". Please feel free to play with it.
+The information for the inference input, like body region and anatomy to generate, is stored in [./configs/config_infer.json](./configs/config_infer.json). Please feel free to play with it. Here are the details of the parameters.
+
 - `"num_output_samples"`: int, the number of output image/mask pairs it will generate.
 - `"spacing"`: voxel size of generated images. E.g., if set to `[1.5, 1.5, 2.0]`, it will generate images with a resolution of 1.5x1.5x2.0 mm.
 - `"output_size"`: volume size of generated images. E.g., if set to `[512, 512, 256]`, it will generate images with size of 512x512x256. They need to be divisible by 16. If you have a small GPU memory size, you should adjust it to small numbers.
@@ -47,7 +48,7 @@ The information for the inference input, like body region and anatomy to generat
 
 Please refer to [maisi_inference_tutorial.ipynb](maisi_inference_tutorial.ipynb) for the tutorial for MAISI model inference.
 
-To run the inferenc script, please run:
+To run the inference script, please run:
 ```bash
 python -m scripts.inference -c ./configs/config_maisi.json -i ./configs/config_infer.json -e ./configs/environment.json --random-seed 0
 ```

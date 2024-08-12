@@ -51,6 +51,7 @@ Please refer to [maisi_inference_tutorial.ipynb](maisi_inference_tutorial.ipynb)
 #### Execute Inference:
 To run the inference script, please run:
 ```bash
+export MONAI_DATA_DIRECTORY="/workspace/data_dir/"
 python -m scripts.inference -c ./configs/config_maisi.json -i ./configs/config_infer.json -e ./configs/environment.json --random-seed 0
 ```
 

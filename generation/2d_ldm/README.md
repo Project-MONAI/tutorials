@@ -1,5 +1,5 @@
 # 2D Latent Diffusion Example
-This folder contains an example for training and validating a 2D Latent Diffusion Model on Brats axial slices. The example includes support for multi-GPU training with distributed data parallelism.
+This folder contains examples for training and validating a 2D Latent Diffusion Model on MedNIST and Brats axial slice data. The notebook [2d_ldm_tutorial.ipynb](./2d_ldm_tutorial.ipynb) demonstrates these concepts with the MedNIST dataset. The larger example given in Python files and explained here uses Brats and includes support for multi-GPU training with distributed data parallelism.
 
 The workflow of the Latent Diffusion Model is depicted in the figure below. It begins by training an autoencoder in pixel space to encode images into latent features. Following that, it trains a diffusion model in the latent space to denoise the noisy latent features. During inference, it first generates latent features from random noise by applying multiple denoising steps using the trained diffusion model. Finally, it decodes the denoised latent features into images using the trained autoencoder.
 <p align="center">

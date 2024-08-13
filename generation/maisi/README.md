@@ -30,9 +30,6 @@ MAISI is based on the following papers:
 ### 1. Installation
 Please refer to the [Installation of MONAI Generative Model](../README.md).
 
-Note: MAISI depends on [xFormers](https://github.com/facebookresearch/xformers) library.
-ARM64 users can build xFormers from the [source](https://github.com/facebookresearch/xformers?tab=readme-ov-file#installing-xformers) if the available wheel does not meet their requirements.
-
 ### 2. Model Inference
 The information used for both training and inference, like network definition, is stored in [./configs/config_maisi.json](./configs/config_maisi.json). Training and inference should use the same [./configs/config_maisi.json](./configs/config_maisi.json).
 

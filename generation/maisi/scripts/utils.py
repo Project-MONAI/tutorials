@@ -754,7 +754,7 @@ def load_diffusion_ckpt(new_state_dict: dict, old_state_dict: dict, verbose=Fals
             old_name = k.replace("postconv", "conv")
             # new_state_dict[k] = old_state_dict[old_name]
             new_state_dict[k] = old_state_dict.pop(old_name)
-    if len(old_state_dict.keys())>0:
+    if len(old_state_dict.keys()) > 0:
         logging.info(f"{old_state_dict.keys()} remaining***********")
     return new_state_dict
 

@@ -21,7 +21,7 @@ import numpy as np
 import skimage
 import torch
 import torch.distributed as dist
-from monai.apps.generation.maisi.utils.morphological_ops import dilate, erode
+from monai.transforms.morphological_ops import dilate, erode
 from monai.bundle import ConfigParser
 from monai.config import DtypeLike, NdarrayOrTensor
 from monai.data import CacheDataset, DataLoader, partition_dataset

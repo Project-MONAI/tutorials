@@ -19,7 +19,7 @@ from datetime import datetime
 
 import monai
 import torch
-from generative.inferers import LatentDiffusionInferer, DiffusionInferer
+from monai.inferers.inferer import DiffusionInferer
 from monai.data import MetaTensor
 from monai.inferers import sliding_window_inference
 from monai.transforms import Compose, SaveImage

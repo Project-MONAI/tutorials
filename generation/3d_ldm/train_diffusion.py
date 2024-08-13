@@ -19,11 +19,11 @@ import sys
 
 import torch
 import torch.nn.functional as F
-from generative.inferers import LatentDiffusionInferer
-from generative.networks.schedulers import DDPMScheduler
+from monai.inferers import LatentDiffusionInferer
+from monai.networks.schedulers import DDPMScheduler
 from monai.config import print_config
 from monai.utils import first, set_determinism
-from torch.cuda.amp import GradScaler, autocast
+from torch.amp import GradScaler, autocast
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
 
@@ -77,7 +77,7 @@ def main():
     set_determinism(42)
 
     # Step 1: set data loader
-    size_divisible = 2 ** (len(args.autoencoder_def["num_channels"]) + len(args.diffusion_def["num_channels"]) - 2)
+    size_divisible = 2 ** (len(args.autoencoder_def["channels"]) + len(args.diffusion_def["channels"]) - 2)
     train_loader, val_loader = prepare_dataloader(
         args,
         args.diffusion_train["batch_size"],
@@ -114,7 +114,7 @@ def main():
     # and the results will not differ from those obtained when it is not used._
 
     with torch.no_grad():
-        with autocast(enabled=True):
+        with autocast("cuda", enabled=True):
             check_data = first(train_loader)
             z = autoencoder.encode_stage_2_inputs(check_data["image"].to(device))
             if rank == 0:
@@ -166,14 +166,14 @@ def main():
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer_diff, milestones=[100, 1000], gamma=0.1)
 
     # Step 4: training
-    n_epochs = args.diffusion_train["n_epochs"]
+    max_epochs = args.diffusion_train["max_epochs"]
     val_interval = args.diffusion_train["val_interval"]
     autoencoder.eval()
     scaler = GradScaler()
     total_step = 0
     best_val_recon_epoch_loss = 100.0
 
-    for epoch in range(n_epochs):
+    for epoch in range(max_epochs):
         unet.train()
         epoch_loss = 0
         lr_scheduler.step()
@@ -184,7 +184,7 @@ def main():
             images = batch["image"].to(device)
             optimizer_diff.zero_grad(set_to_none=True)
 
-            with autocast(enabled=True):
+            with autocast("cuda", enabled=True):
                 # Generate random noise
                 noise_shape = [images.shape[0]] + list(z.shape[1:])
                 noise = torch.randn(noise_shape, dtype=images.dtype).to(device)
@@ -224,7 +224,7 @@ def main():
             unet.eval()
             val_recon_epoch_loss = 0
             with torch.no_grad():
-                with autocast(enabled=True):
+                with autocast("cuda", enabled=True):
                     # compute val loss
                     for step, batch in enumerate(val_loader):
                         images = batch["image"].to(device)

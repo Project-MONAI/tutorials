@@ -27,12 +27,10 @@ MAISI is based on the following papers:
 
 [**ControlNet:**  Lvmin Zhang, Anyi Rao, Maneesh Agrawala; “Adding Conditional Control to Text-to-Image Diffusion Models.” ICCV 2023.](https://openaccess.thecvf.com/content/ICCV2023/papers/Zhang_Adding_Conditional_Control_to_Text-to-Image_Diffusion_Models_ICCV_2023_paper.pdf)
 
-### 1. Installation
-Please refer to the [Installation of MONAI Generative Model](../README.md).
+### 1. Network Definition
+Network definition is stored in [./configs/config_maisi.json](./configs/config_maisi.json). Training and inference should use the same [./configs/config_maisi.json](./configs/config_maisi.json).
 
 ### 2. Model Inference
-The information used for both training and inference, like network definition, is stored in [./configs/config_maisi.json](./configs/config_maisi.json). Training and inference should use the same [./configs/config_maisi.json](./configs/config_maisi.json).
-
 The information for the inference input, like body region and anatomy to generate, is stored in [./configs/config_infer.json](./configs/config_infer.json). Please feel free to play with it. Here are the details of the parameters.
 
 - `"num_output_samples"`: int, the number of output image/mask pairs it will generate.
@@ -54,10 +52,8 @@ export MONAI_DATA_DIRECTORY=<dir_you_will_download_data>
 python -m scripts.inference -c ./configs/config_maisi.json -i ./configs/config_infer.json -e ./configs/environment.json --random-seed 0
 ```
 
-### 3. Training example
+### 3. Model Training
 Training data preparation can be found in [./data/README.md](./data/README.md)
-
-The information used for both training and inference, like network definition, is stored in [./configs/config_maisi.json](./configs/config_maisi.json). Training and inference should use the same [./configs/config_maisi.json](./configs/config_maisi.json).
 
 #### [3.1 3D Autoencoder Training](./maisi_train_vae_tutorial.ipynb)
 The information for the training hyperparameters and data processing parameters, like learning rate and patch size, are stored in [./configs/config_maisi_vae_train.json](./configs/config_maisi_vae_train.json). The provided configuration works for 16G V100 GPU. Please feel free to tune the parameters for your datasets and device.

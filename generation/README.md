@@ -3,7 +3,7 @@ This folder contains examples for training and validating generative models in M
 
 ## Installation
 
-Some tutorials here require extra components on top of what is installed with base MONAI:
+Some tutorials may require extra components on top of what is installed with base MONAI:
 
 ```bash
 pip install monai[lpips]

@@ -124,7 +124,7 @@ def main():
 
     # ## Read in configuration setting, including network definition, body region and anatomy to generate, etc.
     #
-    # The information for the inference input, like body region and anatomy to generate, is stored in "./configs/config_infer.json". 
+    # The information for the inference input, like body region and anatomy to generate, is stored in "./configs/config_infer.json".
     # Please refer to README.md for the details.
     config_dict = json.load(open(args.config_file, "r"))
     for k, v in config_dict.items():

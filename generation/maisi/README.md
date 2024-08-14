@@ -25,7 +25,7 @@ We retrained several state-of-the-art diffusion model-based methods using our da
 
 <div align="center">
 
-[Generated image examples](https://developer-blogs.nvidia.com/wp-content/uploads/2024/06/generated-medical-image-method-comparison-1.png)
+![Generated image examples](https://developer-blogs.nvidia.com/wp-content/uploads/2024/06/generated-medical-image-method-comparison-1.png)
 
 **Figure 1.** Qualitative comparison of generated images between baseline methods (retrained using our large-scale dataset) and our method.
 

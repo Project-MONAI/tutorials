@@ -10,6 +10,8 @@ This example demonstrates the applications of training and validating NVIDIA MAI
 
 We retrained several state-of-the-art diffusion model-based methods using our dataset. The results in the table below show that our method outperforms previous methods on an unseen dataset ([autoPET 2023](https://www.nature.com/articles/s41597-022-01718-3)). Our method shows superior performance to previous methods based on all [Fréchet Inception Distance (FID)](https://papers.nips.cc/paper/2017/hash/8a1d694707eb0fefe65871369074926d-Abstract.html) scores on different 2D planes.
 
+<div align="center">
+
 | Method | FID (XY Plane) ↓ | FID (YZ Plane) ↓ | FID (ZX Plane) ↓ | FID (Average) ↓ |
 |--------|:----------------:|:----------------:|:----------------:|:---------------:|
 | DDPM   |      18.524       |      23.696      |      25.604      |      22.608     |

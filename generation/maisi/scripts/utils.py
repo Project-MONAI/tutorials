@@ -674,7 +674,7 @@ def load_autoencoder_ckpt(load_autoencoder_path):
     Load a state dict from an autoencoder checkpoint trained with
     [MONAI Generative](https://github.com/Project-MONAI/GenerativeModels).
 
-    The loaded state dict is for 
+    The loaded state dict is for
     monai.apps.generation.maisi.networks.autoencoderkl_maisi.AutoencoderKlMaisi.
 
     Args:
@@ -711,7 +711,7 @@ def load_diffusion_ckpt(new_state_dict: dict, old_state_dict: dict, verbose=Fals
     Load a state dict from a DiffusionModelUNet trained with
     [MONAI Generative](https://github.com/Project-MONAI/GenerativeModels).
 
-    The loaded state dict is for 
+    The loaded state dict is for
     monai.apps.generation.maisi.networks.diffusion_model_unet_maisi.DiffusionModelUNetMaisi.
 
     Args:

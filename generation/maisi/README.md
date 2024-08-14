@@ -21,6 +21,8 @@ We retrained several state-of-the-art diffusion model-based methods using our da
 
 **Table 1.** Comparison of Fréchet Inception Distance scores between our foundation model and retrained baseline methods using the unseen public dataset [autoPET 2023](https://www.nature.com/articles/s41597-022-01718-3) as the reference.
 
+</div>
+
 ## MAISI Model Workflow
 The training and inference workflows of MAISI are depicted in the figure below. It begins by training an autoencoder in pixel space to encode images into latent features. Following that, it trains a diffusion model in the latent space to denoise the noisy latent features. During inference, it first generates latent features from random noise by applying multiple denoising steps using the trained diffusion model. Finally, it decodes the denoised latent features into images using the trained autoencoder.
 <p align="center">

@@ -5,12 +5,12 @@
     "latent_channels": 1,
     "sample_axis": 2,
     "autoencoder_def": {
-        "_target_": "generative.networks.nets.AutoencoderKL",
+        "_target_": "monai.networks.nets.AutoencoderKL",
         "spatial_dims": "@spatial_dims",
         "in_channels": "$@image_channels",
         "out_channels": "@image_channels",
         "latent_channels": "@latent_channels",
-        "num_channels": [
+        "channels": [
             64,
             128,
             256
@@ -33,15 +33,15 @@
         "perceptual_weight": 1.0,
         "kl_weight": 1e-6,
         "recon_loss": "l1",
-        "n_epochs": 1000,
+        "max_epochs": 1000,
         "val_interval": 1
     },
     "diffusion_def": {
-        "_target_": "generative.networks.nets.DiffusionModelUNet",
+        "_target_": "monai.networks.nets.DiffusionModelUNet",
         "spatial_dims": "@spatial_dims",
         "in_channels": "@latent_channels",
         "out_channels": "@latent_channels",
-        "num_channels":[32, 64, 128, 256],
+        "channels":[32, 64, 128, 256],
         "attention_levels":[false, true, true, true],
         "num_head_channels":[0, 32, 32, 32],
         "num_res_blocks": 2
@@ -50,7 +50,7 @@
         "batch_size": 80,
         "patch_size": [256,256],
         "lr": 1e-5,
-        "n_epochs": 1500,
+        "max_epochs": 1500,
         "val_interval": 2,
         "lr_scheduler_milestones": [1000]
     },

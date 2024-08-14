@@ -1,5 +1,5 @@
 # 3D Latent Diffusion Example
-This folder contains an example for training and validating a 3D Latent Diffusion Model on Brats data. The example includes support for multi-GPU training with distributed data parallelism based on a [tutorial designed for using single GPU](https://github.com/Project-MONAI/GenerativeModels/blob/main/tutorials/generative/3d_ldm/3d_ldm_tutorial.ipynb).
+This folder contains examples for training and validating a 3D Latent Diffusion Model on Brats data. The notebook [3d_ldm_tutorial.ipynb](./3d_ldm_tutorial.ipynb) demonstrates these concepts in a simpler format, the example given in Python files includes support for multi-GPU training with distributed data parallelism based on this.
 
 The workflow of the Latent Diffusion Model is depicted in the figure below. It begins by training an autoencoder in pixel space to encode images into latent features. Following that, it trains a diffusion model in the latent space to denoise the noisy latent features. During inference, it first generates latent features from random noise by applying multiple denoising steps using the trained diffusion model. Finally, it decodes the denoised latent features into images using the trained autoencoder.
 <p align="center">

@@ -17,8 +17,8 @@ import sys
 from pathlib import Path
 
 import torch
-from generative.losses import PatchAdversarialLoss, PerceptualLoss
-from generative.networks.nets import PatchDiscriminator
+from monai.losses import PatchAdversarialLoss, PerceptualLoss
+from monai.networks.nets import PatchDiscriminator
 from monai.config import print_config
 from monai.utils import set_determinism
 from torch.nn import L1Loss, MSELoss
@@ -75,7 +75,7 @@ def main():
     set_determinism(42)
 
     # Step 1: set data loader
-    size_divisible = 2 ** (len(args.autoencoder_def["num_channels"]) - 1)
+    size_divisible = 2 ** (len(args.autoencoder_def["channels"]) - 1)
     train_loader, val_loader = prepare_brats2d_dataloader(
         args,
         args.autoencoder_train["batch_size"],
@@ -95,7 +95,7 @@ def main():
     discriminator = PatchDiscriminator(
         spatial_dims=args.spatial_dims,
         num_layers_d=3,
-        num_channels=32,
+        channels=32,
         in_channels=1,
         out_channels=1,
         norm=discriminator_norm,
@@ -172,12 +172,12 @@ def main():
 
     # Step 4: training
     autoencoder_warm_up_n_epochs = 5
-    n_epochs = args.autoencoder_train["n_epochs"]
+    max_epochs = args.autoencoder_train["max_epochs"]
     val_interval = args.autoencoder_train["val_interval"]
     best_val_recon_epoch_loss = 100.0
     total_step = 0
 
-    for epoch in range(n_epochs):
+    for epoch in range(max_epochs):
         # train
         autoencoder.train()
         discriminator.train()

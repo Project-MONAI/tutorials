@@ -19,8 +19,8 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from generative.inferers import LatentDiffusionInferer
-from generative.networks.schedulers import DDPMScheduler
+from monai.inferers import LatentDiffusionInferer
+from monai.networks.schedulers import DDPMScheduler
 from monai.config import print_config
 from monai.utils import set_determinism
 from PIL import Image

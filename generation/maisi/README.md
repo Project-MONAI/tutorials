@@ -19,7 +19,7 @@ We retrained several state-of-the-art diffusion model-based methods using our da
 | HA-GAN |      17.432       |      10.266      |      13.572      |      13.757     |
 | MAISI  |      14.165       |      5.770       |      8.510       |      9.481      |
 
-**Table 1.** Comparison of Fréchet Inception Distance scores between our foundation model<br>and retrained baseline methods using the unseen public dataset [autoPET 2023](https://www.nature.com/articles/s41597-022-01718-3) as the reference.
+**Table 1.** Comparison of Fréchet Inception Distance scores between our foundation model and retrained baseline methods<br>using the unseen public dataset [autoPET 2023](https://www.nature.com/articles/s41597-022-01718-3) as the reference.
 
 </div>
 

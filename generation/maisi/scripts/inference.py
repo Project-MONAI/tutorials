@@ -157,22 +157,23 @@ def main():
     autoencoder = define_instance(args, "autoencoder_def").to(device)
     checkpoint_autoencoder = load_autoencoder_ckpt(args.trained_autoencoder_path)
     autoencoder.load_state_dict(checkpoint_autoencoder)
-
+    
     diffusion_unet = define_instance(args, "diffusion_unet_def").to(device)
     checkpoint_diffusion_unet = torch.load(args.trained_diffusion_path)
     new_dict = load_diffusion_ckpt(diffusion_unet.state_dict(), checkpoint_diffusion_unet["unet_state_dict"])
     diffusion_unet.load_state_dict(new_dict, strict=True)
     scale_factor = checkpoint_diffusion_unet["scale_factor"].to(device)
-
+    
     controlnet = define_instance(args, "controlnet_def").to(device)
     checkpoint_controlnet = torch.load(args.trained_controlnet_path)
+    new_dict = load_diffusion_ckpt(controlnet.state_dict(), checkpoint_controlnet["controlnet_state_dict"])
     monai.networks.utils.copy_model_state(controlnet, diffusion_unet.state_dict())
-    controlnet.load_state_dict(checkpoint_controlnet["controlnet_state_dict"], strict=True)
-
+    controlnet.load_state_dict(new_dict, strict=True)
+    
     mask_generation_autoencoder = define_instance(args, "mask_generation_autoencoder_def").to(device)
     checkpoint_mask_generation_autoencoder = load_autoencoder_ckpt(args.trained_mask_generation_autoencoder_path)
     mask_generation_autoencoder.load_state_dict(checkpoint_mask_generation_autoencoder)
-
+    
     mask_generation_diffusion_unet = define_instance(args, "mask_generation_diffusion_def").to(device)
     checkpoint_mask_generation_diffusion_unet = torch.load(args.trained_mask_generation_diffusion_path)
     mask_generation_diffusion_unet.load_old_state_dict(checkpoint_mask_generation_diffusion_unet)

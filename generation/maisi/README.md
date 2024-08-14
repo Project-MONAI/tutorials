@@ -8,7 +8,7 @@ This example demonstrates the applications of training and validating NVIDIA MAI
 
 ## Example Results and Evaluation
 
-We retrained several state-of-the-art diffusion model-based methods using our dataset. The results in the table below show that our method outperforms previous methods on an unseen dataset ([autoPET 2023](https://www.nature.com/articles/s41597-022-01718-3)). Our method shows superior performance to previous methods based on all [Fréchet Inception Distance (FID)](https://papers.nips.cc/paper/2017/hash/8a1d694707eb0fefe65871369074926d-Abstract.html) scores on different 2D planes. Here we compared the generated images with real images of size 512 &times; 512 &times; 512 and spacing 1.0 &times; 1.0 &times; 1.0 mm<sup>3</sup>.
+We retrained several state-of-the-art diffusion model-based methods using our dataset. The results in the table and figure below show that our method outperforms previous methods on an unseen dataset ([autoPET 2023](https://www.nature.com/articles/s41597-022-01718-3)). Our method shows superior performance to previous methods based on all [Fréchet Inception Distance (FID)](https://papers.nips.cc/paper/2017/hash/8a1d694707eb0fefe65871369074926d-Abstract.html) scores on different 2D planes. Here we compared the generated images with real images of size 512 &times; 512 &times; 512 and spacing 1.0 &times; 1.0 &times; 1.0 mm<sup>3</sup>.
 
 <div align="center">
 
@@ -20,6 +20,14 @@ We retrained several state-of-the-art diffusion model-based methods using our da
 | MAISI  |       3.301       |       5.838      |      9.109       |      6.083      |
 
 **Table 1.** Comparison of Fréchet Inception Distance scores between our foundation model and retrained baseline methods<br>using the unseen public dataset [autoPET 2023](https://www.nature.com/articles/s41597-022-01718-3) as the reference.
+
+</div>
+
+<div align="center">
+
+[Generated image examples](https://developer-blogs.nvidia.com/wp-content/uploads/2024/06/generated-medical-image-method-comparison-1.png)
+
+**Figure 1.** Qualitative comparison of generated images between baseline methods (retrained using our large-scale dataset) and our method.
 
 </div>
 

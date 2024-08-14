@@ -10,6 +10,14 @@ This example demonstrates the applications of training and validating NVIDIA MAI
 
 We retrained several state-of-the-art diffusion model-based methods using our dataset. The results in the table below show that our method outperforms previous methods on an unseen dataset ([autoPET 2023](https://www.nature.com/articles/s41597-022-01718-3)). Our method shows superior performance to previous methods based on all [Fréchet Inception Distance (FID)](https://papers.nips.cc/paper/2017/hash/8a1d694707eb0fefe65871369074926d-Abstract.html) scores on different 2D planes.
 
+| Method | FID (XY Plane) ↓ | FID (YZ Plane) ↓ | FID (ZX Plane) ↓ | FID (Average) ↓ |
+|--------|:----------------:|:----------------:|:----------------:|:---------------:|
+| DDPM   |      18.524       |      23.696      |      25.604      |      22.608     |
+| LDM    |      16.853       |      10.191      |      10.093      |      12.379     |
+| HA-GAN |      17.432       |      10.266      |      13.572      |      13.757     |
+| MAISI  |      14.165       |      5.770       |      8.510       |      9.481      |
+**Table 1.** Comparison of Fréchet Inception Distance scores between our foundation model and retrained baseline methods using the unseen public dataset [autoPET 2023](https://www.nature.com/articles/s41597-022-01718-3) as the reference.
+
 ## MAISI Model Workflow
 The training and inference workflows of MAISI are depicted in the figure below. It begins by training an autoencoder in pixel space to encode images into latent features. Following that, it trains a diffusion model in the latent space to denoise the noisy latent features. During inference, it first generates latent features from random noise by applying multiple denoising steps using the trained diffusion model. Finally, it decodes the denoised latent features into images using the trained autoencoder.
 <p align="center">

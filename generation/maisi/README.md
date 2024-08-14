@@ -14,9 +14,9 @@ We retrained several state-of-the-art diffusion model-based methods using our da
 
 | Method | FID (XY Plane) ↓ | FID (YZ Plane) ↓ | FID (ZX Plane) ↓ | FID (Average) ↓ |
 |--------|:----------------:|:----------------:|:----------------:|:---------------:|
-| DDPM   |      18.524       |      23.696      |      25.604      |      22.608     |
-| LDM    |      16.853       |      10.191      |      10.093      |      12.379     |
-| HA-GAN |      17.432       |      10.266      |      13.572      |      13.757     |
+| [DDPM](https://proceedings.neurips.cc/paper_files/paper/2020/file/4c5bcfec8584af0d967f1ab10179ca4b-Paper.pdf)   |      18.524       |      23.696      |      25.604      |      22.608     |
+| [LDM](https://openaccess.thecvf.com/content/CVPR2022/papers/Rombach_High-Resolution_Image_Synthesis_With_Latent_Diffusion_Models_CVPR_2022_paper.pdf)    |      16.853       |      10.191      |      10.093      |      12.379     |
+| [HA-GAN](https://ieeexplore.ieee.org/document/9770375) |      17.432       |      10.266      |      13.572      |      13.757     |
 | MAISI  |       3.301       |       5.838      |      9.109       |      6.083      |
 
 **Table 1.** Comparison of Fréchet Inception Distance scores between our foundation model and retrained baseline methods<br>using the unseen public dataset [autoPET 2023](https://www.nature.com/articles/s41597-022-01718-3) as the reference.

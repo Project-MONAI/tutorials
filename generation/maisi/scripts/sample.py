@@ -19,7 +19,7 @@ from datetime import datetime
 
 import monai
 import torch
-from generative.inferers import LatentDiffusionInferer, DiffusionInferer
+from monai.inferers.inferer import DiffusionInferer
 from monai.data import MetaTensor
 from monai.inferers import sliding_window_inference
 from monai.transforms import Compose, SaveImage
@@ -167,7 +167,7 @@ def ldm_conditional_sample_one_mask(
             if size.item() != -1.0:
                 target_tumor_label = labels[index]
 
-        logging.info("target_tumor_label for postprocess:", target_tumor_label)
+        logging.info(f"target_tumor_label for postprocess:{target_tumor_label}")
         data = general_mask_generation_post_process(data, target_tumor_label=target_tumor_label, device=device)
         synthetic_mask = torch.from_numpy(data).unsqueeze(0).unsqueeze(0).to(device)
 
@@ -791,7 +791,7 @@ class LDMSampler:
             "bone lesion": 9,
         }
         provide_anatomy_size = [None for _ in range(10)]
-        logging.info("controllable_anatomy_size:", controllable_anatomy_size)
+        logging.info(f"controllable_anatomy_size: {controllable_anatomy_size}")
         for element in controllable_anatomy_size:
             anatomy_name, anatomy_size = element
             provide_anatomy_size[anatomy_size_idx[anatomy_name]] = anatomy_size

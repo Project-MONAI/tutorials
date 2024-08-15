@@ -120,11 +120,11 @@
         "dim_split": 1
     },
     "mask_generation_diffusion_def": {
-        "_target_": "monai.apps.generation.maisi.networks.diffusion_model_unet_maisi.DiffusionModelUNetMaisi",
+        "_target_": "monai.networks.nets.diffusion_model_unet.DiffusionModelUNet",
         "spatial_dims": "@spatial_dims",
         "in_channels": "@latent_channels",
         "out_channels": "@latent_channels",
-        "num_channels":[64, 128, 256, 512],
+        "channels":[64, 128, 256, 512],
         "attention_levels":[false, false, true, true],
         "num_head_channels":[0, 0, 32, 32],
         "num_res_blocks": 2,

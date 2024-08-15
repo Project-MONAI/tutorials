@@ -79,6 +79,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 04_integrating_code
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" bending_energy_diffusion_loss_notes.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" mask_augmentation_example.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" maisi_inference_tutorial.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" realism_diversity_metrics.ipynb)
 
 # Execution of the notebook in these folders / with the filename cannot be automated
 skip_run_papermill=()

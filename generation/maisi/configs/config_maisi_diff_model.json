@@ -1,12 +1,4 @@
 {
-    "noise_scheduler": {
-        "_target_": "generative.networks.schedulers.DDPMScheduler",
-        "num_train_timesteps": 1000,
-        "beta_start": 0.0015,
-        "beta_end": 0.0195,
-        "schedule": "scaled_linear_beta",
-        "clip_sample": false
-    },
     "diffusion_unet_train": {
         "batch_size": 1,
         "cache_rate": 0,

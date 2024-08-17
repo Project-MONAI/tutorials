@@ -565,12 +565,23 @@ class LDMSampler:
         self.autoencoder_sliding_window_infer_overlap = autoencoder_sliding_window_infer_overlap
 
         # quality check args
-        self.max_try_time = 5 # if not pass quality check, will try self.max_try_time times
-        with open(real_img_median_statistics, 'r') as json_file:
-            self.median_statistics = json.load(json_file)        
-        self.label_int_dict = {"liver":[1], "spleen":[3], "pancreas":[4], "kidney":[5,14], "lung":[28,29,30,31,31], "brain":[22],
-             "hepatic tumor": [26], "bone lesion":[128], "lung tumor": [23], "colon cancer primaries":[27],"pancreatic tumor":[24],
-             "bone":list(range(33,57))+list(range(63,98))+[120,122,127]}
+        self.max_try_time = 5  # if not pass quality check, will try self.max_try_time times
+        with open(real_img_median_statistics, "r") as json_file:
+            self.median_statistics = json.load(json_file)
+        self.label_int_dict = {
+            "liver": [1],
+            "spleen": [3],
+            "pancreas": [4],
+            "kidney": [5, 14],
+            "lung": [28, 29, 30, 31, 31],
+            "brain": [22],
+            "hepatic tumor": [26],
+            "bone lesion": [128],
+            "lung tumor": [23],
+            "colon cancer primaries": [27],
+            "pancreatic tumor": [24],
+            "bone": list(range(33, 57)) + list(range(63, 98)) + [120, 122, 127],
+        }
 
         # networks
         self.autoencoder.eval()
@@ -676,7 +687,9 @@ class LDMSampler:
                     spacing_tensor,
                 )
                 # current quality always return True
-                pass_quality_check = self.quality_check(synthetic_images.cpu().detach().numpy(), comebine_label_or.cpu().detach().numpy())
+                pass_quality_check = self.quality_check(
+                    synthetic_images.cpu().detach().numpy(), comebine_label_or.cpu().detach().numpy()
+                )
                 if pass_quality_check or try_time > self.max_try_time:
                     # save image/label pairs
                     output_postfix = datetime.now().strftime("%Y%m%d_%H%M%S_%f")

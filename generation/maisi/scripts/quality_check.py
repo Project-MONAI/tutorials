@@ -9,13 +9,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import json
-import time
 import nibabel as nib
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.stats import entropy
 
 
 def get_masked_data(label_data, image_data, labels):

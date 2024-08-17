@@ -29,6 +29,7 @@ from tqdm import tqdm
 from .augmentation import augmentation
 from .find_masks import find_masks
 from .utils import binarize_labels, general_mask_generation_post_process, get_body_region_index_from_mask, remap_labels
+from .quality_check import is_outlier
 
 
 class ReconModel(torch.nn.Module):
@@ -497,7 +498,7 @@ class LDMSampler:
         controllable_anatomy_size,
         image_output_ext=".nii.gz",
         label_output_ext=".nii.gz",
-        quality_check_args=None,
+        real_img_median_statistics="./configs/image_median_statistics.json",
         spacing=[1, 1, 1],
         num_inference_steps=None,
         mask_generation_num_inference_steps=None,
@@ -563,9 +564,15 @@ class LDMSampler:
         self.autoencoder_sliding_window_infer_size = autoencoder_sliding_window_infer_size
         self.autoencoder_sliding_window_infer_overlap = autoencoder_sliding_window_infer_overlap
 
-        # quality check disabled for this version
-        self.quality_check_args = quality_check_args
+        # quality check args
+        self.max_try_time = 5 # if not pass quality check, will try self.max_try_time times
+        with open(real_img_median_statistics, 'r') as json_file:
+            self.median_statistics = json.load(json_file)        
+        self.label_int_dict = {"liver":[1], "spleen":[3], "pancreas":[4], "kidney":[5,14], "lung":[28,29,30,31,31], "brain":[22],
+             "hepatic tumor": [26], "bone lesion":[128], "lung tumor": [23], "colon cancer primaries":[27],"pancreatic tumor":[24],
+             "bone":list(range(33,57))+list(range(63,98))+[120,122,127]}
 
+        # networks
         self.autoencoder.eval()
         self.diffusion_unet.eval()
         self.controlnet.eval()
@@ -669,8 +676,8 @@ class LDMSampler:
                     spacing_tensor,
                 )
                 # current quality always return True
-                pass_quality_check = self.quality_check(synthetic_images)
-                if pass_quality_check or try_time > 3:
+                pass_quality_check = self.quality_check(synthetic_images.cpu().detach().numpy(), comebine_label_or.cpu().detach().numpy())
+                if pass_quality_check or try_time > self.max_try_time:
                     # save image/label pairs
                     output_postfix = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
                     synthetic_labels.meta["filename_or_obj"] = "sample.nii.gz"
@@ -1006,15 +1013,9 @@ class LDMSampler:
             raise ValueError("Cannot find body region with given organ list.")
         return final_candidates
 
-    def quality_check(self, image):
-        """
-        Perform a quality check on the generated image. This version disabled quality check and always return True.
-
-        Args:
-            image (torch.Tensor): The generated image.
-
-        Returns:
-            bool: True if the image passes the quality check, False otherwise.
-        """
-        # This version disabled quality check
+    def quality_check(self, image_data, label_data):
+        outlier_results = is_outlier(self.median_statistics, image_data, label_data, self.label_int_dict)
+        for label, result in outlier_results.items():
+            if result.get("is_outlier", False):
+                return False
         return True

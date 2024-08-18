@@ -1027,6 +1027,14 @@ class LDMSampler:
         return final_candidates
 
     def quality_check(self, image_data, label_data):
+        """
+        Perform a quality check on the generated image.
+        Args:
+            image_data (np.ndarray): The generated image.
+            label_data (np.ndarray): The corresponding whole body mask.
+        Returns:
+            bool: True if the image passes the quality check, False otherwise.
+        """
         outlier_results = is_outlier(self.median_statistics, image_data, label_data, self.label_int_dict)
         for label, result in outlier_results.items():
             if result.get("is_outlier", False):

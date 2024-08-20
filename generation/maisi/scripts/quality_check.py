@@ -125,7 +125,7 @@ def is_outlier(statistics, image_data, label_data, label_int_dict):
             continue
 
         # Compute the median of the masked region
-        median_value = np.median(masked_data)
+        median_value = np.nanmedian(masked_data)
 
         if np.isnan(median_value):
             median_value = None

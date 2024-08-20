@@ -389,7 +389,7 @@ def check_input(
     if output_size[0] * spacing[0] < 128:
         FOV = [output_size[axis] * spacing[axis] for axis in range(3)]
         raise ValueError(
-            f"`'spacing'({spacing}mm) and 'output_size'({output_size}) together decide the output field of view (FOV). The FOV will be {FOV}mm. We recommend the FOV in x and y axis to be at least 256mm for head, and around 512mm for other body regions like abdomen. There is no such restriction for z-axis."
+            f"`'spacing'({spacing}mm) and 'output_size'({output_size}) together decide the output field of view (FOV). The FOV will be {FOV}mm. We recommend the FOV in x and y axis to be at least 256mm for head, and at least 384mm for other body regions like abdomen. There is no such restriction for z-axis."
         )
 
     # check controllable_anatomy_size format

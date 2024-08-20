@@ -49,10 +49,13 @@ def get_masked_data(label_data, image_data, labels):
     if not labels:
         return np.array([])  # Return an empty array if no labels are provided
 
+    labels = list(set(labels))  # remove duplicate items
+
     # Optimize performance based on the number of labels
-    if len(labels) >= 3:
-        label_set = set(labels)  # Convert labels to a set for faster membership testing
-        mask = np.isin(label_data, list(label_set))
+    num_label_acceleration_thresh = 3
+    if len(labels) >= num_label_acceleration_thresh:
+        # if many labels, np.isin is faster
+        mask = np.isin(label_data, labels)
     else:
         # Use logical OR to combine masks if the number of labels is small
         mask = np.zeros_like(label_data, dtype=bool)

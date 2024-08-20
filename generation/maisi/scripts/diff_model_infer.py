@@ -59,7 +59,7 @@ def load_models(args: argparse.Namespace, device: torch.device, logger: logging.
     """
     autoencoder = define_instance(args, "autoencoder_def").to(device)
     try:
-        checkpoint_autoencoder = load_autoencoder_ckpt(args.trained_autoencoder_path)
+        checkpoint_autoencoder = torch.load(args.trained_autoencoder_path)
         autoencoder.load_state_dict(checkpoint_autoencoder)
     except Exception:
         logger.error("The trained_autoencoder_path does not exist!")

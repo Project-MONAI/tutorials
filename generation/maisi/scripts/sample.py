@@ -1038,6 +1038,8 @@ class LDMSampler:
         outlier_results = is_outlier(self.median_statistics, image_data, label_data, self.label_int_dict)
         for label, result in outlier_results.items():
             if result.get("is_outlier", False):
-                logging.info(f"Generated image quality check for label '{label}' failed: median value {result['median_value']} is outside the acceptable range ({result['low_thresh']} - {result['high_thresh']}).")
+                logging.info(
+                    f"Generated image quality check for label '{label}' failed: median value {result['median_value']} is outside the acceptable range ({result['low_thresh']} - {result['high_thresh']})."
+                )
                 return False
         return True

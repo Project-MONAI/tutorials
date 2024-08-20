@@ -389,7 +389,7 @@ def check_input(
     if output_size[0]*spacing[0] < 128:
         FOV = [output_size[axis]*spacing[axis] for axis in range(3)]
         raise ValueError(
-            f"`'spacing'({spacing}mm) and 'output_size'({output_size}) together decide the output field of view (FOV). The FOV will be {FOV}mm. We require the FOV of xy-plane to be at least 128mm. "
+            f"`'spacing'({spacing}mm) and 'output_size'({output_size}) together decide the output field of view (FOV). The FOV will be {FOV}mm. We require the FOV of xy-plane to be at least 128mm. We recommand it to be around 512mm for chest and abdomen region, and around 256mm for head."
         )
 
     # check controllable_anatomy_size format

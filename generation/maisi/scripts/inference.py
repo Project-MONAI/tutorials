@@ -24,7 +24,7 @@ from monai.config import print_config
 from monai.transforms import LoadImage, Orientation
 from monai.utils import set_determinism
 from scripts.sample import LDMSampler, check_input
-from scripts.utils import define_instance, load_autoencoder_ckpt, load_diffusion_ckpt
+from scripts.utils import define_instance
 from scripts.utils_plot import find_label_center_loc, get_xyz_plot, show_image
 
 
@@ -76,23 +76,23 @@ def main():
     files = [
         {
             "path": "models/autoencoder_epoch273.pt",
-            "url": "https://drive.google.com/file/d/1jQefG0yJPzSvTG5rIJVHNqDReBTvVmZ0/view?usp=drive_link",
+            "url": "https://drive.google.com/file/d/1Ojw25lFO8QbHkxazdK4CgZTyp3GFNZGz/view?usp=sharing",
         },
         {
             "path": "models/input_unet3d_data-all_steps1000size512ddpm_random_current_inputx_v1.pt",
-            "url": "https://drive.google.com/file/d/1FtOHBGUF5dLZNHtiuhf5EH448EQGGs-_/view?usp=sharing",
+            "url": "https://drive.google.com/file/d/1lklNv4MTdI_9bwFRMd98QQ7JLerR5gC_/view?usp=drive_link",
         },
         {
             "path": "models/controlnet-20datasets-e20wl100fold0bc_noi_dia_fsize_current.pt",
-            "url": "https://drive.google.com/file/d/1izr52Whkk56OevNTk2QzI86eJV9TTaLk/view?usp=sharing",
+            "url": "https://drive.google.com/file/d/1mLYeqeZ819_WpZPlAInhcWuCIHgn3QNT/view?usp=drive_link",
         },
         {
             "path": "models/mask_generation_autoencoder.pt",
-            "url": "https://drive.google.com/file/d/1FzWrpv6ornYUaPiAWGOOxhRx2P9Wnynm/view?usp=drive_link",
+            "url": "https://drive.google.com/file/d/19JnX-C6QAg4RfghTwpPnj4KEWhtawpCy/view?usp=drive_link",
         },
         {
             "path": "models/mask_generation_diffusion_unet.pt",
-            "url": "https://drive.google.com/file/d/11SA9RUZ6XmCOJr5v6w6UW1kDzr6hlymw/view?usp=drive_link",
+            "url": "https://drive.google.com/file/d/1yOQvlhXFGY1ZYavADM3N34vgg5AEitda/view?usp=drive_link",
         },
         {
             "path": "configs/candidate_masks_flexible_size_and_spacing_3000.json",
@@ -155,29 +155,27 @@ def main():
     device = torch.device("cuda")
 
     autoencoder = define_instance(args, "autoencoder_def").to(device)
-    checkpoint_autoencoder = load_autoencoder_ckpt(args.trained_autoencoder_path)
+    checkpoint_autoencoder = torch.load(args.trained_autoencoder_path)
     autoencoder.load_state_dict(checkpoint_autoencoder)
 
     diffusion_unet = define_instance(args, "diffusion_unet_def").to(device)
     checkpoint_diffusion_unet = torch.load(args.trained_diffusion_path)
-    new_dict = load_diffusion_ckpt(diffusion_unet.state_dict(), checkpoint_diffusion_unet["unet_state_dict"])
-    diffusion_unet.load_state_dict(new_dict, strict=True)
+    diffusion_unet.load_state_dict(checkpoint_diffusion_unet["unet_state_dict"], strict=True)
     scale_factor = checkpoint_diffusion_unet["scale_factor"].to(device)
 
     controlnet = define_instance(args, "controlnet_def").to(device)
     checkpoint_controlnet = torch.load(args.trained_controlnet_path)
-    new_dict = load_diffusion_ckpt(controlnet.state_dict(), checkpoint_controlnet["controlnet_state_dict"])
     monai.networks.utils.copy_model_state(controlnet, diffusion_unet.state_dict())
-    controlnet.load_state_dict(new_dict, strict=True)
+    controlnet.load_state_dict(checkpoint_controlnet["controlnet_state_dict"], strict=True)
 
     mask_generation_autoencoder = define_instance(args, "mask_generation_autoencoder_def").to(device)
-    checkpoint_mask_generation_autoencoder = load_autoencoder_ckpt(args.trained_mask_generation_autoencoder_path)
+    checkpoint_mask_generation_autoencoder = torch.load(args.trained_mask_generation_autoencoder_path)
     mask_generation_autoencoder.load_state_dict(checkpoint_mask_generation_autoencoder)
 
     mask_generation_diffusion_unet = define_instance(args, "mask_generation_diffusion_def").to(device)
     checkpoint_mask_generation_diffusion_unet = torch.load(args.trained_mask_generation_diffusion_path)
-    mask_generation_diffusion_unet.load_old_state_dict(checkpoint_mask_generation_diffusion_unet)
-    mask_generation_scale_factor = args.mask_generation_scale_factor
+    mask_generation_diffusion_unet.load_state_dict(checkpoint_mask_generation_diffusion_unet["unet_state_dict"])
+    mask_generation_scale_factor = checkpoint_mask_generation_diffusion_unet["scale_factor"]
 
     print("All the trained model weights have been loaded.")
 

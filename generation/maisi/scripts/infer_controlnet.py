@@ -98,7 +98,7 @@ def main():
     if args.trained_autoencoder_path is not None:
         if not os.path.exists(args.trained_autoencoder_path):
             raise ValueError("Please download the autoencoder checkpoint.")
-        autoencoder_ckpt = load_autoencoder_ckpt(args.trained_autoencoder_path)
+        autoencoder_ckpt = torch.load(args.trained_autoencoder_path)
         autoencoder.load_state_dict(autoencoder_ckpt)
         logger.info(f"Load trained diffusion model from {args.trained_autoencoder_path}.")
     else:

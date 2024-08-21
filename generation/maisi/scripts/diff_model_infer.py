@@ -27,7 +27,7 @@ from monai.utils import set_determinism
 
 from .diff_model_setting import initialize_distributed, load_config, setup_logging
 from .sample import ReconModel
-from .utils import define_instance, load_autoencoder_ckpt
+from .utils import define_instance
 
 
 def set_random_seed(seed: int) -> int:
@@ -59,7 +59,7 @@ def load_models(args: argparse.Namespace, device: torch.device, logger: logging.
     """
     autoencoder = define_instance(args, "autoencoder_def").to(device)
     try:
-        checkpoint_autoencoder = load_autoencoder_ckpt(args.trained_autoencoder_path)
+        checkpoint_autoencoder = torch.load(args.trained_autoencoder_path)
         autoencoder.load_state_dict(checkpoint_autoencoder)
     except Exception:
         logger.error("The trained_autoencoder_path does not exist!")

@@ -298,7 +298,9 @@ def generate_detection_train_transform_using_coord(
                 max_k=3,
                 spatial_axes=(0, 1),
             ),
-            CoordinateTransformd(keys=[point_key], refer_key=image_key, mode='world_to_image', affine_lps_to_ras=affine_lps_to_ras),
+            CoordinateTransformd(
+                keys=[point_key], refer_key=image_key, mode="world_to_image", affine_lps_to_ras=affine_lps_to_ras
+            ),
             ConvertPointsToBoxd(keys=[point_key]),
             ClipBoxToImaged(
                 box_keys=box_key,
@@ -344,7 +346,6 @@ def generate_detection_train_transform_using_coord(
             RandAdjustContrastd(keys=[image_key], prob=0.3, gamma=(0.7, 1.5)),
             EnsureTyped(keys=[image_key], dtype=compute_dtype),
             EnsureTyped(keys=[label_key], dtype=torch.long),
-
         ]
     )
     return train_transforms
@@ -537,27 +538,33 @@ class ConvertBoxToPointsd(MapTransform):
     def bbox_to_points(self, bbox):
         if bbox.shape[1] == 4:
             x1, y1, x2, y2 = bbox[:, 0], bbox[:, 1], bbox[:, 2], bbox[:, 3]
-            points = np.stack([
-                np.stack([x1, y1], axis=-1),
-                np.stack([x2, y1], axis=-1),
-                np.stack([x2, y2], axis=-1),
-                np.stack([x1, y2], axis=-1)
-            ], axis=1)
+            points = np.stack(
+                [
+                    np.stack([x1, y1], axis=-1),
+                    np.stack([x2, y1], axis=-1),
+                    np.stack([x2, y2], axis=-1),
+                    np.stack([x1, y2], axis=-1),
+                ],
+                axis=1,
+            )
         elif bbox.shape[1] == 6:
             x1, y1, z1, x2, y2, z2 = bbox[:, 0], bbox[:, 1], bbox[:, 2], bbox[:, 3], bbox[:, 4], bbox[:, 5]
-            points = np.stack([
-                np.stack([x1, y1, z1], axis=-1),
-                np.stack([x2, y1, z1], axis=-1),
-                np.stack([x2, y2, z1], axis=-1),
-                np.stack([x1, y2, z1], axis=-1),
-                np.stack([x1, y1, z2], axis=-1),
-                np.stack([x2, y1, z2], axis=-1),
-                np.stack([x2, y2, z2], axis=-1),
-                np.stack([x1, y2, z2], axis=-1)
-            ], axis=1)
+            points = np.stack(
+                [
+                    np.stack([x1, y1, z1], axis=-1),
+                    np.stack([x2, y1, z1], axis=-1),
+                    np.stack([x2, y2, z1], axis=-1),
+                    np.stack([x1, y2, z1], axis=-1),
+                    np.stack([x1, y1, z2], axis=-1),
+                    np.stack([x2, y1, z2], axis=-1),
+                    np.stack([x2, y2, z2], axis=-1),
+                    np.stack([x1, y2, z2], axis=-1),
+                ],
+                axis=1,
+            )
         else:
             raise ValueError("Each bbox must be in the form of [x1, y1, x2, y2] or [x1, y1, z1, x2, y2, z2]")
-        
+
         return points
 
     def __call__(self, data):

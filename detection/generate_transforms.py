@@ -536,7 +536,6 @@ class ConvertBoxToPointsd(MapTransform):
 
     def bbox_to_points(self, bbox):
         if bbox.shape[1] == 4:
-            # 对于2D bbox
             x1, y1, x2, y2 = bbox[:, 0], bbox[:, 1], bbox[:, 2], bbox[:, 3]
             points = np.stack([
                 np.stack([x1, y1], axis=-1),
@@ -545,7 +544,6 @@ class ConvertBoxToPointsd(MapTransform):
                 np.stack([x1, y2], axis=-1)
             ], axis=1)
         elif bbox.shape[1] == 6:
-            # 对于3D bbox
             x1, y1, z1, x2, y2, z2 = bbox[:, 0], bbox[:, 1], bbox[:, 2], bbox[:, 3], bbox[:, 4], bbox[:, 5]
             points = np.stack([
                 np.stack([x1, y1, z1], axis=-1),

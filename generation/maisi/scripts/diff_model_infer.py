@@ -27,7 +27,7 @@ from monai.utils import set_determinism
 
 from .diff_model_setting import initialize_distributed, load_config, setup_logging
 from .sample import ReconModel
-from .utils import define_instance, load_autoencoder_ckpt
+from .utils import define_instance
 
 
 def set_random_seed(seed: int) -> int:

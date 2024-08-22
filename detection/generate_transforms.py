@@ -49,6 +49,7 @@ from monai.config import KeysCollection
 from monai.utils.type_conversion import convert_data_type
 from monai.data.box_utils import clip_boxes_to_image
 from monai.apps.detection.transforms.box_ops import convert_box_to_mask
+from monai.transforms.utils_pytorch_numpy_unification import stack, concatenate, min, max
 
 
 def generate_detection_train_transform(
@@ -201,7 +202,7 @@ def generate_detection_train_transform(
     return train_transforms
 
 
-def generate_detection_train_transform_using_coord(
+def generate_detection_train_transform_v1(
     image_key,
     box_key,
     label_key,
@@ -346,6 +347,141 @@ def generate_detection_train_transform_using_coord(
             RandAdjustContrastd(keys=[image_key], prob=0.3, gamma=(0.7, 1.5)),
             EnsureTyped(keys=[image_key], dtype=compute_dtype),
             EnsureTyped(keys=[label_key], dtype=torch.long),
+        ]
+    )
+    return train_transforms
+
+
+def generate_detection_train_transform_v2(
+    image_key,
+    box_key,
+    label_key,
+    point_key,
+    gt_box_mode,
+    intensity_transform,
+    patch_size,
+    batch_size,
+    affine_lps_to_ras=False,
+    amp=True,
+):
+    """
+    Generate training transform for detection.
+
+    Args:
+        image_key: the key to represent images in the input json files
+        box_key: the key to represent boxes in the input json files
+        label_key: the key to represent box labels in the input json files
+        gt_box_mode: ground truth box mode in the input json files
+        intensity_transform: transform to scale image intensities,
+            usually ScaleIntensityRanged for CT images, and NormalizeIntensityd for MR images.
+        patch_size: cropped patch size for training
+        batch_size: number of cropped patches from each image
+        affine_lps_to_ras: Usually False.
+            Set True only when the original images were read by itkreader with affine_lps_to_ras=True
+        amp: whether to use half precision
+
+    Return:
+        training transform for detection
+    """
+    if amp:
+        compute_dtype = torch.float16
+    else:
+        compute_dtype = torch.float32
+
+    train_transforms = Compose(
+        [
+            LoadImaged(keys=[image_key], image_only=False, meta_key_postfix="meta_dict"),
+            EnsureChannelFirstd(keys=[image_key]),
+            EnsureTyped(keys=[image_key, box_key], dtype=torch.float32),
+            EnsureTyped(keys=[label_key], dtype=torch.long),
+            StandardizeEmptyBoxd(box_keys=[box_key], box_ref_image_keys=image_key),
+            Orientationd(keys=[image_key], axcodes="RAS"),
+            intensity_transform,
+            EnsureTyped(keys=[image_key], dtype=torch.float16),
+            ConvertBoxToStandardModed(box_keys=[box_key], mode=gt_box_mode),
+            ConvertBoxToPointsd(keys=[box_key]),
+            AffineBoxToImageCoordinated(
+                box_keys=[box_key],
+                box_ref_image_keys=image_key,
+                image_meta_key_postfix="meta_dict",
+                affine_lps_to_ras=affine_lps_to_ras,
+            ),
+            GenerateExtendedBoxMask(
+                keys=box_key,
+                image_key=image_key,
+                spatial_size=patch_size,
+                whole_box=True,
+            ),
+            RandCropByPosNegLabeld(
+                keys=[image_key],
+                label_key="mask_image",
+                spatial_size=patch_size,
+                num_samples=batch_size,
+                pos=1,
+                neg=1,
+            ),
+            RandZoomd(
+                keys=[image_key],
+                prob=0.2,
+                min_zoom=0.7,
+                max_zoom=1.4,
+                padding_mode="constant",
+                keep_size=True,
+            ),
+            RandFlipd(
+                keys=[image_key],
+                prob=0.5,
+                spatial_axis=0,
+            ),
+            RandFlipd(
+                keys=[image_key],
+                prob=0.5,
+                spatial_axis=1,
+            ),
+            RandFlipd(
+                keys=[image_key],
+                prob=0.5,
+                spatial_axis=2,
+            ),
+            RandRotate90d(
+                keys=[image_key],
+                prob=0.75,
+                max_k=3,
+                spatial_axes=(0, 1),
+            ),
+            RandRotated(
+                keys=[image_key],
+                mode=["nearest"],
+                prob=0.2,
+                range_x=np.pi / 6,
+                range_y=np.pi / 6,
+                range_z=np.pi / 6,
+                keep_size=True,
+                padding_mode="zeros",
+            ),
+            RandGaussianNoised(keys=[image_key], prob=0.1, mean=0, std=0.1),
+            RandGaussianSmoothd(
+                keys=[image_key],
+                prob=0.1,
+                sigma_x=(0.5, 1.0),
+                sigma_y=(0.5, 1.0),
+                sigma_z=(0.5, 1.0),
+            ),
+            RandScaleIntensityd(keys=[image_key], prob=0.15, factors=0.25),
+            RandShiftIntensityd(keys=[image_key], prob=0.15, offsets=0.1),
+            RandAdjustContrastd(keys=[image_key], prob=0.3, gamma=(0.7, 1.5)),
+            EnsureTyped(keys=[image_key], dtype=compute_dtype),
+            EnsureTyped(keys=[label_key], dtype=torch.long),
+            CoordinateTransformd(
+                keys=[point_key], refer_key=image_key, mode="world_to_image", affine_lps_to_ras=affine_lps_to_ras
+            ),
+            ConvertPointsToBoxd(keys=[point_key]),
+            ClipBoxToImaged(
+                box_keys=box_key,
+                label_keys=[label_key],
+                box_ref_image_keys=image_key,
+                remove_empty=True,
+            ),
         ]
     )
     return train_transforms
@@ -538,29 +674,29 @@ class ConvertBoxToPointsd(MapTransform):
     def bbox_to_points(self, bbox):
         if bbox.shape[1] == 4:
             x1, y1, x2, y2 = bbox[:, 0], bbox[:, 1], bbox[:, 2], bbox[:, 3]
-            points = np.stack(
+            points = stack(
                 [
-                    np.stack([x1, y1], axis=-1),
-                    np.stack([x2, y1], axis=-1),
-                    np.stack([x2, y2], axis=-1),
-                    np.stack([x1, y2], axis=-1),
+                    stack([x1, y1], dim=-1),
+                    stack([x2, y1], dim=-1),
+                    stack([x2, y2], dim=-1),
+                    stack([x1, y2], dim=-1),
                 ],
-                axis=1,
+                dim=1,
             )
         elif bbox.shape[1] == 6:
             x1, y1, z1, x2, y2, z2 = bbox[:, 0], bbox[:, 1], bbox[:, 2], bbox[:, 3], bbox[:, 4], bbox[:, 5]
-            points = np.stack(
+            points = stack(
                 [
-                    np.stack([x1, y1, z1], axis=-1),
-                    np.stack([x2, y1, z1], axis=-1),
-                    np.stack([x2, y2, z1], axis=-1),
-                    np.stack([x1, y2, z1], axis=-1),
-                    np.stack([x1, y1, z2], axis=-1),
-                    np.stack([x2, y1, z2], axis=-1),
-                    np.stack([x2, y2, z2], axis=-1),
-                    np.stack([x1, y2, z2], axis=-1),
+                    stack([x1, y1, z1], dim=-1),
+                    stack([x2, y1, z1], dim=-1),
+                    stack([x2, y2, z1], dim=-1),
+                    stack([x1, y2, z1], dim=-1),
+                    stack([x1, y1, z2], dim=-1),
+                    stack([x2, y1, z2], dim=-1),
+                    stack([x2, y2, z2], dim=-1),
+                    stack([x1, y2, z2], dim=-1),
                 ],
-                axis=1,
+                dim=1,
             )
         else:
             raise ValueError("Each bbox must be in the form of [x1, y1, x2, y2] or [x1, y1, z1, x2, y2, z2]")
@@ -579,11 +715,10 @@ class ConvertPointsToBoxd(MapTransform):
         super().__init__(keys, allow_missing_keys)
 
     def points_to_bbox(self, points):
-        mins = np.min(points, axis=1)  # Shape (n, 3)
-        maxs = np.max(points, axis=1)  # Shape (n, 3)
-
+        mins = min(points, dim=1)  # Shape (n, 3)
+        maxs = max(points, dim=1)  # Shape (n, 3)
         # Concatenate the min and max values to get the bounding boxes
-        bboxes = np.concatenate([mins, maxs], axis=1)  # Shape (n, 6)
+        bboxes = concatenate([mins[0], maxs[0]], axis=1)  # Shape (n, 6)
 
         return bboxes
 

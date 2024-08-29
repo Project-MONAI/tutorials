@@ -60,6 +60,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_radiolog
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_wholebody_totalSegmentator_3dslicer.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_monaibundle_3dslicer_lung_nodule_detection.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_pathology_HoVerNet_QuPath.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" monailabel_vista2d_cell_segmentation_CellProfiler.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" example_feature.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" ssl_train.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" ssl_finetune.ipynb)

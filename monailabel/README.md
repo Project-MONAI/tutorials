@@ -1,6 +1,6 @@
 # MONAI Label End-To-End Tutorial Series
 
-This folder contains end-to-end tutorials of MONAI Label applications. Sample apps including `radiology`, `pathology`, `endoscopy` and `monaibundle`.
+This folder contains end-to-end tutorials of MONAI Label applications. Sample apps including `radiology`, `pathology`, `endoscopy`, `VISTA2D` and `monaibundle`.
 
 ![image](https://raw.githubusercontent.com/Project-MONAI/MONAILabel/main/docs/images/sampleApps_index.jpeg)
 
@@ -32,6 +32,9 @@ Each tutorial provides MONAI Label plugin installation steps associated with the
 - **Endoscopy App**:
   - Viewer: [CVAT](https://github.com/opencv/cvat) | Datastore: Local | Task: Segmentation
     - [MONAILabel: Tooltracking with CVAT](monailabel_endoscopy_cvat_tooltracking.ipynb): Surgical tool segmentation with CVAT/Nuclio setup.
+- **VISTA2D App**:
+  - Viewer: [CellProfiler](https://github.com/CellProfiler/CellProfiler) | Datastore: Local | Task: Segmentation
+    - [MONAILabel: Cell Segmentation with CellProfiler](monailabel_vista2d_cell_segmentation_CellProfiler.ipynb): Cell images segmentation with CellProfiler setup.
 
 
 ## Hardware Requirements

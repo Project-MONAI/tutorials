@@ -1,0 +1,2978 @@
+{
+    "training": [
+        {
+            "image": "train/128_img.png",
+            "label": "train/128_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/136_img.png",
+            "label": "train/136_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/461_img.png",
+            "label": "train/461_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/116_img.png",
+            "label": "train/116_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/534_img.png",
+            "label": "train/534_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/247_img.png",
+            "label": "train/247_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/287_img.png",
+            "label": "train/287_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/202_img.png",
+            "label": "train/202_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/004_img.png",
+            "label": "train/004_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/199_img.png",
+            "label": "train/199_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/326_img.png",
+            "label": "train/326_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/094_img.png",
+            "label": "train/094_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/512_img.png",
+            "label": "train/512_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/039_img.png",
+            "label": "train/039_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/015_img.png",
+            "label": "train/015_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/095_img.png",
+            "label": "train/095_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/214_img.png",
+            "label": "train/214_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/373_img.png",
+            "label": "train/373_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/255_img.png",
+            "label": "train/255_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/374_img.png",
+            "label": "train/374_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/100_img.png",
+            "label": "train/100_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/189_img.png",
+            "label": "train/189_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/175_img.png",
+            "label": "train/175_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/349_img.png",
+            "label": "train/349_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/145_img.png",
+            "label": "train/145_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/369_img.png",
+            "label": "train/369_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/518_img.png",
+            "label": "train/518_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/231_img.png",
+            "label": "train/231_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/473_img.png",
+            "label": "train/473_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/080_img.png",
+            "label": "train/080_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/187_img.png",
+            "label": "train/187_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/350_img.png",
+            "label": "train/350_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/111_img.png",
+            "label": "train/111_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/102_img.png",
+            "label": "train/102_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/243_img.png",
+            "label": "train/243_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/487_img.png",
+            "label": "train/487_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/300_img.png",
+            "label": "train/300_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/266_img.png",
+            "label": "train/266_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/103_img.png",
+            "label": "train/103_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/311_img.png",
+            "label": "train/311_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/297_img.png",
+            "label": "train/297_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/524_img.png",
+            "label": "train/524_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/308_img.png",
+            "label": "train/308_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/392_img.png",
+            "label": "train/392_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/364_img.png",
+            "label": "train/364_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/396_img.png",
+            "label": "train/396_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/185_img.png",
+            "label": "train/185_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/257_img.png",
+            "label": "train/257_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/003_img.png",
+            "label": "train/003_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/535_img.png",
+            "label": "train/535_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/452_img.png",
+            "label": "train/452_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/161_img.png",
+            "label": "train/161_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/425_img.png",
+            "label": "train/425_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/133_img.png",
+            "label": "train/133_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/046_img.png",
+            "label": "train/046_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/213_img.png",
+            "label": "train/213_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/447_img.png",
+            "label": "train/447_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/229_img.png",
+            "label": "train/229_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/529_img.png",
+            "label": "train/529_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/112_img.png",
+            "label": "train/112_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/358_img.png",
+            "label": "train/358_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/078_img.png",
+            "label": "train/078_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/335_img.png",
+            "label": "train/335_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/329_img.png",
+            "label": "train/329_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/539_img.png",
+            "label": "train/539_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/355_img.png",
+            "label": "train/355_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/041_img.png",
+            "label": "train/041_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/104_img.png",
+            "label": "train/104_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/132_img.png",
+            "label": "train/132_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/188_img.png",
+            "label": "train/188_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/174_img.png",
+            "label": "train/174_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/075_img.png",
+            "label": "train/075_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/110_img.png",
+            "label": "train/110_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/423_img.png",
+            "label": "train/423_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/321_img.png",
+            "label": "train/321_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/343_img.png",
+            "label": "train/343_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/069_img.png",
+            "label": "train/069_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/365_img.png",
+            "label": "train/365_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/173_img.png",
+            "label": "train/173_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/048_img.png",
+            "label": "train/048_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/049_img.png",
+            "label": "train/049_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/130_img.png",
+            "label": "train/130_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/533_img.png",
+            "label": "train/533_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/431_img.png",
+            "label": "train/431_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/152_img.png",
+            "label": "train/152_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/252_img.png",
+            "label": "train/252_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/096_img.png",
+            "label": "train/096_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/301_img.png",
+            "label": "train/301_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/507_img.png",
+            "label": "train/507_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/481_img.png",
+            "label": "train/481_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/232_img.png",
+            "label": "train/232_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/267_img.png",
+            "label": "train/267_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/292_img.png",
+            "label": "train/292_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/097_img.png",
+            "label": "train/097_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/157_img.png",
+            "label": "train/157_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/376_img.png",
+            "label": "train/376_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/361_img.png",
+            "label": "train/361_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/219_img.png",
+            "label": "train/219_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/482_img.png",
+            "label": "train/482_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/082_img.png",
+            "label": "train/082_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/438_img.png",
+            "label": "train/438_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/072_img.png",
+            "label": "train/072_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/169_img.png",
+            "label": "train/169_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/538_img.png",
+            "label": "train/538_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/304_img.png",
+            "label": "train/304_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/496_img.png",
+            "label": "train/496_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/264_img.png",
+            "label": "train/264_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/121_img.png",
+            "label": "train/121_masks.png",
+            "fold": 0
+        },
+        {
+            "image": "train/418_img.png",
+            "label": "train/418_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/254_img.png",
+            "label": "train/254_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/290_img.png",
+            "label": "train/290_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/434_img.png",
+            "label": "train/434_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/390_img.png",
+            "label": "train/390_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/074_img.png",
+            "label": "train/074_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/502_img.png",
+            "label": "train/502_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/525_img.png",
+            "label": "train/525_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/278_img.png",
+            "label": "train/278_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/467_img.png",
+            "label": "train/467_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/107_img.png",
+            "label": "train/107_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/410_img.png",
+            "label": "train/410_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/198_img.png",
+            "label": "train/198_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/332_img.png",
+            "label": "train/332_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/316_img.png",
+            "label": "train/316_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/019_img.png",
+            "label": "train/019_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/148_img.png",
+            "label": "train/148_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/475_img.png",
+            "label": "train/475_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/386_img.png",
+            "label": "train/386_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/193_img.png",
+            "label": "train/193_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/318_img.png",
+            "label": "train/318_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/305_img.png",
+            "label": "train/305_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/291_img.png",
+            "label": "train/291_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/245_img.png",
+            "label": "train/245_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/043_img.png",
+            "label": "train/043_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/504_img.png",
+            "label": "train/504_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/288_img.png",
+            "label": "train/288_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/259_img.png",
+            "label": "train/259_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/424_img.png",
+            "label": "train/424_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/007_img.png",
+            "label": "train/007_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/242_img.png",
+            "label": "train/242_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/486_img.png",
+            "label": "train/486_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/484_img.png",
+            "label": "train/484_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/279_img.png",
+            "label": "train/279_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/056_img.png",
+            "label": "train/056_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/027_img.png",
+            "label": "train/027_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/206_img.png",
+            "label": "train/206_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/088_img.png",
+            "label": "train/088_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/339_img.png",
+            "label": "train/339_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/261_img.png",
+            "label": "train/261_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/401_img.png",
+            "label": "train/401_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/061_img.png",
+            "label": "train/061_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/012_img.png",
+            "label": "train/012_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/298_img.png",
+            "label": "train/298_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/108_img.png",
+            "label": "train/108_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/137_img.png",
+            "label": "train/137_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/381_img.png",
+            "label": "train/381_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/474_img.png",
+            "label": "train/474_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/023_img.png",
+            "label": "train/023_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/407_img.png",
+            "label": "train/407_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/510_img.png",
+            "label": "train/510_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/334_img.png",
+            "label": "train/334_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/319_img.png",
+            "label": "train/319_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/455_img.png",
+            "label": "train/455_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/178_img.png",
+            "label": "train/178_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/149_img.png",
+            "label": "train/149_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/091_img.png",
+            "label": "train/091_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/457_img.png",
+            "label": "train/457_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/235_img.png",
+            "label": "train/235_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/083_img.png",
+            "label": "train/083_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/034_img.png",
+            "label": "train/034_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/101_img.png",
+            "label": "train/101_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/224_img.png",
+            "label": "train/224_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/340_img.png",
+            "label": "train/340_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/515_img.png",
+            "label": "train/515_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/018_img.png",
+            "label": "train/018_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/387_img.png",
+            "label": "train/387_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/440_img.png",
+            "label": "train/440_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/183_img.png",
+            "label": "train/183_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/228_img.png",
+            "label": "train/228_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/081_img.png",
+            "label": "train/081_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/495_img.png",
+            "label": "train/495_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/347_img.png",
+            "label": "train/347_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/190_img.png",
+            "label": "train/190_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/014_img.png",
+            "label": "train/014_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/366_img.png",
+            "label": "train/366_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/052_img.png",
+            "label": "train/052_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/416_img.png",
+            "label": "train/416_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/460_img.png",
+            "label": "train/460_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/141_img.png",
+            "label": "train/141_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/331_img.png",
+            "label": "train/331_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/295_img.png",
+            "label": "train/295_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/273_img.png",
+            "label": "train/273_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/299_img.png",
+            "label": "train/299_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/439_img.png",
+            "label": "train/439_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/330_img.png",
+            "label": "train/330_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/511_img.png",
+            "label": "train/511_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/275_img.png",
+            "label": "train/275_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/419_img.png",
+            "label": "train/419_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/053_img.png",
+            "label": "train/053_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/029_img.png",
+            "label": "train/029_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/040_img.png",
+            "label": "train/040_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/494_img.png",
+            "label": "train/494_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/207_img.png",
+            "label": "train/207_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/363_img.png",
+            "label": "train/363_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/509_img.png",
+            "label": "train/509_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/428_img.png",
+            "label": "train/428_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/233_img.png",
+            "label": "train/233_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/194_img.png",
+            "label": "train/194_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/370_img.png",
+            "label": "train/370_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/449_img.png",
+            "label": "train/449_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/383_img.png",
+            "label": "train/383_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/051_img.png",
+            "label": "train/051_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/276_img.png",
+            "label": "train/276_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/437_img.png",
+            "label": "train/437_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/151_img.png",
+            "label": "train/151_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/378_img.png",
+            "label": "train/378_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/294_img.png",
+            "label": "train/294_masks.png",
+            "fold": 1
+        },
+        {
+            "image": "train/389_img.png",
+            "label": "train/389_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/314_img.png",
+            "label": "train/314_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/513_img.png",
+            "label": "train/513_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/477_img.png",
+            "label": "train/477_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/459_img.png",
+            "label": "train/459_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/523_img.png",
+            "label": "train/523_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/177_img.png",
+            "label": "train/177_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/400_img.png",
+            "label": "train/400_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/164_img.png",
+            "label": "train/164_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/065_img.png",
+            "label": "train/065_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/211_img.png",
+            "label": "train/211_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/468_img.png",
+            "label": "train/468_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/114_img.png",
+            "label": "train/114_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/122_img.png",
+            "label": "train/122_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/223_img.png",
+            "label": "train/223_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/320_img.png",
+            "label": "train/320_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/256_img.png",
+            "label": "train/256_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/156_img.png",
+            "label": "train/156_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/282_img.png",
+            "label": "train/282_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/391_img.png",
+            "label": "train/391_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/505_img.png",
+            "label": "train/505_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/469_img.png",
+            "label": "train/469_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/126_img.png",
+            "label": "train/126_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/079_img.png",
+            "label": "train/079_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/402_img.png",
+            "label": "train/402_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/045_img.png",
+            "label": "train/045_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/222_img.png",
+            "label": "train/222_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/106_img.png",
+            "label": "train/106_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/159_img.png",
+            "label": "train/159_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/182_img.png",
+            "label": "train/182_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/210_img.png",
+            "label": "train/210_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/167_img.png",
+            "label": "train/167_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/493_img.png",
+            "label": "train/493_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/191_img.png",
+            "label": "train/191_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/226_img.png",
+            "label": "train/226_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/272_img.png",
+            "label": "train/272_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/236_img.png",
+            "label": "train/236_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/253_img.png",
+            "label": "train/253_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/212_img.png",
+            "label": "train/212_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/127_img.png",
+            "label": "train/127_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/413_img.png",
+            "label": "train/413_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/180_img.png",
+            "label": "train/180_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/171_img.png",
+            "label": "train/171_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/397_img.png",
+            "label": "train/397_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/058_img.png",
+            "label": "train/058_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/315_img.png",
+            "label": "train/315_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/317_img.png",
+            "label": "train/317_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/324_img.png",
+            "label": "train/324_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/307_img.png",
+            "label": "train/307_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/054_img.png",
+            "label": "train/054_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/429_img.png",
+            "label": "train/429_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/147_img.png",
+            "label": "train/147_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/098_img.png",
+            "label": "train/098_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/263_img.png",
+            "label": "train/263_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/352_img.png",
+            "label": "train/352_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/033_img.png",
+            "label": "train/033_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/351_img.png",
+            "label": "train/351_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/393_img.png",
+            "label": "train/393_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/420_img.png",
+            "label": "train/420_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/071_img.png",
+            "label": "train/071_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/011_img.png",
+            "label": "train/011_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/250_img.png",
+            "label": "train/250_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/394_img.png",
+            "label": "train/394_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/522_img.png",
+            "label": "train/522_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/002_img.png",
+            "label": "train/002_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/443_img.png",
+            "label": "train/443_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/050_img.png",
+            "label": "train/050_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/421_img.png",
+            "label": "train/421_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/503_img.png",
+            "label": "train/503_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/089_img.png",
+            "label": "train/089_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/485_img.png",
+            "label": "train/485_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/404_img.png",
+            "label": "train/404_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/134_img.png",
+            "label": "train/134_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/462_img.png",
+            "label": "train/462_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/203_img.png",
+            "label": "train/203_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/120_img.png",
+            "label": "train/120_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/508_img.png",
+            "label": "train/508_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/435_img.png",
+            "label": "train/435_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/192_img.png",
+            "label": "train/192_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/170_img.png",
+            "label": "train/170_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/303_img.png",
+            "label": "train/303_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/076_img.png",
+            "label": "train/076_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/077_img.png",
+            "label": "train/077_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/384_img.png",
+            "label": "train/384_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/059_img.png",
+            "label": "train/059_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/322_img.png",
+            "label": "train/322_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/536_img.png",
+            "label": "train/536_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/042_img.png",
+            "label": "train/042_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/251_img.png",
+            "label": "train/251_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/359_img.png",
+            "label": "train/359_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/184_img.png",
+            "label": "train/184_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/260_img.png",
+            "label": "train/260_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/293_img.png",
+            "label": "train/293_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/265_img.png",
+            "label": "train/265_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/497_img.png",
+            "label": "train/497_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/168_img.png",
+            "label": "train/168_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/006_img.png",
+            "label": "train/006_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/047_img.png",
+            "label": "train/047_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/398_img.png",
+            "label": "train/398_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/476_img.png",
+            "label": "train/476_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/248_img.png",
+            "label": "train/248_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/336_img.png",
+            "label": "train/336_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/197_img.png",
+            "label": "train/197_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/346_img.png",
+            "label": "train/346_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/146_img.png",
+            "label": "train/146_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/328_img.png",
+            "label": "train/328_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/458_img.png",
+            "label": "train/458_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/451_img.png",
+            "label": "train/451_masks.png",
+            "fold": 2
+        },
+        {
+            "image": "train/490_img.png",
+            "label": "train/490_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/165_img.png",
+            "label": "train/165_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/115_img.png",
+            "label": "train/115_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/532_img.png",
+            "label": "train/532_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/063_img.png",
+            "label": "train/063_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/262_img.png",
+            "label": "train/262_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/354_img.png",
+            "label": "train/354_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/372_img.png",
+            "label": "train/372_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/062_img.png",
+            "label": "train/062_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/414_img.png",
+            "label": "train/414_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/284_img.png",
+            "label": "train/284_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/230_img.png",
+            "label": "train/230_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/514_img.png",
+            "label": "train/514_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/371_img.png",
+            "label": "train/371_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/344_img.png",
+            "label": "train/344_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/519_img.png",
+            "label": "train/519_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/270_img.png",
+            "label": "train/270_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/313_img.png",
+            "label": "train/313_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/031_img.png",
+            "label": "train/031_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/488_img.png",
+            "label": "train/488_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/302_img.png",
+            "label": "train/302_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/480_img.png",
+            "label": "train/480_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/220_img.png",
+            "label": "train/220_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/464_img.png",
+            "label": "train/464_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/026_img.png",
+            "label": "train/026_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/506_img.png",
+            "label": "train/506_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/492_img.png",
+            "label": "train/492_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/143_img.png",
+            "label": "train/143_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/521_img.png",
+            "label": "train/521_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/296_img.png",
+            "label": "train/296_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/499_img.png",
+            "label": "train/499_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/234_img.png",
+            "label": "train/234_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/375_img.png",
+            "label": "train/375_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/099_img.png",
+            "label": "train/099_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/353_img.png",
+            "label": "train/353_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/010_img.png",
+            "label": "train/010_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/463_img.png",
+            "label": "train/463_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/465_img.png",
+            "label": "train/465_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/021_img.png",
+            "label": "train/021_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/327_img.png",
+            "label": "train/327_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/109_img.png",
+            "label": "train/109_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/215_img.png",
+            "label": "train/215_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/367_img.png",
+            "label": "train/367_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/105_img.png",
+            "label": "train/105_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/028_img.png",
+            "label": "train/028_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/289_img.png",
+            "label": "train/289_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/441_img.png",
+            "label": "train/441_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/388_img.png",
+            "label": "train/388_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/186_img.png",
+            "label": "train/186_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/283_img.png",
+            "label": "train/283_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/227_img.png",
+            "label": "train/227_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/415_img.png",
+            "label": "train/415_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/201_img.png",
+            "label": "train/201_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/086_img.png",
+            "label": "train/086_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/140_img.png",
+            "label": "train/140_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/172_img.png",
+            "label": "train/172_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/409_img.png",
+            "label": "train/409_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/432_img.png",
+            "label": "train/432_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/274_img.png",
+            "label": "train/274_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/356_img.png",
+            "label": "train/356_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/517_img.png",
+            "label": "train/517_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/064_img.png",
+            "label": "train/064_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/408_img.png",
+            "label": "train/408_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/456_img.png",
+            "label": "train/456_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/060_img.png",
+            "label": "train/060_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/073_img.png",
+            "label": "train/073_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/412_img.png",
+            "label": "train/412_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/385_img.png",
+            "label": "train/385_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/472_img.png",
+            "label": "train/472_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/038_img.png",
+            "label": "train/038_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/037_img.png",
+            "label": "train/037_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/020_img.png",
+            "label": "train/020_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/498_img.png",
+            "label": "train/498_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/310_img.png",
+            "label": "train/310_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/403_img.png",
+            "label": "train/403_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/427_img.png",
+            "label": "train/427_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/239_img.png",
+            "label": "train/239_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/422_img.png",
+            "label": "train/422_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/221_img.png",
+            "label": "train/221_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/195_img.png",
+            "label": "train/195_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/277_img.png",
+            "label": "train/277_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/005_img.png",
+            "label": "train/005_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/489_img.png",
+            "label": "train/489_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/135_img.png",
+            "label": "train/135_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/348_img.png",
+            "label": "train/348_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/022_img.png",
+            "label": "train/022_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/442_img.png",
+            "label": "train/442_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/531_img.png",
+            "label": "train/531_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/240_img.png",
+            "label": "train/240_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/241_img.png",
+            "label": "train/241_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/035_img.png",
+            "label": "train/035_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/142_img.png",
+            "label": "train/142_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/208_img.png",
+            "label": "train/208_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/016_img.png",
+            "label": "train/016_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/084_img.png",
+            "label": "train/084_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/337_img.png",
+            "label": "train/337_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/117_img.png",
+            "label": "train/117_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/036_img.png",
+            "label": "train/036_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/013_img.png",
+            "label": "train/013_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/271_img.png",
+            "label": "train/271_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/399_img.png",
+            "label": "train/399_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/118_img.png",
+            "label": "train/118_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/217_img.png",
+            "label": "train/217_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/218_img.png",
+            "label": "train/218_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/153_img.png",
+            "label": "train/153_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/454_img.png",
+            "label": "train/454_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/181_img.png",
+            "label": "train/181_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/017_img.png",
+            "label": "train/017_masks.png",
+            "fold": 3
+        },
+        {
+            "image": "train/479_img.png",
+            "label": "train/479_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/008_img.png",
+            "label": "train/008_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/113_img.png",
+            "label": "train/113_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/001_img.png",
+            "label": "train/001_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/131_img.png",
+            "label": "train/131_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/055_img.png",
+            "label": "train/055_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/286_img.png",
+            "label": "train/286_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/470_img.png",
+            "label": "train/470_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/520_img.png",
+            "label": "train/520_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/411_img.png",
+            "label": "train/411_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/323_img.png",
+            "label": "train/323_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/527_img.png",
+            "label": "train/527_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/395_img.png",
+            "label": "train/395_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/238_img.png",
+            "label": "train/238_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/342_img.png",
+            "label": "train/342_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/368_img.png",
+            "label": "train/368_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/162_img.png",
+            "label": "train/162_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/537_img.png",
+            "label": "train/537_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/044_img.png",
+            "label": "train/044_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/433_img.png",
+            "label": "train/433_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/380_img.png",
+            "label": "train/380_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/123_img.png",
+            "label": "train/123_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/225_img.png",
+            "label": "train/225_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/362_img.png",
+            "label": "train/362_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/144_img.png",
+            "label": "train/144_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/057_img.png",
+            "label": "train/057_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/155_img.png",
+            "label": "train/155_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/024_img.png",
+            "label": "train/024_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/341_img.png",
+            "label": "train/341_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/445_img.png",
+            "label": "train/445_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/009_img.png",
+            "label": "train/009_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/196_img.png",
+            "label": "train/196_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/501_img.png",
+            "label": "train/501_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/246_img.png",
+            "label": "train/246_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/066_img.png",
+            "label": "train/066_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/478_img.png",
+            "label": "train/478_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/068_img.png",
+            "label": "train/068_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/139_img.png",
+            "label": "train/139_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/285_img.png",
+            "label": "train/285_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/312_img.png",
+            "label": "train/312_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/306_img.png",
+            "label": "train/306_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/125_img.png",
+            "label": "train/125_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/160_img.png",
+            "label": "train/160_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/448_img.png",
+            "label": "train/448_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/446_img.png",
+            "label": "train/446_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/345_img.png",
+            "label": "train/345_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/280_img.png",
+            "label": "train/280_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/516_img.png",
+            "label": "train/516_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/092_img.png",
+            "label": "train/092_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/087_img.png",
+            "label": "train/087_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/528_img.png",
+            "label": "train/528_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/166_img.png",
+            "label": "train/166_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/209_img.png",
+            "label": "train/209_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/444_img.png",
+            "label": "train/444_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/150_img.png",
+            "label": "train/150_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/119_img.png",
+            "label": "train/119_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/204_img.png",
+            "label": "train/204_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/333_img.png",
+            "label": "train/333_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/200_img.png",
+            "label": "train/200_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/430_img.png",
+            "label": "train/430_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/176_img.png",
+            "label": "train/176_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/338_img.png",
+            "label": "train/338_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/309_img.png",
+            "label": "train/309_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/500_img.png",
+            "label": "train/500_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/483_img.png",
+            "label": "train/483_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/357_img.png",
+            "label": "train/357_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/426_img.png",
+            "label": "train/426_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/406_img.png",
+            "label": "train/406_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/379_img.png",
+            "label": "train/379_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/377_img.png",
+            "label": "train/377_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/526_img.png",
+            "label": "train/526_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/085_img.png",
+            "label": "train/085_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/281_img.png",
+            "label": "train/281_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/269_img.png",
+            "label": "train/269_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/070_img.png",
+            "label": "train/070_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/325_img.png",
+            "label": "train/325_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/030_img.png",
+            "label": "train/030_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/249_img.png",
+            "label": "train/249_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/405_img.png",
+            "label": "train/405_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/530_img.png",
+            "label": "train/530_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/067_img.png",
+            "label": "train/067_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/237_img.png",
+            "label": "train/237_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/205_img.png",
+            "label": "train/205_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/000_img.png",
+            "label": "train/000_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/417_img.png",
+            "label": "train/417_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/158_img.png",
+            "label": "train/158_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/436_img.png",
+            "label": "train/436_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/450_img.png",
+            "label": "train/450_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/154_img.png",
+            "label": "train/154_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/491_img.png",
+            "label": "train/491_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/382_img.png",
+            "label": "train/382_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/032_img.png",
+            "label": "train/032_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/025_img.png",
+            "label": "train/025_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/466_img.png",
+            "label": "train/466_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/244_img.png",
+            "label": "train/244_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/138_img.png",
+            "label": "train/138_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/090_img.png",
+            "label": "train/090_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/179_img.png",
+            "label": "train/179_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/268_img.png",
+            "label": "train/268_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/093_img.png",
+            "label": "train/093_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/360_img.png",
+            "label": "train/360_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/129_img.png",
+            "label": "train/129_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/471_img.png",
+            "label": "train/471_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/163_img.png",
+            "label": "train/163_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/453_img.png",
+            "label": "train/453_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/258_img.png",
+            "label": "train/258_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/216_img.png",
+            "label": "train/216_masks.png",
+            "fold": 4
+        },
+        {
+            "image": "train/124_img.png",
+            "label": "train/124_masks.png",
+            "fold": 4
+        }
+    ],
+    "testing": [
+        {
+            "image": "test/008_img.png",
+            "label": "test/008_masks.png"
+        },
+        {
+            "image": "test/001_img.png",
+            "label": "test/001_masks.png"
+        },
+        {
+            "image": "test/004_img.png",
+            "label": "test/004_masks.png"
+        },
+        {
+            "image": "test/063_img.png",
+            "label": "test/063_masks.png"
+        },
+        {
+            "image": "test/062_img.png",
+            "label": "test/062_masks.png"
+        },
+        {
+            "image": "test/055_img.png",
+            "label": "test/055_masks.png"
+        },
+        {
+            "image": "test/019_img.png",
+            "label": "test/019_masks.png"
+        },
+        {
+            "image": "test/039_img.png",
+            "label": "test/039_masks.png"
+        },
+        {
+            "image": "test/015_img.png",
+            "label": "test/015_masks.png"
+        },
+        {
+            "image": "test/031_img.png",
+            "label": "test/031_masks.png"
+        },
+        {
+            "image": "test/065_img.png",
+            "label": "test/065_masks.png"
+        },
+        {
+            "image": "test/044_img.png",
+            "label": "test/044_masks.png"
+        },
+        {
+            "image": "test/043_img.png",
+            "label": "test/043_masks.png"
+        },
+        {
+            "image": "test/026_img.png",
+            "label": "test/026_masks.png"
+        },
+        {
+            "image": "test/007_img.png",
+            "label": "test/007_masks.png"
+        },
+        {
+            "image": "test/045_img.png",
+            "label": "test/045_masks.png"
+        },
+        {
+            "image": "test/057_img.png",
+            "label": "test/057_masks.png"
+        },
+        {
+            "image": "test/010_img.png",
+            "label": "test/010_masks.png"
+        },
+        {
+            "image": "test/024_img.png",
+            "label": "test/024_masks.png"
+        },
+        {
+            "image": "test/021_img.png",
+            "label": "test/021_masks.png"
+        },
+        {
+            "image": "test/056_img.png",
+            "label": "test/056_masks.png"
+        },
+        {
+            "image": "test/027_img.png",
+            "label": "test/027_masks.png"
+        },
+        {
+            "image": "test/009_img.png",
+            "label": "test/009_masks.png"
+        },
+        {
+            "image": "test/003_img.png",
+            "label": "test/003_masks.png"
+        },
+        {
+            "image": "test/066_img.png",
+            "label": "test/066_masks.png"
+        },
+        {
+            "image": "test/028_img.png",
+            "label": "test/028_masks.png"
+        },
+        {
+            "image": "test/061_img.png",
+            "label": "test/061_masks.png"
+        },
+        {
+            "image": "test/012_img.png",
+            "label": "test/012_masks.png"
+        },
+        {
+            "image": "test/046_img.png",
+            "label": "test/046_masks.png"
+        },
+        {
+            "image": "test/023_img.png",
+            "label": "test/023_masks.png"
+        },
+        {
+            "image": "test/058_img.png",
+            "label": "test/058_masks.png"
+        },
+        {
+            "image": "test/054_img.png",
+            "label": "test/054_masks.png"
+        },
+        {
+            "image": "test/064_img.png",
+            "label": "test/064_masks.png"
+        },
+        {
+            "image": "test/060_img.png",
+            "label": "test/060_masks.png"
+        },
+        {
+            "image": "test/034_img.png",
+            "label": "test/034_masks.png"
+        },
+        {
+            "image": "test/033_img.png",
+            "label": "test/033_masks.png"
+        },
+        {
+            "image": "test/041_img.png",
+            "label": "test/041_masks.png"
+        },
+        {
+            "image": "test/011_img.png",
+            "label": "test/011_masks.png"
+        },
+        {
+            "image": "test/038_img.png",
+            "label": "test/038_masks.png"
+        },
+        {
+            "image": "test/018_img.png",
+            "label": "test/018_masks.png"
+        },
+        {
+            "image": "test/002_img.png",
+            "label": "test/002_masks.png"
+        },
+        {
+            "image": "test/050_img.png",
+            "label": "test/050_masks.png"
+        },
+        {
+            "image": "test/037_img.png",
+            "label": "test/037_masks.png"
+        },
+        {
+            "image": "test/020_img.png",
+            "label": "test/020_masks.png"
+        },
+        {
+            "image": "test/048_img.png",
+            "label": "test/048_masks.png"
+        },
+        {
+            "image": "test/049_img.png",
+            "label": "test/049_masks.png"
+        },
+        {
+            "image": "test/014_img.png",
+            "label": "test/014_masks.png"
+        },
+        {
+            "image": "test/052_img.png",
+            "label": "test/052_masks.png"
+        },
+        {
+            "image": "test/005_img.png",
+            "label": "test/005_masks.png"
+        },
+        {
+            "image": "test/030_img.png",
+            "label": "test/030_masks.png"
+        },
+        {
+            "image": "test/059_img.png",
+            "label": "test/059_masks.png"
+        },
+        {
+            "image": "test/042_img.png",
+            "label": "test/042_masks.png"
+        },
+        {
+            "image": "test/022_img.png",
+            "label": "test/022_masks.png"
+        },
+        {
+            "image": "test/067_img.png",
+            "label": "test/067_masks.png"
+        },
+        {
+            "image": "test/035_img.png",
+            "label": "test/035_masks.png"
+        },
+        {
+            "image": "test/000_img.png",
+            "label": "test/000_masks.png"
+        },
+        {
+            "image": "test/006_img.png",
+            "label": "test/006_masks.png"
+        },
+        {
+            "image": "test/053_img.png",
+            "label": "test/053_masks.png"
+        },
+        {
+            "image": "test/029_img.png",
+            "label": "test/029_masks.png"
+        },
+        {
+            "image": "test/040_img.png",
+            "label": "test/040_masks.png"
+        },
+        {
+            "image": "test/047_img.png",
+            "label": "test/047_masks.png"
+        },
+        {
+            "image": "test/016_img.png",
+            "label": "test/016_masks.png"
+        },
+        {
+            "image": "test/032_img.png",
+            "label": "test/032_masks.png"
+        },
+        {
+            "image": "test/025_img.png",
+            "label": "test/025_masks.png"
+        },
+        {
+            "image": "test/036_img.png",
+            "label": "test/036_masks.png"
+        },
+        {
+            "image": "test/013_img.png",
+            "label": "test/013_masks.png"
+        },
+        {
+            "image": "test/051_img.png",
+            "label": "test/051_masks.png"
+        },
+        {
+            "image": "test/017_img.png",
+            "label": "test/017_masks.png"
+        }
+    ]
+}

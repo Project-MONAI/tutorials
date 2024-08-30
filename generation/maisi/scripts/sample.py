@@ -393,9 +393,7 @@ def check_input(
         )
 
     if controllable_anatomy_size == None:
-        logging.info(
-            f"`controllable_anatomy_size` is not provided."
-        )
+        logging.info(f"`controllable_anatomy_size` is not provided.")
         return
 
     # check controllable_anatomy_size format

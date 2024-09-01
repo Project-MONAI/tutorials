@@ -26,7 +26,7 @@ from monai.inferers import sliding_window_inference
 from monai.utils import set_determinism
 
 from .diff_model_setting import initialize_distributed, load_config, setup_logging
-from .sample import ReconModel
+from .sample import ReconModel, check_input
 from .utils import define_instance
 
 
@@ -130,7 +130,13 @@ def run_inference(
         np.ndarray: Generated synthetic image data.
     """
     noise = torch.randn(
-        (1, args.latent_channels, output_size[0] // divisor, output_size[1] // divisor, output_size[2] // divisor),
+        (
+            1,
+            args.latent_channels,
+            output_size[0] // divisor,
+            output_size[1] // divisor,
+            output_size[2] // divisor,
+        ),
         device=device,
     )
     logger.info(f"noise: {noise.device}, {noise.dtype}, {type(noise)}")
@@ -177,7 +183,11 @@ def run_inference(
 
 
 def save_image(
-    data: np.ndarray, output_size: tuple, out_spacing: tuple, output_path: str, logger: logging.Logger
+    data: np.ndarray,
+    output_size: tuple,
+    out_spacing: tuple,
+    output_path: str,
+    logger: logging.Logger,
 ) -> None:
     """
     Save the generated synthetic image to a file.
@@ -230,6 +240,8 @@ def diff_model_infer(env_config_path: str, model_config_path: str, model_def_pat
         logger.info(f"[config] output_prefix -> {output_prefix}.")
         logger.info(f"[config] output_size -> {output_size}.")
         logger.info(f"[config] out_spacing -> {out_spacing}.")
+
+    check_input(None, None, None, output_size, out_spacing, None)
 
     autoencoder, unet, scale_factor = load_models(args, device, logger)
     num_downsample_level = max(
@@ -289,7 +301,10 @@ if __name__ == "__main__":
         help="Path to model training/inference configuration",
     )
     parser.add_argument(
-        "--model_def", type=str, default="./configs/config_maisi.json", help="Path to model definition file"
+        "--model_def",
+        type=str,
+        default="./configs/config_maisi.json",
+        help="Path to model definition file",
     )
 
     args = parser.parse_args()

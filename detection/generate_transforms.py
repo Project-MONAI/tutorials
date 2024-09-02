@@ -52,11 +52,11 @@ def generate_detection_train_transform(
     image_key,
     box_key,
     label_key,
-    point_key,
     gt_box_mode,
     intensity_transform,
     patch_size,
     batch_size,
+    point_key="points",
     affine_lps_to_ras=False,
     amp=True,
 ):
@@ -103,6 +103,7 @@ def generate_detection_train_transform(
                 image_meta_key_postfix="meta_dict",
                 affine_lps_to_ras=affine_lps_to_ras,
             ),
+            # generate box mask based on the input boxes
             GenerateExtendedBoxMask(
                 keys=box_key,
                 image_key=image_key,

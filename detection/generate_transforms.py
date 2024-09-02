@@ -151,9 +151,7 @@ def generate_detection_train_transform(
                 max_k=3,
                 spatial_axes=(0, 1),
             ),
-            ApplyTransformToPointsd(
-                keys=[point_key], refer_key=image_key, affine_lps_to_ras=affine_lps_to_ras
-            ),
+            ApplyTransformToPointsd(keys=[point_key], refer_key=image_key, affine_lps_to_ras=affine_lps_to_ras),
             ConvertPointsToBoxesd(keys=[point_key]),
             ClipBoxToImaged(
                 box_keys=box_key,

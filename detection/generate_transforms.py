@@ -374,5 +374,5 @@ class GenerateExtendedBoxMask(MapTransform):
         for key in self.key_iterator(d):
             image = d[self.image_key]
             boxes = d[key]
-            data[self.mask_image_key] = self.generate_mask_img(boxes, image.shape[1:], self.whole_box)
+            data[self.mask_image_key] = self.generate_mask_img(boxes, image.shape[1:], whole_box=self.whole_box)
         return data

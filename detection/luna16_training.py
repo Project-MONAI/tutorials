@@ -236,7 +236,7 @@ def main():
     )
     after_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=150, gamma=0.1)
     scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=1, total_epoch=10, after_scheduler=after_scheduler)
-    scaler = torch.amp.GradScaler('cuda') if amp else None
+    scaler = torch.amp.GradScaler("cuda") if amp else None
     optimizer.zero_grad()
     optimizer.step()
 
@@ -282,7 +282,7 @@ def main():
                 param.grad = None
 
             if amp and (scaler is not None):
-                with torch.amp.autocast('cuda'):
+                with torch.amp.autocast("cuda"):
                     outputs = detector(inputs, targets)
                     loss = w_cls * outputs[detector.cls_key] + outputs[detector.box_reg_key]
                 scaler.scale(loss).backward()

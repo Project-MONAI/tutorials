@@ -26,7 +26,7 @@ from monai.transforms import Compose
 from monai.utils import set_determinism
 
 from .diff_model_setting import initialize_distributed, load_config, setup_logging
-from .utils import define_instance, load_autoencoder_ckpt
+from .utils import define_instance
 
 # Set the random seed for reproducibility
 set_determinism(seed=0)
@@ -175,7 +175,7 @@ def diff_model_create_training_data(env_config_path: str, model_config_path: str
 
     autoencoder = define_instance(args, "autoencoder_def").to(device)
     try:
-        checkpoint_autoencoder = load_autoencoder_ckpt(args.trained_autoencoder_path)
+        checkpoint_autoencoder = torch.load(args.trained_autoencoder_path)
         autoencoder.load_state_dict(checkpoint_autoencoder)
     except Exception:
         logger.error("The trained_autoencoder_path does not exist!")

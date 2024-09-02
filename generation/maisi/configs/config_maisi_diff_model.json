@@ -7,13 +7,13 @@
     },
     "diffusion_unet_inference": {
         "dim": [
-            128,
-            128,
+            256,
+            256,
             128
         ],
         "spacing": [
             1.0,
-            1.25,
+            1.0,
             0.75
         ],
         "top_region_index": [

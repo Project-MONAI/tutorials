@@ -321,7 +321,14 @@ class GenerateExtendedBoxMask(MapTransform):
     Generate box mask based on the input boxes.
     """
 
-    def __init__(self, keys: KeysCollection, image_key: str, spatial_size: Tuple[int, int, int], whole_box: bool, mask_image_key: str = "mask_image") -> None:
+    def __init__(
+        self,
+        keys: KeysCollection,
+        image_key: str,
+        spatial_size: Tuple[int, int, int],
+        whole_box: bool,
+        mask_image_key: str = "mask_image",
+    ) -> None:
         """
         Args:
             keys: keys of the corresponding items to be transformed.

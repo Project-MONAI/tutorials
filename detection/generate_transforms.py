@@ -325,7 +325,7 @@ class GenerateExtendedBoxMask(MapTransform):
         self,
         keys: KeysCollection,
         image_key: str,
-        spatial_size: Tuple[int, int, int],
+        spatial_size: tuple[int, int, int],
         whole_box: bool,
         mask_image_key: str = "mask_image",
     ) -> None:

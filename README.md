@@ -113,6 +113,8 @@ This folder provides a simple baseline method for training, validation, and infe
 This notebook demonstrates how to construct a training workflow of UNETR on multi-organ segmentation task using the BTCV challenge dataset.
 ##### [unetr_btcv_segmentation_3d_lightning](./3d_segmentation/unetr_btcv_segmentation_3d_lightning.ipynb)
 This tutorial demonstrates how MONAI can be used in conjunction with [PyTorch Lightning](https://www.pytorchlightning.ai/) framework to construct a training workflow of UNETR on multi-organ segmentation task using the BTCV challenge dataset.
+##### [vista3d](./3d_segmentation/vista3d)
+This tutorial showcases the process of fine-tuning VISTA3D on [MSD Spleen dataset](http://medicaldecathlon.com) using MONAI. For an in-depth exploration, please visit the [VISTA](https://github.com/Project-MONAI/VISTA) repository.
 
 #### <ins>**2D registration**</ins>
 ##### [registration using mednist](./2d_registration/registration_mednist.ipynb)

@@ -17,3 +17,4 @@ The codebase is under Apache 2.0 Licence. The model weight is released under [NV
 ## Acknowledgement
 - [segment-anything](https://github.com/facebookresearch/segment-anything)
 - [TotalSegmentator](https://github.com/wasserth/TotalSegmentator)
+- [VISTA](https://github.com/Project-MONAI/VISTA)

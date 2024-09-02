@@ -39,10 +39,6 @@ from monai.apps.detection.transforms.dictionary import (
     ClipBoxToImaged,
     ConvertBoxToStandardModed,
     MaskToBoxd,
-    RandCropBoxByPosNegLabeld,
-    RandFlipBoxd,
-    RandRotateBox90d,
-    RandZoomBoxd,
     ConvertBoxModed,
     StandardizeEmptyBoxd,
 )
@@ -50,7 +46,6 @@ from monai.config import KeysCollection
 from monai.utils.type_conversion import convert_data_type
 from monai.data.box_utils import clip_boxes_to_image
 from monai.apps.detection.transforms.box_ops import convert_box_to_mask
-from monai.transforms.utils_pytorch_numpy_unification import stack, concatenate, min, max
 
 
 def generate_detection_train_transform(

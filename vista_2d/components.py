@@ -98,57 +98,11 @@ class LoadTiffd(MapTransform):
         return d
 
 
-class SaveTiffd(MapTransform):
-    def __init__(
-        self, output_dir, data_root_dir="/", nested_folder=False, *args, **kwargs
-    ) -> None:
-        super().__init__(*args, **kwargs)
-
-        self.output_dir = output_dir
-        self.data_root_dir = data_root_dir
-        self.nested_folder = nested_folder
-
-    def set_data_root_dir(self, data_root_dir):
-        self.data_root_dir = data_root_dir
-
-    def __call__(self, data):
-        d = dict(data)
-        os.makedirs(self.output_dir, exist_ok=True)
-
-        for key in self.key_iterator(d):
-            seg = d[key]
-            filename = seg.meta[ImageMetaKey.FILENAME_OR_OBJ]
-
-            basename = os.path.splitext(os.path.basename(filename))[0]
-
-            if self.nested_folder:
-                reldir = os.path.relpath(os.path.dirname(filename), self.data_root_dir)
-                outdir = os.path.join(self.output_dir, reldir)
-                os.makedirs(outdir, exist_ok=True)
-            else:
-                outdir = self.output_dir
-
-            outname = os.path.join(outdir, basename + ".tif")
-
-            label = seg.cpu().numpy()
-            lm = label.max()
-            if lm <= 255:
-                label = label.astype(np.uint8)
-            elif lm <= 65535:
-                label = label.astype(np.uint16)
-            else:
-                label = label.astype(np.uint32)
-
-            tifffile.imwrite(outname, label)
-
-            print(
-                f"Saving {outname} shape {label.shape} max {label.max()} dtype {label.dtype}"
-            )
-
-        return d
-
-
 class LabelsToFlows(MapTransform):
+    # This transform is useful in cell segmentation tasks where flow-based representations 
+    # help in identifying cell boundaries and directions. The flow representation are used as 
+    # input to models that are designed to work with such data, potentially improving 
+    # segmentation accuracy.
     # based on dynamics labels_to_flows()
     # created a 3 channel output (foreground, flowx, flowy) and saves under flow (new) key
 
@@ -206,118 +160,6 @@ class LogitsToLabels:
             )
 
         return pred_mask, p
-
-
-class LogitsToLabelsd(MapTransform):
-    def __call__(self, data):
-        d = dict(data)
-        f = LogitsToLabels()
-        for key in self.key_iterator(d):
-            pred_mask, p = f(d[key])
-            d[key] = pred_mask
-            d[f"{key}_centroids"] = p
-        return d
-
-
-class SaveTiffExd(MapTransform):
-    def __init__(
-        self,
-        output_dir,
-        output_ext=".png",
-        output_postfix="seg",
-        image_key="image",
-        *args,
-        **kwargs,
-    ) -> None:
-        super().__init__(*args, **kwargs)
-
-        self.output_dir = output_dir
-        self.output_ext = output_ext
-        self.output_postfix = output_postfix
-        self.image_key = image_key
-
-    def to_polygons(self, contours):
-        polygons = []
-        for contour in contours:
-            if len(contour) < 3:
-                continue
-            polygons.append(np.squeeze(contour).astype(int).tolist())
-        return polygons
-
-    def __call__(self, data):
-        d = dict(data)
-
-        output_dir = d.get("output_dir", self.output_dir)
-        output_ext = d.get("output_ext", self.output_ext)
-        overlayed_masks = d.get("overlayed_masks", False)
-        output_contours = d.get("output_contours", False)
-
-        os.makedirs(self.output_dir, exist_ok=True)
-
-        img = d.get(self.image_key, None)
-        filename = (
-            img.meta.get(ImageMetaKey.FILENAME_OR_OBJ) if img is not None else None
-        )
-        image_size = (
-            img.meta.get(ImageMetaKey.SPATIAL_SHAPE) if img is not None else None
-        )
-        basename = (
-            os.path.splitext(os.path.basename(filename))[0] if filename else "mask"
-        )
-        logger.info(f"File: {filename}; Base: {basename}")
-
-        for key in self.key_iterator(d):
-            label = d[key]
-            output_filename = f"{basename}{'_' + self.output_postfix if self.output_postfix else ''}{output_ext}"
-            output_filepath = os.path.join(output_dir, output_filename)
-            lm = label.max()
-            logger.info(f"Mask Shape: {label.shape}; Instances: {lm}")
-
-            if lm <= 255:
-                label = label.astype(np.uint8)
-            elif lm <= 65535:
-                label = label.astype(np.uint16)
-            else:
-                label = label.astype(np.uint32)
-
-            tifffile.imwrite(output_filepath, label)
-            logger.info(f"Saving {output_filepath}")
-
-            polygons = []
-            if overlayed_masks:
-                logger.info(f"Overlay Masks: Reading original Image: {filename}")
-                image = cv2.imread(filename)
-                mask = cv2.imread(output_filepath, 0)
-
-                for i in range(1, np.max(mask)):
-                    m = np.zeros_like(mask)
-                    m[mask == i] = 1
-                    color = np.random.choice(range(256), size=3).tolist()
-                    contours, _ = cv2.findContours(
-                        m, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE
-                    )
-                    polygons.extend(self.to_polygons(contours))
-                    cv2.drawContours(image, contours, -1, color, 1)
-                cv2.imwrite(output_filepath, image)
-                logger.info(f"Overlay Masks: Saving {output_filepath}")
-            else:
-                contours, _ = cv2.findContours(
-                    label, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE
-                )
-                polygons.extend(self.to_polygons(contours))
-
-            meta_json = {"image_size": image_size, "contours": len(polygons)}
-            with open(os.path.join(output_dir, "meta.json"), "w") as fp:
-                json.dump(meta_json, fp, indent=2)
-
-            if output_contours:
-                logger.info(f"Total Polygons: {len(polygons)}")
-                with open(os.path.join(output_dir, "contours.json"), "w") as fp:
-                    json.dump(
-                        {"count": len(polygons), "contours": polygons}, fp, indent=2
-                    )
-
-        return d
 
 
 # Loss (adopted from Cellpose)

@@ -29,6 +29,7 @@ from tqdm import tqdm
 from .augmentation import augmentation
 from .find_masks import find_masks
 from .utils import binarize_labels, general_mask_generation_post_process, get_body_region_index_from_mask, remap_labels
+from .quality_check import is_outlier
 
 
 class ReconModel(torch.nn.Module):
@@ -181,7 +182,7 @@ def ldm_conditional_sample_one_image(
     noise_scheduler,
     scale_factor,
     device,
-    comebine_label_or,
+    combine_label_or,
     top_region_index_tensor,
     bottom_region_index_tensor,
     spacing_tensor,
@@ -202,7 +203,7 @@ def ldm_conditional_sample_one_image(
         noise_scheduler: The noise scheduler for the diffusion process.
         scale_factor (float): Scaling factor for the latent space.
         device (torch.device): The device to run the computation on.
-        comebine_label_or (torch.Tensor): The combined label tensor.
+        combine_label_or (torch.Tensor): The combined label tensor.
         top_region_index_tensor (torch.Tensor): Tensor specifying the top region index.
         bottom_region_index_tensor (torch.Tensor): Tensor specifying the bottom region index.
         spacing_tensor (torch.Tensor): Tensor specifying the spacing.
@@ -229,18 +230,18 @@ def ldm_conditional_sample_one_image(
         logging.info("---- Start generating latent features... ----")
         start_time = time.time()
         # generate segmentation mask
-        comebine_label = comebine_label_or.to(device)
+        combine_label = combine_label_or.to(device)
         if (
-            output_size[0] != comebine_label.shape[2]
-            or output_size[1] != comebine_label.shape[3]
-            or output_size[2] != comebine_label.shape[4]
+            output_size[0] != combine_label.shape[2]
+            or output_size[1] != combine_label.shape[3]
+            or output_size[2] != combine_label.shape[4]
         ):
             logging.info(
                 "output_size is not a desired value. Need to interpolate the mask to match with output_size. The result image will be very low quality."
             )
-            comebine_label = torch.nn.functional.interpolate(comebine_label, size=output_size, mode="nearest")
+            combine_label = torch.nn.functional.interpolate(combine_label, size=output_size, mode="nearest")
 
-        controlnet_cond_vis = binarize_labels(comebine_label.as_tensor().long()).half()
+        controlnet_cond_vis = binarize_labels(combine_label.as_tensor().long()).half()
 
         # Generate random noise
         latents = initialize_noise_latents(latent_shape, device) * noise_factor
@@ -301,18 +302,18 @@ def ldm_conditional_sample_one_image(
         # project output to [-1000, 1000]
         synthetic_images = synthetic_images * (a_max - a_min) + a_min
         # regularize background intensities
-        synthetic_images = crop_img_body_mask(synthetic_images, comebine_label)
+        synthetic_images = crop_img_body_mask(synthetic_images, combine_label)
         torch.cuda.empty_cache()
 
-    return synthetic_images, comebine_label
+    return synthetic_images, combine_label
 
 
-def filter_mask_with_organs(comebine_label, anatomy_list):
+def filter_mask_with_organs(combine_label, anatomy_list):
     """
     Filter a mask to only include specified organs.
 
     Args:
-        comebine_label (torch.Tensor): The input mask.
+        combine_label (torch.Tensor): The input mask.
         anatomy_list (list): List of organ labels to keep.
 
     Returns:
@@ -320,31 +321,31 @@ def filter_mask_with_organs(comebine_label, anatomy_list):
     """
     # final output mask file has shape of output_size, contains labels in anatomy_list
     # it is already interpolated to target size
-    comebine_label = comebine_label.long()
+    combine_label = combine_label.long()
     # filter out the organs that are not in anatomy_list
     for i in range(len(anatomy_list)):
         organ = anatomy_list[i]
         # replace it with a negative value so it will get mixed
-        comebine_label[comebine_label == organ] = -(i + 1)
+        combine_label[combine_label == organ] = -(i + 1)
     # zero-out voxels with value not in anatomy_list
-    comebine_label[comebine_label > 0] = 0
+    combine_label[combine_label > 0] = 0
     # output positive values
-    comebine_label = -comebine_label
-    return comebine_label
+    combine_label = -combine_label
+    return combine_label
 
 
-def crop_img_body_mask(synthetic_images, comebine_label):
+def crop_img_body_mask(synthetic_images, combine_label):
     """
     Crop the synthetic image using a body mask.
 
     Args:
         synthetic_images (torch.Tensor): The synthetic images.
-        comebine_label (torch.Tensor): The body mask.
+        combine_label (torch.Tensor): The body mask.
 
     Returns:
         torch.Tensor: The cropped synthetic images.
     """
-    synthetic_images[comebine_label == 0] = -1000
+    synthetic_images[combine_label == 0] = -1000
     return synthetic_images
 
 
@@ -384,6 +385,16 @@ def check_input(
         raise ValueError(
             f"spacing[0] have to be between 0.5 and 3.0 mm, spacing[2] have to be between 0.5 and 5.0 mm, yet got {spacing}."
         )
+
+    if output_size[0] * spacing[0] < 256:
+        FOV = [output_size[axis] * spacing[axis] for axis in range(3)]
+        raise ValueError(
+            f"`'spacing'({spacing}mm) and 'output_size'({output_size}) together decide the output field of view (FOV). The FOV will be {FOV}mm. We recommend the FOV in x and y axis to be at least 256mm for head, and at least 384mm for other body regions like abdomen. There is no such restriction for z-axis."
+        )
+
+    if controllable_anatomy_size == None:
+        logging.info(f"`controllable_anatomy_size` is not provided.")
+        return
 
     # check controllable_anatomy_size format
     if len(controllable_anatomy_size) > 10:
@@ -497,7 +508,7 @@ class LDMSampler:
         controllable_anatomy_size,
         image_output_ext=".nii.gz",
         label_output_ext=".nii.gz",
-        quality_check_args=None,
+        real_img_median_statistics="./configs/image_median_statistics.json",
         spacing=[1, 1, 1],
         num_inference_steps=None,
         mask_generation_num_inference_steps=None,
@@ -563,9 +574,26 @@ class LDMSampler:
         self.autoencoder_sliding_window_infer_size = autoencoder_sliding_window_infer_size
         self.autoencoder_sliding_window_infer_overlap = autoencoder_sliding_window_infer_overlap
 
-        # quality check disabled for this version
-        self.quality_check_args = quality_check_args
+        # quality check args
+        self.max_try_time = 5  # if not pass quality check, will try self.max_try_time times
+        with open(real_img_median_statistics, "r") as json_file:
+            self.median_statistics = json.load(json_file)
+        self.label_int_dict = {
+            "liver": [1],
+            "spleen": [3],
+            "pancreas": [4],
+            "kidney": [5, 14],
+            "lung": [28, 29, 30, 31, 31],
+            "brain": [22],
+            "hepatic tumor": [26],
+            "bone lesion": [128],
+            "lung tumor": [23],
+            "colon cancer primaries": [27],
+            "pancreatic tumor": [24],
+            "bone": list(range(33, 57)) + list(range(63, 98)) + [120, 122, 127],
+        }
 
+        # networks
         self.autoencoder.eval()
         self.diffusion_unet.eval()
         self.controlnet.eval()
@@ -635,7 +663,7 @@ class LDMSampler:
             if len(self.controllable_anatomy_size) > 0:
                 # generate a synthetic mask
                 (
-                    comebine_label_or,
+                    combine_label_or,
                     top_region_index_tensor,
                     bottom_region_index_tensor,
                     spacing_tensor,
@@ -645,16 +673,16 @@ class LDMSampler:
                 mask_file = item["mask_file"]
                 if_aug = item["if_aug"]
                 (
-                    comebine_label_or,
+                    combine_label_or,
                     top_region_index_tensor,
                     bottom_region_index_tensor,
                     spacing_tensor,
                 ) = self.read_mask_information(mask_file)
                 if need_resample:
-                    comebine_label_or = self.ensure_output_size_and_spacing(comebine_label_or)
+                    combine_label_or = self.ensure_output_size_and_spacing(combine_label_or)
                 # mask augmentation
                 if if_aug:
-                    comebine_label_or = augmentation(comebine_label_or, self.output_size)
+                    combine_label_or = augmentation(combine_label_or, self.output_size)
             end_time = time.time()
             logging.info(f"---- Mask preparation time: {end_time - start_time} seconds ----")
             torch.cuda.empty_cache()
@@ -663,14 +691,16 @@ class LDMSampler:
             try_time = 0
             while to_generate:
                 synthetic_images, synthetic_labels = self.sample_one_pair(
-                    comebine_label_or,
+                    combine_label_or,
                     top_region_index_tensor,
                     bottom_region_index_tensor,
                     spacing_tensor,
                 )
-                # current quality always return True
-                pass_quality_check = self.quality_check(synthetic_images)
-                if pass_quality_check or try_time > 3:
+                # synthetic image quality check
+                pass_quality_check = self.quality_check(
+                    synthetic_images.cpu().detach().numpy(), combine_label_or.cpu().detach().numpy()
+                )
+                if pass_quality_check or try_time > self.max_try_time:
                     # save image/label pairs
                     output_postfix = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
                     synthetic_labels.meta["filename_or_obj"] = "sample.nii.gz"
@@ -727,7 +757,7 @@ class LDMSampler:
 
     def sample_one_pair(
         self,
-        comebine_label_or_aug,
+        combine_label_or_aug,
         top_region_index_tensor,
         bottom_region_index_tensor,
         spacing_tensor,
@@ -736,7 +766,7 @@ class LDMSampler:
         Generate a single pair of synthetic image and mask.
 
         Args:
-            comebine_label_or_aug (torch.Tensor): Combined label tensor or augmented label.
+            combine_label_or_aug (torch.Tensor): Combined label tensor or augmented label.
             top_region_index_tensor (torch.Tensor): Tensor specifying the top region index.
             bottom_region_index_tensor (torch.Tensor): Tensor specifying the bottom region index.
             spacing_tensor (torch.Tensor): Tensor specifying the spacing.
@@ -752,7 +782,7 @@ class LDMSampler:
             noise_scheduler=self.noise_scheduler,
             scale_factor=self.scale_factor,
             device=self.device,
-            comebine_label_or=comebine_label_or_aug,
+            combine_label_or=combine_label_or_aug,
             top_region_index_tensor=top_region_index_tensor,
             bottom_region_index_tensor=bottom_region_index_tensor,
             spacing_tensor=spacing_tensor,
@@ -828,23 +858,23 @@ class LDMSampler:
         Returns:
             tuple: A tuple containing the prepared mask and associated tensors.
         """
-        comebine_label_or = self.sample_one_mask(anatomy_size=anatomy_size_condtion)
+        combine_label_or = self.sample_one_mask(anatomy_size=anatomy_size_condtion)
         # TODO: current mask generation model only can generate 256^3 volumes with 1.5 mm spacing.
         affine = torch.zeros((4, 4))
         affine[0, 0] = 1.5
         affine[1, 1] = 1.5
         affine[2, 2] = 1.5
         affine[3, 3] = 1.0  # dummy
-        comebine_label_or = MetaTensor(comebine_label_or, affine=affine)
-        comebine_label_or = self.ensure_output_size_and_spacing(comebine_label_or)
+        combine_label_or = MetaTensor(combine_label_or, affine=affine)
+        combine_label_or = self.ensure_output_size_and_spacing(combine_label_or)
 
-        top_region_index, bottom_region_index = get_body_region_index_from_mask(comebine_label_or)
+        top_region_index, bottom_region_index = get_body_region_index_from_mask(combine_label_or)
 
         spacing_tensor = torch.FloatTensor(self.spacing).unsqueeze(0).half().to(self.device) * 1e2
         top_region_index_tensor = torch.FloatTensor(top_region_index).unsqueeze(0).half().to(self.device) * 1e2
         bottom_region_index_tensor = torch.FloatTensor(bottom_region_index).unsqueeze(0).half().to(self.device) * 1e2
 
-        return comebine_label_or, top_region_index_tensor, bottom_region_index_tensor, spacing_tensor
+        return combine_label_or, top_region_index_tensor, bottom_region_index_tensor, spacing_tensor
 
     def sample_one_mask(self, anatomy_size):
         """
@@ -1006,15 +1036,20 @@ class LDMSampler:
             raise ValueError("Cannot find body region with given organ list.")
         return final_candidates
 
-    def quality_check(self, image):
+    def quality_check(self, image_data, label_data):
         """
-        Perform a quality check on the generated image. This version disabled quality check and always return True.
-
+        Perform a quality check on the generated image.
         Args:
-            image (torch.Tensor): The generated image.
-
+            image_data (np.ndarray): The generated image.
+            label_data (np.ndarray): The corresponding whole body mask.
         Returns:
             bool: True if the image passes the quality check, False otherwise.
         """
-        # This version disabled quality check
+        outlier_results = is_outlier(self.median_statistics, image_data, label_data, self.label_int_dict)
+        for label, result in outlier_results.items():
+            if result.get("is_outlier", False):
+                logging.info(
+                    f"Generated image quality check for label '{label}' failed: median value {result['median_value']} is outside the acceptable range ({result['low_thresh']} - {result['high_thresh']})."
+                )
+                return False
         return True

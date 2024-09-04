@@ -24,7 +24,7 @@ from monai.transforms import SaveImage
 from monai.utils import RankFilter
 
 from .sample import ldm_conditional_sample_one_image
-from .utils import define_instance, load_autoencoder_ckpt, prepare_maisi_controlnet_json_dataloader, setup_ddp
+from .utils import define_instance, prepare_maisi_controlnet_json_dataloader, setup_ddp
 
 
 @torch.inference_mode()
@@ -98,7 +98,7 @@ def main():
     if args.trained_autoencoder_path is not None:
         if not os.path.exists(args.trained_autoencoder_path):
             raise ValueError("Please download the autoencoder checkpoint.")
-        autoencoder_ckpt = load_autoencoder_ckpt(args.trained_autoencoder_path)
+        autoencoder_ckpt = torch.load(args.trained_autoencoder_path)
         autoencoder.load_state_dict(autoencoder_ckpt)
         logger.info(f"Load trained diffusion model from {args.trained_autoencoder_path}.")
     else:

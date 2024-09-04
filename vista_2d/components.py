@@ -42,23 +42,16 @@ class LoadTiffd(MapTransform):
                 img_array = tifffile.imread(filename)  # use tifffile for tif images
                 image_size = img_array.shape
                 if len(img_array.shape) == 3 and img_array.shape[-1] <= 3:
-                    img_array = np.transpose(
-                        img_array, (2, 0, 1)
-                    )  # channels first without transpose
+                    img_array = np.transpose(img_array, (2, 0, 1))  # channels first without transpose
             else:
-                img_array = np.array(
-                    PIL.Image.open(filename)
-                )  # PIL for all other images (png, jpeg)
+                img_array = np.array(PIL.Image.open(filename))  # PIL for all other images (png, jpeg)
                 image_size = img_array.shape
                 if len(img_array.shape) == 3:
                     img_array = np.transpose(img_array, (2, 0, 1))  # channels first
 
             if len(img_array.shape) not in [2, 3]:
                 raise ValueError(
-                    "Unsupported image dimensions, filename "
-                    + str(filename)
-                    + " shape "
-                    + str(img_array.shape)
+                    "Unsupported image dimensions, filename " + str(filename) + " shape " + str(img_array.shape)
                 )
 
             if len(img_array.shape) == 2:
@@ -73,9 +66,7 @@ class LoadTiffd(MapTransform):
 
             elif key == "image":
                 if img_array.shape[0] == 1:
-                    img_array = np.repeat(
-                        img_array, repeats=3, axis=0
-                    )  # if grayscale, repeat as 3 channels
+                    img_array = np.repeat(img_array, repeats=3, axis=0)  # if grayscale, repeat as 3 channels
                 elif img_array.shape[0] == 2:
                     print(
                         f"Strange case, image with 2 channels {filename} shape {img_array.shape}, appending first channel to make 3"
@@ -84,9 +75,7 @@ class LoadTiffd(MapTransform):
                         (img_array[0], img_array[1], img_array[0]), axis=0
                     )  # this should not happen, we got 2 channel input image
                 elif img_array.shape[0] > 3:
-                    print(
-                        f"Strange case, image with >3 channels,  {filename} shape {img_array.shape}, keeping first 3"
-                    )
+                    print(f"Strange case, image with >3 channels,  {filename} shape {img_array.shape}, keeping first 3")
                     img_array = img_array[:3]
 
             meta_data = {
@@ -99,9 +88,9 @@ class LoadTiffd(MapTransform):
 
 
 class LabelsToFlows(MapTransform):
-    # This transform is useful in cell segmentation tasks where flow-based representations 
-    # help in identifying cell boundaries and directions. The flow representation are used as 
-    # input to models that are designed to work with such data, potentially improving 
+    # This transform is useful in cell segmentation tasks where flow-based representations
+    # help in identifying cell boundaries and directions. The flow representation are used as
+    # input to models that are designed to work with such data, potentially improving
     # segmentation accuracy.
     # based on dynamics labels_to_flows()
     # created a 3 channel output (foreground, flowx, flowy) and saves under flow (new) key
@@ -119,9 +108,7 @@ class LabelsToFlows(MapTransform):
             veci = masks_to_flows(label[0], device=None)
 
             flows = np.concatenate((label > 0.5, veci), axis=0).astype(np.float32)
-            flows = convert_to_dst_type(
-                flows, d[key], dtype=torch.float, device=d[key].device
-            )[0]
+            flows = convert_to_dst_type(flows, d[key], dtype=torch.float, device=d[key].device)[0]
             d[self.flow_key] = flows
             # meta_data = {ImageMetaKey.FILENAME_OR_OBJ : filename}
             # d[key] = MetaTensor.ensure_torch_and_prune_meta(img_array, meta_data)
@@ -146,9 +133,7 @@ class LogitsToLabels:
                 device=device,
             )
         except RuntimeError as e:
-            logger.warning(
-                f"compute_masks failed on GPU retrying on CPU {logits.shape} file {filename} {e}"
-            )
+            logger.warning(f"compute_masks failed on GPU retrying on CPU {logits.shape} file {filename} {e}")
             pred_mask, p = compute_masks(
                 dP,
                 cellprob,
@@ -165,9 +150,9 @@ class LogitsToLabels:
 # Loss (adopted from Cellpose)
 class CellLoss:
     def __call__(self, y_pred, y):
-        loss = 0.5 * F.mse_loss(
-            y_pred[:, 1:], 5 * y[:, 1:]
-        ) + F.binary_cross_entropy_with_logits(y_pred[:, [0]], y[:, [0]])
+        loss = 0.5 * F.mse_loss(y_pred[:, 1:], 5 * y[:, 1:]) + F.binary_cross_entropy_with_logits(
+            y_pred[:, [0]], y[:, [0]]
+        )
         return loss
 
 
@@ -192,4 +177,3 @@ class CellAcc:
 
         # print("CellAcc ap", ap, 'tp', tp, 'fp', fp,  'fn', fn)
         return ap
-    

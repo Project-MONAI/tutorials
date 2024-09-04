@@ -1,6 +1,6 @@
 # VISTA-2D Cell Segmentation with Segment Anything Model (SAM) & MONAI
 
-The tutorial demonstrates how to train a cell segmentation model using the [MONAI](https://monai.io/) framework and the [Segment Anything Model (SAM)](https://github.com/facebookresearch/segment-anything) on the [Cellpose dataset](https://www.cellpose.org/). 
+The tutorial demonstrates how to train a cell segmentation model using the [MONAI](https://monai.io/) framework and the [Segment Anything Model (SAM)](https://github.com/facebookresearch/segment-anything) on the [Cellpose dataset](https://www.cellpose.org/).
 
 ![image](../figures/vista_2d_overview.png)
 

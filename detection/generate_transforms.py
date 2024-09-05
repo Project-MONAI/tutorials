@@ -103,7 +103,7 @@ def generate_detection_train_transform(
                 image_meta_key_postfix="meta_dict",
                 affine_lps_to_ras=affine_lps_to_ras,
             ),
-            # generate box mask based on the input boxes
+            # generate box mask based on the input boxes which used for cropping
             GenerateExtendedBoxMask(
                 keys=box_key,
                 image_key=image_key,
@@ -147,7 +147,9 @@ def generate_detection_train_transform(
                 max_k=3,
                 spatial_axes=(0, 1),
             ),
+            # apply the same affine matrix which already applied on the images to the points
             ApplyTransformToPointsd(keys=[point_key], refer_key=image_key, affine_lps_to_ras=affine_lps_to_ras),
+            # convert points back to boxes
             ConvertPointsToBoxesd(keys=[point_key]),
             ClipBoxToImaged(
                 box_keys=box_key,

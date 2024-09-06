@@ -39,3 +39,24 @@ Example shows the use cases of how to use MONAI for 2D segmentation of images us
 
 ## [Evaluate Realism and Diversity of the generated images](./realism_diversity_metrics/realism_diversity_metrics.ipynb)
 Example shows the use cases of using MONAI to evaluate the performance of a generative model by computing metrics such as Frechet Inception Distance (FID) and Maximum Mean Discrepancy (MMD) for assessing realism, as well as MS-SSIM and SSIM for evaluating image diversity.
+
+## [Training a 2D VQ-VAE + Autoregressive Transformers](./2d_vqvae_transformer/2d_vqvae_transformer_tutorial.ipynb): 
+Example shows how to train a Vector-Quantized Variation Autoencoder + Transformers on the MedNIST dataset.
+
+## Training VQ-VAEs and VQ-GANs: [2D VAE](./2d_vqvae/2d_vqvae_tutorial.ipynb), [3D VAE](./3d_vqvae/3d_vqvae_tutorial.ipynb) and [2D GAN](./3d_autoencoderkl/2d_vqgan_tutorial.ipynb)
+Examples show how to train Vector Quantized Variation Autoencoder on [2D](./2d_vqvae/2d_vqvae_tutorial.ipynb) and [3D](./3d_vqvae/3d_vqvae_tutorial.ipynb), and how to use the PatchDiscriminator class to train a [VQ-GAN](./2d_vqgan/2d_vqgan_tutorial.ipynb) and improve the quality of the generated images.
+
+## [Training a 2D Denoising Diffusion Probabilistic Model](./2d_ddpm/2d_ddpm_tutorial.ipynb): 
+Example shows how to easily train a DDPM on medical data (MedNIST).
+
+## [Comparing different noise schedulers](./2d_ddpm/2d_ddpm_compare_schedulers.ipynb): 
+Example compares the performance of different noise schedulers. This shows how to sample a diffusion model using the DDPM, DDIM, and PNDM schedulers and how different numbers of timesteps affect the quality of the samples.
+
+## [Training a 2D Denoising Diffusion Probabilistic Model with different parameterisation](./2d_ddpm/2d_ddpm_tutorial_v_prediction.ipynb):
+Example shows how to train a DDPM using the v-prediction parameterization, which improves the stability and convergence of the model. MONAI supports different parameterizations for the diffusion model (epsilon, sample, and v-prediction).
+
+## [Training a 2D DDPM using Pytorch Ignite](./2d_ddpm/2d_ddpm_compare_schedulers.ipynb): 
+Example shows how to train a DDPM on medical data using Pytorch Ignite. This shows how to use the DiffusionPrepareBatch to prepare the model inputs and MONAI's SupervisedTrainer and SupervisedEvaluator to train DDPMs.
+
+## [Using a 2D DDPM to inpaint images](./2d_ddpm/2d_ddpm_inpainting.ipynb): 
+Example shows how to use a DDPM to inpaint of 2D images from the MedNIST dataset using the RePaint method.

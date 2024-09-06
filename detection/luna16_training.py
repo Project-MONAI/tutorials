@@ -78,8 +78,10 @@ def main():
     torch.backends.cudnn.benchmark = True
     torch.set_num_threads(4)
 
-    env_dict = json.load(open(args.environment_file, "r"))
-    config_dict = json.load(open(args.config_file, "r"))
+    with open(args.environment_file, "r") as env_file:
+        env_dict = json.load(env_file)
+    with open(args.config_file, "r") as config_file:
+        config_dict = json.load(config_file)
 
     for k, v in env_dict.items():
         setattr(args, k, v)
@@ -103,6 +105,7 @@ def main():
         intensity_transform,
         args.patch_size,
         args.batch_size,
+        point_key="points",
         affine_lps_to_ras=True,
         amp=amp,
     )
@@ -233,7 +236,7 @@ def main():
     )
     after_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=150, gamma=0.1)
     scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=1, total_epoch=10, after_scheduler=after_scheduler)
-    scaler = torch.cuda.amp.GradScaler() if amp else None
+    scaler = torch.amp.GradScaler("cuda") if amp else None
     optimizer.zero_grad()
     optimizer.step()
 
@@ -279,7 +282,7 @@ def main():
                 param.grad = None
 
             if amp and (scaler is not None):
-                with torch.cuda.amp.autocast():
+                with torch.amp.autocast("cuda"):
                     outputs = detector(inputs, targets)
                     loss = w_cls * outputs[detector.cls_key] + outputs[detector.box_reg_key]
                 scaler.scale(loss).backward()

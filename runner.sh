@@ -130,7 +130,6 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*nuclick_training_notebook.ipynb
 skip_run_papermill=("${skip_run_papermill[@]}" .*nuclei_classification_infer.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
 skip_run_papermill=("${skip_run_papermill[@]}" .*nuclick_infer.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
 skip_run_papermill=("${skip_run_papermill[@]}" .*unet_segmentation_3d_ignite_clearml.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1555
-skip_run_papermill=("${skip_run_papermill[@]}" .*3d_image_transforms.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1698
 skip_run_papermill=("${skip_run_papermill[@]}" .*vista_2d_tutorial_monai.ipynb*)
 
 # output formatting

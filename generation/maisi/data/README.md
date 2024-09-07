@@ -62,7 +62,7 @@ The table below provides a summary of the number of volumes for each dataset.
 
 #### 3.1 Example preprocessed dataset
 
-We provide the preprocessed subset of [C4KC-KiTS](https://www.cancerimagingarchive.net/collection/c4kc-kits/) dataset used in the finetuning config `environment_maisi_controlnet_train.json`. The dataset and corresponding JSON data list can be downloaded from [this link](https://drive.google.com/drive/folders/1iMStdYxcl26dEXgJEXOjkWvx-I2fYZ2u?usp=sharing) and should be saved in `maisi/dataset/` folder.
+We provide the preprocessed subset of [C4KC-KiTS](https://www.cancerimagingarchive.net/collection/c4kc-kits/) dataset used in the finetuning config `environment_maisi_controlnet_train.json`. The [dataset](https://developer.download.nvidia.com/assets/Clara/monai/tutorials/model_zoo/model_maisi_C4KC-KiTS_subset.zip) and [corresponding JSON data](https://developer.download.nvidia.com/assets/Clara/monai/tutorials/model_zoo/model_maisi_C4KC-KiTS_subset.json) list can be downloaded and should be saved in `maisi/dataset/` folder.
 
 The structure of example folder in the preprocessed dataset is:
 

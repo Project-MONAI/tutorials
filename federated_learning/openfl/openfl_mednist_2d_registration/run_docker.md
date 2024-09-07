@@ -118,7 +118,7 @@ $ fx envoy start --shard-name env_two --disable-tls --envoy-config-path envoy_co
 ```
 [13:48:42] INFO     🧿 Starting the Envoy.                                                                                                            envoy.py:53
 Downloading...
-From: https://drive.google.com/uc?id=1QsnnkvZyJPcbRoV_ArW8SnE1OTuoVbKE
+From: https://developer.download.nvidia.com/assets/Clara/monai/tutorials/MedNIST.tar.gz
 To: /tmp/tmpd60wcnn8/MedNIST.tar.gz
 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 61.8M/61.8M [00:04<00:00, 13.8MB/s]
 2022-07-22 13:48:48,735 - INFO - Downloaded: MedNIST.tar.gz

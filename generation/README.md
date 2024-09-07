@@ -60,3 +60,6 @@ Example shows how to train a DDPM on medical data using Pytorch Ignite. This sho
 
 ## [Using a 2D DDPM to inpaint images](./2d_ddpm/2d_ddpm_inpainting.ipynb):
 Example shows how to use a DDPM to inpaint of 2D images from the MedNIST dataset using the RePaint method.
+
+## [Guiding the 2D diffusion synthesis using ControlNet](./controlnet/2d_controlnet.ipynb)
+Example shows how to use ControlNet to condition a diffusion model trained on 2D brain MRI images on binary brain masks.

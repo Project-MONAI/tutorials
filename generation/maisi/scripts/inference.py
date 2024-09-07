@@ -92,7 +92,7 @@ def main():
         },
         {
             "path": "models/mask_generation_diffusion_unet.pt",
-            "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/model_zoo/model_maisi_mask_generation_diffusion_unet.pt",
+            "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/model_zoo/model_maisi_mask_generation_diffusion_unet_v2.pt",
         },
         {
             "path": "configs/candidate_masks_flexible_size_and_spacing_3000.json",

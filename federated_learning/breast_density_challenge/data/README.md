@@ -1,6 +1,6 @@
 ## Example breast density data
 
-Download example data from https://drive.google.com/file/d/1Fd9GLUIzbZrl4FrzI3Huzul__C8wwzyx/view?usp=sharing.
+Download example data from https://developer.download.nvidia.com/assets/Clara/monai/tutorials/fl/preprocessed.zip.
 Extract here.
 
 ## Data source

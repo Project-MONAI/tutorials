@@ -49,7 +49,7 @@ python ./panda_mil_train_evaluate_pytorch_gpu.py -h
 
 Train in multi-gpu mode with AMP using all available gpus,
 assuming the training images are in the `/PandaChallenge2020/train_images` folder,
-it will use the pre-defined 80/20 data split in [datalist_panda_0.json](https://drive.google.com/drive/u/0/folders/1CAHXDZqiIn5QUfg5A7XsK1BncRu6Ftbh)
+it will use the pre-defined 80/20 data split in [datalist_panda_0.json](https://developer.download.nvidia.com/assets/Clara/monai/tutorials/datalist_panda_0.json)
 
 ```bash
 python -u panda_mil_train_evaluate_pytorch_gpu.py \

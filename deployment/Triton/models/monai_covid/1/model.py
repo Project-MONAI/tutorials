@@ -64,7 +64,7 @@ import triton_python_backend_utils as pb_utils
 
 
 logger = logging.getLogger(__name__)
-gdrive_url = "https://drive.google.com/uc?id=1U9Oaw47SWMJeDkg1FSTY1W__tQOY1nAZ"
+gdrive_url = "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/covid19_model.tar.gz"
 model_filename = "covid19_model.tar.gz"
 md5_check = "571046a25659515bf7abee4266f14435"
 

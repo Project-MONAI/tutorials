@@ -74,7 +74,7 @@ MEDNIST_CLASSES = ["AbdomenCT", "BreastMRI", "CXR", "ChestCT", "Hand", "HeadCT"]
 
 
 logger = logging.getLogger(__name__)
-gdrive_url = "https://drive.google.com/uc?id=1c6noLV9oR0_mQwrsiQ9TqaaeWFKyw46l"
+gdrive_url = "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/MedNist_model.tar.gz"
 model_filename = "MedNIST_model.tar.gz"
 md5_check = "a4fb9d6147599e104b5d8dc1809ed034"
 

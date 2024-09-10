@@ -76,7 +76,7 @@ def get_network(network, labels, spatial_size):
             hidden_size=1536,
             mlp_dim=3072,
             num_heads=48,
-            pos_embed="conv",
+            proj_type="conv",
             norm_name="instance",
             res_block=True,
         )

@@ -72,9 +72,9 @@ To generate images with substantial dimensions, such as 512 &times; 512 &times; 
 
 |`output_size`| Recommended `"spacing"`|
 |:-----:|:-----:|
-[256, 256, 256]  | [1.5, 1.5, 1.5] | 
-[512, 512, 128]  | [0.8, 0.8, 2.5] | 
-[512, 512, 512]  | [1.0, 1.0, 1.0] | 
+[256, 256, 256]  | [1.5, 1.5, 1.5] |
+[512, 512, 128]  | [0.8, 0.8, 2.5] |
+[512, 512, 512]  | [1.0, 1.0, 1.0] |
 
 #### Execute Inference:
 To run the inference script, please run:

@@ -150,7 +150,7 @@ def main():
         top_region_index_tensor = batch["top_region_index"].to(device)
         bottom_region_index_tensor = batch["bottom_region_index"].to(device)
         spacing_tensor = batch["spacing"].to(device)
-        out_spacing = tuple((batch["spacing"].squeeze().numpy()/100).tolist())
+        out_spacing = tuple((batch["spacing"].squeeze().numpy() / 100).tolist())
         # get target dimension
         dim = batch["dim"]
         output_size = (dim[0].item(), dim[1].item(), dim[2].item())

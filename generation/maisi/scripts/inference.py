@@ -76,35 +76,35 @@ def main():
     files = [
         {
             "path": "models/autoencoder_epoch273.pt",
-            "url": "https://drive.google.com/file/d/1Ojw25lFO8QbHkxazdK4CgZTyp3GFNZGz/view?usp=sharing",
+            "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/model_zoo/model_maisi_autoencoder_epoch273_alternative.pt",
         },
         {
             "path": "models/input_unet3d_data-all_steps1000size512ddpm_random_current_inputx_v1.pt",
-            "url": "https://drive.google.com/file/d/1lklNv4MTdI_9bwFRMd98QQ7JLerR5gC_/view?usp=drive_link",
+            "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/model_zoo/model_maisi_input_unet3d_data-all_steps1000size512ddpm_random_current_inputx_v1_alternative.pt",
         },
         {
             "path": "models/controlnet-20datasets-e20wl100fold0bc_noi_dia_fsize_current.pt",
-            "url": "https://drive.google.com/file/d/1mLYeqeZ819_WpZPlAInhcWuCIHgn3QNT/view?usp=drive_link",
+            "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/model_zoo/model_maisi_controlnet-20datasets-e20wl100fold0bc_noi_dia_fsize_current_alternative.pt",
         },
         {
             "path": "models/mask_generation_autoencoder.pt",
-            "url": "https://drive.google.com/file/d/19JnX-C6QAg4RfghTwpPnj4KEWhtawpCy/view?usp=drive_link",
+            "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/mask_generation_autoencoder.pt",
         },
         {
             "path": "models/mask_generation_diffusion_unet.pt",
-            "url": "https://drive.google.com/file/d/1yOQvlhXFGY1ZYavADM3N34vgg5AEitda/view?usp=drive_link",
+            "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/model_zoo/model_maisi_mask_generation_diffusion_unet_v2.pt",
         },
         {
             "path": "configs/candidate_masks_flexible_size_and_spacing_3000.json",
-            "url": "https://drive.google.com/file/d/1yMkH-lrAsn2YUGoTuVKNMpicziUmU-1J/view?usp=sharing",
+            "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/candidate_masks_flexible_size_and_spacing_3000.json",
         },
         {
             "path": "configs/all_anatomy_size_condtions.json",
-            "url": "https://drive.google.com/file/d/1AJyt1DSoUd2x2AOQOgM7IxeSyo4MXNX0/view?usp=sharing",
+            "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/all_anatomy_size_condtions.json",
         },
         {
             "path": "datasets/all_masks_flexible_size_and_spacing_3000.zip",
-            "url": "https://drive.google.com/file/d/16MKsDKkHvDyF2lEir4dzlxwex_GHStUf/view?usp=sharing",
+            "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/model_zoo/model_maisi_all_masks_flexible_size_and_spacing_3000.zip",
         },
     ]
 

@@ -46,7 +46,7 @@ Then run the following command and go directly to Sec. 3.2.
 python3 luna16_prepare_env_files.py
 ```
 
-Alternatively, you can download the original data and resample them by yourself with the following steps. Users can either download 1) mhd/raw data from [LUNA16](https://luna16.grand-challenge.org/Home/) or its [copy](https://drive.google.com/drive/folders/1-enN4eNEnKmjltevKg3W2V-Aj0nriQWE?usp=share_link), or 2) DICOM data from [LIDC-IDRI](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=1966254) with [NBIA Data Retriever](https://wiki.cancerimagingarchive.net/display/NBIA/Downloading+TCIA+Images).
+Alternatively, you can download the original data and resample them by yourself with the following steps. Users can either download 1) mhd/raw data from [LUNA16](https://luna16.grand-challenge.org/Home/), or 2) DICOM data from [LIDC-IDRI](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=1966254) with [NBIA Data Retriever](https://wiki.cancerimagingarchive.net/display/NBIA/Downloading+TCIA+Images).
 
 The raw CT images in LUNA16 have various voxel sizes. The first step is to resample them to the same voxel size, which is defined in the value of "spacing" in [./config/config_train_luna16_16g.json](./config/config_train_luna16_16g.json).
 

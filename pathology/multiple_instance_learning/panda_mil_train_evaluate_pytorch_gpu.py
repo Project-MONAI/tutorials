@@ -530,7 +530,7 @@ if __name__ == "__main__":
 
     if args.dataset_json is None:
         # download default json datalist
-        resource = "https://drive.google.com/uc?id=1L6PtKBlHHyUgTE4rVhRuOLTQKgD4tBRK"
+        resource = "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/datalist_panda_0.json"
         dst = "./datalist_panda_0.json"
         if not os.path.exists(dst):
             gdown.download(resource, dst, quiet=False)

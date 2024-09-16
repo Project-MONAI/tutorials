@@ -148,7 +148,7 @@ def generate_detection_train_transform(
                 spatial_axes=(0, 1),
             ),
             # apply the same affine matrix which already applied on the images to the points
-            ApplyTransformToPointsd(keys=[point_key], refer_key=image_key, affine_lps_to_ras=affine_lps_to_ras),
+            ApplyTransformToPointsd(keys=[point_key], refer_keys=image_key, affine_lps_to_ras=affine_lps_to_ras),
             # convert points back to boxes
             ConvertPointsToBoxesd(keys=[point_key]),
             ClipBoxToImaged(

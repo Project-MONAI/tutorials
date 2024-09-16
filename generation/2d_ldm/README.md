@@ -26,12 +26,9 @@ python download_brats_data.py -e ./config/environment.json
 
 Disclaimer: We are not the host of the data. Please make sure to read the requirements and usage policies of the data and give credit to the authors of the dataset!
 
-### 2. Installation
-Please refer to the [Installation of MONAI Generative Model](../README.md)
+### 2. Run the example
 
-### 3. Run the example
-
-#### [3.1 2D Autoencoder Training](./train_autoencoder.py)
+#### [2.1 2D Autoencoder Training](./train_autoencoder.py)
 
 The network configuration files are located in [./config/config_train_32g.json](./config/config_train_32g.json) for 32G GPU and [./config/config_train_16g.json](./config/config_train_16g.json) for 16G GPU. You can modify the hyperparameters in these files to suit your requirements.
 
@@ -74,7 +71,7 @@ An example reconstruction result is shown below:
   <img src="./figs/recon.png" alt="Autoencoder reconstruction result")
 </p>
 
-#### [3.2 2D Latent Diffusion Training](./train_diffusion.py)
+#### [2.2 2D Latent Diffusion Training](./train_diffusion.py)
 The training script uses the batch size and patch size defined in the configuration files. If you have a different GPU memory size, you should adjust the `"batch_size"` and `"patch_size"` parameters in the `"diffusion_train"` to match your GPU. Note that the `"patch_size"` needs to be divisible by 16 and no larger than 256.
 
 To train with single 32G GPU, please run:
@@ -97,7 +94,7 @@ torchrun \
   <img src="./figs/val_diffusion.png" alt="latent diffusion validation curve" width="45%" >
 </p>
 
-#### [3.3 Inference](./inference.py)
+#### [2.3 Inference](./inference.py)
 To generate one image during inference, please run the following command:
 ```bash
 python inference.py -c ./config/config_train_32g.json -e ./config/environment.json --num 1
@@ -115,7 +112,7 @@ An example output is shown below.
   <img src="./figs/syn_3.jpeg" width="20%" >
 </p>
 
-### 4. Questions and bugs
+### 3. Questions and bugs
 
 - For questions relating to the use of MONAI, please use our [Discussions tab](https://github.com/Project-MONAI/MONAI/discussions) on the main repository of MONAI.
 - For bugs relating to MONAI functionality, please create an issue on the [main repository](https://github.com/Project-MONAI/MONAI/issues).

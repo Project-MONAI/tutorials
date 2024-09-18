@@ -66,4 +66,3 @@ Example shows how to use ControlNet to condition a diffusion model trained on 2D
 
 ## Performing anomaly detection with diffusion models: [implicit guidance](./anomaly_detection/2d_classifierfree_guidance_anomalydetection_tutorial.ipynb), [using transformers](./anomaly_detection/anomaly_detection_with_transformers.ipynb) and [classifier free guidance](./anomaly_detection/anomalydetection_tutorial_classifier_guidance.ipynb)
 Examples show how to perform anomaly detection in 2D, using implicit guidance [2D-classifier free guiance](./anomaly_detection/2d_classifierfree_guidance_anomalydetection_tutorial.ipynb), transformers [using transformers](./anomaly_detection/anomaly_detection_with_transformers.ipynb) and [classifier free guidance](./anomalydetection_tutorial_classifier_guidance).
-

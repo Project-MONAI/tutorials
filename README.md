@@ -331,12 +331,6 @@ Example shows the use cases of applying SPADE normalization to a latent diffusio
 ##### [Diffusion Models for Implicit Image Segmentation Ensembles](./image_to_image_translation)
 Example shows the use cases of how to use MONAI for 2D segmentation of images using DDPMs. The same structure can also be used for conditional image generation, or image-to-image translation.
 
-##### [Spatial variational autoencoder for 2D modelling and synthesis](./2d_autoencoderkl)
-Example shows the use cases of applying a spatial VAE to a 2D synthesis example. To obtain realistic results, the model is trained on the original VAE losses, as well as perceptual and adversarial ones.
-
-##### [Spatial variational autoencoder for 3D modelling and synthesis](./3d_autoencoderkl)
-Example shows the use cases of applying a spatial VAE to a 3D synthesis example. To obtain realistic results, the model is trained on the original VAE losses, as well as perceptual and adversarial ones.
-
 ##### [Evaluate Realism and Diversity of the generated images](./realism_diversity_metrics)
 Example shows the use cases of using MONAI to evaluate the performance of a generative model by computing metrics such as Frechet Inception Distance (FID) and Maximum Mean Discrepancy (MMD) for assessing realism, as well as MS-SSIM and SSIM for evaluating image diversity.
 

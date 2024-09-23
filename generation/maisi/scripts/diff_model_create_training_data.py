@@ -202,9 +202,10 @@ def diff_model_create_training_data(env_config_path: str, model_config_path: str
         new_transforms = create_transforms(new_dim)
 
         process_file(filepath, args, autoencoder, device, plain_transforms, new_transforms, logger)
-    
+
     if dist.is_initialized():
         dist.destroy_process_group()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Diffusion Model Training Data Creation")

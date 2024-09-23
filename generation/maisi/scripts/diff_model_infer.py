@@ -149,7 +149,7 @@ def run_inference(
     autoencoder.eval()
     unet.eval()
 
-    with torch.cuda.amp.autocast(enabled=True):
+    with torch.amp.autocast("cuda", enabled=True):
         for t in tqdm(noise_scheduler.timesteps, ncols=110):
             model_output = unet(
                 x=image,

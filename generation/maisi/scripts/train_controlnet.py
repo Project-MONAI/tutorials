@@ -23,7 +23,7 @@ import torch.distributed as dist
 import torch.nn.functional as F
 from monai.networks.utils import copy_model_state
 from monai.utils import RankFilter
-from torch.cuda.amp import GradScaler, autocast
+from torch.amp import GradScaler, autocast
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
 
@@ -71,9 +71,12 @@ def main():
     logger.info(f"Number of GPUs: {torch.cuda.device_count()}")
     logger.info(f"World_size: {world_size}")
 
-    env_dict = json.load(open(args.environment_file, "r"))
-    config_dict = json.load(open(args.config_file, "r"))
-    training_config_dict = json.load(open(args.training_config, "r"))
+    with open(args.environment_file, "r") as env_file:
+        env_dict = json.load(env_file)
+    with open(args.config_file, "r") as config_file:
+        config_dict = json.load(config_file)
+    with open(args.training_config, "r") as training_config_file:
+        training_config_dict = json.load(training_config_file)
 
     for k, v in env_dict.items():
         setattr(args, k, v)
@@ -151,7 +154,7 @@ def main():
 
     # Step 4: training
     n_epochs = args.controlnet_train["n_epochs"]
-    scaler = GradScaler()
+    scaler = GradScaler("cuda")
     total_step = 0
     best_loss = 1e4
 
@@ -174,7 +177,7 @@ def main():
 
             optimizer.zero_grad(set_to_none=True)
 
-            with autocast(enabled=True):
+            with autocast("cuda", enabled=True):
                 # generate random noise
                 noise_shape = list(inputs.shape)
                 noise = torch.randn(noise_shape, dtype=inputs.dtype).to(device)

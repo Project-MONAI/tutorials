@@ -146,7 +146,7 @@ def process_file(
         out_path.parent.mkdir(parents=True, exist_ok=True)
         logger.info(f"out_filename: {out_filename}")
 
-        with torch.cuda.amp.autocast():
+        with torch.amp.autocast("cuda"):
             pt_nda = torch.from_numpy(nda_image).float().to(device).unsqueeze(0).unsqueeze(0)
             z = autoencoder.encode_stage_2_inputs(pt_nda)
             logger.info(f"z: {z.size()}, {z.dtype}")

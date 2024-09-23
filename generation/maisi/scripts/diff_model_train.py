@@ -20,7 +20,7 @@ from pathlib import Path
 
 import torch
 import torch.distributed as dist
-from torch.cuda.amp import GradScaler, autocast
+from torch.amp import GradScaler, autocast
 from torch.nn.parallel import DistributedDataParallel
 
 import monai
@@ -231,7 +231,7 @@ def train_one_epoch(
 
         optimizer.zero_grad(set_to_none=True)
 
-        with autocast(enabled=True):
+        with autocast("cuda", enabled=True):
             noise = torch.randn(
                 (num_images_per_batch, 4, images.size(-3), images.size(-2), images.size(-1)), device=device
             )
@@ -365,7 +365,7 @@ def diff_model_train(env_config_path: str, model_config_path: str, model_def_pat
     ]
     lr_scheduler = create_lr_scheduler(optimizer, total_steps)
     loss_pt = torch.nn.L1Loss()
-    scaler = GradScaler()
+    scaler = GradScaler("cuda")
 
     torch.set_float32_matmul_precision("highest")
     logger.info("torch.set_float32_matmul_precision -> highest.")

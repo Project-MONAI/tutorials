@@ -402,6 +402,9 @@ def diff_model_train(env_config_path: str, model_config_path: str, model_def_pat
                 args.model_dir,
                 args,
             )
+    
+    if dist.is_initialized():
+        dist.destroy_process_group()
 
 
 if __name__ == "__main__":

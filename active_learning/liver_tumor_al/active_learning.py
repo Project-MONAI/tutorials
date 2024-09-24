@@ -187,7 +187,7 @@ def main():
                 b_max=1.0,
                 clip=True,
             ),
-            CropForegroundd(keys=["image", "label"], source_key="image", allow_smaller=True),
+            CropForegroundd(keys=["image", "label"], source_key="image"),
             SpatialPadd(keys=["image", "label"], spatial_size=(96, 96, 96)),
             RandCropByPosNegLabeld(
                 keys=["image", "label"],
@@ -225,7 +225,7 @@ def main():
                 b_max=1.0,
                 clip=True,
             ),
-            CropForegroundd(keys=["image", "label"], source_key="image", allow_smaller=True),
+            CropForegroundd(keys=["image", "label"], source_key="image"),
             EnsureTyped(keys=["image", "label"]),
         ]
     )
@@ -240,7 +240,7 @@ def main():
                 mode=("bilinear"),
             ),
             ScaleIntensityRanged(keys="image", a_min=-21, a_max=189, b_min=0.0, b_max=1.0, clip=True),
-            CropForegroundd(keys=("image"), source_key="image", allow_smaller=True),
+            CropForegroundd(keys=("image"), source_key="image"),
             EnsureTyped(keys=["image"]),
         ]
     )
@@ -302,10 +302,10 @@ def main():
             test_d[idx]["image"] = os.path.join(data_root, test_d[idx]["image"])
             test_d[idx]["label"] = os.path.join(data_root, test_d[idx]["label"])
 
-        train_ds = CacheDataset(data=train_d, transform=train_transforms, cache_rate=0.0)
+        train_ds = CacheDataset(data=train_d, transform=train_transforms, cache_rate=1.0)
         train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True)
 
-        val_ds = CacheDataset(data=val_d, transform=val_transforms, cache_rate=0.0, num_workers=2)
+        val_ds = CacheDataset(data=val_d, transform=val_transforms, cache_rate=1.0, num_workers=2)
         val_loader = DataLoader(val_ds, batch_size=args.val_batch_size)
 
         test_ds = Dataset(data=test_d, transform=val_transforms)
@@ -315,7 +315,7 @@ def main():
         unl_loader = DataLoader(unl_ds, batch_size=1)
 
         # Calculation of Epochs based on steps
-        max_epochs = int(args.steps / (np.ceil(len(train_d) / args.batch_size)))
+        max_epochs = np.int(args.steps / (np.ceil(len(train_d) / args.batch_size)))
         print("Epochs Estimated are {} for Active Iter {} with {} Vols".format(max_epochs, active_iter, len(train_d)))
 
         # Model Training begins for one active iteration
@@ -393,7 +393,7 @@ def main():
         prev_best_ckpt = os.path.join(active_model_dir, "model.pt")
 
         device = torch.device("cuda:0")
-        ckpt = torch.load(prev_best_ckpt, weights_only=True)
+        ckpt = torch.load(prev_best_ckpt)
         network.load_state_dict(ckpt)
         network.to(device=device)
 
@@ -487,16 +487,16 @@ def main():
 
                     variance_dims = np.shape(variance)
                     score_list.append(np.nanmean(variance))
-                    name_list.append(unl_data["image"].meta["filename_or_obj"][0])
+                    name_list.append(unl_data["image_meta_dict"]["filename_or_obj"][0])
                     print(
                         "Variance for image: {} is: {}".format(
-                            unl_data["image"].meta["filename_or_obj"][0], np.nanmean(variance)
+                            unl_data["image_meta_dict"]["filename_or_obj"][0], np.nanmean(variance)
                         )
                     )
 
                     # Plot with matplotlib and save all slices
                     plt.figure(1)
-                    plt.imshow(np.squeeze(variance[:, :, int(variance_dims[2] / 2)]))
+                    plt.imshow(np.squeeze(variance[:, :, np.int(variance_dims[2] / 2)]))
                     plt.colorbar()
                     plt.title("Dropout Uncertainty")
                     fig_path = os.path.join(fig_base_dir, "active_{}_file_{}.png".format(active_iter, counter))

@@ -64,17 +64,22 @@ def prepare_data(
     Returns:
         ThreadDataLoader: Data loader for training.
     """
+    
+    def _load_data_from_file(file_path, key):
+        with open(file_path) as f:
+            return torch.FloatTensor(json.load(f)[key])
+
     train_transforms = Compose(
         [
             monai.transforms.LoadImaged(keys=["image"]),
             monai.transforms.EnsureChannelFirstd(keys=["image"]),
             monai.transforms.Lambdad(
-                keys="top_region_index", func=lambda x: torch.FloatTensor(json.load(open(x))["top_region_index"])
+                keys="top_region_index", func=lambda x: _load_data_from_file(x, "top_region_index")
             ),
             monai.transforms.Lambdad(
-                keys="bottom_region_index", func=lambda x: torch.FloatTensor(json.load(open(x))["bottom_region_index"])
+                keys="bottom_region_index", func=lambda x: _load_data_from_file(x, "bottom_region_index")
             ),
-            monai.transforms.Lambdad(keys="spacing", func=lambda x: torch.FloatTensor(json.load(open(x))["spacing"])),
+            monai.transforms.Lambdad(keys="spacing", func=lambda x: _load_data_from_file(x, "spacing")),
             monai.transforms.Lambdad(keys="top_region_index", func=lambda x: x * 1e2),
             monai.transforms.Lambdad(keys="bottom_region_index", func=lambda x: x * 1e2),
             monai.transforms.Lambdad(keys="spacing", func=lambda x: x * 1e2),

@@ -272,7 +272,7 @@ def diff_model_infer(env_config_path: str, model_config_path: str, model_def_pat
     )
 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    output_path = "{0}/{1}_seed{2}_size{3:d}x{4:d}x{5:d}_spacing{6:.2f}x{7:.2f}x{8:.2f}_{9}.nii.gz".format(
+    output_path = "{0}/{1}_seed{2}_size{3:d}x{4:d}x{5:d}_spacing{6:.2f}x{7:.2f}x{8:.2f}_{9}_rank{10}.nii.gz".format(
         args.output_dir,
         output_prefix,
         random_seed,
@@ -283,6 +283,7 @@ def diff_model_infer(env_config_path: str, model_config_path: str, model_def_pat
         out_spacing[1],
         out_spacing[2],
         timestamp,
+        local_rank
     )
     save_image(data, output_size, out_spacing, output_path, logger)
 

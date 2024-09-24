@@ -63,7 +63,7 @@ def load_models(args: argparse.Namespace, device: torch.device, logger: logging.
         checkpoint_autoencoder = torch.load(args.trained_autoencoder_path, weights_only=True)
         autoencoder.load_state_dict(checkpoint_autoencoder)
     except Exception:
-        logger.info("The trained_autoencoder_path does not exist!")
+        logger.error("The trained_autoencoder_path does not exist!")
 
     unet = define_instance(args, "diffusion_unet_def").to(device)
     checkpoint = torch.load(f"{args.model_dir}/{args.model_filename}", map_location=device, weights_only=False)

@@ -285,7 +285,7 @@ def diff_model_infer(env_config_path: str, model_config_path: str, model_def_pat
         timestamp,
     )
     save_image(data, output_size, out_spacing, output_path, logger)
-    
+
     if dist.is_initialized():
         dist.destroy_process_group()
 

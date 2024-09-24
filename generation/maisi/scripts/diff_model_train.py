@@ -64,7 +64,7 @@ def prepare_data(
     Returns:
         ThreadDataLoader: Data loader for training.
     """
-    
+
     def _load_data_from_file(file_path, key):
         with open(file_path) as f:
             return torch.FloatTensor(json.load(f)[key])

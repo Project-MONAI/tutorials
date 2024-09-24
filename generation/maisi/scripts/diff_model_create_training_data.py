@@ -179,7 +179,7 @@ def diff_model_create_training_data(env_config_path: str, model_config_path: str
         checkpoint_autoencoder = torch.load(args.trained_autoencoder_path, weights_only=True)
         autoencoder.load_state_dict(checkpoint_autoencoder)
     except Exception:
-        logger.error("The trained_autoencoder_path does not exist!")
+        logger.info("The trained_autoencoder_path does not exist!")
 
     Path(args.embedding_base_dir).mkdir(parents=True, exist_ok=True)
 

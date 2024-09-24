@@ -32,7 +32,8 @@ def setup_logging(logger_name: str = "") -> logging.Logger:
         logging.Logger: Configured logger.
     """
     logger = logging.getLogger(logger_name)
-    logger.addFilter(RankFilter())
+    if dist.is_initialized():
+        logger.addFilter(RankFilter())
     logging.basicConfig(
         level=logging.INFO,
         format="[%(asctime)s.%(msecs)03d][%(levelname)5s](%(name)s) - %(message)s",

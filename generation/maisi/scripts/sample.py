@@ -117,7 +117,7 @@ def ldm_conditional_sample_one_mask(
     """
     recon_model = ReconModel(autoencoder=autoencoder, scale_factor=scale_factor).to(device)
 
-    with torch.no_grad(), torch.cuda.amp.autocast():
+    with torch.no_grad(), torch.amp.autocast("cuda"):
         # Generate random noise
         latents = initialize_noise_latents(latent_shape, device)
         anatomy_size = torch.FloatTensor(anatomy_size).unsqueeze(0).unsqueeze(0).half().to(device)
@@ -226,7 +226,7 @@ def ldm_conditional_sample_one_image(
 
     recon_model = ReconModel(autoencoder=autoencoder, scale_factor=scale_factor).to(device)
 
-    with torch.no_grad(), torch.cuda.amp.autocast():
+    with torch.no_grad(), torch.amp.autocast("cuda"):
         logging.info("---- Start generating latent features... ----")
         start_time = time.time()
         # generate segmentation mask

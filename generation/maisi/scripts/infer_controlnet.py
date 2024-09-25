@@ -69,9 +69,12 @@ def main():
     logger.info(f"Number of GPUs: {torch.cuda.device_count()}")
     logger.info(f"World_size: {world_size}")
 
-    env_dict = json.load(open(args.environment_file, "r"))
-    config_dict = json.load(open(args.config_file, "r"))
-    training_config_dict = json.load(open(args.training_config, "r"))
+    with open(args.environment_file, "r") as env_file:
+        env_dict = json.load(env_file)
+    with open(args.config_file, "r") as config_file:
+        config_dict = json.load(config_file)
+    with open(args.training_config, "r") as training_config_file:
+        training_config_dict = json.load(training_config_file)
 
     for k, v in env_dict.items():
         setattr(args, k, v)

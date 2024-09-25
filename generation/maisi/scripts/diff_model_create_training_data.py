@@ -20,6 +20,7 @@ from pathlib import Path
 import nibabel as nib
 import numpy as np
 import torch
+import torch.distributed as dist
 
 import monai
 from monai.transforms import Compose
@@ -146,7 +147,7 @@ def process_file(
         out_path.parent.mkdir(parents=True, exist_ok=True)
         logger.info(f"out_filename: {out_filename}")
 
-        with torch.cuda.amp.autocast():
+        with torch.amp.autocast("cuda"):
             pt_nda = torch.from_numpy(nda_image).float().to(device).unsqueeze(0).unsqueeze(0)
             z = autoencoder.encode_stage_2_inputs(pt_nda)
             logger.info(f"z: {z.size()}, {z.dtype}")
@@ -175,7 +176,7 @@ def diff_model_create_training_data(env_config_path: str, model_config_path: str
 
     autoencoder = define_instance(args, "autoencoder_def").to(device)
     try:
-        checkpoint_autoencoder = torch.load(args.trained_autoencoder_path)
+        checkpoint_autoencoder = torch.load(args.trained_autoencoder_path, weights_only=True)
         autoencoder.load_state_dict(checkpoint_autoencoder)
     except Exception:
         logger.error("The trained_autoencoder_path does not exist!")
@@ -201,6 +202,9 @@ def diff_model_create_training_data(env_config_path: str, model_config_path: str
         new_transforms = create_transforms(new_dim)
 
         process_file(filepath, args, autoencoder, device, plain_transforms, new_transforms, logger)
+
+    if dist.is_initialized():
+        dist.destroy_process_group()
 
 
 if __name__ == "__main__":

@@ -281,7 +281,7 @@ def main():
         unl_loader = DataLoader(unl_ds, batch_size=1)
 
         # Calculation of Epochs based on steps
-        max_epochs = np.int(args.steps / (np.ceil(len(train_d) / args.batch_size)))
+        max_epochs = int(args.steps / (np.ceil(len(train_d) / args.batch_size)))
         print("Epochs Estimated are {} for Active Iter {} with {} Vols".format(max_epochs, active_iter, len(train_d)))
 
         # Keep track of Best_metric, it is being used as IoU and not Dice
@@ -379,7 +379,7 @@ def main():
         prev_best_ckpt = os.path.join(active_model_dir, "model.pt")
 
         device = torch.device("cuda:0")
-        ckpt = torch.load(prev_best_ckpt)
+        ckpt = torch.load(prev_best_ckpt, weights_only=True)
         network.load_state_dict(ckpt)
         network.to(device=device)
 

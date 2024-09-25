@@ -20,7 +20,7 @@ from pathlib import Path
 
 import torch
 import torch.distributed as dist
-from torch.cuda.amp import GradScaler, autocast
+from torch.amp import GradScaler, autocast
 from torch.nn.parallel import DistributedDataParallel
 
 import monai
@@ -64,17 +64,22 @@ def prepare_data(
     Returns:
         ThreadDataLoader: Data loader for training.
     """
+
+    def _load_data_from_file(file_path, key):
+        with open(file_path) as f:
+            return torch.FloatTensor(json.load(f)[key])
+
     train_transforms = Compose(
         [
             monai.transforms.LoadImaged(keys=["image"]),
             monai.transforms.EnsureChannelFirstd(keys=["image"]),
             monai.transforms.Lambdad(
-                keys="top_region_index", func=lambda x: torch.FloatTensor(json.load(open(x))["top_region_index"])
+                keys="top_region_index", func=lambda x: _load_data_from_file(x, "top_region_index")
             ),
             monai.transforms.Lambdad(
-                keys="bottom_region_index", func=lambda x: torch.FloatTensor(json.load(open(x))["bottom_region_index"])
+                keys="bottom_region_index", func=lambda x: _load_data_from_file(x, "bottom_region_index")
             ),
-            monai.transforms.Lambdad(keys="spacing", func=lambda x: torch.FloatTensor(json.load(open(x))["spacing"])),
+            monai.transforms.Lambdad(keys="spacing", func=lambda x: _load_data_from_file(x, "spacing")),
             monai.transforms.Lambdad(keys="top_region_index", func=lambda x: x * 1e2),
             monai.transforms.Lambdad(keys="bottom_region_index", func=lambda x: x * 1e2),
             monai.transforms.Lambdad(keys="spacing", func=lambda x: x * 1e2),
@@ -231,7 +236,7 @@ def train_one_epoch(
 
         optimizer.zero_grad(set_to_none=True)
 
-        with autocast(enabled=True):
+        with autocast("cuda", enabled=True):
             noise = torch.randn(
                 (num_images_per_batch, 4, images.size(-3), images.size(-2), images.size(-1)), device=device
             )
@@ -365,7 +370,7 @@ def diff_model_train(env_config_path: str, model_config_path: str, model_def_pat
     ]
     lr_scheduler = create_lr_scheduler(optimizer, total_steps)
     loss_pt = torch.nn.L1Loss()
-    scaler = GradScaler()
+    scaler = GradScaler("cuda")
 
     torch.set_float32_matmul_precision("highest")
     logger.info("torch.set_float32_matmul_precision -> highest.")
@@ -402,6 +407,9 @@ def diff_model_train(env_config_path: str, model_config_path: str, model_def_pat
                 args.model_dir,
                 args,
             )
+
+    if dist.is_initialized():
+        dist.destroy_process_group()
 
 
 if __name__ == "__main__":

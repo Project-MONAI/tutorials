@@ -32,7 +32,8 @@ def setup_logging(logger_name: str = "") -> logging.Logger:
         logging.Logger: Configured logger.
     """
     logger = logging.getLogger(logger_name)
-    logger.addFilter(RankFilter())
+    if dist.is_initialized():
+        logger.addFilter(RankFilter())
     logging.basicConfig(
         level=logging.INFO,
         format="[%(asctime)s.%(msecs)03d][%(levelname)5s](%(name)s) - %(message)s",
@@ -80,9 +81,13 @@ def initialize_distributed() -> tuple:
     Returns:
         tuple: local_rank, world_size, and device.
     """
-    dist.init_process_group(backend="nccl", init_method="env://")
-    local_rank = dist.get_rank()
-    world_size = dist.get_world_size()
+    if torch.cuda.is_available() and torch.cuda.device_count() > 1:
+        dist.init_process_group(backend="nccl", init_method="env://")
+        local_rank = dist.get_rank()
+        world_size = dist.get_world_size()
+    else:
+        local_rank = 0
+        world_size = 1
     device = torch.device("cuda", local_rank)
     torch.cuda.set_device(device)
     return local_rank, world_size, device

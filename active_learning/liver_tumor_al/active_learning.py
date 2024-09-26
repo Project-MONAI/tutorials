@@ -54,7 +54,7 @@ logger = logging.getLogger(__name__)
 parser = argparse.ArgumentParser(description="Active Learning Setting")
 
 # Directory & Json & Seed
-parser.add_argument("--base_dir", default="/home/vishwesh/experiments/al_sanity_test_apr27_2023", type=str)
+parser.add_argument("--base_dir", default="./experiments/al_sanity_test_apr27_2023", type=str)
 parser.add_argument("--data_root", default="/scratch_2/data_2021/68111", type=str)
 parser.add_argument("--json_path", default="/scratch_2/data_2021/68111/dataset_val_test_0_debug.json", type=str)
 parser.add_argument("--seed", default=102, type=int)

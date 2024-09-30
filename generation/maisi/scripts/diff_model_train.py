@@ -430,9 +430,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_def", type=str, default="./configs/config_maisi.json", help="Path to model definition file"
     )
-    parser.add_argument(
-        "--num_gpus", type=int, default=1, help="Number of GPUs to use for training"
-    )
+    parser.add_argument("--num_gpus", type=int, default=1, help="Number of GPUs to use for training")
 
     args = parser.parse_args()
     diff_model_train(args.env_config, args.model_config, args.model_def, args.num_gpus)

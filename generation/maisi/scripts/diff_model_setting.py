@@ -74,7 +74,7 @@ def load_config(env_config_path: str, model_config_path: str, model_def_path: st
     return args
 
 
-def initialize_distributed(num_gpus) -> tuple:
+def initialize_distributed(num_gpus: int) -> tuple:
     """
     Initialize distributed training.
 

@@ -469,10 +469,10 @@ def main():
                     variance = np.sum(np.nanvar(vol_input, axis=0), axis=0)
 
                     score_list.append(np.nanmean(variance))
-                    name_list.append(unl_data["image_meta_dict"]["filename_or_obj"][0])
+                    name_list.append(unl_data["image"].meta["filename_or_obj"][0])
                     print(
                         "Variance for image: {} is: {}".format(
-                            unl_data["image_meta_dict"]["filename_or_obj"][0], np.nanmean(variance)
+                            unl_data["image"].meta["filename_or_obj"][0], np.nanmean(variance)
                         )
                     )
 

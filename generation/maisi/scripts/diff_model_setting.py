@@ -74,14 +74,14 @@ def load_config(env_config_path: str, model_config_path: str, model_def_path: st
     return args
 
 
-def initialize_distributed() -> tuple:
+def initialize_distributed(num_gpus) -> tuple:
     """
     Initialize distributed training.
 
     Returns:
         tuple: local_rank, world_size, and device.
     """
-    if torch.cuda.is_available() and torch.cuda.device_count() > 1:
+    if torch.cuda.is_available() and num_gpus > 1:
         dist.init_process_group(backend="nccl", init_method="env://")
         local_rank = dist.get_rank()
         world_size = dist.get_world_size()

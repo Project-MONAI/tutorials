@@ -20,6 +20,7 @@ from datetime import datetime
 import nibabel as nib
 import numpy as np
 import torch
+import torch.distributed as dist
 from tqdm import tqdm
 
 from monai.inferers import sliding_window_inference
@@ -59,13 +60,13 @@ def load_models(args: argparse.Namespace, device: torch.device, logger: logging.
     """
     autoencoder = define_instance(args, "autoencoder_def").to(device)
     try:
-        checkpoint_autoencoder = torch.load(args.trained_autoencoder_path)
+        checkpoint_autoencoder = torch.load(args.trained_autoencoder_path, weights_only=True)
         autoencoder.load_state_dict(checkpoint_autoencoder)
     except Exception:
         logger.error("The trained_autoencoder_path does not exist!")
 
     unet = define_instance(args, "diffusion_unet_def").to(device)
-    checkpoint = torch.load(f"{args.model_dir}/{args.model_filename}", map_location=device)
+    checkpoint = torch.load(f"{args.model_dir}/{args.model_filename}", map_location=device, weights_only=False)
     unet.load_state_dict(checkpoint["unet_state_dict"], strict=True)
     logger.info(f"checkpoints {args.model_dir}/{args.model_filename} loaded.")
 
@@ -149,7 +150,7 @@ def run_inference(
     autoencoder.eval()
     unet.eval()
 
-    with torch.cuda.amp.autocast(enabled=True):
+    with torch.amp.autocast("cuda", enabled=True):
         for t in tqdm(noise_scheduler.timesteps, ncols=110):
             model_output = unet(
                 x=image,
@@ -210,7 +211,7 @@ def save_image(
 
 
 @torch.inference_mode()
-def diff_model_infer(env_config_path: str, model_config_path: str, model_def_path: str) -> None:
+def diff_model_infer(env_config_path: str, model_config_path: str, model_def_path: str, num_gpus: int) -> None:
     """
     Main function to run the diffusion model inference.
 
@@ -220,7 +221,7 @@ def diff_model_infer(env_config_path: str, model_config_path: str, model_def_pat
         model_def_path (str): Path to the model definition file.
     """
     args = load_config(env_config_path, model_config_path, model_def_path)
-    local_rank, world_size, device = initialize_distributed()
+    local_rank, world_size, device = initialize_distributed(num_gpus)
     logger = setup_logging("inference")
     random_seed = set_random_seed(
         args.diffusion_unet_inference["random_seed"] + local_rank
@@ -271,7 +272,7 @@ def diff_model_infer(env_config_path: str, model_config_path: str, model_def_pat
     )
 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    output_path = "{0}/{1}_seed{2}_size{3:d}x{4:d}x{5:d}_spacing{6:.2f}x{7:.2f}x{8:.2f}_{9}.nii.gz".format(
+    output_path = "{0}/{1}_seed{2}_size{3:d}x{4:d}x{5:d}_spacing{6:.2f}x{7:.2f}x{8:.2f}_{9}_rank{10}.nii.gz".format(
         args.output_dir,
         output_prefix,
         random_seed,
@@ -282,8 +283,12 @@ def diff_model_infer(env_config_path: str, model_config_path: str, model_def_pat
         out_spacing[1],
         out_spacing[2],
         timestamp,
+        local_rank,
     )
     save_image(data, output_size, out_spacing, output_path, logger)
+
+    if dist.is_initialized():
+        dist.destroy_process_group()
 
 
 if __name__ == "__main__":
@@ -306,6 +311,12 @@ if __name__ == "__main__":
         default="./configs/config_maisi.json",
         help="Path to model definition file",
     )
+    parser.add_argument(
+        "--num_gpus",
+        type=int,
+        default=1,
+        help="Number of GPUs to use for distributed inference",
+    )
 
     args = parser.parse_args()
-    diff_model_infer(args.env_config, args.model_config, args.model_def)
+    diff_model_infer(args.env_config, args.model_config, args.model_def, args.num_gpus)

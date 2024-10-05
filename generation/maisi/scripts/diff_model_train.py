@@ -20,7 +20,7 @@ from pathlib import Path
 
 import torch
 import torch.distributed as dist
-from torch.cuda.amp import GradScaler, autocast
+from torch.amp import GradScaler, autocast
 from torch.nn.parallel import DistributedDataParallel
 
 import monai
@@ -64,17 +64,22 @@ def prepare_data(
     Returns:
         ThreadDataLoader: Data loader for training.
     """
+
+    def _load_data_from_file(file_path, key):
+        with open(file_path) as f:
+            return torch.FloatTensor(json.load(f)[key])
+
     train_transforms = Compose(
         [
             monai.transforms.LoadImaged(keys=["image"]),
             monai.transforms.EnsureChannelFirstd(keys=["image"]),
             monai.transforms.Lambdad(
-                keys="top_region_index", func=lambda x: torch.FloatTensor(json.load(open(x))["top_region_index"])
+                keys="top_region_index", func=lambda x: _load_data_from_file(x, "top_region_index")
             ),
             monai.transforms.Lambdad(
-                keys="bottom_region_index", func=lambda x: torch.FloatTensor(json.load(open(x))["bottom_region_index"])
+                keys="bottom_region_index", func=lambda x: _load_data_from_file(x, "bottom_region_index")
             ),
-            monai.transforms.Lambdad(keys="spacing", func=lambda x: torch.FloatTensor(json.load(open(x))["spacing"])),
+            monai.transforms.Lambdad(keys="spacing", func=lambda x: _load_data_from_file(x, "spacing")),
             monai.transforms.Lambdad(keys="top_region_index", func=lambda x: x * 1e2),
             monai.transforms.Lambdad(keys="bottom_region_index", func=lambda x: x * 1e2),
             monai.transforms.Lambdad(keys="spacing", func=lambda x: x * 1e2),
@@ -103,14 +108,14 @@ def load_unet(args: argparse.Namespace, device: torch.device, logger: logging.Lo
     unet = define_instance(args, "diffusion_unet_def").to(device)
     unet = torch.nn.SyncBatchNorm.convert_sync_batchnorm(unet)
 
-    if torch.cuda.device_count() > 1:
+    if dist.is_initialized():
         unet = DistributedDataParallel(unet, device_ids=[device], find_unused_parameters=True)
 
     if args.existing_ckpt_filepath is None:
         logger.info("Training from scratch.")
     else:
         checkpoint_unet = torch.load(f"{args.existing_ckpt_filepath}", map_location=device)
-        if torch.cuda.device_count() > 1:
+        if dist.is_initialized():
             unet.module.load_state_dict(checkpoint_unet["unet_state_dict"], strict=True)
         else:
             unet.load_state_dict(checkpoint_unet["unet_state_dict"], strict=True)
@@ -138,8 +143,9 @@ def calculate_scale_factor(
     scale_factor = 1 / torch.std(z)
     logger.info(f"Scaling factor set to {scale_factor}.")
 
-    dist.barrier()
-    dist.all_reduce(scale_factor, op=torch.distributed.ReduceOp.AVG)
+    if dist.is_initialized():
+        dist.barrier()
+        dist.all_reduce(scale_factor, op=torch.distributed.ReduceOp.AVG)
     logger.info(f"scale_factor -> {scale_factor}.")
     return scale_factor
 
@@ -231,7 +237,7 @@ def train_one_epoch(
 
         optimizer.zero_grad(set_to_none=True)
 
-        with autocast(enabled=True):
+        with autocast("cuda", enabled=True):
             noise = torch.randn(
                 (num_images_per_batch, 4, images.size(-3), images.size(-2), images.size(-1)), device=device
             )
@@ -266,7 +272,7 @@ def train_one_epoch(
                 )
             )
 
-    if torch.cuda.device_count() > 1:
+    if dist.is_initialized():
         dist.all_reduce(loss_torch, op=torch.distributed.ReduceOp.SUM)
 
     return loss_torch
@@ -293,7 +299,7 @@ def save_checkpoint(
         ckpt_folder (str): Checkpoint folder path.
         args (argparse.Namespace): Configuration arguments.
     """
-    unet_state_dict = unet.module.state_dict() if torch.cuda.device_count() > 1 else unet.state_dict()
+    unet_state_dict = unet.module.state_dict() if dist.is_initialized() else unet.state_dict()
     torch.save(
         {
             "epoch": epoch + 1,
@@ -306,7 +312,7 @@ def save_checkpoint(
     )
 
 
-def diff_model_train(env_config_path: str, model_config_path: str, model_def_path: str) -> None:
+def diff_model_train(env_config_path: str, model_config_path: str, model_def_path: str, num_gpus: int) -> None:
     """
     Main function to train a diffusion model.
 
@@ -316,7 +322,7 @@ def diff_model_train(env_config_path: str, model_config_path: str, model_def_pat
         model_def_path (str): Path to the model definition file.
     """
     args = load_config(env_config_path, model_config_path, model_def_path)
-    local_rank, world_size, device = initialize_distributed()
+    local_rank, world_size, device = initialize_distributed(num_gpus)
     logger = setup_logging("training")
 
     logger.info(f"Using {device} of {world_size}")
@@ -345,10 +351,10 @@ def diff_model_train(env_config_path: str, model_config_path: str, model_def_pat
         train_files.append(
             {"image": str_img, "top_region_index": str_info, "bottom_region_index": str_info, "spacing": str_info}
         )
-
-    train_files = partition_dataset(
-        data=train_files, shuffle=True, num_partitions=dist.get_world_size(), even_divisible=True
-    )[local_rank]
+    if dist.is_initialized():
+        train_files = partition_dataset(
+            data=train_files, shuffle=True, num_partitions=dist.get_world_size(), even_divisible=True
+        )[local_rank]
 
     train_loader = prepare_data(
         train_files, device, args.diffusion_unet_train["cache_rate"], args.diffusion_unet_train["batch_size"]
@@ -365,7 +371,7 @@ def diff_model_train(env_config_path: str, model_config_path: str, model_def_pat
     ]
     lr_scheduler = create_lr_scheduler(optimizer, total_steps)
     loss_pt = torch.nn.L1Loss()
-    scaler = GradScaler()
+    scaler = GradScaler("cuda")
 
     torch.set_float32_matmul_precision("highest")
     logger.info("torch.set_float32_matmul_precision -> highest.")
@@ -403,6 +409,9 @@ def diff_model_train(env_config_path: str, model_config_path: str, model_def_pat
                 args,
             )
 
+    if dist.is_initialized():
+        dist.destroy_process_group()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Diffusion Model Training")
@@ -421,6 +430,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_def", type=str, default="./configs/config_maisi.json", help="Path to model definition file"
     )
+    parser.add_argument("--num_gpus", type=int, default=1, help="Number of GPUs to use for training")
 
     args = parser.parse_args()
-    diff_model_train(args.env_config, args.model_config, args.model_def)
+    diff_model_train(args.env_config, args.model_config, args.model_def, args.num_gpus)

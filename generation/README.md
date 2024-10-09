@@ -63,3 +63,15 @@ Example shows how to use a DDPM to inpaint of 2D images from the MedNIST dataset
 
 ## [Guiding the 2D diffusion synthesis using ControlNet](./controlnet/2d_controlnet.ipynb)
 Example shows how to use ControlNet to condition a diffusion model trained on 2D brain MRI images on binary brain masks.
+
+## [Spatial variational autoencoder for 2D modelling and synthesis](./2d_autoencoderkl)
+Example shows the use cases of applying a spatial VAE to a 2D synthesis example. To obtain realistic results, the model is trained on the original VAE losses, as well as perceptual and adversarial ones.
+
+## [Spatial variational autoencoder for 3D modelling and synthesis](./3d_autoencoderkl)
+Example shows the use cases of applying a spatial VAE to a 3D synthesis example. To obtain realistic results, the model is trained on the original VAE losses, as well as perceptual and adversarial ones.
+
+## Performing anomaly detection with diffusion models: [implicit guidance](./anomaly_detection/2d_classifierfree_guidance_anomalydetection_tutorial.ipynb), [using transformers](./anomaly_detection/anomaly_detection_with_transformers.ipynb) and [classifier free guidance](./anomaly_detection/anomalydetection_tutorial_classifier_guidance.ipynb)
+Examples show how to perform anomaly detection in 2D, using implicit guidance [2D-classifier free guiance](./anomaly_detection/2d_classifierfree_guidance_anomalydetection_tutorial.ipynb), transformers [using transformers](./anomaly_detection/anomaly_detection_with_transformers.ipynb) and [classifier free guidance](./anomalydetection_tutorial_classifier_guidance).
+
+## 2D super-resolution using diffusion models: [using torch](./2d_super_resolution/2d_sd_super_resolution.ipynb) and [using torch lightning](./2d_super_resolution/2d_sd_super_resolution_lightning.ipynb).
+Examples show how to perform super-resolution in 2D, using PyTorch and PyTorch Lightning.

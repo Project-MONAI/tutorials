@@ -20,6 +20,7 @@ from pathlib import Path
 import nibabel as nib
 import numpy as np
 import torch
+import torch.distributed as dist
 
 import monai
 from monai.transforms import Compose
@@ -146,7 +147,7 @@ def process_file(
         out_path.parent.mkdir(parents=True, exist_ok=True)
         logger.info(f"out_filename: {out_filename}")
 
-        with torch.cuda.amp.autocast():
+        with torch.amp.autocast("cuda"):
             pt_nda = torch.from_numpy(nda_image).float().to(device).unsqueeze(0).unsqueeze(0)
             z = autoencoder.encode_stage_2_inputs(pt_nda)
             logger.info(f"z: {z.size()}, {z.dtype}")
@@ -159,7 +160,9 @@ def process_file(
 
 
 @torch.inference_mode()
-def diff_model_create_training_data(env_config_path: str, model_config_path: str, model_def_path: str) -> None:
+def diff_model_create_training_data(
+    env_config_path: str, model_config_path: str, model_def_path: str, num_gpus: int
+) -> None:
     """
     Create training data for the diffusion model.
 
@@ -169,13 +172,13 @@ def diff_model_create_training_data(env_config_path: str, model_config_path: str
         model_def_path (str): Path to the model definition file.
     """
     args = load_config(env_config_path, model_config_path, model_def_path)
-    local_rank, world_size, device = initialize_distributed()
+    local_rank, world_size, device = initialize_distributed(num_gpus=num_gpus)
     logger = setup_logging("creating training data")
     logger.info(f"Using device {device}")
 
     autoencoder = define_instance(args, "autoencoder_def").to(device)
     try:
-        checkpoint_autoencoder = torch.load(args.trained_autoencoder_path)
+        checkpoint_autoencoder = torch.load(args.trained_autoencoder_path, weights_only=True)
         autoencoder.load_state_dict(checkpoint_autoencoder)
     except Exception:
         logger.error("The trained_autoencoder_path does not exist!")
@@ -202,6 +205,9 @@ def diff_model_create_training_data(env_config_path: str, model_config_path: str
 
         process_file(filepath, args, autoencoder, device, plain_transforms, new_transforms, logger)
 
+    if dist.is_initialized():
+        dist.destroy_process_group()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Diffusion Model Training Data Creation")
@@ -220,6 +226,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_def", type=str, default="./configs/config_maisi.json", help="Path to model definition file"
     )
+    parser.add_argument("--num_gpus", type=int, default=1, help="Number of GPUs to use for distributed training")
 
     args = parser.parse_args()
-    diff_model_create_training_data(args.env_config, args.model_config, args.model_def)
+    diff_model_create_training_data(args.env_config, args.model_config, args.model_def, args.num_gpus)

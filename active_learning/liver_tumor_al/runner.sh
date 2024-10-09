@@ -22,4 +22,4 @@ python active_learning.py --base_dir ${LOG_DIR}/all_data_iter2k --data_root ${DA
 python active_learning.py --base_dir ${LOG_DIR}/random_i5_q5_iter2k --data_root ${DATA_ROOT} --json_path ${JSON_PATH} --seed 3840 --active_iters 6 --dropout_ratio 0.2 --mc_number 10 --initial_pool 5 --queries 5 --strategy random --steps 2000 --val_interval 1 --batch_size 1 --val_batch_size 1 --lr 1e-4
 
 # # Initial Pool 5 Queries 5 Variance Strategy
-python active_learning.py --base_dir ${LOG_DIR}/variance_i5_q5_iter2k --data_root ${DATA_ROOT} --json_path ${JSON_PATH} --seed 3840 --active_iters 6 --dropout_ratio 0.2 --mc_number 10 --initial_pool 5 --queries 5 --strategy random --steps 2000 --val_interval 1 --batch_size 1 --val_batch_size 1 --lr 1e-4
+python active_learning.py --base_dir ${LOG_DIR}/variance_i5_q5_iter2k --data_root ${DATA_ROOT} --json_path ${JSON_PATH} --seed 3840 --active_iters 6 --dropout_ratio 0.2 --mc_number 10 --initial_pool 5 --queries 5 --strategy variance --steps 2000 --val_interval 1 --batch_size 1 --val_batch_size 1 --lr 1e-4

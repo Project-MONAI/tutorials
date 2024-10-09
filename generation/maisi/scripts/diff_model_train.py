@@ -124,9 +124,7 @@ def load_unet(args: argparse.Namespace, device: torch.device, logger: logging.Lo
     return unet
 
 
-def calculate_scale_factor(
-    train_loader: DataLoader, device: torch.device, logger: logging.Logger
-) -> torch.Tensor:
+def calculate_scale_factor(train_loader: DataLoader, device: torch.device, logger: logging.Logger) -> torch.Tensor:
     """
     Calculate the scaling factor for the dataset.
 
@@ -318,7 +316,9 @@ def save_checkpoint(
     )
 
 
-def diff_model_train(env_config_path: str, model_config_path: str, model_def_path: str, num_gpus: int, amp: bool = True) -> None:
+def diff_model_train(
+    env_config_path: str, model_config_path: str, model_def_path: str, num_gpus: int, amp: bool = True
+) -> None:
     """
     Main function to train a diffusion model.
 

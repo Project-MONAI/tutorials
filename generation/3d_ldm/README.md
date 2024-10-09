@@ -61,7 +61,7 @@ torchrun \
     --master_addr=localhost --master_port=1234 \
     train_autoencoder.py -c ./config/config_train_32g.json -e ./config/environment.json -g ${NUM_GPUS_PER_NODE}
 ```
-Please note that during multi-GPU training, additional GPUs may be required. Users might need to reduce the `batch_size` accordingly based on their available resources to ensure smooth training.
+Please note that during multi-GPU training, additional GPU memory may be required. Users might need to reduce the `batch_size` accordingly based on their available resources to ensure smooth training.
 
 <p align="center">
   <img src="./figs/train_recon.png" alt="autoencoder train curve" width="45%" >
@@ -88,7 +88,7 @@ torchrun \
     --master_addr=localhost --master_port=1234 \
     train_diffusion.py -c ./config/config_train_32g.json -e ./config/environment.json -g ${NUM_GPUS_PER_NODE}
 ```
-Please note that during multi-GPU training, additional GPUs may be required. Users might need to reduce the `batch_size` accordingly based on their available resources to ensure smooth training.
+Please note that during multi-GPU training, additional GPU memory may be required. Users might need to reduce the `batch_size` accordingly based on their available resources to ensure smooth training.
 <p align="center">
   <img src="./figs/train_diffusion.png" alt="latent diffusion train curve" width="45%" >
 &nbsp; &nbsp; &nbsp; &nbsp;

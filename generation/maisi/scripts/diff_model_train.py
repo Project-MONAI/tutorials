@@ -24,7 +24,7 @@ from torch.amp import GradScaler, autocast
 from torch.nn.parallel import DistributedDataParallel
 
 import monai
-from monai.data import ThreadDataLoader, partition_dataset
+from monai.data import DataLoader, partition_dataset
 from monai.transforms import Compose
 from monai.utils import first
 
@@ -50,7 +50,7 @@ def load_filenames(data_list_path: str) -> list:
 
 def prepare_data(
     train_files: list, device: torch.device, cache_rate: float, num_workers: int = 2, batch_size: int = 1
-) -> ThreadDataLoader:
+) -> DataLoader:
     """
     Prepare training data.
 
@@ -62,7 +62,7 @@ def prepare_data(
         batch_size (int): Mini-batch size.
 
     Returns:
-        ThreadDataLoader: Data loader for training.
+        DataLoader: Data loader for training.
     """
 
     def _load_data_from_file(file_path, key):
@@ -90,7 +90,7 @@ def prepare_data(
         data=train_files, transform=train_transforms, cache_rate=cache_rate, num_workers=num_workers
     )
 
-    return ThreadDataLoader(train_ds, num_workers=6, batch_size=batch_size, shuffle=True)
+    return DataLoader(train_ds, num_workers=6, batch_size=batch_size, shuffle=True)
 
 
 def load_unet(args: argparse.Namespace, device: torch.device, logger: logging.Logger) -> torch.nn.Module:
@@ -125,13 +125,13 @@ def load_unet(args: argparse.Namespace, device: torch.device, logger: logging.Lo
 
 
 def calculate_scale_factor(
-    train_loader: ThreadDataLoader, device: torch.device, logger: logging.Logger
+    train_loader: DataLoader, device: torch.device, logger: logging.Logger
 ) -> torch.Tensor:
     """
     Calculate the scaling factor for the dataset.
 
     Args:
-        train_loader (ThreadDataLoader): Data loader for training.
+        train_loader (DataLoader): Data loader for training.
         device (torch.device): Device to use for calculation.
         logger (logging.Logger): Logger for logging information.
 
@@ -181,7 +181,7 @@ def create_lr_scheduler(optimizer: torch.optim.Optimizer, total_steps: int) -> t
 def train_one_epoch(
     epoch: int,
     unet: torch.nn.Module,
-    train_loader: ThreadDataLoader,
+    train_loader: DataLoader,
     optimizer: torch.optim.Optimizer,
     lr_scheduler: torch.optim.lr_scheduler.PolynomialLR,
     loss_pt: torch.nn.L1Loss,
@@ -200,7 +200,7 @@ def train_one_epoch(
     Args:
         epoch (int): Current epoch number.
         unet (torch.nn.Module): UNet model.
-        train_loader (ThreadDataLoader): Data loader for training.
+        train_loader (DataLoader): Data loader for training.
         optimizer (torch.optim.Optimizer): Optimizer.
         lr_scheduler (torch.optim.lr_scheduler.PolynomialLR): Learning rate scheduler.
         loss_pt (torch.nn.L1Loss): Loss function.

@@ -15,4 +15,5 @@ jobs:
     - name: Link Checker
       id: lychee
       uses: lycheeverse/lychee-action@v2
-      args: --verbose
+      with:
+        args: --verbose

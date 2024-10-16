@@ -11,13 +11,8 @@ jobs:
   markdown-link-check:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repository content
-      uses: actions/checkout@v3
-    - name: Install Rust (required for Lychee)
-      run: sudo apt update && sudo apt install -y curl build-essential && curl https://sh.rustup.rs -sSf | sh -s -- -y
-    - name: Add Rust to PATH
-      run: source $HOME/.cargo/env
-    - name: Install Lychee
-      run: cargo install lychee
-    - name: Run Lychee to check links
-      run: lychee --verbose --all
+    - uses: actions/checkout@v4
+    - name: Link Checker
+      id: lychee
+      uses: lycheeverse/lychee-action@v2
+      args: --verbose

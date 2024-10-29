@@ -211,7 +211,7 @@ def save_image(
 
 
 @torch.inference_mode()
-def diff_model_infer(env_config_path: str, model_config_path: str, model_def_path: str) -> None:
+def diff_model_infer(env_config_path: str, model_config_path: str, model_def_path: str, num_gpus: int) -> None:
     """
     Main function to run the diffusion model inference.
 
@@ -221,7 +221,7 @@ def diff_model_infer(env_config_path: str, model_config_path: str, model_def_pat
         model_def_path (str): Path to the model definition file.
     """
     args = load_config(env_config_path, model_config_path, model_def_path)
-    local_rank, world_size, device = initialize_distributed()
+    local_rank, world_size, device = initialize_distributed(num_gpus)
     logger = setup_logging("inference")
     random_seed = set_random_seed(
         args.diffusion_unet_inference["random_seed"] + local_rank
@@ -311,6 +311,12 @@ if __name__ == "__main__":
         default="./configs/config_maisi.json",
         help="Path to model definition file",
     )
+    parser.add_argument(
+        "--num_gpus",
+        type=int,
+        default=1,
+        help="Number of GPUs to use for distributed inference",
+    )
 
     args = parser.parse_args()
-    diff_model_infer(args.env_config, args.model_config, args.model_def)
+    diff_model_infer(args.env_config, args.model_config, args.model_def, args.num_gpus)

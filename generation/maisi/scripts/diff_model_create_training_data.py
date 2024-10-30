@@ -160,7 +160,9 @@ def process_file(
 
 
 @torch.inference_mode()
-def diff_model_create_training_data(env_config_path: str, model_config_path: str, model_def_path: str) -> None:
+def diff_model_create_training_data(
+    env_config_path: str, model_config_path: str, model_def_path: str, num_gpus: int
+) -> None:
     """
     Create training data for the diffusion model.
 
@@ -170,7 +172,7 @@ def diff_model_create_training_data(env_config_path: str, model_config_path: str
         model_def_path (str): Path to the model definition file.
     """
     args = load_config(env_config_path, model_config_path, model_def_path)
-    local_rank, world_size, device = initialize_distributed()
+    local_rank, world_size, device = initialize_distributed(num_gpus=num_gpus)
     logger = setup_logging("creating training data")
     logger.info(f"Using device {device}")
 
@@ -224,6 +226,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_def", type=str, default="./configs/config_maisi.json", help="Path to model definition file"
     )
+    parser.add_argument("--num_gpus", type=int, default=1, help="Number of GPUs to use for distributed training")
 
     args = parser.parse_args()
-    diff_model_create_training_data(args.env_config, args.model_config, args.model_def)
+    diff_model_create_training_data(args.env_config, args.model_config, args.model_def, args.num_gpus)

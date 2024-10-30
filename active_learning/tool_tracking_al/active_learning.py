@@ -47,7 +47,7 @@ from monai.networks.nets import FlexibleUNet
 parser = argparse.ArgumentParser(description="Active Learning Settings")
 
 # Directory & Json & Seed
-parser.add_argument("--base_dir", default="/home/vishwesh/experiments/robo_tool_experiments/variance_sanity", type=str)
+parser.add_argument("--base_dir", default="./experiments/robo_tool_experiments/variance_sanity", type=str)
 parser.add_argument("--data_root", default="/scratch_2/robo_tool_dataset_2023", type=str)
 parser.add_argument("--json_path", default="/scratch_2/robo_tool_dataset_2023/data_list.json", type=str)
 parser.add_argument("--seed", default=120, type=int)
@@ -469,10 +469,10 @@ def main():
                     variance = np.sum(np.nanvar(vol_input, axis=0), axis=0)
 
                     score_list.append(np.nanmean(variance))
-                    name_list.append(unl_data["image_meta_dict"]["filename_or_obj"][0])
+                    name_list.append(unl_data["image"].meta["filename_or_obj"][0])
                     print(
                         "Variance for image: {} is: {}".format(
-                            unl_data["image_meta_dict"]["filename_or_obj"][0], np.nanmean(variance)
+                            unl_data["image"].meta["filename_or_obj"][0], np.nanmean(variance)
                         )
                     )
 

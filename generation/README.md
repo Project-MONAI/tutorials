@@ -49,6 +49,9 @@ Examples show how to train Vector Quantized Variation Autoencoder on [2D](./2d_v
 ## [Training a 2D Denoising Diffusion Probabilistic Model](./2d_ddpm/2d_ddpm_tutorial.ipynb):
 Example shows how to easily train a DDPM on medical data (MedNIST).
 
+## [Training a 3D Denoising Diffusion Probabilistic Model](./3d_ddpm/3d_ddpm_tutorial.ipynb):
+Example shows how to easily train a DDPM on medical data (Decathlon Task 01).
+
 ## [Comparing different noise schedulers](./2d_ddpm/2d_ddpm_compare_schedulers.ipynb):
 Example compares the performance of different noise schedulers. This shows how to sample a diffusion model using the DDPM, DDIM, and PNDM schedulers and how different numbers of timesteps affect the quality of the samples.
 

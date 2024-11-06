@@ -55,7 +55,7 @@ MEDNIST_CLASSES = ["AbdomenCT", "BreastMRI", "CXR", "ChestCT", "Hand", "HeadCT"]
 
 
 model_name = "mednist_class"
-gdrive_path = "https://drive.google.com/uc?id=1HQk4i4vXKUX_aAYR4wcZQKd-qk5Lcm_W"
+gdrive_path = "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/MedNIST_demo.tar.gz"
 mednist_filename = "MedNIST_demo.tar.gz"
 md5_check = "3f24a5833bb0455a7815c4e0ecc8a810"
 

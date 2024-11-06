@@ -14,7 +14,7 @@ MONAI Generative Adversarial Networks Workflow Example
     Sample script using MONAI to train a GAN to synthesize images from a latent code.
 
 ## Get the dataset
-    MedNIST.tar.gz link: https://drive.google.com/uc?id=1QsnnkvZyJPcbRoV_ArW8SnE1OTuoVbKE
+    MedNIST.tar.gz link: https://developer.download.nvidia.com/assets/Clara/monai/tutorials/MedNIST.tar.gz
     Extract tarball and set input_dir variable. GAN script trains using hand CT scan jpg images.
 
     Dataset information available in MedNIST Tutorial

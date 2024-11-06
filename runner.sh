@@ -120,17 +120,13 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*mednist_classifier_ray*)  # htt
 skip_run_papermill=("${skip_run_papermill[@]}" .*TorchIO_MONAI_PyTorch_Lightning*)  # https://github.com/Project-MONAI/tutorials/issues/1324
 skip_run_papermill=("${skip_run_papermill[@]}" .*GDS_dataset*)  # https://github.com/Project-MONAI/tutorials/issues/1324
 skip_run_papermill=("${skip_run_papermill[@]}" .*learn2reg_nlst_paired_lung_ct.ipynb*)  # slow test
-skip_run_papermill=("${skip_run_papermill[@]}" .*01_bundle_intro.ipynb*)
-skip_run_papermill=("${skip_run_papermill[@]}" .*02_mednist_classification.ipynb*)
-skip_run_papermill=("${skip_run_papermill[@]}" .*03_mednist_classification_v2.ipynb*)
-skip_run_papermill=("${skip_run_papermill[@]}" .*04_integrating_code.ipynb*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*hovernet_torch.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
 skip_run_papermill=("${skip_run_papermill[@]}" .*nuclei_classification_training_notebook.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
 skip_run_papermill=("${skip_run_papermill[@]}" .*nuclick_training_notebook.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
 skip_run_papermill=("${skip_run_papermill[@]}" .*nuclei_classification_infer.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
 skip_run_papermill=("${skip_run_papermill[@]}" .*nuclick_infer.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
 skip_run_papermill=("${skip_run_papermill[@]}" .*unet_segmentation_3d_ignite_clearml.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1555
-skip_run_papermill=("${skip_run_papermill[@]}" .*3d_image_transforms.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1698
+skip_run_papermill=("${skip_run_papermill[@]}" .*vista_2d_tutorial_monai.ipynb*)
 
 # output formatting
 separator=""

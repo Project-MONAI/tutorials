@@ -23,7 +23,7 @@ from monai.networks.utils import copy_model_state
 from monai.transforms import SaveImage
 from monai.utils import RankFilter
 
-from .sample import ldm_conditional_sample_one_image
+from .sample import check_input, ldm_conditional_sample_one_image
 from .utils import define_instance, prepare_maisi_controlnet_json_dataloader, setup_ddp
 
 
@@ -69,9 +69,12 @@ def main():
     logger.info(f"Number of GPUs: {torch.cuda.device_count()}")
     logger.info(f"World_size: {world_size}")
 
-    env_dict = json.load(open(args.environment_file, "r"))
-    config_dict = json.load(open(args.config_file, "r"))
-    training_config_dict = json.load(open(args.training_config, "r"))
+    with open(args.environment_file, "r") as env_file:
+        env_dict = json.load(env_file)
+    with open(args.config_file, "r") as config_file:
+        config_dict = json.load(config_file)
+    with open(args.training_config, "r") as training_config_file:
+        training_config_dict = json.load(training_config_file)
 
     for k, v in env_dict.items():
         setattr(args, k, v)
@@ -150,10 +153,13 @@ def main():
         top_region_index_tensor = batch["top_region_index"].to(device)
         bottom_region_index_tensor = batch["bottom_region_index"].to(device)
         spacing_tensor = batch["spacing"].to(device)
+        out_spacing = tuple((batch["spacing"].squeeze().numpy() / 100).tolist())
         # get target dimension
         dim = batch["dim"]
         output_size = (dim[0].item(), dim[1].item(), dim[2].item())
         latent_shape = (args.latent_channels, output_size[0] // 4, output_size[1] // 4, output_size[2] // 4)
+        # check if output_size and out_spacing are valid.
+        check_input(None, None, None, output_size, out_spacing, None)
         # generate a single synthetic image using a latent diffusion model with controlnet.
         synthetic_images, _ = ldm_conditional_sample_one_image(
             autoencoder,

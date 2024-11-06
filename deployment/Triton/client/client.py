@@ -51,7 +51,7 @@ import glob
 from monai.apps.utils import download_and_extract
 
 model_name = "monai_covid"
-gdrive_path = "https://drive.google.com/uc?id=1GYvHGU2jES0m_msin-FFQnmTOaHkl0LN"
+gdrive_path = "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/covid19_compressed.tar.gz"
 covid19_filename = "covid19_compress.tar.gz"
 md5_check = "cadd79d5ca9ccdee2b49cd0c8a3e6217"
 

@@ -80,4 +80,4 @@ Examples show how to perform anomaly detection in 2D, using implicit guidance [2
 Examples show how to perform super-resolution in 2D, using PyTorch and PyTorch Lightning.
 
 ## [Guiding the synthetic process using a semantic encoder](./2d_diffusion_autoencoder/2d_diffusion_autoencoder.ipynb)
-Example shows how to train a DDPM and an encoder simultaneously, resulting in the latents of the encoder guiding the inference process of the DDPM. 
+Example shows how to train a DDPM and an encoder simultaneously, resulting in the latents of the encoder guiding the inference process of the DDPM.

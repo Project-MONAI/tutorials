@@ -132,6 +132,10 @@ def main():
 
     # check the format of inference inputs
     config_infer_dict = json.load(open(args.inference_file, "r"))
+    # override num_split if asked
+    if "autoencoder_tp_num_splits" in config_infer_dict:
+        args.autoencoder_def["num_splits"] = config_infer_dict["autoencoder_tp_num_splits"]
+        args.mask_generation_autoencoder_def["num_splits"] = config_infer_dict["autoencoder_tp_num_splits"]
     for k, v in config_infer_dict.items():
         setattr(args, k, v)
         print(f"{k}: {v}")
@@ -225,4 +229,7 @@ if __name__ == "__main__":
         format="[%(asctime)s.%(msecs)03d][%(levelname)5s](%(name)s) - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
+    torch.cuda.reset_peak_memory_stats()
     main()
+    peak_memory_gb = torch.cuda.max_memory_allocated() / (1024 ** 3)  # Convert to GB
+    print(f"Peak GPU memory usage: {peak_memory_gb:.2f} GB")

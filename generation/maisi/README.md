@@ -50,7 +50,6 @@ We retrained several state-of-the-art diffusion model-based methods using our da
 | 512x512x768   | [80,80,112], 8 patches                 | 4                           | 55G         | 904s    | 48s      |
 
 
-
 The experiment was tested on A100 80G GPU. 
 
 During inference, the peak GPU memory usage happens during the autoencoder decoding latent features.

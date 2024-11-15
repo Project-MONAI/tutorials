@@ -231,5 +231,5 @@ if __name__ == "__main__":
     )
     torch.cuda.reset_peak_memory_stats()
     main()
-    peak_memory_gb = torch.cuda.max_memory_allocated() / (1024 ** 3)  # Convert to GB
+    peak_memory_gb = torch.cuda.max_memory_allocated() / (1024**3)  # Convert to GB
     print(f"Peak GPU memory usage: {peak_memory_gb:.2f} GB")

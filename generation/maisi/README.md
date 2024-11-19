@@ -31,8 +31,9 @@ We retrained several state-of-the-art diffusion model-based methods using our da
 
 </div>
 
-## Inference Time Cost and GPU Memory Usage
+## Time Cost and GPU Memory Usage
 
+### Inference Time Cost and GPU Memory Usage
 | `output_size` | `autoencoder_sliding_window_infer_size` | `autoencoder_tp_num_splits` | Peak Memory | DM Time | VAE Time |
 |---------------|:--------------------------------------:|:---------------------------:|:-----------:|:-------:|:--------:|
 | 256x256x128   | >=[64,64,32], not used                 | 2                           | 14G         | 57s     | 1s       |
@@ -56,6 +57,23 @@ During inference, the peak GPU memory usage happens during the autoencoder decod
 To reduce GPU memory usage, we can either increasing `autoencoder_tp_num_splits` or reduce `autoencoder_sliding_window_infer_size`.
 Increasing `autoencoder_tp_num_splits` has smaller impact on the generated image quality.
 Yet reducing `autoencoder_sliding_window_infer_size` may introduce stitching artifact and has larger impact on the generated image quality.
+
+### Training GPU Memory Usage
+VAE is trained on patches and thus can be trained with 16G GPU if patch size is set to be small like [64,64,64].
+Users can adjust patch size to fit the GPU memory. 
+For the released model, we first trained the autoencoder with 16G V100 with small patch size [64,64,64], then continued training with 32G V100 with patch size of [128,128,128].
+
+DM and ControlNet training GPU memory usage depends on the input image size.
+| `image_size` | `latent_size` | Peak Memory |
+|--------------|:------------- |:-----------:|
+| 256x256x128  | 4x64x64x32    |   5G        |
+| 256x256x256  | 4x64x64x64    |   8G        |
+| 512x512x128  | 4x128x128x32  |   12G       |
+| 512x512x256  | 4x128x128x64  |   21G       |
+| 512x512x512  | 4x128x128x128 |   39G       |
+| 512x512x768  | 4x128x128x192 |   58G       |
+
+
 
 
 

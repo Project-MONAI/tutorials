@@ -135,7 +135,7 @@ The information for the inference input, like body region and anatomy to generat
 - `"anatomy_list"`: If "controllable_anatomy_size" is not specified, the output will contain paired image and segmentation mask for the anatomy in "./configs/label_dict.json".
 - `"autoencoder_sliding_window_infer_size"`: in order to save GPU memory, we use sliding window inference when decoding latents to image when `"output_size"` is large. This is the patch size of the sliding window. Small value will reduce GPU memory but increase time cost. They need to be divisible by 16. If GPU memory is large enough, please choose larger value of this parameter.
 - `"autoencoder_sliding_window_infer_overlap"`: float between 0 and 1. Large value will reduce the stitching artifacts when stitching patches during sliding window inference, but increase time cost. If you do not observe seam lines in the generated image result, you can use a smaller value to save inference time.
-- `"autoencoder_tp_num_splits"`: int, chosen from [1,2,4,8,16]. In order to save GPU memory, we use tensor parallell in the autoencoder. Large value will reduce GPU memory. If GPU memory is large enough, please choose smaller value of this parameter.
+- `"autoencoder_tp_num_splits"`: int, chosen from [1,2,4,8,16]. In order to save GPU memory, we use tensor parallel in the autoencoder. Large value will reduce GPU memory. If GPU memory is large enough, please choose smaller value of this parameter.
 
 
 #### Recommended spacing for different output sizes:

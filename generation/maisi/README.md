@@ -84,11 +84,13 @@ When `autoencoder_sliding_window_infer_size` is equal to or larger than the late
 
 
 ### Training GPU Memory Usage
-VAE is trained on patches and thus can be trained with 16G GPU if patch size is set to be small like [64,64,64].
-Users can adjust patch size to fit the GPU memory.
-For the released model, we first trained the autoencoder with 16G V100 with small patch size [64,64,64], then continued training with 32G V100 with patch size of [128,128,128].
+The VAE is trained on patches and can be trained using a 16G GPU if the patch size is set to a small value, such as [64, 64, 64].  
+Users can adjust the patch size to fit the available GPU memory.  
+For the released model, we initially trained the autoencoder on a 16G V100 GPU with a small patch size of [64, 64, 64], and then continued training on a 32G V100 GPU with a larger patch size of [128, 128, 128].
 
-DM and ControlNet are trained on the whole images instead of patches. The training GPU memory usage depends on the input image size.
+The DM and ControlNet are trained on whole images rather than patches.  
+The GPU memory usage during training depends on the size of the input images.
+
 |  image size  |  latent size  | Peak Memory |
 |--------------|:------------- |:-----------:|
 | 256x256x128  | 4x64x64x32    |   5G        |

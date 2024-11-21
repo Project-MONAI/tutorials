@@ -67,7 +67,7 @@ We retrained several state-of-the-art diffusion model-based methods using our da
 | [512x512x512](./configs/config_infer_80g_512x512x512.json)   |128x128x128| [80,80,80], 8 patches                  | 2                           | 44G         | 569s    | 30s      |
 | [512x512x768](./configs/config_infer_24g_512x512x768.json)   |128x128x192| [80,80,112], 8 patches                 | 4                           | 55G         | 904s    | 48s      |
 
-**Table 3:** Inference Time Cost and GPU Memory Usage. `DM Time` refers to the time cost of diffusion model inference. `VAE Time` refers to the time cost of VAE decoder inference. When `autoencoder_sliding_window_infer_size` is equal or larger than the latent feature size, sliding window will not be used,
+**Table 3:** Inference Time Cost and GPU Memory Usage. `DM Time` refers to the time cost of diffusion model inference. `VAE Time` refers to the time cost of VAE decoder inference. The total inference time is the `DM Time` plus `VAE Time`. When `autoencoder_sliding_window_infer_size` is equal or larger than the latent feature size, sliding window will not be used,
 and the time and memory cost remain the same. The experiment was tested on A100 80G GPU.
 
 

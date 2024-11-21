@@ -6,7 +6,7 @@ This example demonstrates the applications of training and validating NVIDIA MAI
 - A Foundation Diffusion model that can generate large CT volumes up to 512 &times; 512 &times; 768 size, with flexible volume size and voxel size
 - A ControlNet to generate image/mask pairs that can improve downstream tasks, with controllable organ/tumor size
 
-More details can be found in our WACV 2025 paper: 
+More details can be found in our WACV 2025 paper:
 [Guo, P., Zhao, C., Yang, D., Xu, Z., Nath, V., Tang, Y., ... & Xu, D. (2024). MAISI: Medical AI for Synthetic Imaging. arXiv preprint arXiv:2409.11169](https://arxiv.org/pdf/2409.11169)
 
 Welcome to try our GUI demo at [https://build.nvidia.com/nvidia/maisi](https://build.nvidia.com/nvidia/maisi).

@@ -88,7 +88,7 @@ VAE is trained on patches and thus can be trained with 16G GPU if patch size is 
 Users can adjust patch size to fit the GPU memory.
 For the released model, we first trained the autoencoder with 16G V100 with small patch size [64,64,64], then continued training with 32G V100 with patch size of [128,128,128].
 
-DM and ControlNet is train on the whole image instead of patches. The training GPU memory usage depends on the input image size.
+DM and ControlNet are trained on the whole images instead of patches. The training GPU memory usage depends on the input image size.
 |  image size  |  latent size  | Peak Memory |
 |--------------|:------------- |:-----------:|
 | 256x256x128  | 4x64x64x32    |   5G        |

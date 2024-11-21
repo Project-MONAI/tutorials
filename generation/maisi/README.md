@@ -6,6 +6,11 @@ This example demonstrates the applications of training and validating NVIDIA MAI
 - A Foundation Diffusion model that can generate large CT volumes up to 512 &times; 512 &times; 768 size, with flexible volume size and voxel size
 - A ControlNet to generate image/mask pairs that can improve downstream tasks, with controllable organ/tumor size
 
+## Minimum GPU requirement
+For image size equal or smaller than 512x512x128, the minimum GPU memory for training and inference is 16G.
+
+For image size equal or smaller than 512x512x512, the minimum GPU memory for training is 40G, for inference is 24G.
+
 ## Example Results and Evaluation
 
 We retrained several state-of-the-art diffusion model-based methods using our dataset. The results in the table and figure below show that our method outperforms previous methods on an unseen dataset ([autoPET 2023](https://www.nature.com/articles/s41597-022-01718-3)). Our method shows superior performance to previous methods based on all [Fréchet Inception Distance (FID)](https://papers.nips.cc/paper/2017/hash/8a1d694707eb0fefe65871369074926d-Abstract.html) scores on different 2D planes. Here we compared the generated images with real images of size 512 &times; 512 &times; 512 and spacing 1.0 &times; 1.0 &times; 1.0 mm<sup>3</sup>.
@@ -30,6 +35,18 @@ We retrained several state-of-the-art diffusion model-based methods using our da
 **Figure 1.** Qualitative comparison of generated images between baseline methods<br>(retrained using our large-scale dataset) and our method.
 
 </div>
+
+| Dataset     | Model           | LPIPS ↓ | SSIM ↑ | PSNR ↑  | GPU ↓  |
+|-------------|-----------------|----------|--------|---------|--------|
+| MSD Task07  | MAIS VAE        | **0.038**| **0.978**|**37.266**| **0h** |
+|             | Dedicated VAE   | 0.047    | 0.971  | 34.750  | 619h   |
+| MSD Task08  | MAIS VAE        | 0.046    | 0.970  | 36.559  | **0h** |
+|             | Dedicated VAE   | **0.041**|**0.973**|**37.110**| 669h   |
+| Brats18     | MAIS VAE        | **0.026**|**0.0977**| **39.003**| **0h** |
+|             | Dedicated VAE   | 0.030    | 0.0975 | 38.971  | 672h   |
+
+**Table 2:** Performance comparison of the `MAIS VAE` model on out-of-distribution datasets (i.e., unseen during MAISI VAE training) versus `Dedicated VAE` models (i.e., train from scratch on in-distribution data). The “GPU” column shows additional GPU hours for training with one 32G V100 GPU. MAISI VAE model achieved comparable results without additional GPU resource expenditure on unseen datasets.
+
 
 ## Time Cost and GPU Memory Usage
 
@@ -63,8 +80,8 @@ VAE is trained on patches and thus can be trained with 16G GPU if patch size is 
 Users can adjust patch size to fit the GPU memory.
 For the released model, we first trained the autoencoder with 16G V100 with small patch size [64,64,64], then continued training with 32G V100 with patch size of [128,128,128].
 
-DM and ControlNet training GPU memory usage depends on the input image size.
-| `image_size` | `latent_size` | Peak Memory |
+DM and ControlNet is train on the whole image instead of patches. The training GPU memory usage depends on the input image size.
+|  image size  |  latent size  | Peak Memory |
 |--------------|:------------- |:-----------:|
 | 256x256x128  | 4x64x64x32    |   5G        |
 | 256x256x256  | 4x64x64x64    |   8G        |

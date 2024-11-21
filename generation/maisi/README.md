@@ -51,22 +51,24 @@ We retrained several state-of-the-art diffusion model-based methods using our da
 ## Time Cost and GPU Memory Usage
 
 ### Inference Time Cost and GPU Memory Usage
-| `output_size` | `autoencoder_sliding_window_infer_size` | `autoencoder_tp_num_splits` | Peak Memory | DM Time | VAE Time |
-|---------------|:--------------------------------------:|:---------------------------:|:-----------:|:-------:|:--------:|
-| 256x256x128   | >=[64,64,32], not used                 | 2                           | 14G         | 57s     | 1s       |
-| 256x256x256   | [48,48,64], 4 patches                  | 2                           | 14G         | 81s     | 7s       |
-| 512x512x128   | [64,64,32], 9 patches                  | 1                           | 14G         | 138s    | 7s       |
+| `output_size` | latent size |`autoencoder_sliding_window_infer_size` | `autoencoder_tp_num_splits` | Peak Memory | DM Time | VAE Time |
+|---------------|:--------------------------------------:|:--------------------------------------:|:---------------------------:|:-----------:|:-------:|:--------:|
+| [256x256x128](./configs/config_infer_16g_256x256x128.json)   |64x64x32| >=[64,64,32], not used                 | 2                           | 14G         | 57s     | 1s       |
+| [256x256x256](./configs/config_infer_16g_256x256x256.json)   |64x64x64| [48,48,64], 4 patches                  | 2                           | 14G         | 81s     | 7s       |
+| [512x512x128](./configs/config_infer_16g_512x512x128.json)   |128x128x32| [64,64,32], 9 patches                  | 1                           | 14G         | 138s    | 7s       |
 |               |                                        |                             |             |         |          |
-| 256x256x256   | >=[64,64,64], not used                 | 4                           | 22G         | 81s     | 2s       |
-| 512x512x128   | [80,80,32], 4 patches                  | 1                           | 18G         | 138s    | 9s       |
-| 512x512x512   | [64,64,48], 36 patches                 | 2                           | 22G         | 569s    | 29s      |
+| [256x256x256](./configs/config_infer_24g_256x256x256.json)   |64x64x64| >=[64,64,64], not used                 | 4                           | 22G         | 81s     | 2s       |
+| [512x512x128](./configs/config_infer_24g_512x512x128.json)   |128x128x32| [80,80,32], 4 patches                  | 1                           | 18G         | 138s    | 9s       |
+| [512x512x512](./configs/config_infer_24g_512x512x512.json)   |128x128x128| [64,64,48], 36 patches                 | 2                           | 22G         | 569s    | 29s      |
 |               |                                        |                             |             |         |          |
-| 512x512x512   | [64,64,64], 27 patches                 | 2                           | 26G         | 569s    | 40s      |
+| [512x512x512](./configs/config_infer_32g_512x512x512.json)   |128x128x128| [64,64,64], 27 patches                 | 2                           | 26G         | 569s    | 40s      |
 |               |                                        |                             |             |         |          |
-| 512x512x128   | >=[128,128,32], not used               | 4                           | 37G         | 138s    | 140s     |
-| 512x512x512   | [80,80,80], 8 patches                  | 2                           | 44G         | 569s    | 30s      |
-| 512x512x768   | [80,80,112], 8 patches                 | 4                           | 55G         | 904s    | 48s      |
+| [512x512x128](./configs/config_infer_80g_512x512x128.json)   |128x128x32| >=[128,128,32], not used               | 4                           | 37G         | 138s    | 140s     |
+| [512x512x512](./configs/config_infer_80g_512x512x512.json)   |128x128x128| [80,80,80], 8 patches                  | 2                           | 44G         | 569s    | 30s      |
+| [512x512x768](./configs/config_infer_24g_512x512x768.json)   |128x128x192| [80,80,112], 8 patches                 | 4                           | 55G         | 904s    | 48s      |
 
+When `autoencoder_sliding_window_infer_size` is equal or larger than the latent feature size, sliding window will not be used,
+and the time and memory cost remain the same.
 
 The experiment was tested on A100 80G GPU.
 

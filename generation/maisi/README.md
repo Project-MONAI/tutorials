@@ -14,9 +14,9 @@ The GUI is only a demo for toy examples. This Github repo is the full version.
 
 
 ## Minimum GPU requirement
-For image size equal or smaller than 512x512x128, the minimum GPU memory for training and inference is 16G.
-
-For image size equal or smaller than 512x512x512, the minimum GPU memory for training is 40G, for inference is 24G.
+GPU requirement depends on the size of the images. For example,
+- for image size of 512x512x128, the minimum GPU memory requirement for training and inference is 16G.
+- for image size of 512x512x512, the minimum GPU memory requirement for training is 40G, for inference is 24G.
 
 ## Example Results and Evaluation
 

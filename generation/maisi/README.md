@@ -2,9 +2,21 @@
 This example demonstrates the applications of training and validating NVIDIA MAISI, a 3D Latent Diffusion Model (LDM) capable of generating large CT images accompanied by corresponding segmentation masks. It supports variable volume size and voxel spacing and allows for the precise control of organ/tumor size.
 
 ## MAISI Model Highlight
-- A Foundation Variational Auto-Encoder (VAE) model for latent feature compression that works for both CT and MRI with flexible volume size and voxel size
+- A Foundation Variational Auto-Encoder (VAE) model for latent feature compression that works for both CT and MRI with flexible volume size and voxel size. Tensor parallel is included to reduce GPU memory usage.
 - A Foundation Diffusion model that can generate large CT volumes up to 512 &times; 512 &times; 768 size, with flexible volume size and voxel size
 - A ControlNet to generate image/mask pairs that can improve downstream tasks, with controllable organ/tumor size
+
+More details can be found in our WACV 2025 paper:
+[Guo, P., Zhao, C., Yang, D., Xu, Z., Nath, V., Tang, Y., ... & Xu, D. (2024). MAISI: Medical AI for Synthetic Imaging. arXiv preprint arXiv:2409.11169](https://arxiv.org/pdf/2409.11169)
+
+Welcome to try our GUI demo at [https://build.nvidia.com/nvidia/maisi](https://build.nvidia.com/nvidia/maisi).
+The GUI is only a demo for toy examples. This Github repo is the full version.
+
+
+## Minimum GPU requirement
+GPU requirement depends on the size of the images. For example,
+- for image size of 512x512x128, the minimum GPU memory requirement for training and inference is 16G.
+- for image size of 512x512x512, the minimum GPU memory requirement for training is 40G, for inference is 24G.
 
 ## Example Results and Evaluation
 
@@ -31,6 +43,64 @@ We retrained several state-of-the-art diffusion model-based methods using our da
 
 </div>
 
+| Dataset     | Model           | LPIPS ↓ | SSIM ↑ | PSNR ↑  | GPU ↓  |
+|-------------|-----------------|----------|--------|---------|--------|
+| MSD Task07  | MAIS VAE        | **0.038**| **0.978**|**37.266**| **0h** |
+|             | Dedicated VAE   | 0.047    | 0.971  | 34.750  | 619h   |
+| MSD Task08  | MAIS VAE        | 0.046    | 0.970  | 36.559  | **0h** |
+|             | Dedicated VAE   | **0.041**|**0.973**|**37.110**| 669h   |
+| Brats18     | MAIS VAE        | **0.026**|**0.0977**| **39.003**| **0h** |
+|             | Dedicated VAE   | 0.030    | 0.0975 | 38.971  | 672h   |
+
+**Table 2:** Performance comparison of the `MAIS VAE` model on out-of-distribution datasets (i.e., unseen during MAISI VAE training) versus `Dedicated VAE` models (i.e., train from scratch on in-distribution data). The “GPU” column shows additional GPU hours for training with one 32G V100 GPU. MAISI VAE model achieved comparable results without additional GPU resource expenditure on unseen datasets.
+
+
+## Time Cost and GPU Memory Usage
+
+### Inference Time Cost and GPU Memory Usage
+| `output_size` | latent size |`autoencoder_sliding_window_infer_size` | `autoencoder_tp_num_splits` | Peak Memory | DM Time | VAE Time |
+|---------------|:--------------------------------------:|:--------------------------------------:|:---------------------------:|:-----------:|:-------:|:--------:|
+| [256x256x128](./configs/config_infer_16g_256x256x128.json)   |4x64x64x32| >=[64,64,32], not used                 | 2                           | 14G         | 57s     | 1s       |
+| [256x256x256](./configs/config_infer_16g_256x256x256.json)   |4x64x64x64| [48,48,64], 4 patches                  | 2                           | 14G         | 81s     | 7s       |
+| [512x512x128](./configs/config_infer_16g_512x512x128.json)   |4x128x128x32| [64,64,32], 9 patches                  | 1                           | 14G         | 138s    | 7s       |
+|               |                                        |                             |             |         |          |
+| [256x256x256](./configs/config_infer_24g_256x256x256.json)   |4x64x64x64| >=[64,64,64], not used                 | 4                           | 22G         | 81s     | 2s       |
+| [512x512x128](./configs/config_infer_24g_512x512x128.json)   |4x128x128x32| [80,80,32], 4 patches                  | 1                           | 18G         | 138s    | 9s       |
+| [512x512x512](./configs/config_infer_24g_512x512x512.json)   |4x128x128x128| [64,64,48], 36 patches                 | 2                           | 22G         | 569s    | 29s      |
+|               |                                        |                             |             |         |          |
+| [512x512x512](./configs/config_infer_32g_512x512x512.json)   |4x128x128x128| [64,64,64], 27 patches                 | 2                           | 26G         | 569s    | 40s      |
+|               |                                        |                             |             |         |          |
+| [512x512x128](./configs/config_infer_80g_512x512x128.json)   |4x128x128x32| >=[128,128,32], not used               | 4                           | 37G         | 138s    | 140s     |
+| [512x512x512](./configs/config_infer_80g_512x512x512.json)   |4x128x128x128| [80,80,80], 8 patches                  | 2                           | 44G         | 569s    | 30s      |
+| [512x512x768](./configs/config_infer_24g_512x512x768.json)   |4x128x128x192| [80,80,112], 8 patches                 | 4                           | 55G         | 904s    | 48s      |
+
+**Table 3:** Inference Time Cost and GPU Memory Usage. `DM Time` refers to the time required for diffusion model inference. `VAE Time` refers to the time required for VAE decoder inference. The total inference time is the sum of `DM Time` and `VAE Time`. The experiment was conducted on an A100 80G GPU.
+
+During inference, the peak GPU memory usage occurs during the VAE's decoding of latent features.
+To reduce GPU memory usage, we can either increase `autoencoder_tp_num_splits` or reduce `autoencoder_sliding_window_infer_size`.
+Increasing `autoencoder_tp_num_splits` has a smaller impact on the generated image quality, while reducing `autoencoder_sliding_window_infer_size` may introduce stitching artifacts and has a larger impact on the generated image quality.
+
+When `autoencoder_sliding_window_infer_size` is equal to or larger than the latent feature size, the sliding window will not be used, and the time and memory costs remain the same.
+
+
+### Training GPU Memory Usage
+The VAE is trained on patches and can be trained using a 16G GPU if the patch size is set to a small value, such as [64, 64, 64]. Users can adjust the patch size to fit the available GPU memory. For the released model, we initially trained the autoencoder on 16G V100 GPUs with a small patch size of [64, 64, 64], and then continued training on 32G V100 GPUs with a larger patch size of [128, 128, 128].
+
+The DM and ControlNet are trained on whole images rather than patches. The GPU memory usage during training depends on the size of the input images.
+
+|  image size  |  latent size  | Peak Memory |
+|--------------|:------------- |:-----------:|
+| 256x256x128  | 4x64x64x32    |   5G        |
+| 256x256x256  | 4x64x64x64    |   8G        |
+| 512x512x128  | 4x128x128x32  |   12G       |
+| 512x512x256  | 4x128x128x64  |   21G       |
+| 512x512x512  | 4x128x128x128 |   39G       |
+| 512x512x768  | 4x128x128x192 |   58G       |
+
+
+
+
+
 ## MAISI Model Workflow
 The training and inference workflows of MAISI are depicted in the figure below. It begins by training an autoencoder in pixel space to encode images into latent features. Following that, it trains a diffusion model in the latent space to denoise the noisy latent features. During inference, it first generates latent features from random noise by applying multiple denoising steps using the trained diffusion model. Finally, it decodes the denoised latent features into images using the trained autoencoder.
 <p align="center">
@@ -55,18 +125,19 @@ Network definition is stored in [./configs/config_maisi.json](./configs/config_m
 
 ### 2. Model Inference
 #### Inference parameters:
-The information for the inference input, like body region and anatomy to generate, is stored in [./configs/config_infer.json](./configs/config_infer.json). Please feel free to play with it. Here are the details of the parameters.
+The information for the inference input, such as the body region and anatomy to generate, is stored in [./configs/config_infer.json](./configs/config_infer.json). Feel free to experiment with it. Below are the details of the parameters:
 
-- `"num_output_samples"`: int, the number of output image/mask pairs it will generate.
-- `"spacing"`: voxel size of generated images. E.g., if set to `[1.5, 1.5, 2.0]`, it will generate images with a resolution of 1.5x1.5x2.0 mm.
-- `"output_size"`: volume size of generated images. E.g., if set to `[512, 512, 256]`, it will generate images with size of 512x512x256. They need to be divisible by 16. If you have a small GPU memory size, you should adjust it to small numbers. Note that `"spacing"` and `"output_size"` together decide the output field of view (FOV). For eample, if set them to `[1.5, 1.5, 2.0]`mm and `[512, 512, 256]`, the FOV is 768x768x512 mm. We recommend the FOV in x and y axis to be at least 256mm for head, and at least 384mm for other body regions like abdomen. There is no such restriction for z-axis.
-- `"controllable_anatomy_size"`: a list of controllable anatomy and its size scale (0--1). E.g., if set to `[["liver", 0.5],["hepatic tumor", 0.3]]`, the generated image will contain liver that have a median size, with size around 50% percentile, and hepatic tumor that is relatively small, with around 30% percentile. The output will contain paired image and segmentation mask for the controllable anatomy.
-- `"body_region"`: If "controllable_anatomy_size" is not specified, "body_region" will be used to constrain the region of generated images. It needs to be chosen from "head", "chest", "thorax", "abdomen", "pelvis", "lower".
-- `"anatomy_list"`: If "controllable_anatomy_size" is not specified, the output will contain paired image and segmentation mask for the anatomy in "./configs/label_dict.json".
-- `"autoencoder_sliding_window_infer_size"`: in order to save GPU memory, we use sliding window inference when decoding latents to image when `"output_size"` is large. This is the patch size of the sliding window. Small value will reduce GPU memory but increase time cost. They need to be divisible by 16.
-- `"autoencoder_sliding_window_infer_overlap"`: float between 0 and 1. Large value will reduce the stitching artifacts when stitching patches during sliding window inference, but increase time cost. If you do not observe seam lines in the generated image result, you can use a smaller value to save inference time.
+- `"num_output_samples"`: An integer specifying the number of output image/mask pairs to generate.
+- `"spacing"`: The voxel size of the generated images. For example, if set to `[1.5, 1.5, 2.0]`, it generates images with a resolution of 1.5x1.5x2.0 mm.
+- `"output_size"`: The volume size of the generated images. For example, if set to `[512, 512, 256]`, it generates images of size 512x512x256. The values must be divisible by 16. If GPU memory is limited, adjust these to smaller numbers. Note that `"spacing"` and `"output_size"` together determine the output field of view (FOV). For example, if set to `[1.5, 1.5, 2.0]` mm and `[512, 512, 256]`, the FOV is 768x768x512 mm. We recommend the FOV in the x and y axes to be at least 256 mm for the head and at least 384 mm for other body regions like the abdomen. There is no restriction for the z-axis.
+- `"controllable_anatomy_size"`: A list specifying controllable anatomy and their size scale (0–1). For example, if set to `[["liver", 0.5], ["hepatic tumor", 0.3]]`, the generated image will contain a liver of median size (around the 50th percentile) and a relatively small hepatic tumor (around the 30th percentile). The output will include paired images and segmentation masks for the controllable anatomy.
+- `"body_region"`: If `"controllable_anatomy_size"` is not specified, `"body_region"` will constrain the region of the generated images. It must be chosen from `"head"`, `"chest"`, `"thorax"`, `"abdomen"`, `"pelvis"`, or `"lower"`. Please set a reasonable `"body_region"` for the given FOV determined by `"spacing"` and `"output_size"`. For example, if FOV is only 128mm in z-axis, we should not expect `"body_region"` to contain all of [`"head"`, `"chest"`, `"thorax"`, `"abdomen"`, `"pelvis"`, `"lower"`].
+- `"anatomy_list"`: If `"controllable_anatomy_size"` is not specified, the output will include paired images and segmentation masks for the anatomy listed in `"./configs/label_dict.json"`.
+- `"autoencoder_sliding_window_infer_size"`: To save GPU memory, sliding window inference is used when decoding latents into images if `"output_size"` is large. This parameter specifies the patch size of the sliding window. Smaller values reduce GPU memory usage but increase the time cost. The values must be divisible by 16. If GPU memory is sufficient, select a larger value for this parameter.
+- `"autoencoder_sliding_window_infer_overlap"`: A float between 0 and 1. Larger values reduce stitching artifacts when patches are stitched during sliding window inference but increase the time cost. If you do not observe seam lines in the generated image, you can use a smaller value to save inference time.
+- `"autoencoder_tp_num_splits"`: An integer chosen from `[1, 2, 4, 8, 16]`. Tensor parallelism is used in the autoencoder to save GPU memory. Larger values reduce GPU memory usage. If GPU memory is sufficient, select a smaller value for this parameter.
 
-To generate images with substantial dimensions, such as 512 &times; 512 &times; 512 or larger, using GPUs with 80GB of memory, it is advisable to configure the `"num_splits"` parameter in [the auto-encoder configuration](./configs/config_maisi.json#L11-L37) to 16. This adjustment is crucial to avoid out-of-memory issues during inference.
+
 
 #### Recommended spacing for different output sizes:
 

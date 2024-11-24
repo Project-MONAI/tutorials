@@ -132,7 +132,7 @@ def ldm_conditional_sample_one_mask(
             conditioning=anatomy_size.to(device),
         )
         # decode latents to synthesized masks
-        if math.prod(latent_shape[1:]) < math.prod(autoencoder_sliding_window_infer_size):
+        if math.prod(latent_shape[1:]) <= math.prod(autoencoder_sliding_window_infer_size):
             synthetic_mask = recon_model(latents).cpu().detach()
         else:
             synthetic_mask = (
@@ -274,15 +274,15 @@ def ldm_conditional_sample_one_image(
         # decode latents to synthesized images
         logging.info("---- Start decoding latent features into images... ----")
         start_time = time.time()
-        if math.prod(latent_shape[1:]) < math.prod(autoencoder_sliding_window_infer_size):
+        if math.prod(latent_shape[1:]) <= math.prod(autoencoder_sliding_window_infer_size):
             synthetic_images = recon_model(latents)
         else:
             synthetic_images = sliding_window_inference(
                 inputs=latents,
                 roi_size=(
-                    min(output_size[0] // 4 // 4 * 3, autoencoder_sliding_window_infer_size[0]),
-                    min(output_size[1] // 4 // 4 * 3, autoencoder_sliding_window_infer_size[1]),
-                    min(output_size[2] // 4 // 4 * 3, autoencoder_sliding_window_infer_size[2]),
+                    min(output_size[0] // 4, autoencoder_sliding_window_infer_size[0]),
+                    min(output_size[1] // 4, autoencoder_sliding_window_infer_size[1]),
+                    min(output_size[2] // 4, autoencoder_sliding_window_infer_size[2]),
                 ),
                 sw_batch_size=1,
                 predictor=recon_model,

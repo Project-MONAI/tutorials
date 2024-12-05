@@ -49,8 +49,8 @@ We retrained several state-of-the-art diffusion model-based methods using our da
 |             | Dedicated VAE   | 0.047    | 0.971  | 34.750  | 619h   |
 | MSD Task08  | MAIS VAE        | 0.046    | 0.970  | 36.559  | **0h** |
 |             | Dedicated VAE   | **0.041**|**0.973**|**37.110**| 669h   |
-| Brats18     | MAIS VAE        | **0.026**|**0.0977**| **39.003**| **0h** |
-|             | Dedicated VAE   | 0.030    | 0.0975 | 38.971  | 672h   |
+| Brats18     | MAIS VAE        | **0.026**|**0.977**| **39.003**| **0h** |
+|             | Dedicated VAE   | 0.030    | 0.975 | 38.971  | 672h   |
 
 **Table 2:** Performance comparison of the `MAIS VAE` model on out-of-distribution datasets (i.e., unseen during MAISI VAE training) versus `Dedicated VAE` models (i.e., train from scratch on in-distribution data). The “GPU” column shows additional GPU hours for training with one 32G V100 GPU. MAISI VAE model achieved comparable results without additional GPU resource expenditure on unseen datasets.
 

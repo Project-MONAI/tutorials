@@ -49,8 +49,8 @@ We retrained several state-of-the-art diffusion model-based methods using our da
 |             | Dedicated VAE   | 0.047    | 0.971  | 34.750  | 619h   |
 | MSD Task08  | MAIS VAE        | 0.046    | 0.970  | 36.559  | **0h** |
 |             | Dedicated VAE   | **0.041**|**0.973**|**37.110**| 669h   |
-| Brats18     | MAIS VAE        | **0.026**|**0.0977**| **39.003**| **0h** |
-|             | Dedicated VAE   | 0.030    | 0.0975 | 38.971  | 672h   |
+| Brats18     | MAIS VAE        | **0.026**|**0.977**| **39.003**| **0h** |
+|             | Dedicated VAE   | 0.030    | 0.975 | 38.971  | 672h   |
 
 **Table 2:** Performance comparison of the `MAIS VAE` model on out-of-distribution datasets (i.e., unseen during MAISI VAE training) versus `Dedicated VAE` models (i.e., train from scratch on in-distribution data). The “GPU” column shows additional GPU hours for training with one 32G V100 GPU. MAISI VAE model achieved comparable results without additional GPU resource expenditure on unseen datasets.
 
@@ -140,12 +140,28 @@ The information for the inference input, such as the body region and anatomy to 
 
 
 #### Recommended spacing for different output sizes:
+According to the statistics of the training data, we have recommended input parameters for the body region that are included in the training data.
+The Recommended `"output_size"` is the median value of the training data, the Recommended `"spacing"` is the median FOV (the product of `"output_size"` and `"spacing"`) divided by the Recommended `"output_size"`.
+|`"body_region"`   |percentage of training data |Recommended `"output_size"`| Recommended `"spacing"` [mm]|
+|:--------------------------------------|:--------------------------|:----------------------|---------------------------:|
+| ['chest', 'abdomen']                  |                      58.55% | [512, 512, 128]           | [0.781, 0.781, 2.981] |
+| ['chest']                             |                      38.35% | [512, 512, 128]           | [0.684, 0.684, 2.422] |
+| ['chest', 'abdomen', 'lower']         |                       1.42% | [512, 512, 256]           | [0.793, 0.793, 1.826] |
+| ['lower']                             |                       0.61% | [512, 512, 384]           | [0.839, 0.839, 0.728] |
+| ['abdomen', 'lower']                  |                       0.37% | [512, 512, 384]           | [0.808, 0.808, 0.729] |
+| ['head', 'chest', 'abdomen']          |                       0.33% | [512, 512, 384]           | [0.977, 0.977, 2.103] |
+| ['abdomen']                           |                       0.13% | [512, 512, 128]           | [0.723, 0.723, 1.182] |
+| ['head', 'chest', 'abdomen', 'lower'] |                       0.13% | [512, 512, 384]           | [1.367, 1.367, 4.603] |
+| ['head', 'chest']                     |                       0.10% | [512, 512, 128]           | [0.645, 0.645, 2.219] |
 
-|`output_size`| Recommended `"spacing"`|
-|:-----:|:-----:|
-[256, 256, 256]  | [1.5, 1.5, 1.5] |
-[512, 512, 128]  | [0.8, 0.8, 2.5] |
-[512, 512, 512]  | [1.0, 1.0, 1.0] |
+If users want to try different `"output_size"`, please adjust `"spacing"` to ensure a reasonable FOV, which is the product of `"output_size"` and `"spacing"`.
+For example,
+
+|`"output_size"`| Recommended `"spacing"`|
+|:--------------------------------------|:--------------------------|
+|[256, 256, 256]  | [1.5, 1.5, 1.5] |
+|[512, 512, 128]  | [0.8, 0.8, 2.5] |
+|[512, 512, 512]  | [1.0, 1.0, 1.0] |
 
 #### Execute Inference:
 To run the inference script, please run:

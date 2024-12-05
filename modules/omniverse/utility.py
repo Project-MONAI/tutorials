@@ -19,7 +19,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def convert_to_mesh(segmentation_path, output_folder, filename, label_value=1, smoothing_factor=0.5, reduction_ratio=0.0):
+def convert_to_mesh(
+    segmentation_path, output_folder, filename, label_value=1, smoothing_factor=0.5, reduction_ratio=0.0
+):
     """
     Function to perform segmentation-to-mesh conversion and smoothing
     """
@@ -48,7 +50,7 @@ def convert_to_mesh(segmentation_path, output_folder, filename, label_value=1, s
         flying_edges.ComputeNormalsOff()
         flying_edges.SetValue(0, i)
         flying_edges.Update()
-        
+
         if flying_edges.GetOutput().GetNumberOfPoints() == 0:
             print(f"No points found for label {i}. Skipping...")
             continue
@@ -86,38 +88,38 @@ def convert_to_mesh(segmentation_path, output_folder, filename, label_value=1, s
         # normals_filter.SplittingOff()
         # normals_filter.ConsistencyOn()
         # normals_filter.Update()
-                
+
         # Step 6: Decimate the mesh further
         decimation = vtk.vtkQuadricDecimation()
         decimation.SetInputConnection(smoothing_filter.GetOutputPort())
-        decimation.SetTargetReduction(0.9) # 90% reduction, the same as slicer
+        decimation.SetTargetReduction(0.9)  # 90% reduction, the same as slicer
         decimation.VolumePreservationOn()
         decimation.Update()
-        
+
         # Step 7: Generate normals for better shading
         decimatedNormals = vtk.vtkPolyDataNormals()
         decimatedNormals.SetInputConnection(decimation.GetOutputPort())
         decimatedNormals.SplittingOff()
         decimatedNormals.ConsistencyOn()
         decimatedNormals.Update()
-        
+
         # Step 8: convert to LPS
         ras2lps = vtk.vtkMatrix4x4()
-        ras2lps.SetElement(0,0,-1)
-        ras2lps.SetElement(1,1,-1)
+        ras2lps.SetElement(0, 0, -1)
+        ras2lps.SetElement(1, 1, -1)
         ras2lpsTransform = vtk.vtkTransform()
         ras2lpsTransform.SetMatrix(ras2lps)
         transformer = vtk.vtkTransformPolyDataFilter()
         transformer.SetTransform(ras2lpsTransform)
         transformer.SetInputConnection(decimatedNormals.GetOutputPort())
         transformer.Update()
-        
+
         if len(label_values) > 1:
             mapper = vtk.vtkPolyDataMapper()
             mapper.SetInputData(transformer.GetOutput())
             actor = vtk.vtkActor()
             actor.SetMapper(mapper)
-            colorRGB = colors[i-1][:3] if i < 15 else colors[i-2][:3]
+            colorRGB = colors[i - 1][:3] if i < 15 else colors[i - 2][:3]
             colorHSV = [0, 0, 0]
             vtk.vtkMath.RGBToHSV(colorRGB, colorHSV)
             colorHSV[1] = min(colorHSV[1] * 1.5, 1.0)  # increase saturation
@@ -127,7 +129,7 @@ def convert_to_mesh(segmentation_path, output_folder, filename, label_value=1, s
             actor.GetProperty().SetColor(colorRGB[0], colorRGB[1], colorRGB[2])
             actor.GetProperty().SetInterpolationToGouraud()
             renderer.AddActor(actor)
-            
+
     output_filename = os.path.join(output_folder, filename)
     if len(label_values) > 1:
         exporter = vtk.vtkGLTFExporter()
@@ -154,7 +156,7 @@ def convert_obj_to_usd(obj_filename, usd_filename):
     stage = Usd.Stage.CreateNew(usd_filename)
 
     # Define a mesh at the root of the stage
-    mesh = UsdGeom.Mesh.Define(stage, '/RootMesh')
+    mesh = UsdGeom.Mesh.Define(stage, "/RootMesh")
 
     # Lists to hold OBJ data
     vertices = []
@@ -168,27 +170,27 @@ def convert_obj_to_usd(obj_filename, usd_filename):
     texcoord_indices = []
 
     # Read the OBJ file
-    with open(obj_filename, 'r') as obj_file:
+    with open(obj_filename, "r") as obj_file:
         for line in obj_file:
-            if line.startswith('v '):
+            if line.startswith("v "):
                 # Vertex position
                 _, x, y, z = line.strip().split()
                 vertices.append((float(x), float(y), float(z)))
-            elif line.startswith('vn '):
+            elif line.startswith("vn "):
                 # Vertex normal
                 _, nx, ny, nz = line.strip().split()
                 normals.append((float(nx), float(ny), float(nz)))
-            elif line.startswith('vt '):
+            elif line.startswith("vt "):
                 # Texture coordinate
                 _, u, v = line.strip().split()
                 texcoords.append((float(u), float(v)))
-            elif line.startswith('f '):
+            elif line.startswith("f "):
                 # Face
                 face_elements = line.strip().split()[1:]
                 vertex_count = len(face_elements)
                 face_vertex_counts.append(vertex_count)
                 for elem in face_elements:
-                    indices = elem.split('/')
+                    indices = elem.split("/")
                     # OBJ indices are 1-based; subtract 1 for 0-based indexing
                     vi = int(indices[0]) - 1
                     ti = int(indices[1]) - 1 if len(indices) > 1 and indices[1] else None
@@ -211,18 +213,18 @@ def convert_obj_to_usd(obj_filename, usd_filename):
         # Reorder normals according to face vertices
         ordered_normals = [normals[i] for i in normal_indices]
         mesh.CreateNormalsAttr([Gf.Vec3f(*n) for n in ordered_normals])
-        mesh.SetNormalsInterpolation('faceVarying')  # Adjust based on how normals are specified
+        mesh.SetNormalsInterpolation("faceVarying")  # Adjust based on how normals are specified
 
     # Optionally set texture coordinates if they exist
     if texcoords and texcoord_indices:
         # Reorder texcoords according to face vertices
         ordered_texcoords = [texcoords[i] for i in texcoord_indices]
-        stPrimvar = mesh.CreatePrimvar('st', Sdf.ValueTypeNames.TexCoord2fArray, UsdGeom.Tokens.faceVarying)
+        stPrimvar = mesh.CreatePrimvar("st", Sdf.ValueTypeNames.TexCoord2fArray, UsdGeom.Tokens.faceVarying)
         stPrimvar.Set([Gf.Vec2f(*tc) for tc in ordered_texcoords])
 
     # Save the stage
     stage.GetRootLayer().Save()
-    
+
     print(f"USD file successfully exported to {usd_filename}")
 
 
@@ -237,7 +239,7 @@ def convert_mesh_to_usd(input_file, output_file):
     if isinstance(mesh, trimesh.Scene):
         for name, geometry in mesh.geometry.items():
             # Create a unique path for each mesh
-            mesh_path = f'/{name}'
+            mesh_path = f"/{name}"
             usd_mesh = UsdGeom.Mesh.Define(stage, mesh_path)
 
             # Set vertex positions
@@ -253,12 +255,12 @@ def convert_mesh_to_usd(input_file, output_file):
             # Optionally, set normals
             if geometry.vertex_normals is not None:
                 usd_mesh.GetNormalsAttr().Set([Gf.Vec3f(*normal) for normal in geometry.vertex_normals])
-                usd_mesh.SetNormalsInterpolation('vertex')
+                usd_mesh.SetNormalsInterpolation("vertex")
 
             # Handle materials and other attributes if needed
     else:
         # It's a single mesh, proceed as before
-        usd_mesh = UsdGeom.Mesh.Define(stage, '/Mesh')
+        usd_mesh = UsdGeom.Mesh.Define(stage, "/Mesh")
 
         # Set vertex positions
         usd_mesh.GetPointsAttr().Set([Gf.Vec3f(*vertex) for vertex in mesh.vertices])
@@ -273,7 +275,7 @@ def convert_mesh_to_usd(input_file, output_file):
         # Optionally, set normals
         if mesh.vertex_normals is not None:
             usd_mesh.GetNormalsAttr().Set([Gf.Vec3f(*normal) for normal in mesh.vertex_normals])
-            usd_mesh.SetNormalsInterpolation('vertex')
+            usd_mesh.SetNormalsInterpolation("vertex")
 
     # Save the USD file
     stage.GetRootLayer().Save()
@@ -285,4 +287,3 @@ if __name__ == "__main__":
     output_file = "/workspace/Code/tutorials/modules/omniverse/output_scene.usd"
 
     convert_mesh_to_usd(input_file, output_file)
-

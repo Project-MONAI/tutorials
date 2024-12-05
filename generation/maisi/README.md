@@ -156,10 +156,12 @@ The Recommended `"output_size"` is the median value of the training data, the Re
 
 If users want to try different `"output_size"`, please adjust `"spacing"` to ensure a reasonable FOV, which is the product of `"output_size"` and `"spacing"`.
 For example,
+
 |`"output_size"`| Recommended `"spacing"`|
-[256, 256, 256]  | [1.5, 1.5, 1.5] |
-[512, 512, 128]  | [0.8, 0.8, 2.5] |
-[512, 512, 512]  | [1.0, 1.0, 1.0] |
+|:--------------------------------------|:--------------------------|
+|[256, 256, 256]  | [1.5, 1.5, 1.5] |
+|[512, 512, 128]  | [0.8, 0.8, 2.5] |
+|[512, 512, 512]  | [1.0, 1.0, 1.0] |
 
 #### Execute Inference:
 To run the inference script, please run:

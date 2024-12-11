@@ -37,12 +37,13 @@ def convert_to_mesh(
     reader.SetFileName(segmentation_path)
     reader.Update()
 
-    label_values = [label_value] if isinstance(label_value, int) else label_value
-    if len(label_values) > 1:
+    label_values = {label_value: None} if isinstance(label_value, int) else label_value
+    if len(label_values.keys()) > 1:
         renderer = vtk.vtkRenderer()
         render_window = vtk.vtkRenderWindow()
         render_window.AddRenderer(renderer)
-    for i in label_values:
+        actor_metadata = {}
+    for i, name in label_values.items():
         # Step 2: Create Closed Surface Representation using vtkDiscreteFlyingEdges3D
         flying_edges = vtk.vtkDiscreteFlyingEdges3D()
         flying_edges.SetInputConnection(reader.GetOutputPort())
@@ -82,28 +83,21 @@ def convert_to_mesh(
         smoothing_filter.NormalizeCoordinatesOn()
         smoothing_filter.Update()
 
-        # Step 5: Generate normals for better shading
-        # normals_filter = vtk.vtkPolyDataNormals()
-        # normals_filter.SetInputConnection(smoothing_filter.GetOutputPort())
-        # normals_filter.SplittingOff()
-        # normals_filter.ConsistencyOn()
-        # normals_filter.Update()
-
-        # Step 6: Decimate the mesh further
+        # Step 5: Decimate the mesh further
         decimation = vtk.vtkQuadricDecimation()
         decimation.SetInputConnection(smoothing_filter.GetOutputPort())
         decimation.SetTargetReduction(0.9)  # 90% reduction, the same as slicer
         decimation.VolumePreservationOn()
         decimation.Update()
 
-        # Step 7: Generate normals for better shading
+        # Step 6: Generate normals for better shading
         decimatedNormals = vtk.vtkPolyDataNormals()
         decimatedNormals.SetInputConnection(decimation.GetOutputPort())
         decimatedNormals.SplittingOff()
         decimatedNormals.ConsistencyOn()
         decimatedNormals.Update()
 
-        # Step 8: convert to LPS
+        # Step 7: convert to LPS
         ras2lps = vtk.vtkMatrix4x4()
         ras2lps.SetElement(0, 0, -1)
         ras2lps.SetElement(1, 1, -1)
@@ -114,7 +108,7 @@ def convert_to_mesh(
         transformer.SetInputConnection(decimatedNormals.GetOutputPort())
         transformer.Update()
 
-        if len(label_values) > 1:
+        if len(label_values.keys()) > 1:
             mapper = vtk.vtkPolyDataMapper()
             mapper.SetInputData(transformer.GetOutput())
             actor = vtk.vtkActor()
@@ -128,10 +122,11 @@ def convert_to_mesh(
             vtk.vtkMath.HSVToRGB(colorHSV, colorRGB)
             actor.GetProperty().SetColor(colorRGB[0], colorRGB[1], colorRGB[2])
             actor.GetProperty().SetInterpolationToGouraud()
+            actor_metadata[actor] = name
             renderer.AddActor(actor)
 
     output_filename = os.path.join(output_folder, filename)
-    if len(label_values) > 1:
+    if len(label_values.keys()) > 1:
         exporter = vtk.vtkGLTFExporter()
         exporter.SetFileName(output_filename)
         exporter.SetRenderWindow(render_window)
@@ -146,6 +141,26 @@ def convert_to_mesh(
             writer.Write()
 
     print(f"Mesh successfully exported to {output_filename}")
+    
+    if len(label_values.keys()) > 1:
+    # Modify GLTF to include actor names
+        with open(output_filename, "r") as f:
+            gltf_data = json.load(f)
+
+        # Iterate over actors and add names to GLTF nodes
+        actors = renderer.GetActors()
+        actors.InitTraversal()
+
+        for i, node in enumerate(gltf_data.get("nodes", [])):
+            actor = actors.GetNextActor()
+            if actor in actor_metadata:
+                node["name"] = actor_metadata[actor]
+
+        # Save the modified GLTF file
+        modified_output_filename = output_filename.replace(".gltf", "_modified.gltf")
+        with open(modified_output_filename, "w") as f:
+            json.dump(gltf_data, f, indent=2)
+        print(f"Modified GLTF successfully exported to {modified_output_filename}")
 
 
 def convert_mesh_to_usd(input_file, output_file):

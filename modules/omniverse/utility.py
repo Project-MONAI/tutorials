@@ -141,9 +141,9 @@ def convert_to_mesh(
             writer.Write()
 
     print(f"Mesh successfully exported to {output_filename}")
-    
+
     if len(label_values.keys()) > 1:
-    # Modify GLTF to include actor names
+        # Modify GLTF to include actor names
         with open(output_filename, "r") as f:
             gltf_data = json.load(f)
 

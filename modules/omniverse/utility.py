@@ -148,87 +148,10 @@ def convert_to_mesh(
     print(f"Mesh successfully exported to {output_filename}")
 
 
-def convert_obj_to_usd(obj_filename, usd_filename):
-    """
-    Function to convert an OBJ file to USD
-    """
-    # Create a new USD stage
-    stage = Usd.Stage.CreateNew(usd_filename)
-
-    # Define a mesh at the root of the stage
-    mesh = UsdGeom.Mesh.Define(stage, "/RootMesh")
-
-    # Lists to hold OBJ data
-    vertices = []
-    normals = []
-    texcoords = []
-    face_vertex_indices = []
-    face_vertex_counts = []
-
-    # Mapping for OBJ indices (since they can be specified per face-vertex)
-    normal_indices = []
-    texcoord_indices = []
-
-    # Read the OBJ file
-    with open(obj_filename, "r") as obj_file:
-        for line in obj_file:
-            if line.startswith("v "):
-                # Vertex position
-                _, x, y, z = line.strip().split()
-                vertices.append((float(x), float(y), float(z)))
-            elif line.startswith("vn "):
-                # Vertex normal
-                _, nx, ny, nz = line.strip().split()
-                normals.append((float(nx), float(ny), float(nz)))
-            elif line.startswith("vt "):
-                # Texture coordinate
-                _, u, v = line.strip().split()
-                texcoords.append((float(u), float(v)))
-            elif line.startswith("f "):
-                # Face
-                face_elements = line.strip().split()[1:]
-                vertex_count = len(face_elements)
-                face_vertex_counts.append(vertex_count)
-                for elem in face_elements:
-                    indices = elem.split("/")
-                    # OBJ indices are 1-based; subtract 1 for 0-based indexing
-                    vi = int(indices[0]) - 1
-                    ti = int(indices[1]) - 1 if len(indices) > 1 and indices[1] else None
-                    ni = int(indices[2]) - 1 if len(indices) > 2 and indices[2] else None
-                    face_vertex_indices.append(vi)
-                    if ni is not None:
-                        normal_indices.append(ni)
-                    if ti is not None:
-                        texcoord_indices.append(ti)
-
-    # Set the mesh's points
-    mesh.CreatePointsAttr([Gf.Vec3f(*v) for v in vertices])
-
-    # Set the face vertex indices and counts
-    mesh.CreateFaceVertexIndicesAttr(face_vertex_indices)
-    mesh.CreateFaceVertexCountsAttr(face_vertex_counts)
-
-    # Optionally set normals if they exist
-    if normals and normal_indices:
-        # Reorder normals according to face vertices
-        ordered_normals = [normals[i] for i in normal_indices]
-        mesh.CreateNormalsAttr([Gf.Vec3f(*n) for n in ordered_normals])
-        mesh.SetNormalsInterpolation("faceVarying")  # Adjust based on how normals are specified
-
-    # Optionally set texture coordinates if they exist
-    if texcoords and texcoord_indices:
-        # Reorder texcoords according to face vertices
-        ordered_texcoords = [texcoords[i] for i in texcoord_indices]
-        stPrimvar = mesh.CreatePrimvar("st", Sdf.ValueTypeNames.TexCoord2fArray, UsdGeom.Tokens.faceVarying)
-        stPrimvar.Set([Gf.Vec2f(*tc) for tc in ordered_texcoords])
-
-    # Save the stage
-    stage.GetRootLayer().Save()
-
-    print(f"USD file successfully exported to {usd_filename}")
-
-
 def convert_mesh_to_usd(input_file, output_file):
+    """
+    convert a mesh file to USD format
+    """
     # Load the mesh
     mesh = trimesh.load(input_file)
 

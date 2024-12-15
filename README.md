@@ -302,6 +302,10 @@ This tutorial shows several visualization approaches for 3D image during transfo
 #### [Auto3DSeg](./auto3dseg/)
 This folder shows how to run the comprehensive Auto3DSeg pipeline with minimal inputs and customize the Auto3Dseg modules to meet different user requirements.
 
+#### <ins>**NVIDIA NIMs**</ins>
+#### [Vista3D Remote NIM](nvidia_nims/vista_3d_remove_num.ipynb)
+This tutorial illustrates sending an image to the Vista3D NIM running on NVIDIA's AI Enterprise / GPU Cloud servers.  Results are saved to disk and viewed using pyvista.   Registration to generate an API Key is required at [build.nvidia.com](https://build.nvidia.com).  Registration and key generation is free and provides free credits for processing images.
+
 #### <ins>**Self-Supervised Learning**</ins>
 ##### [self_supervised_pretraining](self_supervised_pretraining/vit_unetr_ssl/ssl_train.ipynb)
 This tutorial shows how to construct a training workflow of self-supervised learning where unlabeled data is utilized. The tutorial shows how to train a model on TCIA dataset of unlabeled Covid-19 cases.

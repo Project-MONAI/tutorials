@@ -82,6 +82,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" mask_augmentation_e
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" maisi_inference_tutorial.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" realism_diversity_metrics.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" omniverse_integration.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" vista_3d_remote_nim.ipynb)
 
 # Execution of the notebook in these folders / with the filename cannot be automated
 skip_run_papermill=()
@@ -129,6 +130,7 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*nuclick_infer.ipynb*)  # https:
 skip_run_papermill=("${skip_run_papermill[@]}" .*unet_segmentation_3d_ignite_clearml.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1555
 skip_run_papermill=("${skip_run_papermill[@]}" .*vista_2d_tutorial_monai.ipynb*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*learn2reg_oasis_unpaired_brain_mr.ipynb*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*vista_3d_remote_nim.ipynb*)
 
 # output formatting
 separator=""

@@ -128,7 +128,7 @@ def main():
         print(f"{k}: {val}")
     print("Global config variables have been loaded.")
 
-     # ## Read in configuration setting, including network definition, body region and anatomy to generate, etc.
+    # ## Read in configuration setting, including network definition, body region and anatomy to generate, etc.
     #
     # The information for the inference input, like body region and anatomy to generate, is stored in "./configs/config_infer.json".
     # Please refer to README.md for the details.
@@ -141,7 +141,7 @@ def main():
     # override num_split if asked
     if "autoencoder_tp_num_splits" in config_infer_dict:
         args.autoencoder_def["num_splits"] = config_infer_dict["autoencoder_tp_num_splits"]
-        args.mask_generation_autoencoder_def["num_splits"] = config_infer_dict["autoencoder_tp_num_splits"]        
+        args.mask_generation_autoencoder_def["num_splits"] = config_infer_dict["autoencoder_tp_num_splits"]
     for k, v in config_infer_dict.items():
         setattr(args, k, v)
         print(f"{k}: {v}")

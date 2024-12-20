@@ -49,6 +49,12 @@ def main():
         help="config json file that stores inference hyper-parameters",
     )
     parser.add_argument(
+        "-x",
+        "--extra-config-file",
+        default=None,
+        help="config json file that stores inference extra parameters",
+    )
+    parser.add_argument(
         "-s",
         "--random-seed",
         default=None,
@@ -140,6 +146,16 @@ def main():
         setattr(args, k, v)
         print(f"{k}: {v}")
 
+    #
+    # ## Read in optional extra configuration setting - typically acceleration options (TRT)
+    #
+    #
+    if args.extra_config_file is not None:
+        extra_config_dict = json.load(open(args.extra_config_file, "r"))
+        for k, v in extra_config_dict.items():
+            setattr(args, k, v)
+            print(f"{k}: {v}")
+
     check_input(
         args.body_region,
         args.anatomy_list,
@@ -158,25 +174,25 @@ def main():
 
     device = torch.device("cuda")
 
-    autoencoder = define_instance(args, "autoencoder_def").to(device)
+    autoencoder = define_instance(args, "autoencoder").to(device)
     checkpoint_autoencoder = torch.load(args.trained_autoencoder_path)
     autoencoder.load_state_dict(checkpoint_autoencoder)
 
-    diffusion_unet = define_instance(args, "diffusion_unet_def").to(device)
+    diffusion_unet = define_instance(args, "diffusion_unet").to(device)
     checkpoint_diffusion_unet = torch.load(args.trained_diffusion_path)
     diffusion_unet.load_state_dict(checkpoint_diffusion_unet["unet_state_dict"], strict=True)
     scale_factor = checkpoint_diffusion_unet["scale_factor"].to(device)
 
-    controlnet = define_instance(args, "controlnet_def").to(device)
+    controlnet = define_instance(args, "controlnet").to(device)
     checkpoint_controlnet = torch.load(args.trained_controlnet_path)
     monai.networks.utils.copy_model_state(controlnet, diffusion_unet.state_dict())
     controlnet.load_state_dict(checkpoint_controlnet["controlnet_state_dict"], strict=True)
 
-    mask_generation_autoencoder = define_instance(args, "mask_generation_autoencoder_def").to(device)
+    mask_generation_autoencoder = define_instance(args, "mask_generation_autoencoder").to(device)
     checkpoint_mask_generation_autoencoder = torch.load(args.trained_mask_generation_autoencoder_path)
     mask_generation_autoencoder.load_state_dict(checkpoint_mask_generation_autoencoder)
 
-    mask_generation_diffusion_unet = define_instance(args, "mask_generation_diffusion_def").to(device)
+    mask_generation_diffusion_unet = define_instance(args, "mask_generation_diffusion").to(device)
     checkpoint_mask_generation_diffusion_unet = torch.load(args.trained_mask_generation_diffusion_path)
     mask_generation_diffusion_unet.load_state_dict(checkpoint_mask_generation_diffusion_unet["unet_state_dict"])
     mask_generation_scale_factor = checkpoint_mask_generation_diffusion_unet["scale_factor"]

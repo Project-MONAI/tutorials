@@ -43,7 +43,7 @@ Example shows the use cases of using MONAI to evaluate the performance of a gene
 ## [Training a 2D VQ-VAE + Autoregressive Transformers](./2d_vqvae_transformer/2d_vqvae_transformer_tutorial.ipynb):
 Example shows how to train a Vector-Quantized Variation Autoencoder + Transformers on the MedNIST dataset.
 
-## Training VQ-VAEs and VQ-GANs: [2D VAE](./2d_vqvae/2d_vqvae_tutorial.ipynb), [3D VAE](./3d_vqvae/3d_vqvae_tutorial.ipynb) and [2D GAN](./3d_autoencoderkl/2d_vqgan_tutorial.ipynb)
+## Training VQ-VAEs and VQ-GANs: [2D VAE](./2d_vqvae/2d_vqvae_tutorial.ipynb), [3D VAE](./3d_vqvae/3d_vqvae_tutorial.ipynb) and [2D GAN](./2d_vqgan/2d_vqgan_tutorial.ipynb)
 Examples show how to train Vector Quantized Variation Autoencoder on [2D](./2d_vqvae/2d_vqvae_tutorial.ipynb) and [3D](./3d_vqvae/3d_vqvae_tutorial.ipynb), and how to use the PatchDiscriminator class to train a [VQ-GAN](./2d_vqgan/2d_vqgan_tutorial.ipynb) and improve the quality of the generated images.
 
 ## [Training a 2D Denoising Diffusion Probabilistic Model](./2d_ddpm/2d_ddpm_tutorial.ipynb):

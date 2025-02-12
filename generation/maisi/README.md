@@ -172,6 +172,16 @@ python -m scripts.inference -c ./configs/config_maisi.json -i ./configs/config_i
 
 Please refer to [maisi_inference_tutorial.ipynb](maisi_inference_tutorial.ipynb) for the tutorial for MAISI model inference.
 
+
+#### Accelerated Inference with TensorRT:
+To run the inference script with TensorRT acceleration, please run:
+```bash
+export MONAI_DATA_DIRECTORY=<dir_you_will_download_data>
+python -m scripts.inference -c ./configs/config_maisi.json -i ./configs/config_infer.json -e ./configs/environment.json -x ./configs/config_trt.json --random-seed 0
+```
+Extra config file,  [./configs/config_trt.json](./configs/config_trt.json) is using `trt_compile()` utility from MONAI to convert select modules to TensorRT by overriding their definitions from [./configs/config_infer.json](./configs/config_infer.json).
+
+
 #### Quality Check:
 We have implemented a quality check function for the generated CT images. The main idea behind this function is to ensure that the Hounsfield units (HU) intensity for each organ in the CT images remains within a defined range. For each training image used in the Diffusion network, we computed the median value for a few major organs. Then we summarize the statistics of these median values and save it to [./configs/image_median_statistics.json](./configs/image_median_statistics.json). During inference, for each generated image, we compute the median HU values for the major organs and check whether they fall within the normal range.
 

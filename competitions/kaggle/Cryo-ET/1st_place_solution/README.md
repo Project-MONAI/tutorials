@@ -49,7 +49,7 @@ Alternativly it can be downloaded using the kaggle API (which can be installed v
 
 ```kaggle competitions download -c czii-cryo-et-object-identification```
 
-and adjust path to it in ```configs/common_config.py``` with ```cfg.data_folder```
+and adjust path to it in ```configs/common_config.py``` with ```cfg.data_folder```. 
 
 
 

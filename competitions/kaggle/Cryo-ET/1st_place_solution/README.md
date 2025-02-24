@@ -29,15 +29,15 @@ To have a common environment its suggested to use the basic pytorch docker conta
 
 ```docker run nvcr.io/nvidia/pytorch:24.08-py3```
 
-2. Within the container clone this repository 
+2. Within the container clone this repository
 
 ```
-git clone https://github.com/ProjectMONAI/tutorials 
+git clone https://github.com/ProjectMONAI/tutorials
 cd tutorials/competitions/kaggle/Cryo-ET/1st_place_solution/
 ```
 
 
-3. And install necessary additional pip packages via 
+3. And install necessary additional pip packages via
 
 ```pip install -r requirements.txt```
 
@@ -49,7 +49,7 @@ Alternativly it can be downloaded using the kaggle API (which can be installed v
 
 ```kaggle competitions download -c czii-cryo-et-object-identification```
 
-and adjust path to it in ```configs/common_config.py``` with ```cfg.data_folder```. 
+and adjust path to it in ```configs/common_config.py``` with ```cfg.data_folder```.
 
 
 
@@ -62,7 +62,7 @@ We solve the competition with a 3D-segmentation approach leveraging [MONAI's Fle
 
 ![alt text](partly_Unet.png "Partly UNet")
 
-We provide three different configurations which differ only in the used backbone and output feature maps. The configuration files are .py files and located under ```configs``` and share all other hyper-parameters. Each hyperparameter can be overwriten by adding a flag to the training command. To train a resnet34 version of our segmentation model simply run 
+We provide three different configurations which differ only in the used backbone and output feature maps. The configuration files are .py files and located under ```configs``` and share all other hyper-parameters. Each hyperparameter can be overwriten by adding a flag to the training command. To train a resnet34 version of our segmentation model simply run
 
 ```python train.py -C cfg_resnet34 --output_dir WHATEVERISYOUROUTPUTDIR```
 
@@ -71,7 +71,7 @@ By default models are trained using bfloat16 which requires a GPU capable of tha
 
 ### Replicating 1st place solution (segmentation part)
 
-To train checkpoints necessary for replicating the segmentation part of the 1st place solution run training of 2x fullfits for each model. Thereby ```cfg.fold = -1``` results in training on all data, and using ```fold 0``` as validation. 
+To train checkpoints necessary for replicating the segmentation part of the 1st place solution run training of 2x fullfits for each model. Thereby ```cfg.fold = -1``` results in training on all data, and using ```fold 0``` as validation.
 ```
 python train.py -C cfg_resnet34 --fold -1
 python train.py -C cfg_resnet34 --fold -1

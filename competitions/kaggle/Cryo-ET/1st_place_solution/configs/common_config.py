@@ -75,18 +75,16 @@ cfg.save_first_batch_preds = False
 cfg.clip_mode = "norm"
 cfg.data_sample = -1
 cfg.track_grad_norm = True
-cfg.grad_norm_type = 2.
+cfg.grad_norm_type = 2.0
 cfg.track_weight_norm = True
 cfg.norm_eps = 1e-4
 cfg.disable_tqdm = False
 
 
-
-
 # paths
 
-cfg.data_folder = '/mount/cryo/data/czii-cryo-et-object-identification/train/static/ExperimentRuns/'
-cfg.train_df = 'train_folded_v1.csv'
+cfg.data_folder = "/mount/cryo/data/czii-cryo-et-object-identification/train/static/ExperimentRuns/"
+cfg.train_df = "train_folded_v1.csv"
 
 
 # stages
@@ -94,34 +92,34 @@ cfg.test = False
 cfg.train = True
 cfg.train_val = False
 
-#logging
+# logging
 cfg.neptune_project = None
 cfg.neptune_connection_mode = "async"
 
-#model
+# model
 cfg.model = "mdl_1"
-cfg.mixup_p = 1.
-cfg.mixup_beta = 1.
+cfg.mixup_p = 1.0
+cfg.mixup_beta = 1.0
 cfg.in_channels = 1
 cfg.pretrained = False
 
-#data
+# data
 cfg.dataset = "ds_1"
-cfg.classes = ['apo-ferritin','beta-amylase','beta-galactosidase','ribosome','thyroglobulin','virus-like-particle']
+cfg.classes = ["apo-ferritin", "beta-amylase", "beta-galactosidase", "ribosome", "thyroglobulin", "virus-like-particle"]
 cfg.n_classes = len(cfg.classes)
 
-cfg.post_process_pipeline = 'pp_1'
-cfg.metric = 'metric_1'
+cfg.post_process_pipeline = "pp_1"
+cfg.metric = "metric_1"
 
 
-
-cfg.particle_radi = {'apo-ferritin':60,
-        'beta-amylase':65,
-        'beta-galactosidase':90,
-        'ribosome':150,
-        'thyroglobulin':130,
-        'virus-like-particle':135
-       }
+cfg.particle_radi = {
+    "apo-ferritin": 60,
+    "beta-amylase": 65,
+    "beta-galactosidase": 90,
+    "ribosome": 150,
+    "thyroglobulin": 130,
+    "virus-like-particle": 135,
+}
 
 cfg.voxel_spacing = 10.0
 
@@ -133,66 +131,67 @@ cfg.epochs = 10
 
 cfg.lr = 1e-3
 cfg.optimizer = "Adam"
-cfg.weight_decay = 0.
-cfg.warmup = 0.
+cfg.weight_decay = 0.0
+cfg.warmup = 0.0
 cfg.batch_size = 8
 cfg.batch_size_val = 16
 cfg.sub_batch_size = 4
-cfg.roi_size = [96,96,96]
+cfg.roi_size = [96, 96, 96]
 cfg.train_sub_epochs = 1112
 cfg.val_sub_epochs = 1
 cfg.mixed_precision = False
 cfg.bf16 = True
 cfg.force_fp16 = True
 cfg.pin_memory = False
-cfg.grad_accumulation = 1.
+cfg.grad_accumulation = 1.0
 cfg.num_workers = 8
 
 
-
-
-
-
-#Saving
+# Saving
 cfg.save_weights_only = True
 cfg.save_only_last_ckpt = False
 cfg.save_val_data = False
-cfg.save_checkpoint=True
+cfg.save_checkpoint = True
 cfg.save_pp_csv = False
 
 
+cfg.static_transforms = static_transforms = mt.Compose(
+    [
+        mt.EnsureChannelFirstd(keys=["image"], channel_dim="no_channel"),
+        mt.NormalizeIntensityd(keys="image"),
+    ]
+)
+cfg.train_aug = mt.Compose(
+    [
+        mt.RandSpatialCropSamplesd(keys=["image", "label"], roi_size=cfg.roi_size, num_samples=cfg.sub_batch_size),
+        mt.RandFlipd(
+            keys=["image", "label"],
+            prob=0.5,
+            spatial_axis=0,
+        ),
+        mt.RandFlipd(
+            keys=["image", "label"],
+            prob=0.5,
+            spatial_axis=1,
+        ),
+        mt.RandFlipd(
+            keys=["image", "label"],
+            prob=0.5,
+            spatial_axis=2,
+        ),
+        mt.RandRotate90d(
+            keys=["image", "label"],
+            prob=0.75,
+            max_k=3,
+            spatial_axes=(0, 1),
+        ),
+        mt.RandRotated(
+            keys=["image", "label"], prob=0.5, range_x=0.78, range_y=0.0, range_z=0.0, padding_mode="reflection"
+        ),
+    ]
+)
 
-cfg.static_transforms = static_transforms = mt.Compose([mt.EnsureChannelFirstd(keys=["image"], channel_dim="no_channel"),mt.NormalizeIntensityd(keys="image"),])
-cfg.train_aug = mt.Compose([mt.RandSpatialCropSamplesd(keys=["image", "label"],
-                                                                        roi_size=cfg.roi_size,
-                                                                        num_samples=cfg.sub_batch_size),
-                                mt.RandFlipd(
-                                    keys=["image", "label"],
-                                    prob=0.5,
-                                    spatial_axis=0,
-                                ),
-                                mt.RandFlipd(
-                                    keys=["image", "label"],
-                                    prob=0.5,
-                                    spatial_axis=1,
-                                ),
-                                mt.RandFlipd(
-                                    keys=["image", "label"],
-                                    prob=0.5,
-                                    spatial_axis=2,
-                                ),
-                                mt.RandRotate90d(
-                                    keys=["image", "label"],
-                                    prob=0.75,
-                                    max_k=3,
-                                    spatial_axes=(0, 1),
-                                ),
-                                                mt.RandRotated(keys=["image", "label"], prob=0.5,range_x=0.78,range_y=0.,range_z=0., padding_mode='reflection')
-                                    
-                                            ])
-
-cfg.val_aug = mt.Compose([mt.GridPatchd(keys=["image","label"],patch_size=cfg.roi_size, pad_mode='reflect')])
-
+cfg.val_aug = mt.Compose([mt.GridPatchd(keys=["image", "label"], patch_size=cfg.roi_size, pad_mode="reflect")])
 
 
 basic_cfg = cfg

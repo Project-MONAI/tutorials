@@ -1,5 +1,3 @@
-
-
 import pandas as pd
 import torch
 from torch.nn import functional as F
@@ -7,8 +5,6 @@ from tqdm import tqdm
 
 import torch
 from torch import nn
-
-
 
 def simple_nms(scores, nms_radius: int):
     """ Fast Non-maximum suppression to remove nearby points """
@@ -54,7 +50,6 @@ def post_process_pipeline(cfg, val_data, val_df):
         pred_df_ = pd.DataFrame(xyz.cpu().numpy(),columns=['x','y','z'])
         pred_df_['particle_type'] = p
         pred_df_['conf'] = conf.cpu().numpy()
-#         pred_df_['experiment'] = experiments[fold]
         pred_df += [pred_df_]
     pred_df = pd.concat(pred_df)
     pred_df = pred_df[(pred_df['x']<6300) & (pred_df['y']<6300)& (pred_df['z']<1840) & (pred_df['conf']>0.01)].copy()

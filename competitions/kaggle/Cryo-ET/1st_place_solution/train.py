@@ -29,8 +29,6 @@ from utils import (
 from utils import (
     get_optimizer,
     get_scheduler,
-    setup_neptune,
-    upload_s3,
 )
 
 
@@ -120,9 +118,7 @@ def run_eval(model, val_dataloader, cfg, pre="val", curr_epoch=0):
             loss = np.mean(losses)
 
             print(f"Mean {pre}_{k}", loss)
-            if cfg.neptune_run:
-                if not math.isinf(loss) and not math.isnan(loss):
-                    cfg.neptune_run[f"{pre}/{k}"].log(loss, step=cfg.curr_step)
+
 
 
     if (cfg.local_rank == 0) and (cfg.calc_metric) and (((curr_epoch + 1) % cfg.calc_metric_epochs) == 0):
@@ -135,9 +131,7 @@ def run_eval(model, val_dataloader, cfg, pre="val", curr_epoch=0):
             
         for k, v in val_score.items():
             print(f"{pre}_{k}: {v:.3f}")
-            if cfg.neptune_run:
-                if not math.isinf(v) and not math.isnan(v):
-                    cfg.neptune_run[f"{pre}/{k}"].log(v, step=cfg.curr_step)
+
         
     if cfg.distributed:
         torch.distributed.barrier()
@@ -191,8 +185,7 @@ def train(cfg):
 
     set_seed(cfg.seed)
 
-    if cfg.local_rank == 0:
-        cfg.neptune_run = setup_neptune(cfg)
+
 
     train_df, val_df, test_df = get_data(cfg)
     
@@ -347,17 +340,7 @@ def train(cfg):
                 if cfg.local_rank == 0 and cfg.curr_step % cfg.batch_size == 0:
 
                     loss_names = [key for key in output_dict if 'loss' in key]
-                    if cfg.neptune_run:
-                        for l in loss_names:
-                            v = output_dict[l].item()
-                            if not math.isinf(v) and not math.isnan(v):
-                                cfg.neptune_run[f"train/{l}"].log(value=v, step=cfg.curr_step)
-                        cfg.neptune_run["lr"].log(value=optimizer.param_groups[0]["lr"], step=cfg.curr_step)
-                        if total_grad_norm is not None:
-                            cfg.neptune_run["total_grad_norm"].log(value=total_grad_norm.item(), step=cfg.curr_step)
-                            cfg.neptune_run["total_grad_norm_after_clip"].log(value=total_grad_norm_after_clip.item(), step=cfg.curr_step)
-                        if total_weight_norm is not None:
-                            cfg.neptune_run["total_weight_norm"].log(value=total_weight_norm.item(), step=cfg.curr_step)
+
                     progress_bar.set_description(f"loss: {np.mean(losses[-10:]):.4f}")
 
                 if cfg.eval_steps != 0:
@@ -426,14 +409,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
     
     parser.add_argument("-C", "--config", help="config filename")
-    parser.add_argument("-D", "--debug", action='store_true', help="debugging True/ False")
     parser_args, other_args = parser.parse_known_args(sys.argv)
 
     cfg = copy(importlib.import_module(parser_args.config).cfg)
 
-    if parser_args.debug:
-        print('debug mode')
-        cfg.neptune_connection_mode = 'debug'
+
         
         
     # overwrite params in config with additional args

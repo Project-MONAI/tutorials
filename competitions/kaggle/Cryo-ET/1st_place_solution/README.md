@@ -66,7 +66,7 @@ We provide three different configurations which differ only in the used backbone
 
 ```python train.py -C cfg_resnet34 --output_dir WHATEVERISYOUROUTPUTDIR```
 
-This will save checkpoints under the specified WHATEVERISYOUROUTPUTDIR.
+This will save checkpoints under the specified WHATEVERISYOUROUTPUTDIR when training is finished.
 By default models are trained using bfloat16 which requires a GPU capable of that. Alternatively you can set ```cfg.bf16=False``` or overwrite as flag ```--bf16 False``` when running ```train.py ```.
 
 ### Replicating 1st place solution (segmentation part)

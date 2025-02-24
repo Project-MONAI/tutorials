@@ -1,4 +1,3 @@
-
 import random
 import os
 import numpy as np
@@ -6,13 +5,10 @@ import pandas as pd
 import torch
 from torch.utils.data import Sampler, RandomSampler, SequentialSampler, DataLoader, WeightedRandomSampler
 from torch import nn, optim
-# from torch.optim import AdamW
 from torch.optim.lr_scheduler import LambdaLR
 from torch.optim import lr_scheduler
 import importlib
 import math
-import neptune
-from neptune.utils import stringify_unsupported
 
 import logging
 import pickle
@@ -469,22 +465,7 @@ def get_scheduler(cfg, optimizer, total_steps):
     return scheduler
 
 
-def setup_neptune(cfg):
-    neptune_run = None
-    if cfg.neptune_project:
-        neptune_run = neptune.init_run(
-            project=cfg.neptune_project,
-#             tags=cfg.tags,
-            mode=cfg.neptune_connection_mode,
-            capture_stdout=False,
-            capture_stderr=False,
-            source_files=[f'models/{cfg.model}.py',f'data/{cfg.dataset}.py',f'configs/{cfg.name}.py']
-        )
 
-
-        neptune_run["cfg"] = stringify_unsupported(cfg.__dict__)
-
-    return neptune_run
 
 
 def read_df(fn):

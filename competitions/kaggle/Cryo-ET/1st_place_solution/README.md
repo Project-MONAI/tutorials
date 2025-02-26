@@ -60,7 +60,9 @@ For convenience we provide a file ```train_folded_v1.csv``` which contains the o
 
 We solve the competition with a 3D-segmentation approach leveraging [MONAI's FlexibleUNet](https://docs.monai.io/en/stable/networks.html#flexibleunet) architecture. Compared to the original implementation we adjusted the network to output more featuremap and enable deep-supervision. The following illustrates the resulting architecture at a high level:
 
-![alt text](figures/partly_Unet.png "Partly UNet")
+<p align="center">
+  <img src="partly_Unet.png" alt="figure of a Partly UNet")
+</p>
 
 We provide three different configurations which differ only in the used backbone and output feature maps. The configuration files are .py files and located under ```configs``` and share all other hyper-parameters. Each hyperparameter can be overwriten by adding a flag to the training command. To train a resnet34 version of our segmentation model simply run
 

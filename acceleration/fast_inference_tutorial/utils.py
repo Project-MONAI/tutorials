@@ -71,7 +71,7 @@ def prepare_tensorrt_model(bundle_path, trt_model_name="model_trt.ts"):
             precision="fp16",
             dynamic_batchsize=[1, 4, 8],
             use_onnx=True,
-            use_trace=True
+            use_trace=True,
         )
     else:
         print(f"TensorRT model already exists at {output_path}")
@@ -181,6 +181,7 @@ def prepare_workflow(inference_config, meta_config, bundle_path, override):
     )
 
     return workflow
+
 
 def benchmark_workflow(workflow, timer, benchmark_type):
     workflow.initialize()

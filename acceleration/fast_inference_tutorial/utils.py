@@ -76,7 +76,7 @@ def prepare_tensorrt_model(root_dir, weights_path, trt_model_name="model_trt.ts"
         model.load_state_dict(weights)
         torchscript_model = convert_to_trt(
             model=model,
-            precision="fp32",
+            precision="fp16",
             input_shape=[1, 1, 96, 96, 96],
             dynamic_batchsize=[1, 1, 1],
             use_trace=True,

@@ -20,13 +20,21 @@ import torch
 import torch_tensorrt
 from monai.inferers import sliding_window_inference
 from monai.networks.nets import SegResNet
-from monai.transforms import (Activationsd, AsDiscreted, Compose,
-                              EnsureChannelFirstd, EnsureTyped, Invertd,
-                              LoadImaged, NormalizeIntensityd, Orientationd,
-                              ScaleIntensityd, Spacingd)
+from monai.transforms import (
+    Activationsd,
+    AsDiscreted,
+    Compose,
+    EnsureChannelFirstd,
+    EnsureTyped,
+    Invertd,
+    LoadImaged,
+    NormalizeIntensityd,
+    Orientationd,
+    ScaleIntensityd,
+    Spacingd,
+)
 
-from utils import (prepare_model_weights, prepare_tensorrt_model,
-                   prepare_test_datalist)
+from utils import prepare_model_weights, prepare_tensorrt_model, prepare_test_datalist
 
 
 def get_transforms(device, gpu_loading_flag=False, gpu_transforms_flag=False):
@@ -49,6 +57,7 @@ def get_transforms(device, gpu_loading_flag=False, gpu_transforms_flag=False):
 
     return infer_transforms
 
+
 def get_post_transforms(infer_transforms):
     post_transforms = Compose(
         [
@@ -64,6 +73,7 @@ def get_post_transforms(infer_transforms):
         ]
     )
     return post_transforms
+
 
 def get_model(device, weights_path, trt_model_path, trt_flag=False):
     if not trt_flag:
@@ -84,11 +94,12 @@ def get_model(device, weights_path, trt_model_path, trt_flag=False):
         model = torch.jit.load(trt_model_path)
     return model
 
+
 def run_inference(data_list, infer_transforms, model, device, benchmark_type):
     total_time_dict = {}
     roi_size = (96, 96, 96)
     sw_batch_size = 1
-    
+
     for idx, sample in enumerate(data_list):
         start = timer()
         data = infer_transforms({"image": sample})
@@ -116,6 +127,7 @@ def run_inference(data_list, infer_transforms, model, device, benchmark_type):
             total_time_dict[sample_name] = end - start
 
     return total_time_dict
+
 
 def main():
     parser = argparse.ArgumentParser(description="Run inference benchmark.")
@@ -145,6 +157,7 @@ def main():
     # Save the results
     df = pd.DataFrame(list(total_time_dict.items()), columns=["file_name", "time"])
     df.to_csv(os.path.join(root_dir, f"time_{args.benchmark_type}.csv"), index=False)
+
 
 if __name__ == "__main__":
     main()

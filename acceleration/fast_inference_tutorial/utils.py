@@ -78,7 +78,7 @@ def prepare_tensorrt_model(root_dir, weights_path, trt_model_name="model_trt.ts"
             model=model,
             precision="fp16",
             input_shape=[1, 1, 96, 96, 96],
-            dynamic_batchsize=[1, 1, 1],
+            dynamic_batchsize=[1, 4, 4],
             use_trace=True,
             verify=False,
         )

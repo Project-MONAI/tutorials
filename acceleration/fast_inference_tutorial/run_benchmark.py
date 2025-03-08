@@ -49,6 +49,7 @@ def get_transforms(device, gpu_loading_flag=False, gpu_transforms_flag=False):
 
     return infer_transforms
 
+
 def get_post_transforms(infer_transforms):
     post_transforms = Compose(
         [
@@ -64,6 +65,7 @@ def get_post_transforms(infer_transforms):
         ]
     )
     return post_transforms
+
 
 def get_model(device, weights_path, trt_model_path, trt_flag=False):
     if not trt_flag:
@@ -84,11 +86,12 @@ def get_model(device, weights_path, trt_model_path, trt_flag=False):
         model = torch.jit.load(trt_model_path)
     return model
 
+
 def run_inference(data_list, infer_transforms, model, device, benchmark_type):
     total_time_dict = {}
     roi_size = (96, 96, 96)
-    sw_batch_size = 1
-    
+    sw_batch_size = 4
+
     for idx, sample in enumerate(data_list):
         start = timer()
         data = infer_transforms({"image": sample})
@@ -114,8 +117,9 @@ def run_inference(data_list, infer_transforms, model, device, benchmark_type):
         sample_name = sample.split("/")[-1]
         if idx > 0:
             total_time_dict[sample_name] = end - start
-
+            print(f"Time taken for {sample_name}: {end - start} seconds")
     return total_time_dict
+
 
 def main():
     parser = argparse.ArgumentParser(description="Run inference benchmark.")
@@ -128,8 +132,8 @@ def main():
     torch_tensorrt.runtime.set_multi_device_safe_mode(True)
     device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
     train_files = prepare_test_datalist(root_dir)
-    # since the dataset is too large, the smallest 21 files are used for warm up (1 file) and benchmarking (11 files)
-    train_files = sorted(train_files, key=lambda x: os.path.getsize(x), reverse=False)[:21]
+    # since the dataset is too large, the smallest 31 files are used for warm up (1 file) and benchmarking (30 files)
+    train_files = sorted(train_files, key=lambda x: os.path.getsize(x), reverse=False)[:31]
     weights_path = prepare_model_weights(root_dir=root_dir, bundle_name="wholeBody_ct_segmentation")
     trt_model_name = "model_trt.ts"
     trt_model_path = prepare_tensorrt_model(root_dir, weights_path, trt_model_name)
@@ -145,6 +149,7 @@ def main():
     # Save the results
     df = pd.DataFrame(list(total_time_dict.items()), columns=["file_name", "time"])
     df.to_csv(os.path.join(root_dir, f"time_{args.benchmark_type}.csv"), index=False)
+
 
 if __name__ == "__main__":
     main()

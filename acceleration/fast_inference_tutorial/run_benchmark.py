@@ -20,13 +20,21 @@ import torch
 import torch_tensorrt
 from monai.inferers import sliding_window_inference
 from monai.networks.nets import SegResNet
-from monai.transforms import (Activationsd, AsDiscreted, Compose,
-                              EnsureChannelFirstd, EnsureTyped, Invertd,
-                              LoadImaged, NormalizeIntensityd, Orientationd,
-                              ScaleIntensityd, Spacingd)
+from monai.transforms import (
+    Activationsd,
+    AsDiscreted,
+    Compose,
+    EnsureChannelFirstd,
+    EnsureTyped,
+    Invertd,
+    LoadImaged,
+    NormalizeIntensityd,
+    Orientationd,
+    ScaleIntensityd,
+    Spacingd,
+)
 
-from utils import (prepare_model_weights, prepare_tensorrt_model,
-                   prepare_test_datalist)
+from utils import prepare_model_weights, prepare_tensorrt_model, prepare_test_datalist
 
 
 def get_transforms(device, gpu_loading_flag=False, gpu_transforms_flag=False):

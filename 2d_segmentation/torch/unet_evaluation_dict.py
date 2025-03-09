@@ -61,7 +61,7 @@ def main(tempdir):
     val_loader = DataLoader(val_ds, batch_size=1, num_workers=4, collate_fn=list_data_collate)
     dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
     post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
-    saver = SaveImage(output_dir="./output", output_ext=".png", output_postfix="seg")
+    saver = SaveImage(output_dir="./output", output_ext=".png", output_postfix="seg", scale=255)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = UNet(
         spatial_dims=2,

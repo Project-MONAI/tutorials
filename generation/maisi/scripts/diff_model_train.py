@@ -51,12 +51,12 @@ def load_filenames(data_list_path: str) -> list:
 
 
 def prepare_data(
-    train_files: list, 
-    device: torch.device, 
-    cache_rate: float, 
-    num_workers: int = 2, 
-    batch_size: int = 1, 
-    include_body_region: bool = False
+    train_files: list,
+    device: torch.device,
+    cache_rate: float,
+    num_workers: int = 2,
+    batch_size: int = 1,
+    include_body_region: bool = False,
 ) -> DataLoader:
     """
     Prepare training data.
@@ -78,11 +78,11 @@ def prepare_data(
             return torch.FloatTensor(json.load(f)[key])
 
     train_transforms_list = [
-            monai.transforms.LoadImaged(keys=["image"]),
-            monai.transforms.EnsureChannelFirstd(keys=["image"]),            
-            monai.transforms.Lambdad(keys="spacing", func=lambda x: _load_data_from_file(x, "spacing")),            
-            monai.transforms.Lambdad(keys="spacing", func=lambda x: x * 1e2),
-        ]
+        monai.transforms.LoadImaged(keys=["image"]),
+        monai.transforms.EnsureChannelFirstd(keys=["image"]),
+        monai.transforms.Lambdad(keys="spacing", func=lambda x: _load_data_from_file(x, "spacing")),
+        monai.transforms.Lambdad(keys="spacing", func=lambda x: x * 1e2),
+    ]
     if include_body_region:
         train_transforms_list += [
             monai.transforms.Lambdad(
@@ -202,7 +202,7 @@ def train_one_epoch(
     logger: logging.Logger,
     local_rank: int,
     amp: bool = True,
-    include_body_region: bool = False
+    include_body_region: bool = False,
 ) -> torch.Tensor:
     """
     Train the model for one epoch.
@@ -284,9 +284,10 @@ def train_one_epoch(
                 # predict velocity
                 loss = loss_pt(model_output.float(), (images - noise).float())
             else:
-                raise ValueError("noise scheduler prediction type has to be chosen from ",
-                     f"[{DDPMPredictionType.EPSILON},{DDPMPredictionType.SAMPLE},{DDPMPredictionType.V_PREDICTION}]"
-                    )
+                raise ValueError(
+                    "noise scheduler prediction type has to be chosen from ",
+                    f"[{DDPMPredictionType.EPSILON},{DDPMPredictionType.SAMPLE},{DDPMPredictionType.V_PREDICTION}]",
+                )
 
         if amp:
             scaler.scale(loss).backward()
@@ -349,7 +350,12 @@ def save_checkpoint(
 
 
 def diff_model_train(
-    env_config_path: str, model_config_path: str, model_def_path: str, num_gpus: int, amp: bool = True, include_body_region: bool = False
+    env_config_path: str,
+    model_config_path: str,
+    model_def_path: str,
+    num_gpus: int,
+    amp: bool = True,
+    include_body_region: bool = False,
 ) -> None:
     """
     Main function to train a diffusion model.
@@ -400,9 +406,11 @@ def diff_model_train(
         )[local_rank]
 
     train_loader = prepare_data(
-        train_files, device, args.diffusion_unet_train["cache_rate"], 
+        train_files,
+        device,
+        args.diffusion_unet_train["cache_rate"],
         batch_size=args.diffusion_unet_train["batch_size"],
-        include_body_region = include_body_region
+        include_body_region=include_body_region,
     )
 
     unet = load_unet(args, device, logger)
@@ -438,7 +446,7 @@ def diff_model_train(
             logger,
             local_rank,
             amp=amp,
-            include_body_region=include_body_region
+            include_body_region=include_body_region,
         )
 
         loss_torch = loss_torch.tolist()
@@ -479,7 +487,14 @@ if __name__ == "__main__":
     )
     parser.add_argument("--num_gpus", type=int, default=1, help="Number of GPUs to use for training")
     parser.add_argument("--no_amp", dest="amp", action="store_false", help="Disable automatic mixed precision training")
-    parser.add_argument("--include_body_region", dest="include_body_region", action="store_true", help="Whether to include body region in data")
+    parser.add_argument(
+        "--include_body_region",
+        dest="include_body_region",
+        action="store_true",
+        help="Whether to include body region in data",
+    )
 
     args = parser.parse_args()
-    diff_model_train(args.env_config, args.model_config, args.model_def, args.num_gpus, args.amp, args.include_body_region)
+    diff_model_train(
+        args.env_config, args.model_config, args.model_def, args.num_gpus, args.amp, args.include_body_region
+    )

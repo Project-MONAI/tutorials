@@ -179,7 +179,7 @@ def run_inference(
                 image, _ = noise_scheduler.step(model_output, t, image, next_t)  # type: ignore
 
         inferer = SlidingWindowInferer(
-            roi_size=[80,80,80],
+            roi_size=[80, 80, 80],
             sw_batch_size=1,
             progress=True,
             mode="gaussian",

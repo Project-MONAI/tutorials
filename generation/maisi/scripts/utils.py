@@ -709,4 +709,17 @@ def dynamic_infer(inferer, model, images):
     if torch.numel(images[0:1, 0:1, ...]) < math.prod(inferer.roi_size):
         return model(images)
     else:
-        return inferer(network=model, inputs=images)
+        # Extract the spatial dimensions from the images tensor (H, W, D)
+        spatial_dims = images.shape[2:]
+        orig_roi = inferer.roi_size
+        
+        # Check that roi has the same number of dimensions as spatial_dims
+        if len(orig_roi) != len(spatial_dims):
+            raise ValueError(f"ROI length ({len(orig_roi)}) does not match spatial dimensions ({len(spatial_dims)}).")
+        
+        # Iterate and adjust each ROI dimension
+        adjusted_roi = [min(roi_dim, img_dim) for roi_dim, img_dim in zip(orig_roi, spatial_dims)]
+        inferer.roi_size = adjusted_roi
+        output = inferer(network=model, inputs=images)
+        inferer.roi_size = orig_roi
+        return output

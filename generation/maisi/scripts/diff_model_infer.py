@@ -25,10 +25,12 @@ from tqdm import tqdm
 
 from monai.inferers import sliding_window_inference
 from monai.utils import set_determinism
+from monai.networks.schedulers import RFlowScheduler
+from monai.inferers.inferer import SlidingWindowInferer
 
 from .diff_model_setting import initialize_distributed, load_config, setup_logging
 from .sample import ReconModel, check_input
-from .utils import define_instance
+from .utils import define_instance, dynamic_infer
 
 
 def set_random_seed(seed: int) -> int:
@@ -144,14 +146,26 @@ def run_inference(
 
     image = noise
     noise_scheduler = define_instance(args, "noise_scheduler")
-    noise_scheduler.set_timesteps(num_inference_steps=args.diffusion_unet_inference["num_inference_steps"])
+    if isinstance(noise_scheduler, RFlowScheduler):
+        noise_scheduler.set_timesteps(
+            num_inference_steps=args.diffusion_unet_inference["num_inference_steps"],
+            input_img_size_numel=torch.prod(torch.tensor(noise.shape[-3:]))
+        )
+    else:
+        noise_scheduler.set_timesteps(num_inference_steps=args.diffusion_unet_inference["num_inference_steps"])
 
     recon_model = ReconModel(autoencoder=autoencoder, scale_factor=scale_factor).to(device)
     autoencoder.eval()
     unet.eval()
 
+    all_timesteps = noise_scheduler.timesteps
+    all_next_timesteps = torch.cat((all_timesteps[1:], torch.tensor([0], dtype=all_timesteps.dtype)))
+    progress_bar = tqdm(
+            zip(all_timesteps, all_next_timesteps),
+            total=min(len(all_timesteps), len(all_next_timesteps)),
+        )
     with torch.amp.autocast("cuda", enabled=True):
-        for t in tqdm(noise_scheduler.timesteps, ncols=110):
+        for t, next_t in progress_bar:
             model_output = unet(
                 x=image,
                 timesteps=torch.Tensor((t,)).to(device),
@@ -159,23 +173,26 @@ def run_inference(
                 bottom_region_index_tensor=bottom_region_index_tensor,
                 spacing_tensor=spacing_tensor,
             )
-            image, _ = noise_scheduler.step(model_output, t, image)
+            if not isinstance(noise_scheduler, RFlowScheduler):
+                image, _ = noise_scheduler.step(model_output, t, image)  # type: ignore
+            else:
+                image, _ = noise_scheduler.step(model_output, t, image, next_t)  # type: ignore
 
-        synthetic_images = sliding_window_inference(
-            inputs=image,
+        
+        inferer = SlidingWindowInferer(
             roi_size=(
                 min(output_size[0] // divisor // 4 * 3, 96),
                 min(output_size[1] // divisor // 4 * 3, 96),
                 min(output_size[2] // divisor // 4 * 3, 96),
             ),
             sw_batch_size=1,
-            predictor=recon_model,
+            progress=True,
             mode="gaussian",
             overlap=2.0 / 3.0,
             sw_device=device,
             device=device,
         )
-
+        synthetic_images = dynamic_infer(inferer, recon_model, image)
         data = synthetic_images.squeeze().cpu().detach().numpy()
         a_min, a_max, b_min, b_max = -1000, 1000, 0, 1
         data = (data - b_min) / (b_max - b_min) * (a_max - a_min) + a_min
@@ -211,7 +228,7 @@ def save_image(
 
 
 @torch.inference_mode()
-def diff_model_infer(env_config_path: str, model_config_path: str, model_def_path: str, num_gpus: int) -> None:
+def diff_model_infer(env_config_path: str, model_config_path: str, model_def_path: str, num_gpus: int, include_body_region: bool = False ) -> None:
     """
     Main function to run the diffusion model inference.
 
@@ -219,6 +236,7 @@ def diff_model_infer(env_config_path: str, model_config_path: str, model_def_pat
         env_config_path (str): Path to the environment configuration file.
         model_config_path (str): Path to the model configuration file.
         model_def_path (str): Path to the model definition file.
+        include_body_region (bool): Whether to include body region in data
     """
     args = load_config(env_config_path, model_config_path, model_def_path)
     local_rank, world_size, device = initialize_distributed(num_gpus)
@@ -317,6 +335,7 @@ if __name__ == "__main__":
         default=1,
         help="Number of GPUs to use for distributed inference",
     )
+    parser.add_argument("--include_body_region", dest="include_body_region", action="store_true", help="Whether to include body region in data")
 
     args = parser.parse_args()
-    diff_model_infer(args.env_config, args.model_config, args.model_def, args.num_gpus)
+    diff_model_infer(args.env_config, args.model_config, args.model_def, args.num_gpus, include_body_region=args.include_body_region)

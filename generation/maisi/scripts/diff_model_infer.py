@@ -149,7 +149,7 @@ def run_inference(
     if isinstance(noise_scheduler, RFlowScheduler):
         noise_scheduler.set_timesteps(
             num_inference_steps=args.diffusion_unet_inference["num_inference_steps"],
-            input_img_size_numel=torch.prod(torch.tensor(noise.shape[-3:]))
+            input_img_size_numel=torch.prod(torch.tensor(noise.shape[-3:])),
         )
     else:
         noise_scheduler.set_timesteps(num_inference_steps=args.diffusion_unet_inference["num_inference_steps"])
@@ -161,9 +161,9 @@ def run_inference(
     all_timesteps = noise_scheduler.timesteps
     all_next_timesteps = torch.cat((all_timesteps[1:], torch.tensor([0], dtype=all_timesteps.dtype)))
     progress_bar = tqdm(
-            zip(all_timesteps, all_next_timesteps),
-            total=min(len(all_timesteps), len(all_next_timesteps)),
-        )
+        zip(all_timesteps, all_next_timesteps),
+        total=min(len(all_timesteps), len(all_next_timesteps)),
+    )
     with torch.amp.autocast("cuda", enabled=True):
         for t, next_t in progress_bar:
             model_output = unet(
@@ -178,7 +178,6 @@ def run_inference(
             else:
                 image, _ = noise_scheduler.step(model_output, t, image, next_t)  # type: ignore
 
-        
         inferer = SlidingWindowInferer(
             roi_size=[80,80,80],
             sw_batch_size=1,
@@ -224,7 +223,9 @@ def save_image(
 
 
 @torch.inference_mode()
-def diff_model_infer(env_config_path: str, model_config_path: str, model_def_path: str, num_gpus: int, include_body_region: bool = False ) -> None:
+def diff_model_infer(
+    env_config_path: str, model_config_path: str, model_def_path: str, num_gpus: int, include_body_region: bool = False
+) -> None:
     """
     Main function to run the diffusion model inference.
 
@@ -331,7 +332,14 @@ if __name__ == "__main__":
         default=1,
         help="Number of GPUs to use for distributed inference",
     )
-    parser.add_argument("--include_body_region", dest="include_body_region", action="store_true", help="Whether to include body region in data")
+    parser.add_argument(
+        "--include_body_region",
+        dest="include_body_region",
+        action="store_true",
+        help="Whether to include body region in data",
+    )
 
     args = parser.parse_args()
-    diff_model_infer(args.env_config, args.model_config, args.model_def, args.num_gpus, include_body_region=args.include_body_region)
+    diff_model_infer(
+        args.env_config, args.model_config, args.model_def, args.num_gpus, include_body_region=args.include_body_region
+    )

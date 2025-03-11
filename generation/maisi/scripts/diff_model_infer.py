@@ -180,15 +180,11 @@ def run_inference(
 
         
         inferer = SlidingWindowInferer(
-            roi_size=(
-                min(output_size[0] // divisor // 4 * 3, 96),
-                min(output_size[1] // divisor // 4 * 3, 96),
-                min(output_size[2] // divisor // 4 * 3, 96),
-            ),
+            roi_size=[80,80,80],
             sw_batch_size=1,
             progress=True,
             mode="gaussian",
-            overlap=2.0 / 3.0,
+            overlap=0.4,
             sw_device=device,
             device=device,
         )

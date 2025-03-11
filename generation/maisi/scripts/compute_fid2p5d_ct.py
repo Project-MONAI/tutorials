@@ -79,7 +79,7 @@ import torch.nn.functional as F
 
 from datetime import timedelta
 from pathlib import Path
-from generative.metrics import FIDMetric
+from monai.metrics.fid import FIDMetric
 from monai.transforms import Compose
 
 # ------------------------------------------------------------------------------

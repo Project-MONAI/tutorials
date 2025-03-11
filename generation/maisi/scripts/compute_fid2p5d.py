@@ -100,6 +100,7 @@ from monai.transforms import Compose
 # to remove external dependency.
 # ------------------------------------------------------------------------------
 
+
 def drop_empty_slice(slices, empty_threshold: float):
     """
     Decide which 2D slices to keep by checking if their maximum intensity
@@ -330,6 +331,7 @@ def get_features_2p5d(
 
     return feature_image_xy, feature_image_yz, feature_image_zx
 
+
 # ------------------------------------------------------------------------------
 # End inline fid_utils code
 # ------------------------------------------------------------------------------
@@ -503,17 +505,15 @@ def main(
     ]
 
     if enable_resampling:
-        transform_list.append(
-            monai.transforms.Spacingd(keys=["image"], pixdim=rs_spacing_tuple, mode=["bilinear"])
-        )
+        transform_list.append(monai.transforms.Spacingd(keys=["image"], pixdim=rs_spacing_tuple, mode=["bilinear"]))
     if enable_padding:
         transform_list.append(
-            monai.transforms.SpatialPadd(keys=["image"], spatial_size=target_shape_tuple, mode=["constant"], value=-1000)
+            monai.transforms.SpatialPadd(
+                keys=["image"], spatial_size=target_shape_tuple, mode=["constant"], value=-1000
+            )
         )
     if enable_center_cropping:
-        transform_list.append(
-            monai.transforms.CenterSpatialCropd(keys=["image"], roi_size=target_shape_tuple)
-        )
+        transform_list.append(monai.transforms.CenterSpatialCropd(keys=["image"], roi_size=target_shape_tuple))
 
     # Intensity scaling to clamp between [-1000, 1000]
     transform_list.append(
@@ -617,8 +617,12 @@ def main(
     # All-reduce / gather features across ranks
     # -------------------------------------------------------------------------
     features = [
-        real_features_xy, real_features_yz, real_features_zx,
-        synth_features_xy, synth_features_yz, synth_features_zx
+        real_features_xy,
+        real_features_yz,
+        real_features_zx,
+        synth_features_xy,
+        synth_features_yz,
+        synth_features_zx,
     ]
 
     # 1) Gather local feature sizes across ranks

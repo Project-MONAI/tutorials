@@ -21,12 +21,11 @@ import nibabel as nib
 import numpy as np
 import torch
 import torch.distributed as dist
-from tqdm import tqdm
-
 from monai.inferers import sliding_window_inference
-from monai.utils import set_determinism
-from monai.networks.schedulers import RFlowScheduler
 from monai.inferers.inferer import SlidingWindowInferer
+from monai.networks.schedulers import RFlowScheduler
+from monai.utils import set_determinism
+from tqdm import tqdm
 
 from .diff_model_setting import initialize_distributed, load_config, setup_logging
 from .sample import ReconModel, check_input
@@ -179,7 +178,7 @@ def run_inference(
                 image, _ = noise_scheduler.step(model_output, t, image, next_t)  # type: ignore
 
         inferer = SlidingWindowInferer(
-            roi_size=[80,80,80],
+            roi_size=[80, 80, 80],
             sw_batch_size=1,
             progress=True,
             mode="gaussian",

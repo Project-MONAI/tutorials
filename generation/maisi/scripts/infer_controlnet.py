@@ -18,7 +18,7 @@ from datetime import datetime
 
 import torch
 import torch.distributed as dist
-from monai.data import decollate_batch, MetaTensor
+from monai.data import MetaTensor, decollate_batch
 from monai.networks.utils import copy_model_state
 from monai.transforms import SaveImage
 from monai.utils import RankFilter

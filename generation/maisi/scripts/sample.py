@@ -19,17 +19,17 @@ from datetime import datetime
 
 import monai
 import torch
-from monai.inferers.inferer import DiffusionInferer
 from monai.data import MetaTensor
 from monai.inferers import sliding_window_inference
+from monai.inferers.inferer import DiffusionInferer
 from monai.transforms import Compose, SaveImage
 from monai.utils import set_determinism
 from tqdm import tqdm
 
 from .augmentation import augmentation
 from .find_masks import find_masks
-from .utils import binarize_labels, general_mask_generation_post_process, get_body_region_index_from_mask, remap_labels
 from .quality_check import is_outlier
+from .utils import binarize_labels, general_mask_generation_post_process, get_body_region_index_from_mask, remap_labels
 
 
 class ReconModel(torch.nn.Module):

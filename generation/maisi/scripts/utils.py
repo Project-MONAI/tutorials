@@ -11,9 +11,9 @@
 
 import copy
 import json
+import logging
 import math
 import os
-import logging
 from argparse import Namespace
 from datetime import timedelta
 from typing import Any, Sequence
@@ -22,11 +22,11 @@ import numpy as np
 import skimage
 import torch
 import torch.distributed as dist
-from monai.transforms.utils_morphological_ops import dilate, erode
 from monai.bundle import ConfigParser
 from monai.config import DtypeLike, NdarrayOrTensor
 from monai.data import CacheDataset, DataLoader, partition_dataset
 from monai.transforms import Compose, EnsureTyped, Lambdad, LoadImaged, Orientationd
+from monai.transforms.utils_morphological_ops import dilate, erode
 from monai.utils import TransformBackends, convert_data_type, convert_to_dst_type, get_equivalent_dtype
 from scipy import stats
 from torch import Tensor

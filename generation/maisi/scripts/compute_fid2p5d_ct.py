@@ -22,7 +22,7 @@ SHELL Usage Example:
     export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6
     NUM_GPUS=7
 
-    torchrun --nproc_per_node=${NUM_GPUS} compute_fid2d_mgpu.py \
+    torchrun --nproc_per_node=${NUM_GPUS} compute_fid2p5d_ct.py \
         --model_name "radimagenet_resnet50" \
         --data0_dataroot "path/to/datasetA" \
         --data0_filelist "path/to/filelistA.txt" \
@@ -63,19 +63,6 @@ Function Arguments (main):
     num_images (int): Max number of images from each dataset to process (truncate if larger).
     output_root (str): Folder where extracted feature .pt files and logs are saved.
     target_shape (str): "XxYxZ" shape to which images are padded/cropped/resampled.
-
-Example:
---------
-    python compute_fid2p5d.py   --model_name=radimagenet_resnet50 \\
-                                --data0_dataroot=/data/real_images \\
-                                --data0_filelist=/data/real_list.txt \\
-                                --data0_folder=real \\
-                                --data1_dataroot=/data/synth_images \\
-                                --data1_filelist=/data/synth_list.txt \\
-                                --data1_folder=synth \\
-                                --enable_center_slices=True \\
-                                --enable_padding=True \\
-                                --target_shape=512x512x512
 
 """
 

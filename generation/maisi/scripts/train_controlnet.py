@@ -23,6 +23,8 @@ import torch.distributed as dist
 import torch.nn.functional as F
 from monai.networks.utils import copy_model_state
 from monai.utils import RankFilter
+from monai.networks.schedulers import RFlowScheduler
+from monai.networks.schedulers.ddpm import DDPMPredictionType
 from torch.amp import GradScaler, autocast
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
@@ -49,9 +51,16 @@ def main():
         "--training-config",
         default="./configs/config_maisi_controlnet_train.json",
         help="config json file that stores training hyper-parameters",
-    )
+    )    
     parser.add_argument("-g", "--gpus", default=1, type=int, help="number of gpus per node")
+    parser.add_argument(
+        "--include_body_region",
+        dest="include_body_region",
+        action="store_true",
+        help="Whether to include body region in data",
+    )
     args = parser.parse_args()
+    include_body_region = args.include_body_region
 
     # Step 0: configuration
     logger = logging.getLogger("maisi.controlnet.training")
@@ -168,58 +177,83 @@ def main():
         epoch_loss_ = 0
         for step, batch in enumerate(train_loader):
             # get image embedding and label mask and scale image embedding by the provided scale_factor
-            inputs = batch["image"].to(device) * scale_factor
+            images = batch["image"].to(device) * scale_factor
             labels = batch["label"].to(device)
             # get corresponding conditions
-            top_region_index_tensor = batch["top_region_index"].to(device)
-            bottom_region_index_tensor = batch["bottom_region_index"].to(device)
+            if include_body_region:
+                top_region_index_tensor = batch["top_region_index"].to(device)
+                bottom_region_index_tensor = batch["bottom_region_index"].to(device)
             spacing_tensor = batch["spacing"].to(device)
 
             optimizer.zero_grad(set_to_none=True)
 
             with autocast("cuda", enabled=True):
                 # generate random noise
-                noise_shape = list(inputs.shape)
-                noise = torch.randn(noise_shape, dtype=inputs.dtype).to(device)
+                noise_shape = list(images.shape)
+                noise = torch.randn(noise_shape, dtype=images.dtype).to(device)
 
                 # use binary encoding to encode segmentation mask
                 controlnet_cond = binarize_labels(labels.as_tensor().to(torch.uint8)).float()
 
                 # create timesteps
-                timesteps = torch.randint(
-                    0, noise_scheduler.num_train_timesteps, (inputs.shape[0],), device=device
-                ).long()
+                if isinstance(noise_scheduler, RFlowScheduler):
+                    timesteps = noise_scheduler.sample_timesteps(images)
+                else:
+                    timesteps = torch.randint(0, noise_scheduler.num_train_timesteps, (images.shape[0],), device=images.device).long()
 
                 # create noisy latent
-                noisy_latent = noise_scheduler.add_noise(original_samples=inputs, noise=noise, timesteps=timesteps)
+                noisy_latent = noise_scheduler.add_noise(original_samples=images, noise=noise, timesteps=timesteps)
 
                 # get controlnet output
                 down_block_res_samples, mid_block_res_sample = controlnet(
                     x=noisy_latent, timesteps=timesteps, controlnet_cond=controlnet_cond
                 )
-                # get noise prediction from diffusion unet
-                noise_pred = unet(
-                    x=noisy_latent,
-                    timesteps=timesteps,
-                    top_region_index_tensor=top_region_index_tensor,
-                    bottom_region_index_tensor=bottom_region_index_tensor,
-                    spacing_tensor=spacing_tensor,
-                    down_block_additional_residuals=down_block_res_samples,
-                    mid_block_additional_residual=mid_block_res_sample,
-                )
+                if include_body_region:
+                    model_output = unet(
+                        x=noisy_latent,
+                        timesteps=timesteps,
+                        top_region_index_tensor=top_region_index_tensor,
+                        bottom_region_index_tensor=bottom_region_index_tensor,
+                        spacing_tensor=spacing_tensor,
+                        down_block_additional_residuals=down_block_res_samples,
+                        mid_block_additional_residual=mid_block_res_sample,
+                    )
+                else:
+                    model_output = unet(
+                        x=noisy_latent,
+                        timesteps=timesteps,
+                        spacing_tensor=spacing_tensor,
+                        down_block_additional_residuals=down_block_res_samples,
+                        mid_block_additional_residual=mid_block_res_sample,
+                    )
 
+            if noise_scheduler.prediction_type == DDPMPredictionType.EPSILON:
+                # predict noise
+                model_gt = noise
+            elif noise_scheduler.prediction_type == DDPMPredictionType.SAMPLE:
+                # predict sample
+                model_gt = images
+            elif noise_scheduler.prediction_type == DDPMPredictionType.V_PREDICTION:
+                # predict velocity
+                model_gt = images - noise
+            else:
+                raise ValueError(
+                    "noise scheduler prediction type has to be chosen from ",
+                    f"[{DDPMPredictionType.EPSILON},{DDPMPredictionType.SAMPLE},{DDPMPredictionType.V_PREDICTION}]",
+                )
+                    
             if weighted_loss > 1.0:
-                weights = torch.ones_like(inputs).to(inputs.device)
-                roi = torch.zeros([noise_shape[0]] + [1] + noise_shape[2:]).to(inputs.device)
-                interpolate_label = F.interpolate(labels, size=inputs.shape[2:], mode="nearest")
+                weights = torch.ones_like(images).to(images.device)
+                roi = torch.zeros([noise_shape[0]] + [1] + noise_shape[2:]).to(images.device)
+                interpolate_label = F.interpolate(labels, size=images.shape[2:], mode="nearest")
                 # assign larger weights for ROI (tumor)
                 for label in weighted_loss_label:
                     roi[interpolate_label == label] = 1
-                weights[roi.repeat(1, inputs.shape[1], 1, 1, 1) == 1] = weighted_loss
-                loss = (F.l1_loss(noise_pred.float(), noise.float(), reduction="none") * weights).mean()
+                weights[roi.repeat(1, images.shape[1], 1, 1, 1) == 1] = weighted_loss
+                loss = (F.l1_loss(noise_pred.float(), model_gt.float(), reduction="none") * weights).mean()
             else:
-                loss = F.l1_loss(noise_pred.float(), noise.float())
-
+                loss = F.l1_loss(model_output.float(), model_gt.float())
+                
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()

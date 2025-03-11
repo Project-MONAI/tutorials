@@ -273,20 +273,23 @@ def train_one_epoch(
                     timesteps=timesteps,
                     spacing_tensor=spacing_tensor,
                 )
+
             if noise_scheduler.prediction_type == DDPMPredictionType.EPSILON:
                 # predict noise
-                loss = loss_pt(model_output.float(), noise.float())
+                model_gt = noise
             elif noise_scheduler.prediction_type == DDPMPredictionType.SAMPLE:
                 # predict sample
-                loss = loss_pt(model_output.float(), images.float())
+                model_gt = images
             elif noise_scheduler.prediction_type == DDPMPredictionType.V_PREDICTION:
                 # predict velocity
-                loss = loss_pt(model_output.float(), (images - noise).float())
+                model_gt = images - noise
             else:
                 raise ValueError(
                     "noise scheduler prediction type has to be chosen from ",
                     f"[{DDPMPredictionType.EPSILON},{DDPMPredictionType.SAMPLE},{DDPMPredictionType.V_PREDICTION}]",
                 )
+            
+            loss = loss_pt(model_output.float(), model_gt.float())
 
         if amp:
             scaler.scale(loss).backward()

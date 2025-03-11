@@ -49,7 +49,14 @@ def main():
         help="config json file that stores training hyper-parameters",
     )
     parser.add_argument("-g", "--gpus", default=1, type=int, help="number of gpus per node")
+    parser.add_argument(
+        "--include_body_region",
+        dest="include_body_region",
+        action="store_true",
+        help="Whether to include body region in data",
+    )
     args = parser.parse_args()
+    include_body_region = args.include_body_region
 
     # Step 0: configuration
     logger = logging.getLogger("maisi.controlnet.infer")
@@ -150,8 +157,12 @@ def main():
         # get label mask
         labels = batch["label"].to(device)
         # get corresponding conditions
-        top_region_index_tensor = batch["top_region_index"].to(device)
-        bottom_region_index_tensor = batch["bottom_region_index"].to(device)
+        if include_body_region:
+            top_region_index_tensor = batch["top_region_index"].to(device)
+            bottom_region_index_tensor = batch["bottom_region_index"].to(device)
+        else:
+            top_region_index_tensor = None
+            bottom_region_index_tensor = None
         spacing_tensor = batch["spacing"].to(device)
         out_spacing = tuple((batch["spacing"].squeeze().numpy() / 100).tolist())
         # get target dimension
@@ -162,22 +173,22 @@ def main():
         check_input(None, None, None, output_size, out_spacing, None)
         # generate a single synthetic image using a latent diffusion model with controlnet.
         synthetic_images, _ = ldm_conditional_sample_one_image(
-            autoencoder,
-            unet,
-            controlnet,
-            noise_scheduler,
-            scale_factor,
-            device,
-            labels,
-            top_region_index_tensor,
-            bottom_region_index_tensor,
-            spacing_tensor,
+            autoencoder=autoencoder,
+            diffusion_unet=unet,
+            controlnet=controlnet,
+            noise_scheduler=noise_scheduler,
+            scale_factor=scale_factor,
+            device=device,
+            combine_label_or=labels,
+            top_region_index_tensor=top_region_index_tensor,
+            bottom_region_index_tensor=bottom_region_index_tensor,
+            spacing_tensor=spacing_tensor,
             latent_shape=latent_shape,
             output_size=output_size,
             noise_factor=1.0,
             num_inference_steps=args.controlnet_infer["num_inference_steps"],
-            # reduce it when GPU memory is limited
             autoencoder_sliding_window_infer_size=args.controlnet_infer["autoencoder_sliding_window_infer_size"],
+            autoencoder_sliding_window_infer_overlap=args.controlnet_infer["autoencoder_sliding_window_infer_overlap"]
         )
         # save image/label pairs
         labels = decollate_batch(batch)[0]["label"]

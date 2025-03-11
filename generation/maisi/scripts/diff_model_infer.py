@@ -111,6 +111,7 @@ def run_inference(
     output_size: tuple,
     divisor: int,
     logger: logging.Logger,
+    include_body_region: bool = False,
 ) -> np.ndarray:
     """
     Run the inference to generate synthetic images.
@@ -165,13 +166,20 @@ def run_inference(
     )
     with torch.amp.autocast("cuda", enabled=True):
         for t, next_t in progress_bar:
-            model_output = unet(
-                x=image,
-                timesteps=torch.Tensor((t,)).to(device),
-                top_region_index_tensor=top_region_index_tensor,
-                bottom_region_index_tensor=bottom_region_index_tensor,
-                spacing_tensor=spacing_tensor,
-            )
+            if include_body_region:
+                model_output = unet(
+                    x=image,
+                    timesteps=torch.Tensor((t,)).to(device),
+                    top_region_index_tensor=top_region_index_tensor,
+                    bottom_region_index_tensor=bottom_region_index_tensor,
+                    spacing_tensor=spacing_tensor,
+                )
+            else:
+                model_output = unet(
+                    x=image,
+                    timesteps=torch.Tensor((t,)).to(device),
+                    spacing_tensor=spacing_tensor,
+                )
             if not isinstance(noise_scheduler, RFlowScheduler):
                 image, _ = noise_scheduler.step(model_output, t, image)  # type: ignore
             else:
@@ -283,6 +291,7 @@ def diff_model_infer(
         output_size,
         divisor,
         logger,
+        include_body_region = include_body_region,
     )
 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")

@@ -182,13 +182,13 @@ def ldm_conditional_sample_one_image(
     noise_scheduler,
     scale_factor,
     device,
-    combine_label_or,    
+    combine_label_or,
     spacing_tensor,
     latent_shape,
     output_size,
     noise_factor,
-    top_region_index_tensor = None,
-    bottom_region_index_tensor = None,
+    top_region_index_tensor=None,
+    bottom_region_index_tensor=None,
     num_inference_steps=1000,
     autoencoder_sliding_window_infer_size=[96, 96, 96],
     autoencoder_sliding_window_infer_overlap=0.6667,
@@ -203,7 +203,7 @@ def ldm_conditional_sample_one_image(
         noise_scheduler: The noise scheduler for the diffusion process.
         scale_factor (float): Scaling factor for the latent space.
         device (torch.device): The device to run the computation on.
-        combine_label_or (torch.Tensor): The combined label tensor.        
+        combine_label_or (torch.Tensor): The combined label tensor.
         spacing_tensor (torch.Tensor): Tensor specifying the spacing.
         latent_shape (tuple): The shape of the latent space.
         output_size (tuple): The desired output size of the image.

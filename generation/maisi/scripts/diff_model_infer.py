@@ -291,7 +291,7 @@ def diff_model_infer(
         output_size,
         divisor,
         logger,
-        include_body_region = include_body_region,
+        include_body_region=include_body_region,
     )
 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")

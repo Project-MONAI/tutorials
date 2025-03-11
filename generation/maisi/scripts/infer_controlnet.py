@@ -188,7 +188,7 @@ def main():
             noise_factor=1.0,
             num_inference_steps=args.controlnet_infer["num_inference_steps"],
             autoencoder_sliding_window_infer_size=args.controlnet_infer["autoencoder_sliding_window_infer_size"],
-            autoencoder_sliding_window_infer_overlap=args.controlnet_infer["autoencoder_sliding_window_infer_overlap"]
+            autoencoder_sliding_window_infer_overlap=args.controlnet_infer["autoencoder_sliding_window_infer_overlap"],
         )
         # save image/label pairs
         labels = decollate_batch(batch)[0]["label"]

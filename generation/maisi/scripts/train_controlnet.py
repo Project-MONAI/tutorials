@@ -51,7 +51,7 @@ def main():
         "--training-config",
         default="./configs/config_maisi_controlnet_train.json",
         help="config json file that stores training hyper-parameters",
-    )    
+    )
     parser.add_argument("-g", "--gpus", default=1, type=int, help="number of gpus per node")
     parser.add_argument(
         "--include_body_region",
@@ -199,7 +199,9 @@ def main():
                 if isinstance(noise_scheduler, RFlowScheduler):
                     timesteps = noise_scheduler.sample_timesteps(images)
                 else:
-                    timesteps = torch.randint(0, noise_scheduler.num_train_timesteps, (images.shape[0],), device=images.device).long()
+                    timesteps = torch.randint(
+                        0, noise_scheduler.num_train_timesteps, (images.shape[0],), device=images.device
+                    ).long()
 
                 # create noisy latent
                 noisy_latent = noise_scheduler.add_noise(original_samples=images, noise=noise, timesteps=timesteps)
@@ -241,7 +243,7 @@ def main():
                     "noise scheduler prediction type has to be chosen from ",
                     f"[{DDPMPredictionType.EPSILON},{DDPMPredictionType.SAMPLE},{DDPMPredictionType.V_PREDICTION}]",
                 )
-                    
+
             if weighted_loss > 1.0:
                 weights = torch.ones_like(images).to(images.device)
                 roi = torch.zeros([noise_shape[0]] + [1] + noise_shape[2:]).to(images.device)
@@ -253,7 +255,7 @@ def main():
                 loss = (F.l1_loss(noise_pred.float(), model_gt.float(), reduction="none") * weights).mean()
             else:
                 loss = F.l1_loss(model_output.float(), model_gt.float())
-                
+
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()

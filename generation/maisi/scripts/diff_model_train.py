@@ -288,7 +288,7 @@ def train_one_epoch(
                     "noise scheduler prediction type has to be chosen from ",
                     f"[{DDPMPredictionType.EPSILON},{DDPMPredictionType.SAMPLE},{DDPMPredictionType.V_PREDICTION}]",
                 )
-            
+
             loss = loss_pt(model_output.float(), model_gt.float())
 
         if amp:

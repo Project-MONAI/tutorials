@@ -168,7 +168,7 @@ For example,
 To run the inference script, please run:
 ```bash
 export MONAI_DATA_DIRECTORY=<dir_you_will_download_data>
-python -m scripts.inference -c ./configs/config_maisi.json -i ./configs/config_infer.json -e ./configs/environment.json --random-seed 0
+python -m scripts.inference -c ./configs/config_maisi3d-ddpm.json -i ./configs/config_infer.json -e ./configs/environment.json --random-seed 0
 ```
 
 Please refer to [maisi_inference_tutorial.ipynb](maisi_inference_tutorial.ipynb) for the tutorial for MAISI model inference.
@@ -216,7 +216,7 @@ Please refer to [maisi_train_vae_tutorial.ipynb](maisi_train_vae_tutorial.ipynb)
 
 #### [3.2 3D Latent Diffusion Training](./scripts/diff_model_train.py)
 
-Please refer to [maisi_diff_unet_training_tutorial.ipynb](maisi_diff_unet_training_tutorial.ipynb) for the tutorial for MAISI diffusion model training.
+Please refer to [maisi_train_diff_unet_tutorial.ipynb](maisi_train_diff_unet_tutorial.ipynb) for the tutorial for MAISI diffusion model training.
 
 #### [3.3 3D ControlNet Training](./scripts/train_controlnet.py)
 
@@ -234,7 +234,7 @@ The training was performed with the following:
 #### Execute Training:
 To train with a single GPU, please run:
 ```bash
-python -m scripts.train_controlnet -c ./configs/config_maisi.json -t ./configs/config_maisi_controlnet_train.json -e ./configs/environment_maisi_controlnet_train.json -g 1
+python -m scripts.train_controlnet -c ./configs/config_maisi3d-ddpm.json -t ./configs/config_maisi_controlnet_train.json -e ./configs/environment_maisi_controlnet_train.json -g 1
 ```
 
 The training script also enables multi-GPU training. For instance, if you are using eight GPUs, you can run the training script with the following command:
@@ -244,7 +244,7 @@ torchrun \
     --nproc_per_node=${NUM_GPUS_PER_NODE} \
     --nnodes=1 \
     --master_addr=localhost --master_port=1234 \
-    -m scripts.train_controlnet -c ./configs/config_maisi.json -t ./configs/config_maisi_controlnet_train.json -e ./configs/environment_maisi_controlnet_train.json -g ${NUM_GPUS_PER_NODE}
+    -m scripts.train_controlnet -c ./configs/config_maisi3d-ddpm.json -t ./configs/config_maisi_controlnet_train.json -e ./configs/environment_maisi_controlnet_train.json -g ${NUM_GPUS_PER_NODE}
 ```
 Please also check [maisi_train_controlnet_tutorial.ipynb](./maisi_train_controlnet_tutorial.ipynb) for more details about data preparation and training parameters.
 

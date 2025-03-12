@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright (c) MONAI Consortium
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +12,7 @@
 # and limitations under the License.
 
 """
-Compute 2.5D FID using distributed GPU processing, **without** external fid_utils dependencies.
+Compute 2.5D FID using distributed GPU processing.
 
 SHELL Usage Example:
 -------------------
@@ -22,7 +21,7 @@ SHELL Usage Example:
     export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6
     NUM_GPUS=7
 
-    torchrun --nproc_per_node=${NUM_GPUS} compute_fid2p5d_ct.py \
+    torchrun --nproc_per_node=${NUM_GPUS} compute_fid_2-5d_ct.py \
         --model_name "radimagenet_resnet50" \
         --data0_dataroot "path/to/datasetA" \
         --data0_filelist "path/to/filelistA.txt" \
@@ -82,10 +81,16 @@ from pathlib import Path
 from monai.metrics.fid import FIDMetric
 from monai.transforms import Compose
 
+import logging
+
 # ------------------------------------------------------------------------------
-# Below are the core utilities originally in fid_utils.py, now inlined here
-# to remove external dependency.
+# Create logger
 # ------------------------------------------------------------------------------
+logger = logging.getLogger("fid_2-5d_ct")
+if not logger.handlers:
+    # Configure logger only if it has no handlers (avoid reconfiguring in multi-rank scenarios)
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logger.setLevel(logging.INFO)
 
 
 def drop_empty_slice(slices, empty_threshold: float):
@@ -111,7 +116,7 @@ def drop_empty_slice(slices, empty_threshold: float):
         else:
             outputs.append(True)
 
-    print(f"Empty slice drop rate {round((n_drop/len(slices))*100,1)}%")
+    logger.info(f"Empty slice drop rate {round((n_drop/len(slices))*100,1)}%")
     return outputs
 
 
@@ -183,7 +188,7 @@ def radimagenet_intensity_normalisation(volume: torch.Tensor, norm2d: bool = Fal
         volume (torch.Tensor): Input (B, C, H, W) or (B, C, H, W, D).
         norm2d (bool): If True, normalizes each (H,W) slice to [0,1], then subtracts the ImageNet mean.
     """
-    print(f"norm2d: {norm2d}")
+    logger.info(f"norm2d: {norm2d}")
     dim = len(volume.shape)
     # If norm2d is True, only meaningful for 4D data (B, C, H, W):
     if dim == 4 and norm2d:
@@ -236,20 +241,18 @@ def get_features_2p5d(
     Returns:
         tuple of torch.Tensor or None: (XY_features, YZ_features, ZX_features).
     """
-    print(f"center_slices: {center_slices}, ratio: {center_slices_ratio}")
+    logger.info(f"center_slices: {center_slices}, ratio: {center_slices_ratio}")
 
     # If there's only 1 channel, replicate to 3 channels
     if image.shape[1] == 1:
         image = image.repeat(1, 3, 1, 1, 1)
 
-    # Convert from 'RGB'→(R,G,B) to (B, G, R) ordering
+    # Convert from 'RGB'→(R,G,B) to (B,G,R)
     image = image[:, [2, 1, 0], ...]
 
     B, C, H, W, D = image.size()
     with torch.no_grad():
-        # ---------------------------------------------------------------------
-        # 1) XY-plane slicing along D
-        # ---------------------------------------------------------------------
+        # ---------------------- XY-plane slicing along D ----------------------
         if center_slices:
             start_d = int((1.0 - center_slices_ratio) / 2.0 * D)
             end_d = int((1.0 + center_slices_ratio) / 2.0 * D)
@@ -268,13 +271,10 @@ def get_features_2p5d(
 
         feature_image_xy = feature_network.forward(images_2d)
         feature_image_xy = spatial_average(feature_image_xy, keepdim=False)
-
         if xy_only:
             return feature_image_xy, None, None
 
-        # ---------------------------------------------------------------------
-        # 2) YZ-plane slicing along H
-        # ---------------------------------------------------------------------
+        # ---------------------- YZ-plane slicing along H ----------------------
         if center_slices:
             start_h = int((1.0 - center_slices_ratio) / 2.0 * H)
             end_h = int((1.0 + center_slices_ratio) / 2.0 * H)
@@ -294,9 +294,7 @@ def get_features_2p5d(
         feature_image_yz = feature_network.forward(images_2d)
         feature_image_yz = spatial_average(feature_image_yz, keepdim=False)
 
-        # ---------------------------------------------------------------------
-        # 3) ZX-plane slicing along W
-        # ---------------------------------------------------------------------
+        # ---------------------- ZX-plane slicing along W ----------------------
         if center_slices:
             start_w = int((1.0 - center_slices_ratio) / 2.0 * W)
             end_w = int((1.0 + center_slices_ratio) / 2.0 * W)
@@ -319,11 +317,6 @@ def get_features_2p5d(
     return feature_image_xy, feature_image_yz, feature_image_zx
 
 
-# ------------------------------------------------------------------------------
-# End inline fid_utils code
-# ------------------------------------------------------------------------------
-
-
 def pad_to_max_size(tensor: torch.Tensor, max_size: int, padding_value: float = 0.0) -> torch.Tensor:
     """
     Zero-pad a 2D feature map or other tensor along the first dimension to match a specified size.
@@ -336,7 +329,6 @@ def pad_to_max_size(tensor: torch.Tensor, max_size: int, padding_value: float = 
     Returns:
         torch.Tensor: Padded tensor matching `max_size` along dim=0.
     """
-    # For a shape (B, C, ...), we only pad the B dimension up to `max_size`.
     pad_size = [0, 0] * (len(tensor.shape) - 1) + [0, max_size - tensor.shape[0]]
     return F.pad(tensor, pad_size, "constant", padding_value)
 
@@ -395,11 +387,9 @@ def main(
     world_size = int(dist.get_world_size())
     device = torch.device("cuda", local_rank)
     torch.cuda.set_device(device)
-    print(f"[INFO] Running process on {device} of total {world_size} ranks.")
+    logger.info(f"[INFO] Running process on {device} of total {world_size} ranks.")
 
-    # -------------------------------------------------------------------------
     # Convert potential string bools to actual bools (Fire sometimes passes strings)
-    # -------------------------------------------------------------------------
     if not isinstance(enable_center_slices, bool):
         enable_center_slices = enable_center_slices.lower() == "true"
     if not isinstance(enable_padding, bool):
@@ -413,24 +403,22 @@ def main(
 
     # Print out some flags on rank 0
     if local_rank == 0:
-        print(f"[INFO] enable_center_slices: {enable_center_slices}")
-        print(f"[INFO] enable_padding: {enable_padding}")
-        print(f"[INFO] enable_center_cropping: {enable_center_cropping}")
-        print(f"[INFO] enable_resampling: {enable_resampling}")
-        print(f"[INFO] ignore_existing: {ignore_existing}")
+        logger.info(f"enable_center_slices: {enable_center_slices}")
+        logger.info(f"enable_padding: {enable_padding}")
+        logger.info(f"enable_center_cropping: {enable_center_cropping}")
+        logger.info(f"enable_resampling: {enable_resampling}")
+        logger.info(f"ignore_existing: {ignore_existing}")
 
     # -------------------------------------------------------------------------
     # Load feature extraction model
     # -------------------------------------------------------------------------
     if model_name == "radimagenet_resnet50":
-        # Using a model from Warvito/radimagenet-models on Torch Hub
         feature_network = torch.hub.load(
             "Warvito/radimagenet-models", model="radimagenet_resnet50", verbose=True, trust_repo=True
         )
         suffix = "radimagenet_resnet50"
     else:
         import torchvision
-
         feature_network = torchvision.models.squeezenet1_1(pretrained=True)
         suffix = "squeezenet1_1"
 
@@ -438,7 +426,7 @@ def main(
     feature_network.eval()
 
     # -------------------------------------------------------------------------
-    # Parse shape/spacings from string
+    # Parse shape/spacings
     # -------------------------------------------------------------------------
     t_shape = [int(x) for x in target_shape.split("x")]
     target_shape_tuple = tuple(t_shape)
@@ -446,13 +434,13 @@ def main(
         rs_spacing = [float(x) for x in enable_resampling_spacing.split("x")]
         rs_spacing_tuple = tuple(rs_spacing)
         if local_rank == 0:
-            print(f"[INFO] resampling spacing: {rs_spacing_tuple}")
+            logger.info(f"resampling spacing: {rs_spacing_tuple}")
     else:
         rs_spacing_tuple = (1.0, 1.0, 1.0)
 
     center_slices_ratio_final = enable_center_slices_ratio if enable_center_slices else 1.0
     if local_rank == 0:
-        print(f"[INFO] center_slices_ratio: {center_slices_ratio_final}")
+        logger.info(f"center_slices_ratio: {center_slices_ratio_final}")
 
     # -------------------------------------------------------------------------
     # Prepare dataset 0
@@ -490,25 +478,20 @@ def main(
         monai.transforms.EnsureChannelFirstd(keys=["image"]),
         monai.transforms.Orientationd(keys=["image"], axcodes="RAS"),
     ]
-
     if enable_resampling:
         transform_list.append(monai.transforms.Spacingd(keys=["image"], pixdim=rs_spacing_tuple, mode=["bilinear"]))
     if enable_padding:
         transform_list.append(
-            monai.transforms.SpatialPadd(
-                keys=["image"], spatial_size=target_shape_tuple, mode=["constant"], value=-1000
-            )
+            monai.transforms.SpatialPadd(keys=["image"], spatial_size=target_shape_tuple, mode="constant", value=-1000)
         )
     if enable_center_cropping:
         transform_list.append(monai.transforms.CenterSpatialCropd(keys=["image"], roi_size=target_shape_tuple))
 
-    # Intensity scaling to clamp between [-1000, 1000]
     transform_list.append(
         monai.transforms.ScaleIntensityRanged(
             keys=["image"], a_min=-1000, a_max=1000, b_min=-1000, b_max=1000, clip=True
         )
     )
-
     transforms = Compose(transform_list)
 
     # -------------------------------------------------------------------------
@@ -527,7 +510,7 @@ def main(
     for idx, batch_data in enumerate(real_loader, start=1):
         img = batch_data["image"].to(device)
         fn = img.meta["filename_or_obj"][0]
-        print(f"[Rank {local_rank}] Real data {idx}/{len(filenames0)}: {fn}")
+        logger.info(f"[Rank {local_rank}] Real data {idx}/{len(filenames0)}: {fn}")
 
         out_fp = fn.replace(data0_dataroot, output_root0).replace(".nii.gz", ".pt")
         out_fp = Path(out_fp)
@@ -537,9 +520,8 @@ def main(
             feats = torch.load(out_fp)
         else:
             img_t = img.as_tensor()
-            print(f"[INFO] image shape: {tuple(img_t.shape)}")
+            logger.info(f"image shape: {tuple(img_t.shape)}")
 
-            # Inline get_features_2p5d
             feats = get_features_2p5d(
                 img_t,
                 feature_network,
@@ -547,7 +529,10 @@ def main(
                 center_slices_ratio=center_slices_ratio_final,
                 xy_only=False,
             )
-            print(f"[INFO] feats shapes: {feats[0].shape}, {feats[1].shape}, {feats[2].shape}")
+            logger.info(
+                f"feats shapes: {feats[0].shape}, "
+                f"{feats[1].shape}, {feats[2].shape}"
+            )
             torch.save(feats, out_fp)
 
         real_features_xy.append(feats[0])
@@ -557,7 +542,10 @@ def main(
     real_features_xy = torch.vstack(real_features_xy)
     real_features_yz = torch.vstack(real_features_yz)
     real_features_zx = torch.vstack(real_features_zx)
-    print(f"[INFO] Real feature shapes: {real_features_xy.shape}, {real_features_yz.shape}, {real_features_zx.shape}")
+    logger.info(
+        f"Real feature shapes: {real_features_xy.shape}, "
+        f"{real_features_yz.shape}, {real_features_zx.shape}"
+    )
 
     # -------------------------------------------------------------------------
     # Extract features for dataset 1
@@ -566,7 +554,7 @@ def main(
     for idx, batch_data in enumerate(synt_loader, start=1):
         img = batch_data["image"].to(device)
         fn = img.meta["filename_or_obj"][0]
-        print(f"[Rank {local_rank}] Synthetic data {idx}/{len(filenames1)}: {fn}")
+        logger.info(f"[Rank {local_rank}] Synthetic data {idx}/{len(filenames1)}: {fn}")
 
         out_fp = fn.replace(data1_dataroot, output_root1).replace(".nii.gz", ".pt")
         out_fp = Path(out_fp)
@@ -576,7 +564,7 @@ def main(
             feats = torch.load(out_fp)
         else:
             img_t = img.as_tensor()
-            print(f"[INFO] image shape: {tuple(img_t.shape)}")
+            logger.info(f"image shape: {tuple(img_t.shape)}")
 
             feats = get_features_2p5d(
                 img_t,
@@ -585,7 +573,10 @@ def main(
                 center_slices_ratio=center_slices_ratio_final,
                 xy_only=False,
             )
-            print(f"[INFO] feats shapes: {feats[0].shape}, {feats[1].shape}, {feats[2].shape}")
+            logger.info(
+                f"feats shapes: {feats[0].shape}, "
+                f"{feats[1].shape}, {feats[2].shape}"
+            )
             torch.save(feats, out_fp)
 
         synth_features_xy.append(feats[0])
@@ -595,8 +586,8 @@ def main(
     synth_features_xy = torch.vstack(synth_features_xy)
     synth_features_yz = torch.vstack(synth_features_yz)
     synth_features_zx = torch.vstack(synth_features_zx)
-    print(
-        f"[INFO] Synthetic feature shapes: {synth_features_xy.shape}, "
+    logger.info(
+        f"Synthetic feature shapes: {synth_features_xy.shape}, "
         f"{synth_features_yz.shape}, {synth_features_zx.shape}"
     )
 
@@ -649,25 +640,27 @@ def main(
         synth_yz = torch.vstack(all_tensors_list[4])
         synth_zx = torch.vstack(all_tensors_list[5])
 
-        print(f"[INFO] Final Real shapes: {real_xy.shape}, {real_yz.shape}, {real_zx.shape}")
-        print(f"[INFO] Final Synth shapes: {synth_xy.shape}, {synth_yz.shape}, {synth_zx.shape}")
+        logger.info(
+            f"Final Real shapes: {real_xy.shape}, {real_yz.shape}, {real_zx.shape}"
+        )
+        logger.info(
+            f"Final Synth shapes: {synth_xy.shape}, {synth_yz.shape}, {synth_zx.shape}"
+        )
 
         fid = FIDMetric()
-        print(f"\n[INFO] Computing FID for: {output_root0} | {output_root1}")
+        logger.info(f"Computing FID for: {output_root0} | {output_root1}")
         fid_res_xy = fid(synth_xy, real_xy)
         fid_res_yz = fid(synth_yz, real_yz)
         fid_res_zx = fid(synth_zx, real_zx)
 
-        print(f"  FID XY: {fid_res_xy}")
-        print(f"  FID YZ: {fid_res_yz}")
-        print(f"  FID ZX: {fid_res_zx}")
+        logger.info(f"FID XY: {fid_res_xy}")
+        logger.info(f"FID YZ: {fid_res_yz}")
+        logger.info(f"FID ZX: {fid_res_zx}")
         fid_avg = (fid_res_xy + fid_res_yz + fid_res_zx) / 3.0
-        print(f"  FID Avg: {fid_avg}")
+        logger.info(f"FID Avg: {fid_avg}")
 
     dist.destroy_process_group()
 
 
 if __name__ == "__main__":
-    # Using python-fire for command-line interface.
-    # e.g., python compute_fid2d_mgpu.py --model_name=radimagenet_resnet50 --num_images=100 ...
     fire.Fire(main)

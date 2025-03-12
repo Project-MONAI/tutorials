@@ -419,6 +419,7 @@ def main(
         suffix = "radimagenet_resnet50"
     else:
         import torchvision
+
         feature_network = torchvision.models.squeezenet1_1(pretrained=True)
         suffix = "squeezenet1_1"
 
@@ -529,10 +530,7 @@ def main(
                 center_slices_ratio=center_slices_ratio_final,
                 xy_only=False,
             )
-            logger.info(
-                f"feats shapes: {feats[0].shape}, "
-                f"{feats[1].shape}, {feats[2].shape}"
-            )
+            logger.info(f"feats shapes: {feats[0].shape}, " f"{feats[1].shape}, {feats[2].shape}")
             torch.save(feats, out_fp)
 
         real_features_xy.append(feats[0])
@@ -543,8 +541,7 @@ def main(
     real_features_yz = torch.vstack(real_features_yz)
     real_features_zx = torch.vstack(real_features_zx)
     logger.info(
-        f"Real feature shapes: {real_features_xy.shape}, "
-        f"{real_features_yz.shape}, {real_features_zx.shape}"
+        f"Real feature shapes: {real_features_xy.shape}, " f"{real_features_yz.shape}, {real_features_zx.shape}"
     )
 
     # -------------------------------------------------------------------------
@@ -573,10 +570,7 @@ def main(
                 center_slices_ratio=center_slices_ratio_final,
                 xy_only=False,
             )
-            logger.info(
-                f"feats shapes: {feats[0].shape}, "
-                f"{feats[1].shape}, {feats[2].shape}"
-            )
+            logger.info(f"feats shapes: {feats[0].shape}, " f"{feats[1].shape}, {feats[2].shape}")
             torch.save(feats, out_fp)
 
         synth_features_xy.append(feats[0])
@@ -587,8 +581,7 @@ def main(
     synth_features_yz = torch.vstack(synth_features_yz)
     synth_features_zx = torch.vstack(synth_features_zx)
     logger.info(
-        f"Synthetic feature shapes: {synth_features_xy.shape}, "
-        f"{synth_features_yz.shape}, {synth_features_zx.shape}"
+        f"Synthetic feature shapes: {synth_features_xy.shape}, " f"{synth_features_yz.shape}, {synth_features_zx.shape}"
     )
 
     # -------------------------------------------------------------------------
@@ -640,12 +633,8 @@ def main(
         synth_yz = torch.vstack(all_tensors_list[4])
         synth_zx = torch.vstack(all_tensors_list[5])
 
-        logger.info(
-            f"Final Real shapes: {real_xy.shape}, {real_yz.shape}, {real_zx.shape}"
-        )
-        logger.info(
-            f"Final Synth shapes: {synth_xy.shape}, {synth_yz.shape}, {synth_zx.shape}"
-        )
+        logger.info(f"Final Real shapes: {real_xy.shape}, {real_yz.shape}, {real_zx.shape}")
+        logger.info(f"Final Synth shapes: {synth_xy.shape}, {synth_yz.shape}, {synth_zx.shape}")
 
         fid = FIDMetric()
         logger.info(f"Computing FID for: {output_root0} | {output_root1}")

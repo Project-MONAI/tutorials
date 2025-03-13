@@ -3,7 +3,7 @@
     "body_region": ["abdomen"],
     "anatomy_list": ["liver","hepatic tumor"],
     "controllable_anatomy_size": [],
-    "num_inference_steps": 1000,
+    "num_inference_steps": 30,
     "mask_generation_num_inference_steps": 1000,
     "output_size": [
         256,
@@ -23,5 +23,6 @@
     "diffusion_unet": "$@diffusion_unet_def",
     "autoencoder": "$@autoencoder_def",
     "mask_generation_autoencoder": "$@mask_generation_autoencoder_def",
-    "mask_generation_diffusion": "$@mask_generation_diffusion_def"
+    "mask_generation_diffusion": "$@mask_generation_diffusion_def",
+    "modality": 1
 }

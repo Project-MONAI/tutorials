@@ -53,14 +53,8 @@ def main():
         help="config json file that stores training hyper-parameters",
     )
     parser.add_argument("-g", "--gpus", default=1, type=int, help="number of gpus per node")
-    parser.add_argument(
-        "--include_body_region",
-        dest="include_body_region",
-        action="store_true",
-        help="Whether to include body region in data",
-    )
+    
     args = parser.parse_args()
-    include_body_region = args.include_body_region
 
     # Step 0: configuration
     logger = logging.getLogger("maisi.controlnet.training")
@@ -114,6 +108,9 @@ def main():
     # Step 2: define diffusion model and controlnet
     # define diffusion Model
     unet = define_instance(args, "diffusion_unet_def").to(device)
+    include_body_region = unet.include_top_region_index_input
+    include_modality = (unet.num_class_embeds is not None)
+    
     # load trained diffusion model
     if args.trained_diffusion_path is not None:
         if not os.path.exists(args.trained_diffusion_path):
@@ -183,6 +180,9 @@ def main():
             if include_body_region:
                 top_region_index_tensor = batch["top_region_index"].to(device)
                 bottom_region_index_tensor = batch["bottom_region_index"].to(device)
+            # We trained with only CT in this version
+            if include_modality:
+                modality_tensor = torch.ones((len(images),),dtype=torch.long).to(device)
             spacing_tensor = batch["spacing"].to(device)
 
             optimizer.zero_grad(set_to_none=True)
@@ -207,27 +207,40 @@ def main():
                 noisy_latent = noise_scheduler.add_noise(original_samples=images, noise=noise, timesteps=timesteps)
 
                 # get controlnet output
+                # Create a dictionary to store the inputs
+                controlnet_inputs = {
+                    "x": noisy_latent,
+                    "timesteps": timesteps,
+                    "controlnet_cond": controlnet_cond,
+                } 
+                if include_modality:
+                    controlnet_inputs.update({
+                        "class_labels": modality_tensor,
+                    })
                 down_block_res_samples, mid_block_res_sample = controlnet(
-                    x=noisy_latent, timesteps=timesteps, controlnet_cond=controlnet_cond
+                    **controlnet_inputs
                 )
+
+                # get diffusion network output
+                # Create a dictionary to store the inputs
+                unet_inputs = {
+                    "x": noisy_latent,
+                    "timesteps": timesteps,
+                    "spacing_tensor": spacing_tensor,
+                    "down_block_additional_residuals": down_block_res_samples,
+                    "mid_block_additional_residual": mid_block_res_sample
+                }            
+                # Add extra arguments if include_body_region is True
                 if include_body_region:
-                    model_output = unet(
-                        x=noisy_latent,
-                        timesteps=timesteps,
-                        top_region_index_tensor=top_region_index_tensor,
-                        bottom_region_index_tensor=bottom_region_index_tensor,
-                        spacing_tensor=spacing_tensor,
-                        down_block_additional_residuals=down_block_res_samples,
-                        mid_block_additional_residual=mid_block_res_sample,
-                    )
-                else:
-                    model_output = unet(
-                        x=noisy_latent,
-                        timesteps=timesteps,
-                        spacing_tensor=spacing_tensor,
-                        down_block_additional_residuals=down_block_res_samples,
-                        mid_block_additional_residual=mid_block_res_sample,
-                    )
+                    unet_inputs.update({
+                        "top_region_index_tensor": top_region_index_tensor,
+                        "bottom_region_index_tensor": bottom_region_index_tensor
+                    }) 
+                if include_modality:
+                    unet_inputs.update({
+                        "class_labels": modality_tensor,
+                    }) 
+                model_output = unet(**unet_inputs)
 
             if noise_scheduler.prediction_type == DDPMPredictionType.EPSILON:
                 # predict noise

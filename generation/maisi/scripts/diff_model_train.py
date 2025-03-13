@@ -201,7 +201,6 @@ def train_one_epoch(
     logger: logging.Logger,
     local_rank: int,
     amp: bool = True,
-    include_body_region: bool = False,
 ) -> torch.Tensor:
     """
     Train the model for one epoch.
@@ -222,11 +221,13 @@ def train_one_epoch(
         logger (logging.Logger): Logger for logging information.
         local_rank (int): Local rank for distributed training.
         amp (bool): Use automatic mixed precision training.
-        include_body_region (bool): Whether to include body region in data
 
     Returns:
         torch.Tensor: Training loss for the epoch.
     """
+    include_body_region = unet.include_top_region_index_input
+    include_modality = (unet.num_class_embeds is not None)
+    
     if local_rank == 0:
         current_lr = optimizer.param_groups[0]["lr"]
         logger.info(f"Epoch {epoch + 1}, lr {current_lr}.")
@@ -245,6 +246,9 @@ def train_one_epoch(
         if include_body_region:
             top_region_index_tensor = train_data["top_region_index"].to(device)
             bottom_region_index_tensor = train_data["bottom_region_index"].to(device)
+        # We trained with only CT in this version
+        if include_modality:
+            modality_tensor = torch.ones((len(images),),dtype=torch.long).to(device)
         spacing_tensor = train_data["spacing"].to(device)
 
         optimizer.zero_grad(set_to_none=True)
@@ -259,20 +263,23 @@ def train_one_epoch(
 
             noisy_latent = noise_scheduler.add_noise(original_samples=images, noise=noise, timesteps=timesteps)
 
+            # Create a dictionary to store the inputs
+            unet_inputs = {
+                "x": noisy_latent,
+                "timesteps": timesteps,
+                "spacing_tensor": spacing_tensor,
+            }            
+            # Add extra arguments if include_body_region is True
             if include_body_region:
-                model_output = unet(
-                    x=noisy_latent,
-                    timesteps=timesteps,
-                    top_region_index_tensor=top_region_index_tensor,
-                    bottom_region_index_tensor=bottom_region_index_tensor,
-                    spacing_tensor=spacing_tensor,
-                )
-            else:
-                model_output = unet(
-                    x=noisy_latent,
-                    timesteps=timesteps,
-                    spacing_tensor=spacing_tensor,
-                )
+                unet_inputs.update({
+                    "top_region_index_tensor": top_region_index_tensor,
+                    "bottom_region_index_tensor": bottom_region_index_tensor
+                }) 
+            if include_modality:
+                unet_inputs.update({
+                    "class_labels": modality_tensor,
+                }) 
+            model_output = unet(**unet_inputs)                
 
             if noise_scheduler.prediction_type == DDPMPredictionType.EPSILON:
                 # predict noise
@@ -356,8 +363,7 @@ def diff_model_train(
     model_config_path: str,
     model_def_path: str,
     num_gpus: int,
-    amp: bool = True,
-    include_body_region: bool = False,
+    amp: bool = True
 ) -> None:
     """
     Main function to train a diffusion model.
@@ -368,7 +374,6 @@ def diff_model_train(
         model_def_path (str): Path to the model definition file.
         num_gpus (int): Number of GPUs to use for training.
         amp (bool): Use automatic mixed precision training.
-        include_body_region (bool): Whether to include body region in data
     """
     args = load_config(env_config_path, model_config_path, model_def_path)
     local_rank, world_size, device = initialize_distributed(num_gpus)
@@ -385,6 +390,10 @@ def diff_model_train(
         logger.info(f"[config] num_train_timesteps -> {args.noise_scheduler['num_train_timesteps']}.")
 
         Path(args.model_dir).mkdir(parents=True, exist_ok=True)
+
+    unet = load_unet(args, device, logger)
+    noise_scheduler = define_instance(args, "noise_scheduler")
+    include_body_region = unet.include_top_region_index_input
 
     filenames_train = load_filenames(args.json_data_list)
     if local_rank == 0:
@@ -415,8 +424,7 @@ def diff_model_train(
         include_body_region=include_body_region,
     )
 
-    unet = load_unet(args, device, logger)
-    noise_scheduler = define_instance(args, "noise_scheduler")
+    
 
     scale_factor = calculate_scale_factor(train_loader, device, logger)
     optimizer = create_optimizer(unet, args.diffusion_unet_train["lr"])
@@ -447,8 +455,7 @@ def diff_model_train(
             device,
             logger,
             local_rank,
-            amp=amp,
-            include_body_region=include_body_region,
+            amp=amp
         )
 
         loss_torch = loss_torch.tolist()
@@ -489,14 +496,8 @@ if __name__ == "__main__":
     )
     parser.add_argument("--num_gpus", type=int, default=1, help="Number of GPUs to use for training")
     parser.add_argument("--no_amp", dest="amp", action="store_false", help="Disable automatic mixed precision training")
-    parser.add_argument(
-        "--include_body_region",
-        dest="include_body_region",
-        action="store_true",
-        help="Whether to include body region in data",
-    )
 
     args = parser.parse_args()
     diff_model_train(
-        args.env_config, args.model_config, args.model_def, args.num_gpus, args.amp, args.include_body_region
+        args.env_config, args.model_config, args.model_def, args.num_gpus, args.amp
     )

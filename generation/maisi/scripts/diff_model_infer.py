@@ -91,12 +91,14 @@ def prepare_tensors(args: argparse.Namespace, device: torch.device) -> tuple:
     top_region_index_tensor = np.array(args.diffusion_unet_inference["top_region_index"]).astype(float) * 1e2
     bottom_region_index_tensor = np.array(args.diffusion_unet_inference["bottom_region_index"]).astype(float) * 1e2
     spacing_tensor = np.array(args.diffusion_unet_inference["spacing"]).astype(float) * 1e2
+    modality_tensor = np.array([args.diffusion_unet_inference["modality"]]).astype(int)
 
     top_region_index_tensor = torch.from_numpy(top_region_index_tensor[np.newaxis, :]).half().to(device)
     bottom_region_index_tensor = torch.from_numpy(bottom_region_index_tensor[np.newaxis, :]).half().to(device)
     spacing_tensor = torch.from_numpy(spacing_tensor[np.newaxis, :]).half().to(device)
+    modality_tensor = torch.from_numpy(modality_tensor[np.newaxis, :]).long().to(device)
 
-    return top_region_index_tensor, bottom_region_index_tensor, spacing_tensor
+    return top_region_index_tensor, bottom_region_index_tensor, spacing_tensor, modality_tensor
 
 
 def run_inference(
@@ -108,10 +110,10 @@ def run_inference(
     top_region_index_tensor: torch.Tensor,
     bottom_region_index_tensor: torch.Tensor,
     spacing_tensor: torch.Tensor,
+    modality_tensor: torch.Tensor,
     output_size: tuple,
     divisor: int,
     logger: logging.Logger,
-    include_body_region: bool = False,
 ) -> np.ndarray:
     """
     Run the inference to generate synthetic images.
@@ -125,6 +127,7 @@ def run_inference(
         top_region_index_tensor (torch.Tensor): Top region index tensor.
         bottom_region_index_tensor (torch.Tensor): Bottom region index tensor.
         spacing_tensor (torch.Tensor): Spacing tensor.
+        modality_tensor (torch.Tensor): Modality tensor.
         output_size (tuple): Output size of the synthetic image.
         divisor (int): Divisor for downsample level.
         logger (logging.Logger): Logger for logging information.
@@ -132,6 +135,9 @@ def run_inference(
     Returns:
         np.ndarray: Generated synthetic image data.
     """
+    include_body_region = unet.include_top_region_index_input
+    include_modality = (unet.num_class_embeds is not None)
+    
     noise = torch.randn(
         (
             1,
@@ -149,7 +155,7 @@ def run_inference(
     if isinstance(noise_scheduler, RFlowScheduler):
         noise_scheduler.set_timesteps(
             num_inference_steps=args.diffusion_unet_inference["num_inference_steps"],
-            input_img_size_numel=torch.prod(torch.tensor(noise.shape[-3:])),
+            input_img_size_numel=torch.prod(torch.tensor(noise.shape[2:])),
         )
     else:
         noise_scheduler.set_timesteps(num_inference_steps=args.diffusion_unet_inference["num_inference_steps"])
@@ -166,20 +172,25 @@ def run_inference(
     )
     with torch.amp.autocast("cuda", enabled=True):
         for t, next_t in progress_bar:
+            # Create a dictionary to store the inputs
+            unet_inputs = {
+                "x": image,
+                "timesteps": torch.Tensor((t,)).to(device),
+                "spacing_tensor": spacing_tensor,
+            }
+            
+            # Add extra arguments if include_body_region is True
             if include_body_region:
-                model_output = unet(
-                    x=image,
-                    timesteps=torch.Tensor((t,)).to(device),
-                    top_region_index_tensor=top_region_index_tensor,
-                    bottom_region_index_tensor=bottom_region_index_tensor,
-                    spacing_tensor=spacing_tensor,
-                )
-            else:
-                model_output = unet(
-                    x=image,
-                    timesteps=torch.Tensor((t,)).to(device),
-                    spacing_tensor=spacing_tensor,
-                )
+                unet_inputs.update({
+                    "top_region_index_tensor": top_region_index_tensor,
+                    "bottom_region_index_tensor": bottom_region_index_tensor
+                }) 
+
+            if include_modality:
+                unet_inputs.update({
+                    "class_labels": modality_tensor,
+                }) 
+            model_output = unet(**unet_inputs)
             if not isinstance(noise_scheduler, RFlowScheduler):
                 image, _ = noise_scheduler.step(model_output, t, image)  # type: ignore
             else:
@@ -231,7 +242,7 @@ def save_image(
 
 @torch.inference_mode()
 def diff_model_infer(
-    env_config_path: str, model_config_path: str, model_def_path: str, num_gpus: int, include_body_region: bool = False
+    env_config_path: str, model_config_path: str, model_def_path: str, num_gpus: int
 ) -> None:
     """
     Main function to run the diffusion model inference.
@@ -240,7 +251,6 @@ def diff_model_infer(
         env_config_path (str): Path to the environment configuration file.
         model_config_path (str): Path to the model configuration file.
         model_def_path (str): Path to the model definition file.
-        include_body_region (bool): Whether to include body region in data
     """
     args = load_config(env_config_path, model_config_path, model_def_path)
     local_rank, world_size, device = initialize_distributed(num_gpus)
@@ -278,7 +288,7 @@ def diff_model_infer(
     divisor = 2 ** (num_downsample_level - 2)
     logger.info(f"num_downsample_level -> {num_downsample_level}, divisor -> {divisor}.")
 
-    top_region_index_tensor, bottom_region_index_tensor, spacing_tensor = prepare_tensors(args, device)
+    top_region_index_tensor, bottom_region_index_tensor, spacing_tensor, modality_tensor = prepare_tensors(args, device)
     data = run_inference(
         args,
         device,
@@ -288,10 +298,10 @@ def diff_model_infer(
         top_region_index_tensor,
         bottom_region_index_tensor,
         spacing_tensor,
+        modality_tensor,
         output_size,
         divisor,
-        logger,
-        include_body_region=include_body_region,
+        logger
     )
 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -340,14 +350,8 @@ if __name__ == "__main__":
         default=1,
         help="Number of GPUs to use for distributed inference",
     )
-    parser.add_argument(
-        "--include_body_region",
-        dest="include_body_region",
-        action="store_true",
-        help="Whether to include body region in data",
-    )
 
     args = parser.parse_args()
     diff_model_infer(
-        args.env_config, args.model_config, args.model_def, args.num_gpus, include_body_region=args.include_body_region
+        args.env_config, args.model_config, args.model_def, args.num_gpus
     )

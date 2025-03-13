@@ -49,14 +49,8 @@ def main():
         help="config json file that stores training hyper-parameters",
     )
     parser.add_argument("-g", "--gpus", default=1, type=int, help="number of gpus per node")
-    parser.add_argument(
-        "--include_body_region",
-        dest="include_body_region",
-        action="store_true",
-        help="Whether to include body region in data",
-    )
+
     args = parser.parse_args()
-    include_body_region = args.include_body_region
 
     # Step 0: configuration
     logger = logging.getLogger("maisi.controlnet.infer")
@@ -116,6 +110,9 @@ def main():
 
     # define diffusion Model
     unet = define_instance(args, "diffusion_unet_def").to(device)
+    include_body_region = unet.include_top_region_index_input
+    include_modality = (unet.num_class_embeds is not None)
+    
     # load trained diffusion model
     if args.trained_diffusion_path is not None:
         if not os.path.exists(args.trained_diffusion_path):

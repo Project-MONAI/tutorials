@@ -269,7 +269,7 @@ def ldm_conditional_sample_one_image(
             noise_scheduler.set_timesteps(num_inference_steps=num_inference_steps)
 
         if isinstance(noise_scheduler, DDPMScheduler) and num_inference_steps < noise_scheduler.num_train_timesteps:
-             warnings.warn(
+            warnings.warn(
                 "**************************************************************\n"
                 "* WARNING: Image noise_scheduler is a DDPMScheduler.\n"
                 "* We expect num_inference_steps = noise_scheduler.num_train_timesteps"

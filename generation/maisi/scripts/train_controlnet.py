@@ -53,7 +53,7 @@ def main():
         help="config json file that stores training hyper-parameters",
     )
     parser.add_argument("-g", "--gpus", default=1, type=int, help="number of gpus per node")
-    
+
     args = parser.parse_args()
 
     # Step 0: configuration
@@ -109,8 +109,8 @@ def main():
     # define diffusion Model
     unet = define_instance(args, "diffusion_unet_def").to(device)
     include_body_region = unet.include_top_region_index_input
-    include_modality = (unet.num_class_embeds is not None)
-    
+    include_modality = unet.num_class_embeds is not None
+
     # load trained diffusion model
     if args.trained_diffusion_path is not None:
         if not os.path.exists(args.trained_diffusion_path):
@@ -182,7 +182,7 @@ def main():
                 bottom_region_index_tensor = batch["bottom_region_index"].to(device)
             # We trained with only CT in this version
             if include_modality:
-                modality_tensor = torch.ones((len(images),),dtype=torch.long).to(device)
+                modality_tensor = torch.ones((len(images),), dtype=torch.long).to(device)
             spacing_tensor = batch["spacing"].to(device)
 
             optimizer.zero_grad(set_to_none=True)
@@ -212,14 +212,14 @@ def main():
                     "x": noisy_latent,
                     "timesteps": timesteps,
                     "controlnet_cond": controlnet_cond,
-                } 
+                }
                 if include_modality:
-                    controlnet_inputs.update({
-                        "class_labels": modality_tensor,
-                    })
-                down_block_res_samples, mid_block_res_sample = controlnet(
-                    **controlnet_inputs
-                )
+                    controlnet_inputs.update(
+                        {
+                            "class_labels": modality_tensor,
+                        }
+                    )
+                down_block_res_samples, mid_block_res_sample = controlnet(**controlnet_inputs)
 
                 # get diffusion network output
                 # Create a dictionary to store the inputs
@@ -228,18 +228,22 @@ def main():
                     "timesteps": timesteps,
                     "spacing_tensor": spacing_tensor,
                     "down_block_additional_residuals": down_block_res_samples,
-                    "mid_block_additional_residual": mid_block_res_sample
-                }            
+                    "mid_block_additional_residual": mid_block_res_sample,
+                }
                 # Add extra arguments if include_body_region is True
                 if include_body_region:
-                    unet_inputs.update({
-                        "top_region_index_tensor": top_region_index_tensor,
-                        "bottom_region_index_tensor": bottom_region_index_tensor
-                    }) 
+                    unet_inputs.update(
+                        {
+                            "top_region_index_tensor": top_region_index_tensor,
+                            "bottom_region_index_tensor": bottom_region_index_tensor,
+                        }
+                    )
                 if include_modality:
-                    unet_inputs.update({
-                        "class_labels": modality_tensor,
-                    }) 
+                    unet_inputs.update(
+                        {
+                            "class_labels": modality_tensor,
+                        }
+                    )
                 model_output = unet(**unet_inputs)
 
             if noise_scheduler.prediction_type == DDPMPredictionType.EPSILON:

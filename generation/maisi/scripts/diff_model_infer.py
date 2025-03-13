@@ -136,8 +136,8 @@ def run_inference(
         np.ndarray: Generated synthetic image data.
     """
     include_body_region = unet.include_top_region_index_input
-    include_modality = (unet.num_class_embeds is not None)
-    
+    include_modality = unet.num_class_embeds is not None
+
     noise = torch.randn(
         (
             1,
@@ -178,18 +178,22 @@ def run_inference(
                 "timesteps": torch.Tensor((t,)).to(device),
                 "spacing_tensor": spacing_tensor,
             }
-            
+
             # Add extra arguments if include_body_region is True
             if include_body_region:
-                unet_inputs.update({
-                    "top_region_index_tensor": top_region_index_tensor,
-                    "bottom_region_index_tensor": bottom_region_index_tensor
-                }) 
+                unet_inputs.update(
+                    {
+                        "top_region_index_tensor": top_region_index_tensor,
+                        "bottom_region_index_tensor": bottom_region_index_tensor,
+                    }
+                )
 
             if include_modality:
-                unet_inputs.update({
-                    "class_labels": modality_tensor,
-                }) 
+                unet_inputs.update(
+                    {
+                        "class_labels": modality_tensor,
+                    }
+                )
             model_output = unet(**unet_inputs)
             if not isinstance(noise_scheduler, RFlowScheduler):
                 image, _ = noise_scheduler.step(model_output, t, image)  # type: ignore
@@ -241,9 +245,7 @@ def save_image(
 
 
 @torch.inference_mode()
-def diff_model_infer(
-    env_config_path: str, model_config_path: str, model_def_path: str, num_gpus: int
-) -> None:
+def diff_model_infer(env_config_path: str, model_config_path: str, model_def_path: str, num_gpus: int) -> None:
     """
     Main function to run the diffusion model inference.
 
@@ -301,7 +303,7 @@ def diff_model_infer(
         modality_tensor,
         output_size,
         divisor,
-        logger
+        logger,
     )
 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -352,6 +354,4 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    diff_model_infer(
-        args.env_config, args.model_config, args.model_def, args.num_gpus
-    )
+    diff_model_infer(args.env_config, args.model_config, args.model_def, args.num_gpus)

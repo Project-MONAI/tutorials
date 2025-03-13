@@ -226,8 +226,8 @@ def train_one_epoch(
         torch.Tensor: Training loss for the epoch.
     """
     include_body_region = unet.include_top_region_index_input
-    include_modality = (unet.num_class_embeds is not None)
-    
+    include_modality = unet.num_class_embeds is not None
+
     if local_rank == 0:
         current_lr = optimizer.param_groups[0]["lr"]
         logger.info(f"Epoch {epoch + 1}, lr {current_lr}.")
@@ -248,7 +248,7 @@ def train_one_epoch(
             bottom_region_index_tensor = train_data["bottom_region_index"].to(device)
         # We trained with only CT in this version
         if include_modality:
-            modality_tensor = torch.ones((len(images),),dtype=torch.long).to(device)
+            modality_tensor = torch.ones((len(images),), dtype=torch.long).to(device)
         spacing_tensor = train_data["spacing"].to(device)
 
         optimizer.zero_grad(set_to_none=True)
@@ -268,18 +268,22 @@ def train_one_epoch(
                 "x": noisy_latent,
                 "timesteps": timesteps,
                 "spacing_tensor": spacing_tensor,
-            }            
+            }
             # Add extra arguments if include_body_region is True
             if include_body_region:
-                unet_inputs.update({
-                    "top_region_index_tensor": top_region_index_tensor,
-                    "bottom_region_index_tensor": bottom_region_index_tensor
-                }) 
+                unet_inputs.update(
+                    {
+                        "top_region_index_tensor": top_region_index_tensor,
+                        "bottom_region_index_tensor": bottom_region_index_tensor,
+                    }
+                )
             if include_modality:
-                unet_inputs.update({
-                    "class_labels": modality_tensor,
-                }) 
-            model_output = unet(**unet_inputs)                
+                unet_inputs.update(
+                    {
+                        "class_labels": modality_tensor,
+                    }
+                )
+            model_output = unet(**unet_inputs)
 
             if noise_scheduler.prediction_type == DDPMPredictionType.EPSILON:
                 # predict noise
@@ -359,11 +363,7 @@ def save_checkpoint(
 
 
 def diff_model_train(
-    env_config_path: str,
-    model_config_path: str,
-    model_def_path: str,
-    num_gpus: int,
-    amp: bool = True
+    env_config_path: str, model_config_path: str, model_def_path: str, num_gpus: int, amp: bool = True
 ) -> None:
     """
     Main function to train a diffusion model.
@@ -424,8 +424,6 @@ def diff_model_train(
         include_body_region=include_body_region,
     )
 
-    
-
     scale_factor = calculate_scale_factor(train_loader, device, logger)
     optimizer = create_optimizer(unet, args.diffusion_unet_train["lr"])
 
@@ -455,7 +453,7 @@ def diff_model_train(
             device,
             logger,
             local_rank,
-            amp=amp
+            amp=amp,
         )
 
         loss_torch = loss_torch.tolist()
@@ -498,6 +496,4 @@ if __name__ == "__main__":
     parser.add_argument("--no_amp", dest="amp", action="store_false", help="Disable automatic mixed precision training")
 
     args = parser.parse_args()
-    diff_model_train(
-        args.env_config, args.model_config, args.model_def, args.num_gpus, args.amp
-    )
+    diff_model_train(args.env_config, args.model_config, args.model_def, args.num_gpus, args.amp)

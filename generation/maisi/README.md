@@ -165,7 +165,7 @@ For example,
 |[512, 512, 512]  | [1.0, 1.0, 1.0] |
 
 #### Execute Inference:
-To run the inference script, please run:
+To run the inference script with MAISI DDPM, please set `"num_inference_steps": 1000` in `./configs/config_infer.json`, and run:
 ```bash
 export MONAI_DATA_DIRECTORY=<dir_you_will_download_data>
 python -m scripts.inference -c ./configs/config_maisi3d-ddpm.json -i ./configs/config_infer.json -e ./configs/environment.json --random-seed 0

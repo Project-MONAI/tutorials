@@ -706,7 +706,7 @@ def dynamic_infer(inferer, model, images):
     Returns:
         torch.Tensor: The output from the model or the inferer, depending on the input size.
     """
-    if torch.numel(images[0:1, 0:1, ...]) < math.prod(inferer.roi_size):
+    if torch.numel(images[0:1, 0:1, ...]) <= math.prod(inferer.roi_size):
         return model(images)
     else:
         # Extract the spatial dimensions from the images tensor (H, W, D)

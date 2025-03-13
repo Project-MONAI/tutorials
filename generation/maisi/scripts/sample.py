@@ -132,10 +132,13 @@ def ldm_conditional_sample_one_mask(
         # synthesize latents
         if isinstance(noise_scheduler, DDPMScheduler) and num_inference_steps < noise_scheduler.num_train_timesteps:
             warnings.warn(
-                "Warning: noise_scheduler is a DDPMScheduler. "
-                "We expect num_inference_steps = noise_scheduler.num_train_timesteps"
-                f" = {noise_scheduler.num_train_timesteps}. Yet got num_inference_steps = {num_inference_steps}. "
-                "The generated image quality is not guaranteed."
+                "**************************************************************\n"
+                "* WARNING: Mask noise_scheduler is a DDPMScheduler.\n"
+                "* We expect num_inference_steps = noise_scheduler.num_train_timesteps"
+                f" = {noise_scheduler.num_train_timesteps}.\n"
+                f"* Yet got num_inference_steps = {num_inference_steps}.\n"
+                "* The generated image quality is not guaranteed.\n"
+                "**************************************************************"
             )
 
         noise_scheduler.set_timesteps(num_inference_steps=num_inference_steps)
@@ -266,11 +269,14 @@ def ldm_conditional_sample_one_image(
             noise_scheduler.set_timesteps(num_inference_steps=num_inference_steps)
 
         if isinstance(noise_scheduler, DDPMScheduler) and num_inference_steps < noise_scheduler.num_train_timesteps:
-            warnings.warn(
-                "Warning: noise_scheduler is a DDPMScheduler. "
-                "We expect num_inference_steps = noise_scheduler.num_train_timesteps"
-                f" = {noise_scheduler.num_train_timesteps}. Yet got num_inference_steps = {num_inference_steps}. "
-                "The generated image quality is not guaranteed."
+             warnings.warn(
+                "**************************************************************\n"
+                "* WARNING: Image noise_scheduler is a DDPMScheduler.\n"
+                "* We expect num_inference_steps = noise_scheduler.num_train_timesteps"
+                f" = {noise_scheduler.num_train_timesteps}.\n"
+                f"* Yet got num_inference_steps = {num_inference_steps}.\n"
+                "* The generated image quality is not guaranteed.\n"
+                "**************************************************************"
             )
 
         all_timesteps = noise_scheduler.timesteps
@@ -325,8 +331,8 @@ def ldm_conditional_sample_one_image(
             else:
                 latents, _ = noise_scheduler.step(model_output, t, latents, next_t)  # type: ignore
         end_time = time.time()
-        logging.info(f"---- Latent features generation time: {end_time - start_time} seconds ----")
-        del model_output
+        logging.info(f"---- DM/ControlNet Latent features generation time: {end_time - start_time} seconds ----")
+        del model_output, controlnet_cond_vis
         torch.cuda.empty_cache()
 
         # decode latents to synthesized images
@@ -345,7 +351,7 @@ def ldm_conditional_sample_one_image(
         synthetic_images = dynamic_infer(inferer, recon_model, latents)
         synthetic_images = torch.clip(synthetic_images, b_min, b_max).cpu()
         end_time = time.time()
-        logging.info(f"---- Image decoding time: {end_time - start_time} seconds ----")
+        logging.info(f"---- Image VAE decoding time: {end_time - start_time} seconds ----")
 
         ## post processing:
         # project output to [0, 1]
@@ -628,7 +634,7 @@ class LDMSampler:
         self.autoencoder_sliding_window_infer_overlap = autoencoder_sliding_window_infer_overlap
 
         # quality check args
-        self.max_try_time = 5  # if not pass quality check, will try self.max_try_time times
+        self.max_try_time = 3  # if not pass quality check, will try self.max_try_time times
         with open(real_img_median_statistics, "r") as json_file:
             self.median_statistics = json.load(json_file)
         self.label_int_dict = {
@@ -713,9 +719,12 @@ class LDMSampler:
 
             selected_mask_files = self.select_mask(candidate_mask_files, num_img)
             logging.info(f"Images will be generated based on {selected_mask_files}.")
-            if len(selected_mask_files) != num_img:
+            if len(selected_mask_files) < num_img:
                 raise ValueError(
-                    f"len(selected_mask_files) ({len(selected_mask_files)}) != num_img ({num_img}). This should not happen. Please revisit function select_mask(self, candidate_mask_files, num_img)."
+                    (
+                        f"len(selected_mask_files) ({len(selected_mask_files)}) < num_img ({num_img}). "
+                        "This should not happen. Please revisit function select_mask(self, candidate_mask_files, num_img)."
+                    )
                 )
 
         num_generated_img = 0
@@ -766,6 +775,7 @@ class LDMSampler:
             pass_quality_check = self.quality_check(
                 synthetic_images.cpu().detach().numpy(), combine_label_or.cpu().detach().numpy()
             )
+            print(num_img - num_generated_img, (len(selected_mask_files) - index_s))
             if pass_quality_check or (num_img - num_generated_img) >= (len(selected_mask_files) - index_s):
                 if not pass_quality_check:
                     logging.info(
@@ -819,7 +829,7 @@ class LDMSampler:
         selected_mask_files = []
         random.shuffle(candidate_mask_files)
 
-        for n in range(num_img):
+        for n in range(num_img*self.max_try_time):
             mask_file = candidate_mask_files[n % len(candidate_mask_files)]
             selected_mask_files.append({"mask_file": mask_file, "if_aug": True})
         return selected_mask_files

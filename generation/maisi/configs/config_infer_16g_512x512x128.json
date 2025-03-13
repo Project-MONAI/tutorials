@@ -18,7 +18,12 @@
         4.0
     ],
     "autoencoder_sliding_window_infer_size": [64,64,32],
-    "autoencoder_sliding_window_infer_overlap": 0.25,
-    "autoencoder_tp_num_splits": 1,
+    "autoencoder_sliding_window_infer_overlap": 0.5,
+    "autoencoder_tp_num_splits": 2,
+    "controlnet": "$@controlnet_def",
+    "diffusion_unet": "$@diffusion_unet_def",
+    "autoencoder": "$@autoencoder_def",
+    "mask_generation_autoencoder": "$@mask_generation_autoencoder_def",
+    "mask_generation_diffusion": "$@mask_generation_diffusion_def",
     "modality": 1
 }

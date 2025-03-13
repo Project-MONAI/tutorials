@@ -111,8 +111,8 @@ def main():
     # define diffusion Model
     unet = define_instance(args, "diffusion_unet_def").to(device)
     include_body_region = unet.include_top_region_index_input
-    include_modality = (unet.num_class_embeds is not None)
-    
+    include_modality = unet.num_class_embeds is not None
+
     # load trained diffusion model
     if args.trained_diffusion_path is not None:
         if not os.path.exists(args.trained_diffusion_path):

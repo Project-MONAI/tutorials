@@ -113,7 +113,7 @@ def is_outlier(statistics, image_data, label_data, label_int_dict):
         high_thresh = max(stats["sigma_6_high"], stats["percentile_99_5"])  # or "sigma_12_high" depending on your needs
 
         if label_name == "bone":
-            high_thresh = 1000.
+            high_thresh = 1000.0
 
         # Retrieve the corresponding label integers
         labels = label_int_dict.get(label_name, [])

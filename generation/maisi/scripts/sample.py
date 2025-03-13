@@ -31,7 +31,13 @@ from monai.networks.schedulers import RFlowScheduler, DDPMScheduler
 from .augmentation import augmentation
 from .find_masks import find_masks
 from .quality_check import is_outlier
-from .utils import binarize_labels, general_mask_generation_post_process, get_body_region_index_from_mask, remap_labels, dynamic_infer
+from .utils import (
+    binarize_labels,
+    general_mask_generation_post_process,
+    get_body_region_index_from_mask,
+    remap_labels,
+    dynamic_infer,
+)
 
 
 class ReconModel(torch.nn.Module):
@@ -124,12 +130,14 @@ def ldm_conditional_sample_one_mask(
         latents = initialize_noise_latents(latent_shape, device)
         anatomy_size = torch.FloatTensor(anatomy_size).unsqueeze(0).unsqueeze(0).half().to(device)
         # synthesize latents
-        if isinstance(noise_scheduler,DDPMScheduler) and num_inference_steps<noise_scheduler.num_train_timesteps:
-            warnings.warn("Warning: noise_scheduler is a DDPMScheduler. "\
-                          "We expect num_inference_steps = noise_scheduler.num_train_timesteps"\
-                          f" = {noise_scheduler.num_train_timesteps}. Yet got num_inference_steps = {num_inference_steps}. "\
-                          "The generated image quality is not guaranteed.")
-            
+        if isinstance(noise_scheduler, DDPMScheduler) and num_inference_steps < noise_scheduler.num_train_timesteps:
+            warnings.warn(
+                "Warning: noise_scheduler is a DDPMScheduler. "
+                "We expect num_inference_steps = noise_scheduler.num_train_timesteps"
+                f" = {noise_scheduler.num_train_timesteps}. Yet got num_inference_steps = {num_inference_steps}. "
+                "The generated image quality is not guaranteed."
+            )
+
         noise_scheduler.set_timesteps(num_inference_steps=num_inference_steps)
         # mask generator is DDPM
         inferer_ddpm = DiffusionInferer(noise_scheduler)
@@ -180,7 +188,7 @@ def ldm_conditional_sample_one_image(
     scale_factor,
     device,
     combine_label_or,
-    spacing_tensor,    
+    spacing_tensor,
     latent_shape,
     output_size,
     noise_factor,
@@ -189,7 +197,7 @@ def ldm_conditional_sample_one_image(
     modality_tensor=None,
     num_inference_steps=1000,
     autoencoder_sliding_window_infer_size=[96, 96, 96],
-    autoencoder_sliding_window_infer_overlap=0.6667
+    autoencoder_sliding_window_infer_overlap=0.6667,
 ):
     """
     Generate a single synthetic image using a latent diffusion model with controlnet.
@@ -224,7 +232,7 @@ def ldm_conditional_sample_one_image(
     b_max = 1
 
     include_body_region = diffusion_unet.include_top_region_index_input
-    include_modality = (diffusion_unet.num_class_embeds is not None)
+    include_modality = diffusion_unet.num_class_embeds is not None
 
     recon_model = ReconModel(autoencoder=autoencoder, scale_factor=scale_factor).to(device)
 
@@ -257,18 +265,20 @@ def ldm_conditional_sample_one_image(
         else:
             noise_scheduler.set_timesteps(num_inference_steps=num_inference_steps)
 
-        if isinstance(noise_scheduler,DDPMScheduler) and num_inference_steps<noise_scheduler.num_train_timesteps:
-            warnings.warn("Warning: noise_scheduler is a DDPMScheduler. "\
-                          "We expect num_inference_steps = noise_scheduler.num_train_timesteps"\
-                          f" = {noise_scheduler.num_train_timesteps}. Yet got num_inference_steps = {num_inference_steps}. "\
-                          "The generated image quality is not guaranteed.")
-            
+        if isinstance(noise_scheduler, DDPMScheduler) and num_inference_steps < noise_scheduler.num_train_timesteps:
+            warnings.warn(
+                "Warning: noise_scheduler is a DDPMScheduler. "
+                "We expect num_inference_steps = noise_scheduler.num_train_timesteps"
+                f" = {noise_scheduler.num_train_timesteps}. Yet got num_inference_steps = {num_inference_steps}. "
+                "The generated image quality is not guaranteed."
+            )
+
         all_timesteps = noise_scheduler.timesteps
         all_next_timesteps = torch.cat((all_timesteps[1:], torch.tensor([0], dtype=all_timesteps.dtype)))
         progress_bar = tqdm(
             zip(all_timesteps, all_next_timesteps),
             total=min(len(all_timesteps), len(all_next_timesteps)),
-        )    
+        )
         for t, next_t in progress_bar:
             # get controlnet output
             # Create a dictionary to store the inputs
@@ -276,14 +286,14 @@ def ldm_conditional_sample_one_image(
                 "x": latents,
                 "timesteps": torch.Tensor((t,)).to(device),
                 "controlnet_cond": controlnet_cond_vis,
-            } 
+            }
             if include_modality:
-                controlnet_inputs.update({
-                    "class_labels": modality_tensor,
-                })
-            down_block_res_samples, mid_block_res_sample = controlnet(
-                **controlnet_inputs
-            )
+                controlnet_inputs.update(
+                    {
+                        "class_labels": modality_tensor,
+                    }
+                )
+            down_block_res_samples, mid_block_res_sample = controlnet(**controlnet_inputs)
 
             # get diffusion network output
             # Create a dictionary to store the inputs
@@ -292,18 +302,22 @@ def ldm_conditional_sample_one_image(
                 "timesteps": torch.Tensor((t,)).to(device),
                 "spacing_tensor": spacing_tensor,
                 "down_block_additional_residuals": down_block_res_samples,
-                "mid_block_additional_residual": mid_block_res_sample
-            }            
+                "mid_block_additional_residual": mid_block_res_sample,
+            }
             # Add extra arguments if include_body_region is True
             if include_body_region:
-                unet_inputs.update({
-                    "top_region_index_tensor": top_region_index_tensor,
-                    "bottom_region_index_tensor": bottom_region_index_tensor
-                }) 
+                unet_inputs.update(
+                    {
+                        "top_region_index_tensor": top_region_index_tensor,
+                        "bottom_region_index_tensor": bottom_region_index_tensor,
+                    }
+                )
             if include_modality:
-                unet_inputs.update({
-                    "class_labels": modality_tensor,
-                }) 
+                unet_inputs.update(
+                    {
+                        "class_labels": modality_tensor,
+                    }
+                )
             model_output = diffusion_unet(**unet_inputs)
 
             if not isinstance(noise_scheduler, RFlowScheduler):
@@ -552,7 +566,7 @@ class LDMSampler:
         mask_generation_num_inference_steps=None,
         random_seed=None,
         autoencoder_sliding_window_infer_size=[96, 96, 96],
-        autoencoder_sliding_window_infer_overlap=0.6667
+        autoencoder_sliding_window_infer_overlap=0.6667,
     ) -> None:
         """
         Initialize the LDMSampler with various parameters and models.
@@ -601,7 +615,7 @@ class LDMSampler:
         self.mask_generation_num_inference_steps = (
             mask_generation_num_inference_steps if mask_generation_num_inference_steps is not None else 1000
         )
-        
+
         if any(size % 16 != 0 for size in autoencoder_sliding_window_infer_size):
             raise ValueError(
                 f"autoencoder_sliding_window_infer_size must be divisible by 16.\n Got {autoencoder_sliding_window_infer_size}"
@@ -640,27 +654,26 @@ class LDMSampler:
         self.mask_generation_diffusion_unet.eval()
 
         self.spacing = spacing
-        self.modality_tensor = modality * torch.ones((1,),dtype=torch.long).to(device)
+        self.modality_tensor = modality * torch.ones((1,), dtype=torch.long).to(device)
         self.include_body_region = self.diffusion_unet.include_top_region_index_input
-        self.include_modality = (self.diffusion_unet.num_class_embeds is not None)
+        self.include_modality = self.diffusion_unet.num_class_embeds is not None
 
         val_transforms_list = [
             monai.transforms.LoadImaged(keys=["pseudo_label"]),
             monai.transforms.EnsureChannelFirstd(keys=["pseudo_label"]),
             monai.transforms.Orientationd(keys=["pseudo_label"], axcodes="RAS"),
-            monai.transforms.EnsureTyped(keys=["pseudo_label"], dtype=torch.uint8),            
-            monai.transforms.Lambdad(keys="spacing", func=lambda x: torch.FloatTensor(x)),            
+            monai.transforms.EnsureTyped(keys=["pseudo_label"], dtype=torch.uint8),
+            monai.transforms.Lambdad(keys="spacing", func=lambda x: torch.FloatTensor(x)),
             monai.transforms.Lambdad(keys="spacing", func=lambda x: x * 1e2),
-            
         ]
         if self.include_body_region:
             val_transforms_list += [
                 monai.transforms.Lambdad(keys="top_region_index", func=lambda x: torch.FloatTensor(x)),
                 monai.transforms.Lambdad(keys="bottom_region_index", func=lambda x: torch.FloatTensor(x)),
                 monai.transforms.Lambdad(keys="top_region_index", func=lambda x: x * 1e2),
-                monai.transforms.Lambdad(keys="bottom_region_index", func=lambda x: x * 1e2),                
+                monai.transforms.Lambdad(keys="bottom_region_index", func=lambda x: x * 1e2),
             ]
-            
+
         self.val_transforms = Compose(val_transforms_list)
         logging.info("LDM sampler initialized.")
 
@@ -743,23 +756,23 @@ class LDMSampler:
             try_time = 0
             # start generation
             synthetic_images, synthetic_labels = self.sample_one_pair(
-                    combine_label_or,
-                    top_region_index_tensor,
-                    bottom_region_index_tensor,
-                    spacing_tensor,
-                    modality_tensor,
-                )
+                combine_label_or,
+                top_region_index_tensor,
+                bottom_region_index_tensor,
+                spacing_tensor,
+                modality_tensor,
+            )
             # synthetic image quality check
             pass_quality_check = self.quality_check(
                 synthetic_images.cpu().detach().numpy(), combine_label_or.cpu().detach().numpy()
             )
-            if pass_quality_check or (num_img - num_generated_img)>=(len(selected_mask_files)-index_s):
+            if pass_quality_check or (num_img - num_generated_img) >= (len(selected_mask_files) - index_s):
                 if not pass_quality_check:
                     logging.info(
-                    "Generated image/label pair did not pass quality check, but will still save them. "
-                    "Please consider changing spacing and output_size to facilitate a more realistic setting."
-                )
-                num_generated_img = num_generated_img +1
+                        "Generated image/label pair did not pass quality check, but will still save them. "
+                        "Please consider changing spacing and output_size to facilitate a more realistic setting."
+                    )
+                num_generated_img = num_generated_img + 1
                 # save image/label pairs
                 output_postfix = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
                 synthetic_labels.meta["filename_or_obj"] = "sample.nii.gz"
@@ -789,11 +802,9 @@ class LDMSampler:
                 output_filenames.append([synthetic_images_filename, synthetic_labels_filename])
                 to_generate = False
             else:
-                logging.info(
-                    "Generated image/label pair did not pass quality check, will re-generate another pair."
-                )
+                logging.info("Generated image/label pair did not pass quality check, will re-generate another pair.")
         return output_filenames
-        
+
     def select_mask(self, candidate_mask_files, num_img):
         """
         Select mask files for image generation.
@@ -852,7 +863,7 @@ class LDMSampler:
             noise_factor=self.noise_factor,
             num_inference_steps=self.num_inference_steps,
             autoencoder_sliding_window_infer_size=self.autoencoder_sliding_window_infer_size,
-            autoencoder_sliding_window_infer_overlap=self.autoencoder_sliding_window_infer_overlap
+            autoencoder_sliding_window_infer_overlap=self.autoencoder_sliding_window_infer_overlap,
         )
         return synthetic_images, synthetic_labels
 
@@ -1020,13 +1031,8 @@ class LDMSampler:
         """
         val_data = self.val_transforms(mask_file)
 
-        for key in [
-            "pseudo_label",
-            "spacing",
-            "top_region_index",
-            "bottom_region_index"
-        ]:
-            if isinstance(val_data[key],torch.Tensor):
+        for key in ["pseudo_label", "spacing", "top_region_index", "bottom_region_index"]:
+            if isinstance(val_data[key], torch.Tensor):
                 val_data[key] = val_data[key].unsqueeze(0).to(self.device)
             else:
                 val_data[key] = None
@@ -1064,26 +1070,28 @@ class LDMSampler:
 
         if len(candidates) < num_img:
             raise ValueError(f"candidate masks are less than {num_img}).")
-        
+
         # loop through the database and find closest combinations
         new_candidates = []
         for c in candidates:
             diff = 0
             include_c = True
             for axis in range(3):
-                if abs(c["dim"][axis]) < self.output_size[axis]-64:
+                if abs(c["dim"][axis]) < self.output_size[axis] - 64:
                     # we cannot upsample the mask too much
                     include_c = False
                     break
                 # check diff in FOV, major metric
-                diff += abs((abs(c["dim"][axis]*c["spacing"][axis]) - self.output_size[axis]*self.spacing[axis]) / 10)
+                diff += abs(
+                    (abs(c["dim"][axis] * c["spacing"][axis]) - self.output_size[axis] * self.spacing[axis]) / 10
+                )
                 # check diff in dim
                 diff += abs((abs(c["dim"][axis]) - self.output_size[axis]) / 100)
                 # check diff in spacing
                 diff += abs(abs(c["spacing"][axis]) - self.spacing[axis])
             if include_c:
                 new_candidates.append((c, diff))
-        
+
         # choose top-2*num_img candidates (at least 5)
         num_candidates = max(2 * num_img, 5)
         new_candidates = sorted(new_candidates, key=lambda x: x[1])
@@ -1094,7 +1102,7 @@ class LDMSampler:
             c = self.resample_mask_check_organ_list(c)
             if c is not None:
                 final_candidates.append(c)
-            if len(final_candidates)>=num_candidates:
+            if len(final_candidates) >= num_candidates:
                 break
         if len(final_candidates) == 0:
             raise ValueError("Cannot find body region with given organ list.")
@@ -1113,7 +1121,7 @@ class LDMSampler:
         Raises:
             ValueError: If suitable candidates cannot be found.
         """
-        
+
         image_loader = monai.transforms.LoadImage(image_only=True, ensure_channel_first=True)
         label = image_loader(mask["pseudo_label"])
         try:

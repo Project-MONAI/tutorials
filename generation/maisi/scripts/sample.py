@@ -269,7 +269,7 @@ def ldm_conditional_sample_one_image(
             noise_scheduler.set_timesteps(num_inference_steps=num_inference_steps)
 
         if isinstance(noise_scheduler, DDPMScheduler) and num_inference_steps < noise_scheduler.num_train_timesteps:
-             warnings.warn(
+            warnings.warn(
                 "**************************************************************\n"
                 "* WARNING: Image noise_scheduler is a DDPMScheduler.\n"
                 "* We expect num_inference_steps = noise_scheduler.num_train_timesteps"
@@ -829,7 +829,7 @@ class LDMSampler:
         selected_mask_files = []
         random.shuffle(candidate_mask_files)
 
-        for n in range(num_img*self.max_try_time):
+        for n in range(num_img * self.max_try_time):
             mask_file = candidate_mask_files[n % len(candidate_mask_files)]
             selected_mask_files.append({"mask_file": mask_file, "if_aug": True})
         return selected_mask_files

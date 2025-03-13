@@ -63,7 +63,7 @@ def main():
     )
     parser.add_argument(
         "--version",
-        default='maisi3d-rflow',
+        default="maisi3d-rflow",
         type=str,
         help="maisi_version, choose from ['maisi3d-ddpm', 'maisi3d-rflow']",
     )
@@ -97,7 +97,8 @@ def main():
         },
         {
             "path": "models/mask_generation_autoencoder.pt",
-            "url": "https://developer.download.nvidia.com/assets/Clara/monai" "/tutorials/mask_generation_autoencoder.pt",
+            "url": "https://developer.download.nvidia.com/assets/Clara/monai"
+            "/tutorials/mask_generation_autoencoder.pt",
         },
         {
             "path": "models/mask_generation_diffusion_unet.pt",
@@ -114,7 +115,7 @@ def main():
             "/tutorials/all_masks_flexible_size_and_spacing_4000.zip",
         },
     ]
-    
+
     if maisi_version == "maisi3d-ddpm":
         files += [
             {
@@ -142,7 +143,8 @@ def main():
             },
             {
                 "path": "models/controlnet_3d_rflow.pt",
-                "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/" "controlnet_rflow_epoch208.pt",
+                "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/"
+                "controlnet_rflow_epoch208.pt",
             },
             {
                 "path": "configs/candidate_masks_flexible_size_and_spacing_4000.json",
@@ -151,8 +153,10 @@ def main():
             },
         ]
     else:
-        raise ValueError(f"maisi_version has to be chosen from ['maisi3d-ddpm', 'maisi3d-rflow'], yet got {maisi_version}.")
-    
+        raise ValueError(
+            f"maisi_version has to be chosen from ['maisi3d-ddpm', 'maisi3d-rflow'], yet got {maisi_version}."
+        )
+
     for file in files:
         file["path"] = file["path"] if "datasets/" not in file["path"] else os.path.join(root_dir, file["path"])
         download_url(url=file["url"], filepath=file["path"])

@@ -390,7 +390,7 @@ def main(
 
     This function loads two datasets (real vs. synthetic) in 3D medical format (NIfTI)
     and extracts feature maps via a 2.5D approach, then computes the Frechet Inception
-    Distance (FID) across three orthogonal planes. Data parallelism is implemented 
+    Distance (FID) across three orthogonal planes. Data parallelism is implemented
     using torch.distributed with an NCCL backend.
 
     Args:
@@ -406,7 +406,7 @@ def main(
                 ...
             These entries will be appended to `real_dataset_root`.
         real_features_dir (str):
-            Name of the directory under `output_root` in which to store 
+            Name of the directory under `output_root` in which to store
             extracted features for the real dataset.
 
         synth_dataset_root (str):
@@ -420,7 +420,7 @@ def main(
                 ...
             These entries will be appended to `synth_dataset_root`.
         synth_features_dir (str):
-            Name of the directory under `output_root` in which to store 
+            Name of the directory under `output_root` in which to store
             extracted features for the synthetic dataset.
 
         enable_center_slices_ratio (float or None):
@@ -500,14 +500,12 @@ def main(
     # -------------------------------------------------------------------------
     if model_name == "radimagenet_resnet50":
         feature_network = torch.hub.load(
-            "Warvito/radimagenet-models",
-            model="radimagenet_resnet50",
-            verbose=True,
-            trust_repo=True
+            "Warvito/radimagenet-models", model="radimagenet_resnet50", verbose=True, trust_repo=True
         )
         suffix = "radimagenet_resnet50"
     else:
         import torchvision
+
         feature_network = torchvision.models.squeezenet1_1(pretrained=True)
         suffix = "squeezenet1_1"
 
@@ -545,10 +543,7 @@ def main(
 
     real_filenames = [{"image": os.path.join(real_dataset_root, f)} for f in real_lines]
     real_filenames = monai.data.partition_dataset(
-        data=real_filenames,
-        shuffle=False,
-        num_partitions=world_size,
-        even_divisible=False
+        data=real_filenames, shuffle=False, num_partitions=world_size, even_divisible=False
     )[local_rank]
 
     # -------------------------------------------------------------------------
@@ -562,10 +557,7 @@ def main(
 
     synth_filenames = [{"image": os.path.join(synth_dataset_root, f)} for f in synth_lines]
     synth_filenames = monai.data.partition_dataset(
-        data=synth_filenames,
-        shuffle=False,
-        num_partitions=world_size,
-        even_divisible=False
+        data=synth_filenames, shuffle=False, num_partitions=world_size, even_divisible=False
     )[local_rank]
 
     # -------------------------------------------------------------------------
@@ -578,23 +570,15 @@ def main(
     ]
 
     if enable_resampling:
-        transform_list.append(
-            monai.transforms.Spacingd(
-                keys=["image"], pixdim=rs_spacing_tuple, mode=["bilinear"]
-            )
-        )
+        transform_list.append(monai.transforms.Spacingd(keys=["image"], pixdim=rs_spacing_tuple, mode=["bilinear"]))
 
     if enable_padding:
         transform_list.append(
-            monai.transforms.SpatialPadd(
-                keys=["image"], spatial_size=target_shape_tuple, mode="constant", value=-1000
-            )
+            monai.transforms.SpatialPadd(keys=["image"], spatial_size=target_shape_tuple, mode="constant", value=-1000)
         )
 
     if enable_center_cropping:
-        transform_list.append(
-            monai.transforms.CenterSpatialCropd(keys=["image"], roi_size=target_shape_tuple)
-        )
+        transform_list.append(monai.transforms.CenterSpatialCropd(keys=["image"], roi_size=target_shape_tuple))
 
     transform_list.append(
         monai.transforms.ScaleIntensityRanged(
@@ -638,9 +622,7 @@ def main(
                 center_slices_ratio=center_slices_ratio_final,
                 xy_only=False,
             )
-            logger.info(
-                f"feats shapes: {feats[0].shape}, {feats[1].shape}, {feats[2].shape}"
-            )
+            logger.info(f"feats shapes: {feats[0].shape}, {feats[1].shape}, {feats[2].shape}")
             torch.save(feats, out_fp)
 
         real_features_xy.append(feats[0])
@@ -651,8 +633,7 @@ def main(
     real_features_yz = torch.vstack(real_features_yz)
     real_features_zx = torch.vstack(real_features_zx)
     logger.info(
-        f"Real feature shapes: {real_features_xy.shape}, "
-        f"{real_features_yz.shape}, {real_features_zx.shape}"
+        f"Real feature shapes: {real_features_xy.shape}, " f"{real_features_yz.shape}, {real_features_zx.shape}"
     )
 
     # -------------------------------------------------------------------------
@@ -681,9 +662,7 @@ def main(
                 center_slices_ratio=center_slices_ratio_final,
                 xy_only=False,
             )
-            logger.info(
-                f"feats shapes: {feats[0].shape}, {feats[1].shape}, {feats[2].shape}"
-            )
+            logger.info(f"feats shapes: {feats[0].shape}, {feats[1].shape}, {feats[2].shape}")
             torch.save(feats, out_fp)
 
         synth_features_xy.append(feats[0])
@@ -694,8 +673,7 @@ def main(
     synth_features_yz = torch.vstack(synth_features_yz)
     synth_features_zx = torch.vstack(synth_features_zx)
     logger.info(
-        f"Synth feature shapes: {synth_features_xy.shape}, "
-        f"{synth_features_yz.shape}, {synth_features_zx.shape}"
+        f"Synth feature shapes: {synth_features_xy.shape}, " f"{synth_features_yz.shape}, {synth_features_zx.shape}"
     )
 
     # -------------------------------------------------------------------------

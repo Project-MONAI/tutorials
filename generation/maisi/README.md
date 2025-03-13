@@ -253,13 +253,13 @@ We provide the `compute_fid_2-5d_ct.py` script that calculates the Frechet Incep
 
 #### Key Features
 
-- **Distributed Processing**  
+- **Distributed Processing**
   Scales to multiple GPUs and larger datasets by splitting the workload across devices.
 
-- **2.5D Feature Extraction**  
+- **2.5D Feature Extraction**
   Uses a slice-based technique, applying a 2D model across all slices in each dimension.
 
-- **Flexible Preprocessing**  
+- **Flexible Preprocessing**
   Supports optional center-cropping, padding, and resampling to target shapes or voxel spacings.
 
 #### Usage Example

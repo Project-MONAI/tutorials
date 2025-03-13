@@ -23,47 +23,82 @@ SHELL Usage Example:
 
     torchrun --nproc_per_node=${NUM_GPUS} compute_fid_2-5d_ct.py \
         --model_name "radimagenet_resnet50" \
-        --data0_dataroot "path/to/datasetA" \
-        --data0_filelist "path/to/filelistA.txt" \
-        --data0_folder "datasetA" \
-        --data1_dataroot "path/to/datasetB" \
-        --data1_filelist "path/to/filelistB.txt" \
-        --data1_folder "datasetB" \
-        --enable_center_slices False \
+        --real_dataset_root "path/to/datasetA" \
+        --real_filelist "path/to/filelistA.txt" \
+        --real_features_dir "datasetA" \
+        --synth_dataset_root "path/to/datasetB" \
+        --synth_filelist "path/to/filelistB.txt" \
+        --synth_features_dir "datasetB" \
+        --enable_center_slices_ratio 0.4 \
         --enable_padding True \
         --enable_center_cropping True \
-        --enable_resampling True \
+        --enable_resampling_spacing "1.0x1.0x1.0" \
         --ignore_existing True \
         --num_images 100 \
         --output_root "./features/features-512x512x512" \
         --target_shape "512x512x512"
 
-This script loads two datasets (real vs. synthetic) in 3D medical format (NIfTI) and extracts
-feature maps via a 2.5D approach. It then computes the Frechet Inception Distance (FID)
-across three orthogonal planes. Data parallelism is implemented using
-torch.distributed with an NCCL backend.
+This script loads two datasets (real vs. synthetic) in 3D medical format (NIfTI)
+and extracts feature maps via a 2.5D approach. It then computes the Frechet
+Inception Distance (FID) across three orthogonal planes. Data parallelism
+is implemented using torch.distributed with an NCCL backend.
 
 Function Arguments (main):
 --------------------------
-    data0_dataroot (str): Root folder for dataset 0 (real images).
-    data0_filelist (str): Text file listing 3D images for dataset 0.
-    data0_folder (str): Name for dataset 0 output folder under `output_root`.
-    data1_dataroot (str): Root folder for dataset 1 (synthetic images).
-    data1_filelist (str): Text file listing 3D images for dataset 1.
-    data1_folder (str): Name for dataset 1 output folder under `output_root`.
-    enable_center_slices (bool): Whether to slice around the center region of each axis.
-    enable_center_slices_ratio (float): Ratio of slices to take from the center if `enable_center_slices` is True.
-    enable_padding (bool): If True, pad images to `target_shape` before feature extraction.
-    enable_center_cropping (bool): If True, center-crop images to `target_shape`.
-    enable_resampling (bool): If True, resample images to `enable_resampling_spacing`.
-    enable_resampling_spacing (str): Target voxel spacing, e.g. "1.0x1.0x1.0".
-    ignore_existing (bool): If True, ignore existing .pt feature files and recompute.
-    model_name (str): Model identifier. Uses "radimagenet_resnet50" or a default squeezenet1_1.
-    num_images (int): Max number of images from each dataset to process (truncate if larger).
-    output_root (str): Folder where extracted feature .pt files and logs are saved.
-    target_shape (str): "XxYxZ" shape to which images are padded/cropped/resampled.
+    real_dataset_root (str):
+        Root folder for the real dataset.
 
+    real_filelist (str):
+        Text file listing 3D images for the real dataset.
+
+    real_features_dir (str):
+        Subdirectory (under `output_root`) in which to store feature files
+        extracted from the real dataset.
+
+    synth_dataset_root (str):
+        Root folder for the synthetic dataset.
+
+    synth_filelist (str):
+        Text file listing 3D images for the synthetic dataset.
+
+    synth_features_dir (str):
+        Subdirectory (under `output_root`) in which to store feature files
+        extracted from the synthetic dataset.
+
+    enable_center_slices_ratio (float or None):
+        - If not None, only slices around the specified center ratio will be used
+          (analogous to "enable_center_slices=True" with that ratio).
+        - If None, no center-slice selection is performed
+          (analogous to "enable_center_slices=False").
+
+    enable_padding (bool):
+        Whether to pad images to `target_shape`.
+
+    enable_center_cropping (bool):
+        Whether to center-crop images to `target_shape`.
+
+    enable_resampling_spacing (str or None):
+        - If not None, resample images to the specified voxel spacing (e.g. "1.0x1.0x1.0")
+          (analogous to "enable_resampling=True" with that spacing).
+        - If None, resampling is skipped
+          (analogous to "enable_resampling=False").
+
+    ignore_existing (bool):
+        If True, ignore any existing .pt feature files and force re-extraction.
+
+    model_name (str):
+        Model identifier. Typically "radimagenet_resnet50" or "squeezenet1_1".
+
+    num_images (int):
+        Max number of images to process from each dataset (truncate if more are present).
+
+    output_root (str):
+        Folder where extracted .pt feature files, logs, and results are saved.
+
+    target_shape (str):
+        Target shape as "XxYxZ" for padding, cropping, or resampling operations.
 """
+
 
 from __future__ import annotations
 
@@ -334,18 +369,16 @@ def pad_to_max_size(tensor: torch.Tensor, max_size: int, padding_value: float = 
 
 
 def main(
-    data0_dataroot: str = "path/to/datasetA",
-    data0_filelist: str = "path/to/filelistA.txt",
-    data0_folder: str = "datasetA",
-    data1_dataroot: str = "path/to/datasetB",
-    data1_filelist: str = "path/to/filelistB.txt",
-    data1_folder: str = "datasetB",
-    enable_center_slices: bool = False,
-    enable_center_slices_ratio: float = 0.4,
+    real_dataset_root: str = "path/to/datasetA",
+    real_filelist: str = "path/to/filelistA.txt",
+    real_features_dir: str = "datasetA",
+    synth_dataset_root: str = "path/to/datasetB",
+    synth_filelist: str = "path/to/filelistB.txt",
+    synth_features_dir: str = "datasetB",
+    enable_center_slices_ratio: float = None,
     enable_padding: bool = True,
     enable_center_cropping: bool = True,
-    enable_resampling: bool = False,
-    enable_resampling_spacing: str = "1.0x1.0x1.0",
+    enable_resampling_spacing: str = None,
     ignore_existing: bool = False,
     model_name: str = "radimagenet_resnet50",
     num_images: int = 100,
@@ -353,27 +386,74 @@ def main(
     target_shape: str = "512x512x512",
 ):
     """
-    Main function to compute 2.5D features for two datasets (e.g. real vs. synthetic)
-    and calculate FID across XY, YZ, ZX planes.
+    Compute 2.5D FID using distributed GPU processing.
+
+    This function loads two datasets (real vs. synthetic) in 3D medical format (NIfTI)
+    and extracts feature maps via a 2.5D approach, then computes the Frechet Inception
+    Distance (FID) across three orthogonal planes. Data parallelism is implemented 
+    using torch.distributed with an NCCL backend.
 
     Args:
-        data0_dataroot (str): Root path of dataset 0 (real images).
-        data0_filelist (str): Text file listing the 3D images in dataset 0.
-        data0_folder (str): Name (subdir) for dataset 0 outputs under `output_root`.
-        data1_dataroot (str): Root path of dataset 1 (synthetic images).
-        data1_filelist (str): Text file listing the 3D images in dataset 1.
-        data1_folder (str): Name (subdir) for dataset 1 outputs under `output_root`.
-        enable_center_slices (bool): If True, only slices around the center ratio are used.
-        enable_center_slices_ratio (float): Ratio of center slices to keep if `enable_center_slices` is True.
-        enable_padding (bool): Whether to pad images to `target_shape`.
-        enable_center_cropping (bool): Whether to center-crop images to `target_shape`.
-        enable_resampling (bool): Whether to resample images to `enable_resampling_spacing`.
-        enable_resampling_spacing (str): Target voxel spacing as "XxYxZ", e.g. "1.0x1.0x1.0".
-        ignore_existing (bool): If True, re-extract features even if .pt files exist.
-        model_name (str): Model to use for feature extraction (radimagenet_resnet50 or squeezenet1_1).
-        num_images (int): Number of images to use from each dataset (truncate if exceeding).
-        output_root (str): Output directory to store extracted features and final results.
-        target_shape (str): Desired shape, as "XxYxZ", for padding/cropping/resampling.
+        real_dataset_root (str):
+            Root folder for the real dataset.
+        real_filelist (str):
+            Path to a text file listing 3D images (e.g., NIfTI files) for the real dataset.
+            Each line in this file should contain a relative path (or filename) to a NIfTI file.
+            For example, your "real_filelist.txt" could look like:
+                case001.nii.gz
+                case002.nii.gz
+                case003.nii.gz
+                ...
+            These entries will be appended to `real_dataset_root`.
+        real_features_dir (str):
+            Name of the directory under `output_root` in which to store 
+            extracted features for the real dataset.
+
+        synth_dataset_root (str):
+            Root folder for the synthetic dataset.
+        synth_filelist (str):
+            Path to a text file listing 3D images (e.g., NIfTI files) for the synthetic dataset.
+            The format is the same as the real dataset file list, for example:
+                synth_case001.nii.gz
+                synth_case002.nii.gz
+                synth_case003.nii.gz
+                ...
+            These entries will be appended to `synth_dataset_root`.
+        synth_features_dir (str):
+            Name of the directory under `output_root` in which to store 
+            extracted features for the synthetic dataset.
+
+        enable_center_slices_ratio (float or None):
+            - If not None, only slices around the specified center ratio are used.
+              (similar to "enable_center_slices=True" with that ratio in an earlier script).
+            - If None, no center-slice selection is performed
+              (similar to "enable_center_slices=False").
+
+        enable_padding (bool):
+            Whether to pad images to `target_shape`.
+
+        enable_center_cropping (bool):
+            Whether to center-crop images to `target_shape`.
+
+        enable_resampling_spacing (str or None):
+            - If not None, resample images to this voxel spacing (e.g. "1.0x1.0x1.0")
+              (similar to "enable_resampling=True" with that spacing).
+            - If None, skip resampling (similar to "enable_resampling=False").
+
+        ignore_existing (bool):
+            If True, ignore any existing .pt feature files and force re-computation.
+
+        model_name (str):
+            Model identifier. Typically "radimagenet_resnet50" or "squeezenet1_1".
+
+        num_images (int):
+            Maximum number of images to load from each dataset (truncate if more are present).
+
+        output_root (str):
+            Parent folder where extracted .pt files and logs will be saved.
+
+        target_shape (str):
+            Target shape, e.g. "512x512x512", for padding, cropping, or resampling operations.
 
     Returns:
         None
@@ -389,23 +469,29 @@ def main(
     torch.cuda.set_device(device)
     logger.info(f"[INFO] Running process on {device} of total {world_size} ranks.")
 
-    # Convert potential string bools to actual bools (Fire sometimes passes strings)
-    if not isinstance(enable_center_slices, bool):
-        enable_center_slices = enable_center_slices.lower() == "true"
+    # Convert potential string bools to actual bools (if using Fire or similar)
     if not isinstance(enable_padding, bool):
         enable_padding = enable_padding.lower() == "true"
     if not isinstance(enable_center_cropping, bool):
         enable_center_cropping = enable_center_cropping.lower() == "true"
-    if not isinstance(enable_resampling, bool):
-        enable_resampling = enable_resampling.lower() == "true"
     if not isinstance(ignore_existing, bool):
         ignore_existing = ignore_existing.lower() == "true"
 
+    # Merge logic for center slices
+    enable_center_slices = enable_center_slices_ratio is not None
+
+    # Merge logic for resampling
+    enable_resampling = enable_resampling_spacing is not None
+
     # Print out some flags on rank 0
     if local_rank == 0:
+        logger.info(f"Real dataset root: {real_dataset_root}")
+        logger.info(f"Synth dataset root: {synth_dataset_root}")
+        logger.info(f"enable_center_slices_ratio: {enable_center_slices_ratio}")
         logger.info(f"enable_center_slices: {enable_center_slices}")
         logger.info(f"enable_padding: {enable_padding}")
         logger.info(f"enable_center_cropping: {enable_center_cropping}")
+        logger.info(f"enable_resampling_spacing: {enable_resampling_spacing}")
         logger.info(f"enable_resampling: {enable_resampling}")
         logger.info(f"ignore_existing: {ignore_existing}")
 
@@ -414,12 +500,14 @@ def main(
     # -------------------------------------------------------------------------
     if model_name == "radimagenet_resnet50":
         feature_network = torch.hub.load(
-            "Warvito/radimagenet-models", model="radimagenet_resnet50", verbose=True, trust_repo=True
+            "Warvito/radimagenet-models",
+            model="radimagenet_resnet50",
+            verbose=True,
+            trust_repo=True
         )
         suffix = "radimagenet_resnet50"
     else:
         import torchvision
-
         feature_network = torchvision.models.squeezenet1_1(pretrained=True)
         suffix = "squeezenet1_1"
 
@@ -431,44 +519,53 @@ def main(
     # -------------------------------------------------------------------------
     t_shape = [int(x) for x in target_shape.split("x")]
     target_shape_tuple = tuple(t_shape)
+
+    # If not None, parse the resampling spacing
     if enable_resampling:
         rs_spacing = [float(x) for x in enable_resampling_spacing.split("x")]
         rs_spacing_tuple = tuple(rs_spacing)
         if local_rank == 0:
-            logger.info(f"resampling spacing: {rs_spacing_tuple}")
+            logger.info(f"Resampling spacing: {rs_spacing_tuple}")
     else:
         rs_spacing_tuple = (1.0, 1.0, 1.0)
 
+    # Use the ratio if provided, otherwise 1.0
     center_slices_ratio_final = enable_center_slices_ratio if enable_center_slices else 1.0
     if local_rank == 0:
         logger.info(f"center_slices_ratio: {center_slices_ratio_final}")
 
     # -------------------------------------------------------------------------
-    # Prepare dataset 0
+    # Prepare Real Dataset
     # -------------------------------------------------------------------------
-    output_root0 = os.path.join(output_root, data0_folder)
-    with open(data0_filelist, "r") as f0:
-        lines0 = [l.strip() for l in f0.readlines()]
-    lines0.sort()
-    lines0 = lines0[:num_images]
+    output_root_real = os.path.join(output_root, real_features_dir)
+    with open(real_filelist, "r") as rf:
+        real_lines = [l.strip() for l in rf.readlines()]
+    real_lines.sort()
+    real_lines = real_lines[:num_images]
 
-    filenames0 = [{"image": os.path.join(data0_dataroot, f)} for f in lines0]
-    filenames0 = monai.data.partition_dataset(
-        data=filenames0, shuffle=False, num_partitions=world_size, even_divisible=False
+    real_filenames = [{"image": os.path.join(real_dataset_root, f)} for f in real_lines]
+    real_filenames = monai.data.partition_dataset(
+        data=real_filenames,
+        shuffle=False,
+        num_partitions=world_size,
+        even_divisible=False
     )[local_rank]
 
     # -------------------------------------------------------------------------
-    # Prepare dataset 1
+    # Prepare Synthetic Dataset
     # -------------------------------------------------------------------------
-    output_root1 = os.path.join(output_root, data1_folder)
-    with open(data1_filelist, "r") as f1:
-        lines1 = [l.strip() for l in f1.readlines()]
-    lines1.sort()
-    lines1 = lines1[:num_images]
+    output_root_synth = os.path.join(output_root, synth_features_dir)
+    with open(synth_filelist, "r") as sf:
+        synth_lines = [l.strip() for l in sf.readlines()]
+    synth_lines.sort()
+    synth_lines = synth_lines[:num_images]
 
-    filenames1 = [{"image": os.path.join(data1_dataroot, f)} for f in lines1]
-    filenames1 = monai.data.partition_dataset(
-        data=filenames1, shuffle=False, num_partitions=world_size, even_divisible=False
+    synth_filenames = [{"image": os.path.join(synth_dataset_root, f)} for f in synth_lines]
+    synth_filenames = monai.data.partition_dataset(
+        data=synth_filenames,
+        shuffle=False,
+        num_partitions=world_size,
+        even_divisible=False
     )[local_rank]
 
     # -------------------------------------------------------------------------
@@ -479,14 +576,25 @@ def main(
         monai.transforms.EnsureChannelFirstd(keys=["image"]),
         monai.transforms.Orientationd(keys=["image"], axcodes="RAS"),
     ]
+
     if enable_resampling:
-        transform_list.append(monai.transforms.Spacingd(keys=["image"], pixdim=rs_spacing_tuple, mode=["bilinear"]))
+        transform_list.append(
+            monai.transforms.Spacingd(
+                keys=["image"], pixdim=rs_spacing_tuple, mode=["bilinear"]
+            )
+        )
+
     if enable_padding:
         transform_list.append(
-            monai.transforms.SpatialPadd(keys=["image"], spatial_size=target_shape_tuple, mode="constant", value=-1000)
+            monai.transforms.SpatialPadd(
+                keys=["image"], spatial_size=target_shape_tuple, mode="constant", value=-1000
+            )
         )
+
     if enable_center_cropping:
-        transform_list.append(monai.transforms.CenterSpatialCropd(keys=["image"], roi_size=target_shape_tuple))
+        transform_list.append(
+            monai.transforms.CenterSpatialCropd(keys=["image"], roi_size=target_shape_tuple)
+        )
 
     transform_list.append(
         monai.transforms.ScaleIntensityRanged(
@@ -498,22 +606,22 @@ def main(
     # -------------------------------------------------------------------------
     # Create DataLoaders
     # -------------------------------------------------------------------------
-    real_ds = monai.data.Dataset(data=filenames0, transform=transforms)
+    real_ds = monai.data.Dataset(data=real_filenames, transform=transforms)
     real_loader = monai.data.DataLoader(real_ds, num_workers=6, batch_size=1, shuffle=False)
 
-    synt_ds = monai.data.Dataset(data=filenames1, transform=transforms)
-    synt_loader = monai.data.DataLoader(synt_ds, num_workers=6, batch_size=1, shuffle=False)
+    synth_ds = monai.data.Dataset(data=synth_filenames, transform=transforms)
+    synth_loader = monai.data.DataLoader(synth_ds, num_workers=6, batch_size=1, shuffle=False)
 
     # -------------------------------------------------------------------------
-    # Extract features for dataset 0
+    # Extract features for Real Dataset
     # -------------------------------------------------------------------------
     real_features_xy, real_features_yz, real_features_zx = [], [], []
     for idx, batch_data in enumerate(real_loader, start=1):
         img = batch_data["image"].to(device)
         fn = img.meta["filename_or_obj"][0]
-        logger.info(f"[Rank {local_rank}] Real data {idx}/{len(filenames0)}: {fn}")
+        logger.info(f"[Rank {local_rank}] Real data {idx}/{len(real_filenames)}: {fn}")
 
-        out_fp = fn.replace(data0_dataroot, output_root0).replace(".nii.gz", ".pt")
+        out_fp = fn.replace(real_dataset_root, output_root_real).replace(".nii.gz", ".pt")
         out_fp = Path(out_fp)
         out_fp.parent.mkdir(parents=True, exist_ok=True)
 
@@ -530,7 +638,9 @@ def main(
                 center_slices_ratio=center_slices_ratio_final,
                 xy_only=False,
             )
-            logger.info(f"feats shapes: {feats[0].shape}, " f"{feats[1].shape}, {feats[2].shape}")
+            logger.info(
+                f"feats shapes: {feats[0].shape}, {feats[1].shape}, {feats[2].shape}"
+            )
             torch.save(feats, out_fp)
 
         real_features_xy.append(feats[0])
@@ -541,19 +651,20 @@ def main(
     real_features_yz = torch.vstack(real_features_yz)
     real_features_zx = torch.vstack(real_features_zx)
     logger.info(
-        f"Real feature shapes: {real_features_xy.shape}, " f"{real_features_yz.shape}, {real_features_zx.shape}"
+        f"Real feature shapes: {real_features_xy.shape}, "
+        f"{real_features_yz.shape}, {real_features_zx.shape}"
     )
 
     # -------------------------------------------------------------------------
-    # Extract features for dataset 1
+    # Extract features for Synthetic Dataset
     # -------------------------------------------------------------------------
     synth_features_xy, synth_features_yz, synth_features_zx = [], [], []
-    for idx, batch_data in enumerate(synt_loader, start=1):
+    for idx, batch_data in enumerate(synth_loader, start=1):
         img = batch_data["image"].to(device)
         fn = img.meta["filename_or_obj"][0]
-        logger.info(f"[Rank {local_rank}] Synthetic data {idx}/{len(filenames1)}: {fn}")
+        logger.info(f"[Rank {local_rank}] Synth data {idx}/{len(synth_filenames)}: {fn}")
 
-        out_fp = fn.replace(data1_dataroot, output_root1).replace(".nii.gz", ".pt")
+        out_fp = fn.replace(synth_dataset_root, output_root_synth).replace(".nii.gz", ".pt")
         out_fp = Path(out_fp)
         out_fp.parent.mkdir(parents=True, exist_ok=True)
 
@@ -570,7 +681,9 @@ def main(
                 center_slices_ratio=center_slices_ratio_final,
                 xy_only=False,
             )
-            logger.info(f"feats shapes: {feats[0].shape}, " f"{feats[1].shape}, {feats[2].shape}")
+            logger.info(
+                f"feats shapes: {feats[0].shape}, {feats[1].shape}, {feats[2].shape}"
+            )
             torch.save(feats, out_fp)
 
         synth_features_xy.append(feats[0])
@@ -581,7 +694,8 @@ def main(
     synth_features_yz = torch.vstack(synth_features_yz)
     synth_features_zx = torch.vstack(synth_features_zx)
     logger.info(
-        f"Synthetic feature shapes: {synth_features_xy.shape}, " f"{synth_features_yz.shape}, {synth_features_zx.shape}"
+        f"Synth feature shapes: {synth_features_xy.shape}, "
+        f"{synth_features_yz.shape}, {synth_features_zx.shape}"
     )
 
     # -------------------------------------------------------------------------
@@ -637,7 +751,7 @@ def main(
         logger.info(f"Final Synth shapes: {synth_xy.shape}, {synth_yz.shape}, {synth_zx.shape}")
 
         fid = FIDMetric()
-        logger.info(f"Computing FID for: {output_root0} | {output_root1}")
+        logger.info(f"Computing FID for: {output_root_real} | {output_root_synth}")
         fid_res_xy = fid(synth_xy, real_xy)
         fid_res_yz = fid(synth_yz, real_yz)
         fid_res_zx = fid(synth_zx, real_zx)

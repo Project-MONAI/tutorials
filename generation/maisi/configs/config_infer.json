@@ -18,7 +18,7 @@
         2.0
     ],
     "autoencoder_sliding_window_infer_size": [48,48,48],
-    "autoencoder_sliding_window_infer_overlap": 0.25,
+    "autoencoder_sliding_window_infer_overlap": 0.6666,
     "controlnet": "$@controlnet_def",
     "diffusion_unet": "$@diffusion_unet_def",
     "autoencoder": "$@autoencoder_def",

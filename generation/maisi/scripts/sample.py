@@ -269,7 +269,7 @@ def ldm_conditional_sample_one_image(
             noise_scheduler.set_timesteps(num_inference_steps=num_inference_steps)
 
         if isinstance(noise_scheduler, DDPMScheduler) and num_inference_steps < noise_scheduler.num_train_timesteps:
-            warnings.warn(
+             warnings.warn(
                 "**************************************************************\n"
                 "* WARNING: Image noise_scheduler is a DDPMScheduler.\n"
                 "* We expect num_inference_steps = noise_scheduler.num_train_timesteps"
@@ -634,7 +634,7 @@ class LDMSampler:
         self.autoencoder_sliding_window_infer_overlap = autoencoder_sliding_window_infer_overlap
 
         # quality check args
-        self.max_try_time = 3  # if not pass quality check, will try self.max_try_time times
+        self.max_try_time = 2  # if not pass quality check, will try self.max_try_time times
         with open(real_img_median_statistics, "r") as json_file:
             self.median_statistics = json.load(json_file)
         self.label_int_dict = {
@@ -829,7 +829,7 @@ class LDMSampler:
         selected_mask_files = []
         random.shuffle(candidate_mask_files)
 
-        for n in range(num_img * self.max_try_time):
+        for n in range(len(candidate_mask_files)):
             mask_file = candidate_mask_files[n % len(candidate_mask_files)]
             selected_mask_files.append({"mask_file": mask_file, "if_aug": True})
         return selected_mask_files
@@ -1103,7 +1103,7 @@ class LDMSampler:
                 new_candidates.append((c, diff))
 
         # choose top-2*num_img candidates (at least 5)
-        num_candidates = max(2 * num_img, 5)
+        num_candidates = max(self.max_try_time * num_img, 5)
         new_candidates = sorted(new_candidates, key=lambda x: x[1])
 
         final_candidates = []

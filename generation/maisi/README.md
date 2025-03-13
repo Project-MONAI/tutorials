@@ -265,11 +265,11 @@ We provide the `compute_fid_2-5d_ct.py` script that calculates the Frechet Incep
 #### Usage Example
 
 Suppose your **real** dataset root is `path/to/real_images`, and you have a `real_filelist.txt` that lists filenames line by line, such as:
-
+```
 case001.nii.gz
 case002.nii.gz
 case003.nii.gz
-
+```
 You also have a **synthetic** dataset in `path/to/synth_images` with a corresponding `synth_filelist.txt`. You can run the script as follows:
 
 ```bash

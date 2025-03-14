@@ -91,12 +91,11 @@ def prepare_tensors(args: argparse.Namespace, device: torch.device) -> tuple:
     top_region_index_tensor = np.array(args.diffusion_unet_inference["top_region_index"]).astype(float) * 1e2
     bottom_region_index_tensor = np.array(args.diffusion_unet_inference["bottom_region_index"]).astype(float) * 1e2
     spacing_tensor = np.array(args.diffusion_unet_inference["spacing"]).astype(float) * 1e2
-    modality_tensor = np.array([args.diffusion_unet_inference["modality"]]).astype(int)
 
     top_region_index_tensor = torch.from_numpy(top_region_index_tensor[np.newaxis, :]).half().to(device)
     bottom_region_index_tensor = torch.from_numpy(bottom_region_index_tensor[np.newaxis, :]).half().to(device)
     spacing_tensor = torch.from_numpy(spacing_tensor[np.newaxis, :]).half().to(device)
-    modality_tensor = torch.from_numpy(modality_tensor[np.newaxis, :]).long().to(device)
+    modality_tensor = args.diffusion_unet_inference["modality"]*torch.ones((len(spacing_tensor)),dtype=torch.long).to(device)
 
     return top_region_index_tensor, bottom_region_index_tensor, spacing_tensor, modality_tensor
 

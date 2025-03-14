@@ -306,10 +306,10 @@ def prepare_maisi_controlnet_json_dataloader(
         LoadImaged(keys=["image", "label"], image_only=True, ensure_channel_first=True),
         Orientationd(keys=["label"], axcodes="RAS"),
         EnsureTyped(keys=["label"], dtype=torch.uint8, track_meta=True),
-        Lambdad(keys="top_region_index", func=lambda x: torch.FloatTensor(x)),
-        Lambdad(keys="bottom_region_index", func=lambda x: torch.FloatTensor(x)),
+        Lambdad(keys="top_region_index", func=lambda x: torch.FloatTensor(x),allow_missing_keys=True),
+        Lambdad(keys="bottom_region_index", func=lambda x: torch.FloatTensor(x),allow_missing_keys=True),
         Lambdad(keys="spacing", func=lambda x: torch.FloatTensor(x)),
-        Lambdad(keys=["top_region_index", "bottom_region_index", "spacing"], func=lambda x: x * 1e2),
+        Lambdad(keys=["top_region_index", "bottom_region_index", "spacing"], func=lambda x: x * 1e2,allow_missing_keys=True),
     ]
     train_transforms, val_transforms = Compose(common_transform), Compose(common_transform)
 

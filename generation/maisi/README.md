@@ -12,7 +12,7 @@ More details can be found in our WACV 2025 paper:
 
 [Guo, P., Zhao, C., Yang, D., Xu, Z., Nath, V., Tang, Y., ... & Xu, D. (2024). MAISI: Medical AI for Synthetic Imaging. WACV 2025](https://arxiv.org/pdf/2409.11169)
 
-🎉🎉🎉🎉🎉🎉**Release Note (March 2025):** 🎉🎉🎉🎉🎉🎉 
+🎉🎉🎉🎉🎉🎉**Release Note (March 2025):** 🎉🎉🎉🎉🎉🎉
 
 We are excited to announce the new MAISI Version `maisi3d-rflow`. Compared with the previous version `maisi3d-ddpm`, **it accelerated latent diffusion model inference by 33x**. The MAISI VAE is not changed. The differences are:
 - The maisi version `maisi3d-ddpm` uses basic noise scheduler DDPM. `maisi3d-rflow` uses Rectified Flow scheduler. The diffusion model inference can be 33 times faster.

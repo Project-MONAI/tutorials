@@ -2,14 +2,24 @@
 This example demonstrates the applications of training and validating NVIDIA MAISI, a 3D Latent Diffusion Model (LDM) capable of generating large CT images accompanied by corresponding segmentation masks. It supports variable volume size and voxel spacing and allows for the precise control of organ/tumor size.
 
 ## MAISI Model Highlight
+`[Initial Version (August 2024)]:` First release `'maisi3d-ddpm'`.
+
 - A Foundation Variational Auto-Encoder (VAE) model for latent feature compression that works for both CT and MRI with flexible volume size and voxel size. Tensor parallel is included to reduce GPU memory usage.
 - A Foundation Diffusion model that can generate large CT volumes up to 512 &times; 512 &times; 768 size, with flexible volume size and voxel size
 - A ControlNet to generate image/mask pairs that can improve downstream tasks, with controllable organ/tumor size
 
 More details can be found in our WACV 2025 paper:
-[Guo, P., Zhao, C., Yang, D., Xu, Z., Nath, V., Tang, Y., ... & Xu, D. (2024). MAISI: Medical AI for Synthetic Imaging. arXiv preprint arXiv:2409.11169](https://arxiv.org/pdf/2409.11169)
 
-Welcome to try our GUI demo at [https://build.nvidia.com/nvidia/maisi](https://build.nvidia.com/nvidia/maisi).
+[1] [Guo, P., Zhao, C., Yang, D., Xu, Z., Nath, V., Tang, Y., ... & Xu, D. (2024). MAISI: Medical AI for Synthetic Imaging. WACV 2025](https://arxiv.org/pdf/2409.11169)
+
+`[Release Note (March 2025)]:` We are excited to announce the new MAISI Version `'maisi3d-rflow'`. Compared with the previous version `'maisi3d-ddpm'`, it accelerated latent diffusion model inference by 33x. The differences are:
+- The maisi version `'maisi3d-ddpm'` uses basic noise scheduler DDPM. `'maisi3d-rflow'` uses Rectified Flow scheduler [2]. The diffusion model inference can be 33 times faster.
+- The maisi version `'maisi3d-ddpm'` requires training images to be labeled with body regions (`"top_region_index"` and `"bottom_region_index"`), while `'maisi3d-rflow'` does not have such requirement. In other words, it is easier to prepare training data for `'maisi3d-rflow'`.
+- For the released model weights, `'maisi3d-rflow'` can generate images with better quality for head region and small output volumes, and comparable quality for other cases compared with `'maisi3d-ddpm'`.
+
+[2] [Liu, Xingchao, Chengyue Gong, and Qiang Liu. "Flow straight and fast: Learning to generate and transfer data with rectified flow." ICLR 2023](https://arxiv.org/pdf/2209.03003).
+
+`[GUI demo]:` Welcome to try our GUI demo at [https://build.nvidia.com/nvidia/maisi](https://build.nvidia.com/nvidia/maisi).
 The GUI is only a demo for toy examples. This Github repo is the full version.
 
 
@@ -246,6 +256,10 @@ To train with a single GPU, please run:
 python -m scripts.train_controlnet -c ./configs/config_maisi3d-ddpm.json -t ./configs/config_maisi_controlnet_train.json -e ./configs/environment_maisi_controlnet_train.json -g 1
 ```
 
+```bash
+python -m scripts.train_controlnet -c ./configs/config_maisi3d-rflow.json -t ./configs/config_maisi_controlnet_train.json -e ./configs/environment_maisi_controlnet_train.json -g 1
+```
+
 The training script also enables multi-GPU training. For instance, if you are using eight GPUs, you can run the training script with the following command:
 ```bash
 export NUM_GPUS_PER_NODE=8
@@ -254,6 +268,15 @@ torchrun \
     --nnodes=1 \
     --master_addr=localhost --master_port=1234 \
     -m scripts.train_controlnet -c ./configs/config_maisi3d-ddpm.json -t ./configs/config_maisi_controlnet_train.json -e ./configs/environment_maisi_controlnet_train.json -g ${NUM_GPUS_PER_NODE}
+```
+
+```bash
+export NUM_GPUS_PER_NODE=8
+torchrun \
+    --nproc_per_node=${NUM_GPUS_PER_NODE} \
+    --nnodes=1 \
+    --master_addr=localhost --master_port=1234 \
+    -m scripts.train_controlnet -c ./configs/config_maisi3d-rflow.json -t ./configs/config_maisi_controlnet_train.json -e ./configs/environment_maisi_controlnet_train.json -g ${NUM_GPUS_PER_NODE}
 ```
 Please also check [maisi_train_controlnet_tutorial.ipynb](./maisi_train_controlnet_tutorial.ipynb) for more details about data preparation and training parameters.
 

@@ -12,10 +12,13 @@ More details can be found in our WACV 2025 paper:
 
 [Guo, P., Zhao, C., Yang, D., Xu, Z., Nath, V., Tang, Y., ... & Xu, D. (2024). MAISI: Medical AI for Synthetic Imaging. WACV 2025](https://arxiv.org/pdf/2409.11169)
 
-**Release Note (March 2025):** We are excited to announce the new MAISI Version `maisi3d-rflow`. Compared with the previous version `maisi3d-ddpm`, it accelerated latent diffusion model inference by 33x. The differences are:
+🎉🎉🎉🎉🎉🎉**Release Note (March 2025):** 🎉🎉🎉🎉🎉🎉 
+
+We are excited to announce the new MAISI Version `maisi3d-rflow`. Compared with the previous version `maisi3d-ddpm`, **it accelerated latent diffusion model inference by 33x**. The MAISI VAE is not changed. The differences are:
 - The maisi version `maisi3d-ddpm` uses basic noise scheduler DDPM. `maisi3d-rflow` uses Rectified Flow scheduler. The diffusion model inference can be 33 times faster.
 - The maisi version `maisi3d-ddpm` requires training images to be labeled with body regions (`"top_region_index"` and `"bottom_region_index"`), while `maisi3d-rflow` does not have such requirement. In other words, it is easier to prepare training data for `maisi3d-rflow`.
 - For the released model weights, `maisi3d-rflow` can generate images with better quality for head region and small output volumes, and comparable quality for other cases compared with `maisi3d-ddpm`.
+- `maisi3d-rflow` added a diffusionn model input `modality`, which gives it flexibility to extend to other modalities. Currently it is set as always equal to 1 since this version only supports CT generation. We predefined some modalities in [./configs/modality_mapping.json](./configs/modality_mapping.json).
 
 **GUI demo:** Welcome to try our GUI demo at [https://build.nvidia.com/nvidia/maisi](https://build.nvidia.com/nvidia/maisi).
 The GUI is only a demo for toy examples. This Github repo is the full version.
@@ -67,22 +70,20 @@ We retrained several state-of-the-art diffusion model-based methods using our da
 ## Time Cost and GPU Memory Usage
 
 ### Inference Time Cost and GPU Memory Usage
-### Inference Time Cost and GPU Memory Usage
-| `output_size` | latent size |`autoencoder_sliding_window_infer_size` | `autoencoder_tp_num_splits` | Peak Memory | VAE Time | DM Time (`maisi3d-ddpm`) | DM Time (`maisi3d-rflow`) | VAE Time + DM Time (`maisi3d-ddpm`) | VAE Time + DM Time (`maisi3d-rflow`) |
-|---------------|:--------------------------------------:|:--------------------------------------:|:---------------------------:|:-----------:|:--------:|:---------------:|:---------------:|:------------------------:|:------------------------:|
-| [256x256x128](./configs/config_infer_16g_256x256x128.json)   |4x64x64x32| >=[64,64,32], not used                 | 2                           | 15.0G         | 1s       | 57s     | 2s               | 58s                      | 3s                       |
-| [256x256x256](./configs/config_infer_16g_256x256x256.json)   |4x64x64x64| [48,48,64], 4 patches                  | 4                           | 15.4G         | 5s       | 81s     | 3s              | 86s                      | 8s                       |
-| [512x512x128](./configs/config_infer_16g_512x512x128.json)   |4x128x128x32| [64,64,32], 9 patches                  | 2                           | 15.7G         | 8s       | 138s    | 5s              | 146s                     | 13s                      |
-|               |                                        |                             |             |         |          |               |                 |                            |                            |
-| [256x256x256](./configs/config_infer_24g_256x256x256.json)   |4x64x64x64| >=[64,64,64], not used                 | 4                           | 22.7G         | 2s       | 81s     | 3s              | 83s                      | 5s                       |
-| [512x512x128](./configs/config_infer_24g_512x512x128.json)   |4x128x128x32| [80,80,32], 4 patches                  | 2                           | 21.0G         | 6s       | 138s    | 5s              | 144s                     | 11s                      |
-| [512x512x512](./configs/config_infer_24g_512x512x512.json)   |4x128x128x128| [64,64,48], 36 patches                 | 2                           | 22.8G         | 29s      | 569s    | 19s              | 598s                     | 48s                      |
-|               |                                        |                             |             |         |          |               |                 |                            |                            |
-| [512x512x512](./configs/config_infer_32g_512x512x512.json)   |4x128x128x128| [80,80,48], 16 patches                 | 4                           | 28.4G         | 30s      | 569s    | 19s              | 599s                     | 49s                      |
-|               |                                        |                             |             |         |          |               |                 |                            |                            |
-| [512x512x128](./configs/config_infer_80g_512x512x128.json)   |4x128x128x32| >=[128,128,32], not used               | 4                           | 37.7G         | 127s     | 138s    | 5s               | 265s                     | 132s                     |
-| [512x512x512](./configs/config_infer_80g_512x512x512.json)   |4x128x128x128| [80,80,80], 8 patches                  | 2                           | 45.3G         | 32s      | 569s    | 19s              | 601s                     | 51s                      |
-| [512x512x768](./configs/config_infer_80g_512x512x768.json)   |4x128x128x192| [80,80,112], 8 patches                 | 4                           | 56.2G         | 50s      | 904s    | 30s              | 954s                     | 80s                      |
+| `output_size` | Peak Memory | VAE Time + DM Time (`maisi3d-ddpm`) | VAE Time + DM Time (`maisi3d-rflow`) | latent size | `autoencoder_sliding_window_infer_size` | `autoencoder_tp_num_splits` | VAE Time | DM Time (`maisi3d-ddpm`) | DM Time (`maisi3d-rflow`) |
+|---------------|:-----------:|:------------------------:|:------------------------:|:--------------------------------------:|:--------------------------------------:|:---------------------------:|:--------:|:---------------:|:---------------:|
+| [256x256x128](./configs/config_infer_16g_256x256x128.json)   | 15.0G      | 58s                      | 3s                       | 4x64x64x32 | >=[64,64,32], not used                 | 2                           | 1s       | 57s     | 2s               |
+| [256x256x256](./configs/config_infer_16g_256x256x256.json)   | 15.4G      | 86s                      | 8s                       | 4x64x64x64 | [48,48,64], 4 patches                  | 4                           | 5s       | 81s     | 3s              |
+| [512x512x128](./configs/config_infer_16g_512x512x128.json)   | 15.7G      | 146s                     | 13s                      | 4x128x128x32 | [64,64,32], 9 patches                  | 2                           | 8s       | 138s    | 5s              |
+|               |            |                            |                            |                                        |                             |                             |         |               |                 |
+| [256x256x256](./configs/config_infer_24g_256x256x256.json)   | 22.7G      | 83s                      | 5s                       | 4x64x64x64 | >=[64,64,64], not used                 | 4                           | 2s       | 81s     | 3s              |
+| [512x512x128](./configs/config_infer_24g_512x512x128.json)   | 21.0G      | 144s                     | 11s                      | 4x128x128x32 | [80,80,32], 4 patches                  | 2                           | 6s       | 138s    | 5s              |
+| [512x512x512](./configs/config_infer_24g_512x512x512.json)   | 22.8G      | 598s                     | 48s                      | 4x128x128x128 | [64,64,48], 36 patches                 | 2                           | 29s      | 569s    | 19s              |
+|               |            |                            |                            |                                        |                             |                             |         |               |                 |
+| [512x512x512](./configs/config_infer_32g_512x512x512.json)   | 28.4G      | 599s                     | 49s                      | 4x128x128x128 | [80,80,48], 16 patches                 | 4                           | 30s      | 569s    | 19s              |
+|               |            |                            |                            |                                        |                             |                             |         |               |                 |
+| [512x512x512](./configs/config_infer_80g_512x512x512.json)   | 45.3G      | 601s                     | 51s                      | 4x128x128x128 | [80,80,80], 8 patches                  | 2                           | 32s      | 569s    | 19s              |
+| [512x512x768](./configs/config_infer_80g_512x512x768.json)   | 49.7G      | 961s                     | 87s                      | 4x128x128x192 | [80,80,96], 12 patches                 | 4                           | 57s      | 904s    | 30s              |
 
 **Table 3:** Inference Time Cost and GPU Memory Usage. `DM Time` refers to the time required for diffusion model inference. `VAE Time` refers to the time required for VAE decoder inference. The total inference time is the sum of `DM Time` and `VAE Time`. The experiment was conducted on an A100 80G GPU.
 
@@ -96,7 +97,7 @@ When `autoencoder_sliding_window_infer_size` is equal to or larger than the late
 ### Training GPU Memory Usage
 The VAE is trained on patches and can be trained using a 16G GPU if the patch size is set to a small value, such as [64, 64, 64]. Users can adjust the patch size to fit the available GPU memory. For the released model, we initially trained the autoencoder on 16G V100 GPUs with a small patch size of [64, 64, 64], and then continued training on 32G V100 GPUs with a larger patch size of [128, 128, 128].
 
-The DM and ControlNet are trained on whole images rather than patches. The GPU memory usage during training depends on the size of the input images.
+The DM and ControlNet are trained on whole images rather than patches. The GPU memory usage during training depends on the size of the input images. There is no big difference on memory usage between `maisi3d-ddpm` and `maisi3d-rflow`.
 
 |  image size  |  latent size  | Peak Memory |
 |--------------|:------------- |:-----------:|
@@ -198,7 +199,12 @@ Please refer to [maisi_inference_tutorial.ipynb](maisi_inference_tutorial.ipynb)
 To run the inference script with TensorRT acceleration, please run:
 ```bash
 export MONAI_DATA_DIRECTORY=<dir_you_will_download_data>
-python -m scripts.inference -c ./configs/config_maisi.json -i ./configs/config_infer.json -e ./configs/environment.json -x ./configs/config_trt.json --random-seed 0
+python -m scripts.inference -c ./configs/config_maisi3d-ddpm.json -i ./configs/config_infer.json -e ./configs/environment_maisi3d-ddpm.json -x ./configs/config_trt.json --random-seed 0 --version maisi3d-ddpm
+```
+
+```bash
+export MONAI_DATA_DIRECTORY=<dir_you_will_download_data>
+python -m scripts.inference -c ./configs/config_maisi3d-rflow.json -i ./configs/config_infer.json -e ./configs/environment_maisi3d-rflow.json -x ./configs/config_trt.json --random-seed 0 --version maisi3d-rflow
 ```
 Extra config file,  [./configs/config_trt.json](./configs/config_trt.json) is using `trt_compile()` utility from MONAI to convert select modules to TensorRT by overriding their definitions from [./configs/config_infer.json](./configs/config_infer.json).
 

@@ -161,7 +161,7 @@ def main():
             top_region_index_tensor = None
             bottom_region_index_tensor = None
         spacing_tensor = batch["spacing"].to(device)
-        modality_tensor = args.controlnet_infer["modality"]*torch.ones((len(labels),),dtype=torch.long).to(device)
+        modality_tensor = args.controlnet_infer["modality"] * torch.ones((len(labels),), dtype=torch.long).to(device)
         out_spacing = tuple((batch["spacing"].squeeze().numpy() / 100).tolist())
         # get target dimension
         dim = batch["dim"]

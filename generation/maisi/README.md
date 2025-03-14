@@ -114,13 +114,13 @@ The DM and ControlNet are trained on whole images rather than patches. The GPU m
 ## MAISI Model Workflow
 The training and inference workflows of MAISI are depicted in the figure below. It begins by training an autoencoder in pixel space to encode images into latent features. Following that, it trains a diffusion model in the latent space to denoise the noisy latent features. During inference, it first generates latent features from random noise by applying multiple denoising steps using the trained diffusion model. Finally, it decodes the denoised latent features into images using the trained autoencoder.
 <p align="center">
-  <img src="./figures/maisi_train.jpg" alt="MAISI training scheme">
+  <img src="./figures/maisi_train.png" alt="MAISI training scheme">
   <br>
   <em>Figure 1: MAISI training scheme</em>
 </p>
 
 <p align="center">
-  <img src="./figures/maisi_infer.jpg" alt="MAISI inference scheme")
+  <img src="./figures/maisi_infer.png" alt="MAISI inference scheme")
   <br>
   <em>Figure 2: MAISI inference scheme</em>
 </p>

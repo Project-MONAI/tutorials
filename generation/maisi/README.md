@@ -2,7 +2,7 @@
 This example demonstrates the applications of training and validating NVIDIA MAISI, a 3D Latent Diffusion Model (LDM) capable of generating large CT images accompanied by corresponding segmentation masks. It supports variable volume size and voxel spacing and allows for the precise control of organ/tumor size.
 
 ## MAISI Model Highlight
-**Initial Version (August 2024):** First release `'maisi3d-ddpm'`.
+**Initial Version (August 2024):** First release `maisi3d-ddpm`.
 
 - A Foundation Variational Auto-Encoder (VAE) model for latent feature compression that works for both CT and MRI with flexible volume size and voxel size. Tensor parallel is included to reduce GPU memory usage.
 - A Foundation Diffusion model that can generate large CT volumes up to 512 &times; 512 &times; 768 size, with flexible volume size and voxel size
@@ -12,10 +12,10 @@ More details can be found in our WACV 2025 paper:
 
 [Guo, P., Zhao, C., Yang, D., Xu, Z., Nath, V., Tang, Y., ... & Xu, D. (2024). MAISI: Medical AI for Synthetic Imaging. WACV 2025](https://arxiv.org/pdf/2409.11169)
 
-**Release Note (March 2025):** We are excited to announce the new MAISI Version `'maisi3d-rflow'`. Compared with the previous version `'maisi3d-ddpm'`, it accelerated latent diffusion model inference by 33x. The differences are:
-- The maisi version `'maisi3d-ddpm'` uses basic noise scheduler DDPM. `'maisi3d-rflow'` uses Rectified Flow scheduler. The diffusion model inference can be 33 times faster.
-- The maisi version `'maisi3d-ddpm'` requires training images to be labeled with body regions (`"top_region_index"` and `"bottom_region_index"`), while `'maisi3d-rflow'` does not have such requirement. In other words, it is easier to prepare training data for `'maisi3d-rflow'`.
-- For the released model weights, `'maisi3d-rflow'` can generate images with better quality for head region and small output volumes, and comparable quality for other cases compared with `'maisi3d-ddpm'`.
+**Release Note (March 2025):** We are excited to announce the new MAISI Version `maisi3d-rflow`. Compared with the previous version `maisi3d-ddpm`, it accelerated latent diffusion model inference by 33x. The differences are:
+- The maisi version `maisi3d-ddpm` uses basic noise scheduler DDPM. `maisi3d-rflow` uses Rectified Flow scheduler. The diffusion model inference can be 33 times faster.
+- The maisi version `maisi3d-ddpm` requires training images to be labeled with body regions (`"top_region_index"` and `"bottom_region_index"`), while `maisi3d-rflow` does not have such requirement. In other words, it is easier to prepare training data for `maisi3d-rflow`.
+- For the released model weights, `maisi3d-rflow` can generate images with better quality for head region and small output volumes, and comparable quality for other cases compared with `maisi3d-ddpm`.
 
 **GUI demo:** Welcome to try our GUI demo at [https://build.nvidia.com/nvidia/maisi](https://build.nvidia.com/nvidia/maisi).
 The GUI is only a demo for toy examples. This Github repo is the full version.
@@ -37,8 +37,8 @@ We retrained several state-of-the-art diffusion model-based methods using our da
 | [DDPM](https://proceedings.neurips.cc/paper_files/paper/2020/file/4c5bcfec8584af0d967f1ab10179ca4b-Paper.pdf)   |      18.524       |      23.696      |      25.604      |      22.608     |
 | [LDM](https://openaccess.thecvf.com/content/CVPR2022/papers/Rombach_High-Resolution_Image_Synthesis_With_Latent_Diffusion_Models_CVPR_2022_paper.pdf)    |      16.853       |      10.191      |      10.093      |      12.379     |
 | [HA-GAN](https://ieeexplore.ieee.org/document/9770375) |      17.432       |      10.266      |      13.572      |      13.757     |
-| MAISI-DDPM  |       3.301       |       5.838      |      9.109       |      6.083      |
-| MAISI-RFlow  |       2.685       |       4.723      |      7.963       |      5.124      |
+| MAISI (`maisi3d-ddpm`)  |       3.301       |       5.838      |      9.109       |      6.083      |
+| MAISI (`maisi3d-rflow`)  |       2.685       |       4.723      |      7.963       |      5.124      |
 
 **Table 1.** Comparison of Fréchet Inception Distance scores between our foundation model and retrained baseline methods<br>using the unseen public dataset [autoPET 2023](https://www.nature.com/articles/s41597-022-01718-3) as the reference.
 
@@ -67,21 +67,22 @@ We retrained several state-of-the-art diffusion model-based methods using our da
 ## Time Cost and GPU Memory Usage
 
 ### Inference Time Cost and GPU Memory Usage
-| `output_size` | latent size |`autoencoder_sliding_window_infer_size` | `autoencoder_tp_num_splits` | Peak Memory | VAE Time | DM Time (DDPM) | DM Time (RFlow) |
-|---------------|:--------------------------------------:|:--------------------------------------:|:---------------------------:|:-----------:|:--------:|:-------:|:---------------:|
-| [256x256x128](./configs/config_infer_16g_256x256x128.json)   |4x64x64x32| >=[64,64,32], not used                 | 2                           | 15.0G         | 1s       | 57s     | 2s               |
-| [256x256x256](./configs/config_infer_16g_256x256x256.json)   |4x64x64x64| [48,48,64], 4 patches                  | 4                           | 15.4G         | 5s       | 81s     | 3s              |
-| [512x512x128](./configs/config_infer_16g_512x512x128.json)   |4x128x128x32| [64,64,32], 9 patches                  | 2                           | 15.7G         | 8s       | 138s    | 5s              |
-|               |                                        |                             |             |         |          |         |                 |
-| [256x256x256](./configs/config_infer_24g_256x256x256.json)   |4x64x64x64| >=[64,64,64], not used                 | 4                           | 22.7G         | 2s       | 81s     | 3s              |
-| [512x512x128](./configs/config_infer_24g_512x512x128.json)   |4x128x128x32| [80,80,32], 4 patches                  | 2                           | 21.0G         | 6s       | 138s    | 5s              |
-| [512x512x512](./configs/config_infer_24g_512x512x512.json)   |4x128x128x128| [64,64,48], 36 patches                 | 2                           | 22.8G         | 29s      | 569s    | 19s               |
-|               |                                        |                             |             |         |          |         |                 |
-| [512x512x512](./configs/config_infer_32g_512x512x512.json)   |4x128x128x128| [80,80,48], 16 patches                 | 4                           | 28.4G         | 30s      | 569s    | 19s               |
-|               |                                        |                             |             |         |          |         |                 |
-| [512x512x128](./configs/config_infer_80g_512x512x128.json)   |4x128x128x32| >=[128,128,32], not used               | 4                           | 37.7G         | 127s     | 138s    | 5s               |
-| [512x512x512](./configs/config_infer_80g_512x512x512.json)   |4x128x128x128| [80,80,80], 8 patches                  | 2                           | 45.3G         | 32s      | 569s    | 19s              |
-| [512x512x768](./configs/config_infer_80g_512x512x768.json)   |4x128x128x192| [80,80,112], 8 patches                 | 4                           | 56.2G         | 50s      | 904s    | 30s              |
+### Inference Time Cost and GPU Memory Usage
+| `output_size` | latent size |`autoencoder_sliding_window_infer_size` | `autoencoder_tp_num_splits` | Peak Memory | VAE Time | DM Time (`maisi3d-ddpm`) | DM Time (`maisi3d-rflow`) | VAE Time + DM Time (`maisi3d-ddpm`) | VAE Time + DM Time (`maisi3d-rflow`) |
+|---------------|:--------------------------------------:|:--------------------------------------:|:---------------------------:|:-----------:|:--------:|:---------------:|:---------------:|:------------------------:|:------------------------:|
+| [256x256x128](./configs/config_infer_16g_256x256x128.json)   |4x64x64x32| >=[64,64,32], not used                 | 2                           | 15.0G         | 1s       | 57s     | 2s               | 58s                      | 3s                       |
+| [256x256x256](./configs/config_infer_16g_256x256x256.json)   |4x64x64x64| [48,48,64], 4 patches                  | 4                           | 15.4G         | 5s       | 81s     | 3s              | 86s                      | 8s                       |
+| [512x512x128](./configs/config_infer_16g_512x512x128.json)   |4x128x128x32| [64,64,32], 9 patches                  | 2                           | 15.7G         | 8s       | 138s    | 5s              | 146s                     | 13s                      |
+|               |                                        |                             |             |         |          |               |                 |                            |                            |
+| [256x256x256](./configs/config_infer_24g_256x256x256.json)   |4x64x64x64| >=[64,64,64], not used                 | 4                           | 22.7G         | 2s       | 81s     | 3s              | 83s                      | 5s                       |
+| [512x512x128](./configs/config_infer_24g_512x512x128.json)   |4x128x128x32| [80,80,32], 4 patches                  | 2                           | 21.0G         | 6s       | 138s    | 5s              | 144s                     | 11s                      |
+| [512x512x512](./configs/config_infer_24g_512x512x512.json)   |4x128x128x128| [64,64,48], 36 patches                 | 2                           | 22.8G         | 29s      | 569s    | 19s              | 598s                     | 48s                      |
+|               |                                        |                             |             |         |          |               |                 |                            |                            |
+| [512x512x512](./configs/config_infer_32g_512x512x512.json)   |4x128x128x128| [80,80,48], 16 patches                 | 4                           | 28.4G         | 30s      | 569s    | 19s              | 599s                     | 49s                      |
+|               |                                        |                             |             |         |          |               |                 |                            |                            |
+| [512x512x128](./configs/config_infer_80g_512x512x128.json)   |4x128x128x32| >=[128,128,32], not used               | 4                           | 37.7G         | 127s     | 138s    | 5s               | 265s                     | 132s                     |
+| [512x512x512](./configs/config_infer_80g_512x512x512.json)   |4x128x128x128| [80,80,80], 8 patches                  | 2                           | 45.3G         | 32s      | 569s    | 19s              | 601s                     | 51s                      |
+| [512x512x768](./configs/config_infer_80g_512x512x768.json)   |4x128x128x192| [80,80,112], 8 patches                 | 4                           | 56.2G         | 50s      | 904s    | 30s              | 954s                     | 80s                      |
 
 **Table 3:** Inference Time Cost and GPU Memory Usage. `DM Time` refers to the time required for diffusion model inference. `VAE Time` refers to the time required for VAE decoder inference. The total inference time is the sum of `DM Time` and `VAE Time`. The experiment was conducted on an A100 80G GPU.
 

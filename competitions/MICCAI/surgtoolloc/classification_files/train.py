@@ -21,7 +21,7 @@ import torch
 from monai.bundle import ConfigParser
 from monai.metrics import ConfusionMatrixMetric
 from monai.networks.nets import EfficientNetBN
-from torch.cuda.amp import GradScaler, autocast
+from torch import GradScaler, autocast
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 from utils import (

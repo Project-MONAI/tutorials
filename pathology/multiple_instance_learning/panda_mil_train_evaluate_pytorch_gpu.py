@@ -39,7 +39,7 @@ from monai.transforms import (
     ToTensord,
 )
 from sklearn.metrics import cohen_kappa_score
-from torch.cuda.amp import GradScaler, autocast
+from torch import GradScaler, autocast
 from torch.utils.data.dataloader import default_collate
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.tensorboard import SummaryWriter

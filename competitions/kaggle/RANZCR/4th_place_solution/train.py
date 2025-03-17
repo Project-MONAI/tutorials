@@ -22,7 +22,7 @@ import torch
 from monai.metrics import compute_roc_auc
 from monai.transforms import ToDeviced
 from scipy.special import expit
-from torch.cuda.amp import GradScaler, autocast
+from torch import GradScaler, autocast
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 

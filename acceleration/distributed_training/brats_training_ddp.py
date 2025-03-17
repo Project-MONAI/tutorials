@@ -170,7 +170,7 @@ def main_worker(args):
     device = torch.device(f"cuda:{os.environ['LOCAL_RANK']}")
     torch.cuda.set_device(device)
     # use amp to accelerate training
-    scaler = torch.cuda.amp.GradScaler()
+    scaler = torch.GradScaler("cuda")
     torch.backends.cudnn.benchmark = True
 
     total_start = time.time()
@@ -320,7 +320,7 @@ def train(train_loader, model, criterion, optimizer, lr_scheduler, scaler):
     for batch_data in train_loader:
         step += 1
         optimizer.zero_grad()
-        with torch.cuda.amp.autocast():
+        with torch.autocast("cuda"):
             outputs = model(batch_data["image"])
             loss = criterion(outputs, batch_data["label"])
         scaler.scale(loss).backward()
@@ -339,7 +339,7 @@ def evaluate(model, val_loader, dice_metric, dice_metric_batch, post_trans):
     model.eval()
     with torch.no_grad():
         for val_data in val_loader:
-            with torch.cuda.amp.autocast():
+            with torch.autocast("cuda"):
                 val_outputs = sliding_window_inference(
                     inputs=val_data["image"], roi_size=(240, 240, 160), sw_batch_size=4, predictor=model, overlap=0.6
                 )

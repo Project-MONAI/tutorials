@@ -44,7 +44,7 @@ from monai.transforms import (
 from monai.utils import first, set_determinism, Range
 
 import torch
-from torch.cuda.amp import GradScaler, autocast
+from torch import GradScaler, autocast
 from torch.optim import SGD, lr_scheduler
 from torch.utils.tensorboard import SummaryWriter
 

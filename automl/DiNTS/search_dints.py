@@ -429,7 +429,7 @@ def main():
 
     # amp
     if amp:
-        from torch.cuda.amp import autocast, GradScaler
+        from torch import autocast, GradScaler
 
         scaler = GradScaler()
         if dist.get_rank() == 0:
@@ -638,7 +638,7 @@ def main():
                     sw_batch_size = num_sw_batch_size
 
                     if amp:
-                        with torch.cuda.amp.autocast():
+                        with torch.autocast("cuda"):
                             pred = sliding_window_inference(
                                 val_images,
                                 roi_size,

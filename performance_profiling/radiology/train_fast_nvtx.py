@@ -169,7 +169,7 @@ model = UNet(
 ).to(device)
 loss_function = DiceCELoss(to_onehot_y=True, softmax=True, squared_pred=True, batch=True)
 optimizer = Novograd(model.parameters(), learning_rate * 10)
-scaler = torch.cuda.amp.GradScaler()
+scaler = torch.GradScaler("cuda")
 dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
 
 post_pred = Compose([EnsureType(), AsDiscrete(argmax=True, to_onehot=2)])
@@ -208,7 +208,7 @@ with torch.autograd.profiler.emit_nvtx():
             optimizer.zero_grad()
 
             rng_train_forward = nvtx.start_range(message="forward", color="green")
-            with torch.cuda.amp.autocast():
+            with torch.autocast("cuda"):
                 outputs = model(inputs)
                 loss = loss_function(outputs, labels)
             nvtx.end_range(rng_train_forward)
@@ -249,7 +249,7 @@ with torch.autograd.profiler.emit_nvtx():
                     sw_batch_size = 4
 
                     rng_valid_dataload = nvtx.start_range(message="sliding window", color="green")
-                    with torch.cuda.amp.autocast():
+                    with torch.autocast("cuda"):
                         val_outputs = sliding_window_inference(val_inputs, roi_size, sw_batch_size, model)
                     nvtx.end_range(rng_valid_dataload)
                     rng_valid_dataload = nvtx.start_range(message="decollate batch", color="blue")

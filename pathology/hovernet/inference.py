@@ -143,7 +143,7 @@ def run(cfg):
         in_channels=3,
         out_classes=cfg["out_classes"],
     ).to(device)
-    model.load_state_dict(torch.load(cfg["ckpt"], map_location=device)["model"])
+    model.load_state_dict(torch.load(cfg["ckpt"], map_location=device, weights_only=True)["model"])
     model.eval()
     if multi_gpu:
         model = torch.nn.parallel.DistributedDataParallel(

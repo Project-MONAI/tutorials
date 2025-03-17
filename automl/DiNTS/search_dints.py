@@ -422,7 +422,7 @@ def main():
 
     if args.checkpoint != None and os.path.isfile(args.checkpoint):
         print("[info] fine-tuning pre-trained checkpoint {0:s}".format(args.checkpoint))
-        model.load_state_dict(torch.load(args.checkpoint, map_location=device))
+        model.load_state_dict(torch.load(args.checkpoint, map_location=device, weights_only=True))
         torch.cuda.empty_cache()
     else:
         print("[info] training from scratch")

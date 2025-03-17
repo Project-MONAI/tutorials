@@ -355,7 +355,7 @@ def main_worker(gpu, args):
     best_acc = 0
     start_epoch = 0
     if args.checkpoint is not None:
-        checkpoint = torch.load(args.checkpoint, map_location="cpu")
+        checkpoint = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
         model.load_state_dict(checkpoint["state_dict"])
         if "epoch" in checkpoint:
             start_epoch = checkpoint["epoch"]

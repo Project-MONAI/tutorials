@@ -48,7 +48,7 @@ def main():
 
     # load generator
     network_filepath = glob("./model_out/*.pt")[0]
-    data = torch.load(network_filepath)
+    data = torch.load(network_filepath, weights_only=True)
     latent_size = 64
     gen_net = Generator(
         latent_shape=latent_size, start_shape=(latent_size, 8, 8), channels=[32, 16, 8, 1], strides=[2, 2, 2, 1]

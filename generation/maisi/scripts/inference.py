@@ -175,25 +175,25 @@ def main():
     device = torch.device("cuda")
 
     autoencoder = define_instance(args, "autoencoder").to(device)
-    checkpoint_autoencoder = torch.load(args.trained_autoencoder_path)
+    checkpoint_autoencoder = torch.load(args.trained_autoencoder_path, weights_only=True)
     autoencoder.load_state_dict(checkpoint_autoencoder)
 
     diffusion_unet = define_instance(args, "diffusion_unet").to(device)
-    checkpoint_diffusion_unet = torch.load(args.trained_diffusion_path)
+    checkpoint_diffusion_unet = torch.load(args.trained_diffusion_path, weights_only=False)
     diffusion_unet.load_state_dict(checkpoint_diffusion_unet["unet_state_dict"], strict=True)
     scale_factor = checkpoint_diffusion_unet["scale_factor"].to(device)
 
     controlnet = define_instance(args, "controlnet").to(device)
-    checkpoint_controlnet = torch.load(args.trained_controlnet_path)
+    checkpoint_controlnet = torch.load(args.trained_controlnet_path, weights_only=False)
     monai.networks.utils.copy_model_state(controlnet, diffusion_unet.state_dict())
     controlnet.load_state_dict(checkpoint_controlnet["controlnet_state_dict"], strict=True)
 
     mask_generation_autoencoder = define_instance(args, "mask_generation_autoencoder").to(device)
-    checkpoint_mask_generation_autoencoder = torch.load(args.trained_mask_generation_autoencoder_path)
+    checkpoint_mask_generation_autoencoder = torch.load(args.trained_mask_generation_autoencoder_path, weights_only=True)
     mask_generation_autoencoder.load_state_dict(checkpoint_mask_generation_autoencoder)
 
     mask_generation_diffusion_unet = define_instance(args, "mask_generation_diffusion").to(device)
-    checkpoint_mask_generation_diffusion_unet = torch.load(args.trained_mask_generation_diffusion_path)
+    checkpoint_mask_generation_diffusion_unet = torch.load(args.trained_mask_generation_diffusion_path, weights_only=False)
     mask_generation_diffusion_unet.load_state_dict(checkpoint_mask_generation_diffusion_unet["unet_state_dict"])
     mask_generation_scale_factor = checkpoint_mask_generation_diffusion_unet["scale_factor"]
 

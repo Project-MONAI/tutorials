@@ -58,7 +58,7 @@ def main(tempdir):
         num_res_units=2,
     ).to(device)
 
-    model.load_state_dict(torch.load("best_metric_model_segmentation2d_array.pth"))
+    model.load_state_dict(torch.load("best_metric_model_segmentation2d_array.pth", weights_only=True))
     model.eval()
     with torch.no_grad():
         for val_data in val_loader:

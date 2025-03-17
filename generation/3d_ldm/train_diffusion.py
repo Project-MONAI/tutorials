@@ -103,7 +103,7 @@ def main():
     trained_g_path = os.path.join(args.model_dir, "autoencoder.pt")
 
     map_location = {"cuda:%d" % 0: "cuda:%d" % rank}
-    autoencoder.load_state_dict(torch.load(trained_g_path, map_location=map_location))
+    autoencoder.load_state_dict(torch.load(trained_g_path, map_location=map_location, weights_only=True))
     print(f"Rank {rank}: Load trained autoencoder from {trained_g_path}")
 
     # Compute Scaling factor
@@ -142,7 +142,7 @@ def main():
     if args.resume_ckpt:
         map_location = {"cuda:%d" % 0: "cuda:%d" % rank}
         try:
-            unet.load_state_dict(torch.load(trained_diffusion_path, map_location=map_location))
+            unet.load_state_dict(torch.load(trained_diffusion_path, map_location=map_location, weights_only=True))
             print(f"Rank {rank}: Load trained diffusion model from", trained_diffusion_path)
         except:
             print(f"Rank {rank}: Train diffusion model from scratch.")

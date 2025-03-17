@@ -70,11 +70,11 @@ def main():
     # load trained networks
     autoencoder = define_instance(args, "autoencoder_def").to(device)
     trained_g_path = os.path.join(args.model_dir, "autoencoder.pt")
-    autoencoder.load_state_dict(torch.load(trained_g_path))
+    autoencoder.load_state_dict(torch.load(trained_g_path, weights_only=True))
 
     diffusion_model = define_instance(args, "diffusion_def").to(device)
     trained_diffusion_path = os.path.join(args.model_dir, "diffusion_unet_last.pt")
-    diffusion_model.load_state_dict(torch.load(trained_diffusion_path))
+    diffusion_model.load_state_dict(torch.load(trained_diffusion_path, weights_only=True))
 
     scheduler = DDPMScheduler(
         num_train_timesteps=args.NoiseScheduler["num_train_timesteps"],

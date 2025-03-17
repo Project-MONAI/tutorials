@@ -248,7 +248,7 @@ def run_infer(weights_folder_path, cfg):
 
     nets = []
     for path in all_path:
-        state_dict = torch.load(path)["model"]
+        state_dict = torch.load(path, weights_only=True)["model"]
         new_state_dict = {}
         for k, v in state_dict.items():
             new_state_dict[k.replace("module.", "")] = v

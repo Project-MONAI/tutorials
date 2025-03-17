@@ -346,7 +346,7 @@ def main():
     train_loader = ThreadDataLoader(train_ds, num_workers=8, batch_size=num_images_per_batch, shuffle=True)
     val_loader = ThreadDataLoader(val_ds, num_workers=4, batch_size=1, shuffle=False)
 
-    ckpt = torch.load(args.arch_ckpt)
+    ckpt = torch.load(args.arch_ckpt, weights_only=True)
     node_a = ckpt["node_a"]
     arch_code_a = ckpt["arch_code_a"]
     arch_code_c = ckpt["arch_code_c"]
@@ -399,7 +399,7 @@ def main():
 
     if args.checkpoint != None and os.path.isfile(args.checkpoint):
         print("[info] fine-tuning pre-trained checkpoint {0:s}".format(args.checkpoint))
-        model.load_state_dict(torch.load(args.checkpoint, map_location=device))
+        model.load_state_dict(torch.load(args.checkpoint, map_location=device, weights_only=True))
         torch.cuda.empty_cache()
     else:
         print("[info] training from scratch")

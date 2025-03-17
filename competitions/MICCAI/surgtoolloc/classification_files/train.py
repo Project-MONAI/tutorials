@@ -62,7 +62,9 @@ def main(cfg):
     model.to(cfg.device)
 
     if cfg.weights is not None:
-        model.load_state_dict(torch.load(os.path.join(f"{cfg.output_dir}/fold{cfg.fold}", cfg.weights), weights_only=True)["model"])
+        model.load_state_dict(
+            torch.load(os.path.join(f"{cfg.output_dir}/fold{cfg.fold}", cfg.weights), weights_only=True)["model"]
+        )
         print(f"weights from: {cfg.weights} are loaded.")
 
     # set optimizer, lr scheduler

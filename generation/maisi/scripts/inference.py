@@ -189,11 +189,15 @@ def main():
     controlnet.load_state_dict(checkpoint_controlnet["controlnet_state_dict"], strict=True)
 
     mask_generation_autoencoder = define_instance(args, "mask_generation_autoencoder").to(device)
-    checkpoint_mask_generation_autoencoder = torch.load(args.trained_mask_generation_autoencoder_path, weights_only=True)
+    checkpoint_mask_generation_autoencoder = torch.load(
+        args.trained_mask_generation_autoencoder_path, weights_only=True
+    )
     mask_generation_autoencoder.load_state_dict(checkpoint_mask_generation_autoencoder)
 
     mask_generation_diffusion_unet = define_instance(args, "mask_generation_diffusion").to(device)
-    checkpoint_mask_generation_diffusion_unet = torch.load(args.trained_mask_generation_diffusion_path, weights_only=False)
+    checkpoint_mask_generation_diffusion_unet = torch.load(
+        args.trained_mask_generation_diffusion_path, weights_only=False
+    )
     mask_generation_diffusion_unet.load_state_dict(checkpoint_mask_generation_diffusion_unet["unet_state_dict"])
     mask_generation_scale_factor = checkpoint_mask_generation_diffusion_unet["scale_factor"]
 

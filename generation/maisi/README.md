@@ -17,7 +17,7 @@ More details can be found in our WACV 2025 paper:
 We are excited to announce the new MAISI Version `maisi3d-rflow`. Compared with the previous version `maisi3d-ddpm`, **it accelerated latent diffusion model inference by 33x**. The MAISI VAE is not changed. The differences are:
 - The maisi version `maisi3d-ddpm` uses basic noise scheduler DDPM. `maisi3d-rflow` uses Rectified Flow scheduler. The diffusion model inference can be 33 times faster.
 - The maisi version `maisi3d-ddpm` requires training images to be labeled with body regions (`"top_region_index"` and `"bottom_region_index"`), while `maisi3d-rflow` does not have such requirement. In other words, it is easier to prepare training data for `maisi3d-rflow`.
-- For the released model weights, `maisi3d-rflow` can generate images with better quality for head region and small output volumes, and comparable quality for other cases compared with `maisi3d-ddpm`.
+- For the released model weights, `maisi3d-rflow` can generate images with better quality for head region and small output volumes; `maisi3d-ddpm` controlnet has better tumor generation quality; they have comparable quality for other cases. 
 - `maisi3d-rflow` added a diffusion model input `modality`, which gives it flexibility to extend to other modalities. Currently it is set as always equal to 1 since this version only supports CT generation. We predefined some modalities in [./configs/modality_mapping.json](./configs/modality_mapping.json).
 
 **GUI demo:** Welcome to try our GUI demo at [https://build.nvidia.com/nvidia/maisi](https://build.nvidia.com/nvidia/maisi).

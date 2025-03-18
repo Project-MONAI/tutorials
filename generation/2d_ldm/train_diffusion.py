@@ -182,7 +182,7 @@ def main():
     max_epochs = args.diffusion_train["max_epochs"]
     val_interval = args.diffusion_train["val_interval"]
     autoencoder.eval()
-    scaler = GradScaler()
+    scaler = GradScaler("cuda")
     total_step = 0
     best_val_recon_epoch_loss = 100.0
 

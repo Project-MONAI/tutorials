@@ -431,7 +431,7 @@ def main():
     if amp:
         from torch import autocast, GradScaler
 
-        scaler = GradScaler()
+        scaler = GradScaler("cuda")
         if dist.get_rank() == 0:
             print("[info] amp enabled")
 
@@ -487,7 +487,7 @@ def main():
             optimizer.zero_grad()
 
             if amp:
-                with autocast():
+                with autocast("cuda"):
                     outputs = model(inputs)
                     if output_classes == 2:
                         loss = loss_func(torch.flip(outputs, dims=[1]), 1 - labels)
@@ -559,7 +559,7 @@ def main():
             combination_weights = (epoch - num_epochs_warmup) / (num_epochs - num_epochs_warmup)
 
             if amp:
-                with autocast():
+                with autocast("cuda"):
                     outputs_search = model(inputs_search)
                     if output_classes == 2:
                         loss = loss_func(torch.flip(outputs_search, dims=[1]), 1 - labels_search)

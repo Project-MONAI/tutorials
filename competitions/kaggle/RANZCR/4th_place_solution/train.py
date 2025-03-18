@@ -83,7 +83,7 @@ def main(cfg):
 
     # set other tools
     if cfg.mixed_precision:
-        scaler = GradScaler()
+        scaler = GradScaler("cuda")
     else:
         scaler = None
 
@@ -168,7 +168,7 @@ def run_train(
         torch.set_grad_enabled(True)
 
         if cfg.mixed_precision:
-            with autocast():
+            with autocast("cuda"):
                 output_dict = model(batch)
         else:
             output_dict = model(batch)
@@ -210,7 +210,7 @@ def run_eval(model, val_dataloader, cfg, writer, epoch):
     for batch in val_dataloader:
         batch = cfg.to_device_transform(batch)
         if cfg.mixed_precision:
-            with autocast():
+            with autocast("cuda"):
                 output = model(batch)
         else:
             output = model(batch)
@@ -271,7 +271,7 @@ def run_infer(weights_folder_path, cfg):
             batch = to_device_transform(batch)
             for i, net in enumerate(nets):
                 if cfg.mixed_precision:
-                    with autocast():
+                    with autocast("cuda"):
                         logits = net(batch)["logits"].cpu().numpy()
                 else:
                     logits = net(batch)["logits"].cpu().numpy()

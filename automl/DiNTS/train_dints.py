@@ -408,7 +408,7 @@ def main():
     if amp:
         from torch import autocast, GradScaler
 
-        scaler = GradScaler()
+        scaler = GradScaler("cuda")
         if dist.get_rank() == 0:
             print("[info] amp enabled")
 
@@ -450,7 +450,7 @@ def main():
                 param.grad = None
 
             if amp:
-                with autocast():
+                with autocast("cuda"):
                     outputs = model(inputs)
                     if output_classes == 2:
                         loss = loss_func(torch.flip(outputs, dims=[1]), 1 - labels)

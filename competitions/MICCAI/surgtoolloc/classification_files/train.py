@@ -85,7 +85,7 @@ def main(cfg):
     metric = ConfusionMatrixMetric(metric_name="F1", reduction="mean_batch")
 
     # set other tools
-    scaler = GradScaler()
+    scaler = GradScaler("cuda")
     writer = SummaryWriter(str(cfg.output_dir + f"/fold{cfg.fold}/"))
 
     # train and val loop
@@ -171,11 +171,11 @@ def run_train(
         torch.set_grad_enabled(True)
         if torch.rand(1) > 0.5:
             inputs, labels_a, labels_b, lam = mixup_data(inputs, labels)
-            with autocast():
+            with autocast("cuda"):
                 outputs = model(inputs)
                 loss = lam * loss_function(outputs, labels_a) + (1 - lam) * loss_function(outputs, labels_b)
         else:
-            with autocast():
+            with autocast("cuda"):
                 outputs = model(inputs)
                 loss = loss_function(outputs, labels)
         losses.append(loss.item())

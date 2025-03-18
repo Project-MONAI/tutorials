@@ -63,7 +63,7 @@ def train_epoch(model, loader, optimizer, scaler, epoch, args):
 
         optimizer.zero_grad(set_to_none=True)
 
-        with autocast(enabled=args.amp):
+        with autocast("cuda", enabled=args.amp):
             logits = model(data)
             loss = criterion(logits, target)
 
@@ -116,7 +116,7 @@ def val_epoch(model, loader, epoch, args, max_tiles=None):
             data = batch_data["image"].as_subclass(torch.Tensor).cuda(args.rank)
             target = batch_data["label"].as_subclass(torch.Tensor).cuda(args.rank)
 
-            with autocast(enabled=args.amp):
+            with autocast("cuda", enabled=args.amp):
                 if max_tiles is not None and data.shape[1] > max_tiles:
                     # During validation, we want to use all instances/patches
                     # and if its number is very big, we may run out of GPU memory
@@ -406,7 +406,7 @@ def main_worker(gpu, args):
     n_epochs = args.epochs
     val_acc_max = 0.0
 
-    scaler = GradScaler(enabled=args.amp)
+    scaler = GradScaler("cuda", enabled=args.amp)
 
     for epoch in range(start_epoch, n_epochs):
         if args.distributed:

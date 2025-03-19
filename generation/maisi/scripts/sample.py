@@ -17,6 +17,7 @@ import random
 import time
 from datetime import datetime
 import warnings
+import gc
 
 import monai
 import torch
@@ -332,7 +333,8 @@ def ldm_conditional_sample_one_image(
                 latents, _ = noise_scheduler.step(model_output, t, latents, next_t)  # type: ignore
         end_time = time.time()
         logging.info(f"---- DM/ControlNet Latent features generation time: {end_time - start_time} seconds ----")
-        del model_output, controlnet_cond_vis, down_block_res_samples, mid_block_res_sample
+        del unet_inputs, controlnet_inputs, model_output, controlnet_cond_vis, down_block_res_samples, mid_block_res_sample
+        gc.collect()
         torch.cuda.empty_cache()
 
         # decode latents to synthesized images

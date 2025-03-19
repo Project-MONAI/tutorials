@@ -148,7 +148,7 @@ def create_model(cfg, device):
             pretrained_url=None,
             freeze_encoder=False,
         ).to(device)
-        model.load_state_dict(torch.load(cfg["ckpt"])["model"])
+        model.load_state_dict(torch.load(cfg["ckpt"], weights_only=True)["model"])
         print(f'stage{cfg["stage"]}, success load weight!')
 
     return model

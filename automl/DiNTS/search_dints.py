@@ -422,16 +422,16 @@ def main():
 
     if args.checkpoint != None and os.path.isfile(args.checkpoint):
         print("[info] fine-tuning pre-trained checkpoint {0:s}".format(args.checkpoint))
-        model.load_state_dict(torch.load(args.checkpoint, map_location=device))
+        model.load_state_dict(torch.load(args.checkpoint, map_location=device, weights_only=True))
         torch.cuda.empty_cache()
     else:
         print("[info] training from scratch")
 
     # amp
     if amp:
-        from torch.cuda.amp import autocast, GradScaler
+        from torch import autocast, GradScaler
 
-        scaler = GradScaler()
+        scaler = GradScaler("cuda")
         if dist.get_rank() == 0:
             print("[info] amp enabled")
 
@@ -487,7 +487,7 @@ def main():
             optimizer.zero_grad()
 
             if amp:
-                with autocast():
+                with autocast("cuda"):
                     outputs = model(inputs)
                     if output_classes == 2:
                         loss = loss_func(torch.flip(outputs, dims=[1]), 1 - labels)
@@ -559,7 +559,7 @@ def main():
             combination_weights = (epoch - num_epochs_warmup) / (num_epochs - num_epochs_warmup)
 
             if amp:
-                with autocast():
+                with autocast("cuda"):
                     outputs_search = model(inputs_search)
                     if output_classes == 2:
                         loss = loss_func(torch.flip(outputs_search, dims=[1]), 1 - labels_search)
@@ -638,7 +638,7 @@ def main():
                     sw_batch_size = num_sw_batch_size
 
                     if amp:
-                        with torch.cuda.amp.autocast():
+                        with torch.autocast("cuda"):
                             pred = sliding_window_inference(
                                 val_images,
                                 roi_size,

@@ -109,7 +109,7 @@ def main():
     if args.trained_diffusion_path is not None:
         if not os.path.exists(args.trained_diffusion_path):
             raise ValueError("Please download the trained diffusion unet checkpoint.")
-        diffusion_model_ckpt = torch.load(args.trained_diffusion_path, map_location=device)
+        diffusion_model_ckpt = torch.load(args.trained_diffusion_path, map_location=device, weights_only=False)
         unet.load_state_dict(diffusion_model_ckpt["unet_state_dict"])
         # load scale factor from diffusion model checkpoint
         scale_factor = diffusion_model_ckpt["scale_factor"]
@@ -129,7 +129,7 @@ def main():
         if not os.path.exists(args.trained_controlnet_path):
             raise ValueError("Please download the trained ControlNet checkpoint.")
         controlnet.load_state_dict(
-            torch.load(args.trained_controlnet_path, map_location=device)["controlnet_state_dict"]
+            torch.load(args.trained_controlnet_path, map_location=device, weights_only=False)["controlnet_state_dict"]
         )
         logger.info(f"load trained controlnet model from {args.trained_controlnet_path}")
     else:

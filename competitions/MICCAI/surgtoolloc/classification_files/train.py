@@ -21,7 +21,7 @@ import torch
 from monai.bundle import ConfigParser
 from monai.metrics import ConfusionMatrixMetric
 from monai.networks.nets import EfficientNetBN
-from torch.cuda.amp import GradScaler, autocast
+from torch import GradScaler, autocast
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 from utils import (
@@ -62,7 +62,9 @@ def main(cfg):
     model.to(cfg.device)
 
     if cfg.weights is not None:
-        model.load_state_dict(torch.load(os.path.join(f"{cfg.output_dir}/fold{cfg.fold}", cfg.weights))["model"])
+        model.load_state_dict(
+            torch.load(os.path.join(f"{cfg.output_dir}/fold{cfg.fold}", cfg.weights), weights_only=True)["model"]
+        )
         print(f"weights from: {cfg.weights} are loaded.")
 
     # set optimizer, lr scheduler
@@ -83,7 +85,7 @@ def main(cfg):
     metric = ConfusionMatrixMetric(metric_name="F1", reduction="mean_batch")
 
     # set other tools
-    scaler = GradScaler()
+    scaler = GradScaler("cuda")
     writer = SummaryWriter(str(cfg.output_dir + f"/fold{cfg.fold}/"))
 
     # train and val loop
@@ -169,11 +171,11 @@ def run_train(
         torch.set_grad_enabled(True)
         if torch.rand(1) > 0.5:
             inputs, labels_a, labels_b, lam = mixup_data(inputs, labels)
-            with autocast():
+            with autocast("cuda"):
                 outputs = model(inputs)
                 loss = lam * loss_function(outputs, labels_a) + (1 - lam) * loss_function(outputs, labels_b)
         else:
-            with autocast():
+            with autocast("cuda"):
                 outputs = model(inputs)
                 loss = loss_function(outputs, labels)
         losses.append(loss.item())

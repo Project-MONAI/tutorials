@@ -208,7 +208,7 @@ class RanzcrNet(nn.Module):
 
         if cfg.pretrained_weights is not None:
             self.load_state_dict(
-                torch.load(cfg.pretrained_weights, map_location="cpu")["model"],
+                torch.load(cfg.pretrained_weights, map_location="cpu", weights_only=True)["model"],
                 strict=True,
             )
             print("weights loaded from", cfg.pretrained_weights)

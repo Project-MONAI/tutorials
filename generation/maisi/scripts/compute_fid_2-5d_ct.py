@@ -610,7 +610,7 @@ def main(
         out_fp.parent.mkdir(parents=True, exist_ok=True)
 
         if (not ignore_existing) and os.path.isfile(out_fp):
-            feats = torch.load(out_fp)
+            feats = torch.load(out_fp, weights_only=True)
         else:
             img_t = img.as_tensor()
             logger.info(f"image shape: {tuple(img_t.shape)}")
@@ -650,7 +650,7 @@ def main(
         out_fp.parent.mkdir(parents=True, exist_ok=True)
 
         if (not ignore_existing) and os.path.isfile(out_fp):
-            feats = torch.load(out_fp)
+            feats = torch.load(out_fp, weights_only=True)
         else:
             img_t = img.as_tensor()
             logger.info(f"image shape: {tuple(img_t.shape)}")

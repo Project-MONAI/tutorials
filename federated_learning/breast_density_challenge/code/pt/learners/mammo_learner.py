@@ -416,7 +416,7 @@ class MammoLearner(Learner):
             model_data = None
             try:
                 # load model to cpu as server might or might not have a GPU
-                model_data = torch.load(self.best_local_model_file, map_location="cpu")
+                model_data = torch.load(self.best_local_model_file, map_location="cpu", weights_only=True)
             except Exception as e:
                 self.log_error(fl_ctx, f"Unable to load best model: {e}")
 

@@ -144,7 +144,7 @@ def main():
             {
                 "path": "models/controlnet_3d_rflow.pt",
                 "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/"
-                "controlnet_rflow_epoch208.pt",
+                "controlnet_rflow_epoch60.pt",
             },
             {
                 "path": "configs/candidate_masks_flexible_size_and_spacing_4000.json",

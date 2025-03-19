@@ -1,0 +1,13 @@
+{
+    "output_dir": "output",
+    "trained_autoencoder_path": "models/autoencoder_epoch273.pt",
+    "trained_diffusion_path": "models/diff_unet_3d_rflow.pt",
+    "trained_controlnet_path": "models/controlnet_3d_rflow.pt",
+    "trained_mask_generation_autoencoder_path": "models/mask_generation_autoencoder.pt",
+    "trained_mask_generation_diffusion_path": "models/mask_generation_diffusion_unet.pt",
+    "all_mask_files_base_dir": "datasets/all_masks_flexible_size_and_spacing_4000",
+    "all_mask_files_json": "./configs/candidate_masks_flexible_size_and_spacing_4000.json",
+    "all_anatomy_size_conditions_json": "./configs/all_anatomy_size_condtions.json",
+    "label_dict_json": "./configs/label_dict.json",
+    "label_dict_remap_json": "./configs/label_dict_124_to_132.json"
+}

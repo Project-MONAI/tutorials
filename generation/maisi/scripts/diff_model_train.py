@@ -18,15 +18,16 @@ import os
 from datetime import datetime
 from pathlib import Path
 
+import monai
 import torch
 import torch.distributed as dist
-from torch.amp import GradScaler, autocast
-from torch.nn.parallel import DistributedDataParallel
-
-import monai
 from monai.data import DataLoader, partition_dataset
+from monai.networks.schedulers import RFlowScheduler
+from monai.networks.schedulers.ddpm import DDPMPredictionType
 from monai.transforms import Compose
 from monai.utils import first
+from torch.amp import GradScaler, autocast
+from torch.nn.parallel import DistributedDataParallel
 
 from .diff_model_setting import initialize_distributed, load_config, setup_logging
 from .utils import define_instance
@@ -49,7 +50,12 @@ def load_filenames(data_list_path: str) -> list:
 
 
 def prepare_data(
-    train_files: list, device: torch.device, cache_rate: float, num_workers: int = 2, batch_size: int = 1
+    train_files: list,
+    device: torch.device,
+    cache_rate: float,
+    num_workers: int = 2,
+    batch_size: int = 1,
+    include_body_region: bool = False,
 ) -> DataLoader:
     """
     Prepare training data.
@@ -60,6 +66,7 @@ def prepare_data(
         cache_rate (float): Cache rate for dataset.
         num_workers (int): Number of workers for data loading.
         batch_size (int): Mini-batch size.
+        include_body_region (bool): Whether to include body region in data
 
     Returns:
         DataLoader: Data loader for training.
@@ -69,22 +76,24 @@ def prepare_data(
         with open(file_path) as f:
             return torch.FloatTensor(json.load(f)[key])
 
-    train_transforms = Compose(
-        [
-            monai.transforms.LoadImaged(keys=["image"]),
-            monai.transforms.EnsureChannelFirstd(keys=["image"]),
+    train_transforms_list = [
+        monai.transforms.LoadImaged(keys=["image"]),
+        monai.transforms.EnsureChannelFirstd(keys=["image"]),
+        monai.transforms.Lambdad(keys="spacing", func=lambda x: _load_data_from_file(x, "spacing")),
+        monai.transforms.Lambdad(keys="spacing", func=lambda x: x * 1e2),
+    ]
+    if include_body_region:
+        train_transforms_list += [
             monai.transforms.Lambdad(
                 keys="top_region_index", func=lambda x: _load_data_from_file(x, "top_region_index")
             ),
             monai.transforms.Lambdad(
                 keys="bottom_region_index", func=lambda x: _load_data_from_file(x, "bottom_region_index")
             ),
-            monai.transforms.Lambdad(keys="spacing", func=lambda x: _load_data_from_file(x, "spacing")),
             monai.transforms.Lambdad(keys="top_region_index", func=lambda x: x * 1e2),
             monai.transforms.Lambdad(keys="bottom_region_index", func=lambda x: x * 1e2),
-            monai.transforms.Lambdad(keys="spacing", func=lambda x: x * 1e2),
         ]
-    )
+    train_transforms = Compose(train_transforms_list)
 
     train_ds = monai.data.CacheDataset(
         data=train_files, transform=train_transforms, cache_rate=cache_rate, num_workers=num_workers
@@ -216,6 +225,9 @@ def train_one_epoch(
     Returns:
         torch.Tensor: Training loss for the epoch.
     """
+    include_body_region = unet.include_top_region_index_input
+    include_modality = unet.num_class_embeds is not None
+
     if local_rank == 0:
         current_lr = optimizer.param_groups[0]["lr"]
         logger.info(f"Epoch {epoch + 1}, lr {current_lr}.")
@@ -231,30 +243,64 @@ def train_one_epoch(
         images = train_data["image"].to(device)
         images = images * scale_factor
 
-        top_region_index_tensor = train_data["top_region_index"].to(device)
-        bottom_region_index_tensor = train_data["bottom_region_index"].to(device)
+        if include_body_region:
+            top_region_index_tensor = train_data["top_region_index"].to(device)
+            bottom_region_index_tensor = train_data["bottom_region_index"].to(device)
+        # We trained with only CT in this version
+        if include_modality:
+            modality_tensor = torch.ones((len(images),), dtype=torch.long).to(device)
         spacing_tensor = train_data["spacing"].to(device)
 
         optimizer.zero_grad(set_to_none=True)
 
         with autocast("cuda", enabled=amp):
-            noise = torch.randn(
-                (num_images_per_batch, 4, images.size(-3), images.size(-2), images.size(-1)), device=device
-            )
+            noise = torch.randn_like(images)
 
-            timesteps = torch.randint(0, num_train_timesteps, (images.shape[0],), device=images.device).long()
+            if isinstance(noise_scheduler, RFlowScheduler):
+                timesteps = noise_scheduler.sample_timesteps(images)
+            else:
+                timesteps = torch.randint(0, num_train_timesteps, (images.shape[0],), device=images.device).long()
 
             noisy_latent = noise_scheduler.add_noise(original_samples=images, noise=noise, timesteps=timesteps)
 
-            noise_pred = unet(
-                x=noisy_latent,
-                timesteps=timesteps,
-                top_region_index_tensor=top_region_index_tensor,
-                bottom_region_index_tensor=bottom_region_index_tensor,
-                spacing_tensor=spacing_tensor,
-            )
+            # Create a dictionary to store the inputs
+            unet_inputs = {
+                "x": noisy_latent,
+                "timesteps": timesteps,
+                "spacing_tensor": spacing_tensor,
+            }
+            # Add extra arguments if include_body_region is True
+            if include_body_region:
+                unet_inputs.update(
+                    {
+                        "top_region_index_tensor": top_region_index_tensor,
+                        "bottom_region_index_tensor": bottom_region_index_tensor,
+                    }
+                )
+            if include_modality:
+                unet_inputs.update(
+                    {
+                        "class_labels": modality_tensor,
+                    }
+                )
+            model_output = unet(**unet_inputs)
 
-            loss = loss_pt(noise_pred.float(), noise.float())
+            if noise_scheduler.prediction_type == DDPMPredictionType.EPSILON:
+                # predict noise
+                model_gt = noise
+            elif noise_scheduler.prediction_type == DDPMPredictionType.SAMPLE:
+                # predict sample
+                model_gt = images
+            elif noise_scheduler.prediction_type == DDPMPredictionType.V_PREDICTION:
+                # predict velocity
+                model_gt = images - noise
+            else:
+                raise ValueError(
+                    "noise scheduler prediction type has to be chosen from ",
+                    f"[{DDPMPredictionType.EPSILON},{DDPMPredictionType.SAMPLE},{DDPMPredictionType.V_PREDICTION}]",
+                )
+
+            loss = loss_pt(model_output.float(), model_gt.float())
 
         if amp:
             scaler.scale(loss).backward()
@@ -345,6 +391,10 @@ def diff_model_train(
 
         Path(args.model_dir).mkdir(parents=True, exist_ok=True)
 
+    unet = load_unet(args, device, logger)
+    noise_scheduler = define_instance(args, "noise_scheduler")
+    include_body_region = unet.include_top_region_index_input
+
     filenames_train = load_filenames(args.json_data_list)
     if local_rank == 0:
         logger.info(f"num_files_train: {len(filenames_train)}")
@@ -356,20 +406,23 @@ def diff_model_train(
             continue
 
         str_info = os.path.join(args.embedding_base_dir, filenames_train[_i]) + ".json"
-        train_files.append(
-            {"image": str_img, "top_region_index": str_info, "bottom_region_index": str_info, "spacing": str_info}
-        )
+        train_files_i = {"image": str_img, "spacing": str_info}
+        if include_body_region:
+            train_files_i["top_region_index"] = str_info
+            train_files_i["bottom_region_index"] = str_info
+        train_files.append(train_files_i)
     if dist.is_initialized():
         train_files = partition_dataset(
             data=train_files, shuffle=True, num_partitions=dist.get_world_size(), even_divisible=True
         )[local_rank]
 
     train_loader = prepare_data(
-        train_files, device, args.diffusion_unet_train["cache_rate"], batch_size=args.diffusion_unet_train["batch_size"]
+        train_files,
+        device,
+        args.diffusion_unet_train["cache_rate"],
+        batch_size=args.diffusion_unet_train["batch_size"],
+        include_body_region=include_body_region,
     )
-
-    unet = load_unet(args, device, logger)
-    noise_scheduler = define_instance(args, "noise_scheduler")
 
     scale_factor = calculate_scale_factor(train_loader, device, logger)
     optimizer = create_optimizer(unet, args.diffusion_unet_train["lr"])

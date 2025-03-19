@@ -219,7 +219,7 @@ def infer(data_folder=".", model_folder="runs", prediction_folder="output"):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     net = get_net().to(device)
-    net.load_state_dict(torch.load(ckpt, map_location=device))
+    net.load_state_dict(torch.load(ckpt, map_location=device, weights_only=True))
     net.eval()
 
     image_folder = os.path.abspath(data_folder)

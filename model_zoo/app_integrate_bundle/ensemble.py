@@ -125,7 +125,9 @@ class EnsembleTrainTask:
         networks = []
         for i in range(args.n_splits):
             _network = inference_workflow.network_def.to(device)
-            _network.load_state_dict(torch.load(self.bundle_path + f"/models/model_fold{i}.pt", map_location=device))
+            _network.load_state_dict(
+                torch.load(self.bundle_path + f"/models/model_fold{i}.pt", map_location=device, weights_only=True)
+            )
             networks.append(_network)
 
         inference_workflow.evaluator = EnsembleEvaluator(

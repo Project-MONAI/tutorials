@@ -102,7 +102,7 @@ def find_masks(
         db = json.load(f)
 
     # select candidate_masks
-    candidate_masks = []    
+    candidate_masks = []
     for _item in db:
         if not set(anatomy_list).issubset(_item["label_list"]):
             continue
@@ -111,7 +111,7 @@ def find_masks(
         keep_mask = True
 
         # extract region indice (top_index and bottom_index) for candidate mask
-        include_body_region = ("top_region_index" in _item.keys())
+        include_body_region = "top_region_index" in _item.keys()
         if include_body_region:
             top_index = [index for index, element in enumerate(_item["top_region_index"]) if element != 0]
             top_index = top_index[0]

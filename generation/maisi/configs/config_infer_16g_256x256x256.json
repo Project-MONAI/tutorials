@@ -1,7 +1,7 @@
 {
     "num_output_samples": 1,
-    "body_region": ["abdomen"],
-    "anatomy_list": ["liver","hepatic tumor"],
+    "body_region": ["chest"],
+    "anatomy_list": ["lung tumor"],
     "controllable_anatomy_size": [],
     "num_inference_steps": 30,
     "mask_generation_num_inference_steps": 1000,

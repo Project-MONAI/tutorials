@@ -18,7 +18,7 @@ from datetime import datetime
 
 import torch
 import torch.distributed as dist
-from monai.data import decollate_batch, MetaTensor
+from monai.data import MetaTensor, decollate_batch
 from monai.networks.utils import copy_model_state
 from monai.transforms import SaveImage
 from monai.utils import RankFilter
@@ -49,6 +49,7 @@ def main():
         help="config json file that stores training hyper-parameters",
     )
     parser.add_argument("-g", "--gpus", default=1, type=int, help="number of gpus per node")
+
     args = parser.parse_args()
 
     # Step 0: configuration
@@ -109,6 +110,9 @@ def main():
 
     # define diffusion Model
     unet = define_instance(args, "diffusion_unet_def").to(device)
+    include_body_region = unet.include_top_region_index_input
+    include_modality = unet.num_class_embeds is not None
+
     # load trained diffusion model
     if args.trained_diffusion_path is not None:
         if not os.path.exists(args.trained_diffusion_path):
@@ -150,9 +154,14 @@ def main():
         # get label mask
         labels = batch["label"].to(device)
         # get corresponding conditions
-        top_region_index_tensor = batch["top_region_index"].to(device)
-        bottom_region_index_tensor = batch["bottom_region_index"].to(device)
+        if include_body_region:
+            top_region_index_tensor = batch["top_region_index"].to(device)
+            bottom_region_index_tensor = batch["bottom_region_index"].to(device)
+        else:
+            top_region_index_tensor = None
+            bottom_region_index_tensor = None
         spacing_tensor = batch["spacing"].to(device)
+        modality_tensor = args.controlnet_infer["modality"] * torch.ones((len(labels),), dtype=torch.long).to(device)
         out_spacing = tuple((batch["spacing"].squeeze().numpy() / 100).tolist())
         # get target dimension
         dim = batch["dim"]
@@ -162,22 +171,23 @@ def main():
         check_input(None, None, None, output_size, out_spacing, None)
         # generate a single synthetic image using a latent diffusion model with controlnet.
         synthetic_images, _ = ldm_conditional_sample_one_image(
-            autoencoder,
-            unet,
-            controlnet,
-            noise_scheduler,
-            scale_factor,
-            device,
-            labels,
-            top_region_index_tensor,
-            bottom_region_index_tensor,
-            spacing_tensor,
+            autoencoder=autoencoder,
+            diffusion_unet=unet,
+            controlnet=controlnet,
+            noise_scheduler=noise_scheduler,
+            scale_factor=scale_factor,
+            device=device,
+            combine_label_or=labels,
+            top_region_index_tensor=top_region_index_tensor,
+            bottom_region_index_tensor=bottom_region_index_tensor,
+            spacing_tensor=spacing_tensor,
+            modality_tensor=modality_tensor,
             latent_shape=latent_shape,
             output_size=output_size,
             noise_factor=1.0,
             num_inference_steps=args.controlnet_infer["num_inference_steps"],
-            # reduce it when GPU memory is limited
             autoencoder_sliding_window_infer_size=args.controlnet_infer["autoencoder_sliding_window_infer_size"],
+            autoencoder_sliding_window_infer_overlap=args.controlnet_infer["autoencoder_sliding_window_infer_overlap"],
         )
         # save image/label pairs
         labels = decollate_batch(batch)[0]["label"]

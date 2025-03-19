@@ -107,19 +107,21 @@ def find_masks(
         if not set(anatomy_list).issubset(_item["label_list"]):
             continue
 
-        # extract region indice (top_index and bottom_index) for candidate mask
-        top_index = [index for index, element in enumerate(_item["top_region_index"]) if element != 0]
-        top_index = top_index[0]
-        bottom_index = [index for index, element in enumerate(_item["bottom_region_index"]) if element != 0]
-        bottom_index = bottom_index[0]
-
         # whether to keep this mask, default to be True.
         keep_mask = True
 
-        # if candiate mask does not contain all the body_region, skip it
-        for _idx in body_region:
-            if _idx > bottom_index or _idx < top_index:
-                keep_mask = False
+        # extract region indice (top_index and bottom_index) for candidate mask
+        include_body_region = "top_region_index" in _item.keys()
+        if include_body_region:
+            top_index = [index for index, element in enumerate(_item["top_region_index"]) if element != 0]
+            top_index = top_index[0]
+            bottom_index = [index for index, element in enumerate(_item["bottom_region_index"]) if element != 0]
+            bottom_index = bottom_index[0]
+
+            # if candiate mask does not contain all the body_region, skip it
+            for _idx in body_region:
+                if _idx > bottom_index or _idx < top_index:
+                    keep_mask = False
 
         for tumor_label in [23, 24, 26, 27, 128]:
             # we skip those mask with tumors if users do not provide tumor label in anatomy_list
@@ -138,9 +140,10 @@ def find_masks(
                 "pseudo_label": os.path.join(mask_foldername, _item["pseudo_label_filename"]),
                 "spacing": _item["spacing"],
                 "dim": _item["dim"],
-                "top_region_index": _item["top_region_index"],
-                "bottom_region_index": _item["bottom_region_index"],
             }
+            if include_body_region:
+                candidate["top_region_index"] = _item["top_region_index"]
+                candidate["bottom_region_index"] = _item["bottom_region_index"]
 
             # Conditionally add the label to the candidate dictionary
             if "label_filename" in _item:

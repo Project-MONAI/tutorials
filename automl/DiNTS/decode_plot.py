@@ -56,7 +56,7 @@ def plot_graph(
     Return:
         graphviz graph.
     """
-    code = torch.load(codepath)
+    code = torch.load(codepath, weights_only=True)
     arch_code_a = code["arch_code_a"]
     arch_code_c = code["arch_code_c"]
     ga = Digraph("G", filename=filename, engine="neato")

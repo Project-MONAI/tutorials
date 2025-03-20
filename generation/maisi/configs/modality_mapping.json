@@ -1,0 +1,15 @@
+{
+    "unknown":0,
+    "ct":1,
+    "ct_wo_contrast":2,
+    "ct_contrast":3,
+    "mri":8,
+    "mri_t1":9,
+    "mri_t2":10,
+    "mri_flair":11,
+    "mri_pd":12,
+    "mri_dwi":13,
+    "mri_adc":14,
+    "mri_ssfp":15,
+    "mri_mra":16
+}

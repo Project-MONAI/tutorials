@@ -121,7 +121,7 @@ class DynUNetInferrer(SupervisedEvaluator):
         # execute forward computation
         with eval_mode(self.network):
             if self.amp:
-                with torch.cuda.amp.autocast():
+                with torch.autocast("cuda"):
                     predictions = _compute_pred()
             else:
                 predictions = _compute_pred()

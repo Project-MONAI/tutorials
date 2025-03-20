@@ -103,7 +103,7 @@ def main():
     trained_g_path = os.path.join(args.model_dir, "autoencoder.pt")
 
     map_location = {"cuda:%d" % 0: "cuda:%d" % rank}
-    autoencoder.load_state_dict(torch.load(trained_g_path, map_location=map_location))
+    autoencoder.load_state_dict(torch.load(trained_g_path, map_location=map_location, weights_only=True))
     print(f"Rank {rank}: Load trained autoencoder from {trained_g_path}")
 
     # Compute Scaling factor
@@ -143,7 +143,7 @@ def main():
         start_epoch = args.start_epoch
         map_location = {"cuda:%d" % 0: "cuda:%d" % rank}
         try:
-            unet.load_state_dict(torch.load(trained_diffusion_path, map_location=map_location))
+            unet.load_state_dict(torch.load(trained_diffusion_path, map_location=map_location, weights_only=True))
             print(
                 f"Rank {rank}: Load trained diffusion model from",
                 trained_diffusion_path,
@@ -182,7 +182,7 @@ def main():
     max_epochs = args.diffusion_train["max_epochs"]
     val_interval = args.diffusion_train["val_interval"]
     autoencoder.eval()
-    scaler = GradScaler()
+    scaler = GradScaler("cuda")
     total_step = 0
     best_val_recon_epoch_loss = 100.0
 

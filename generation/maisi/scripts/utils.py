@@ -11,9 +11,9 @@
 
 import copy
 import json
+import logging
 import math
 import os
-import logging
 from argparse import Namespace
 from datetime import timedelta
 from typing import Any, Sequence
@@ -22,11 +22,11 @@ import numpy as np
 import skimage
 import torch
 import torch.distributed as dist
-from monai.transforms.utils_morphological_ops import dilate, erode
 from monai.bundle import ConfigParser
 from monai.config import DtypeLike, NdarrayOrTensor
 from monai.data import CacheDataset, DataLoader, partition_dataset
 from monai.transforms import Compose, EnsureTyped, Lambdad, LoadImaged, Orientationd
+from monai.transforms.utils_morphological_ops import dilate, erode
 from monai.utils import TransformBackends, convert_data_type, convert_to_dst_type, get_equivalent_dtype
 from scipy import stats
 from torch import Tensor
@@ -306,10 +306,12 @@ def prepare_maisi_controlnet_json_dataloader(
         LoadImaged(keys=["image", "label"], image_only=True, ensure_channel_first=True),
         Orientationd(keys=["label"], axcodes="RAS"),
         EnsureTyped(keys=["label"], dtype=torch.uint8, track_meta=True),
-        Lambdad(keys="top_region_index", func=lambda x: torch.FloatTensor(x)),
-        Lambdad(keys="bottom_region_index", func=lambda x: torch.FloatTensor(x)),
+        Lambdad(keys="top_region_index", func=lambda x: torch.FloatTensor(x), allow_missing_keys=True),
+        Lambdad(keys="bottom_region_index", func=lambda x: torch.FloatTensor(x), allow_missing_keys=True),
         Lambdad(keys="spacing", func=lambda x: torch.FloatTensor(x)),
-        Lambdad(keys=["top_region_index", "bottom_region_index", "spacing"], func=lambda x: x * 1e2),
+        Lambdad(
+            keys=["top_region_index", "bottom_region_index", "spacing"], func=lambda x: x * 1e2, allow_missing_keys=True
+        ),
     ]
     train_transforms, val_transforms = Compose(common_transform), Compose(common_transform)
 
@@ -706,7 +708,20 @@ def dynamic_infer(inferer, model, images):
     Returns:
         torch.Tensor: The output from the model or the inferer, depending on the input size.
     """
-    if torch.numel(images[0:1, 0:1, ...]) < math.prod(inferer.roi_size):
+    if torch.numel(images[0:1, 0:1, ...]) <= math.prod(inferer.roi_size):
         return model(images)
     else:
-        return inferer(network=model, inputs=images)
+        # Extract the spatial dimensions from the images tensor (H, W, D)
+        spatial_dims = images.shape[2:]
+        orig_roi = inferer.roi_size
+
+        # Check that roi has the same number of dimensions as spatial_dims
+        if len(orig_roi) != len(spatial_dims):
+            raise ValueError(f"ROI length ({len(orig_roi)}) does not match spatial dimensions ({len(spatial_dims)}).")
+
+        # Iterate and adjust each ROI dimension
+        adjusted_roi = [min(roi_dim, img_dim) for roi_dim, img_dim in zip(orig_roi, spatial_dims)]
+        inferer.roi_size = adjusted_roi
+        output = inferer(network=model, inputs=images)
+        inferer.roi_size = orig_roi
+        return output

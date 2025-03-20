@@ -226,6 +226,12 @@ This tutorial shows how to train a surgical tool segmentation model to locate to
 ##### [endoscopic inbody classification](./computer_assisted_intervention/endoscopic_inbody_classification.ipynb)
 Tutorial to show the pipeline of fine tuning an endoscopic inbody classification model based on a corresponding pretrained bundle.
 
+#### <ins>**Hugging Face**</ins>
+##### [MONAI Hugging Face Pipeline](./hugging_face/hugging_face_pipeline_for_monai.ipynb)
+This tutorial demonstrates how to encapsulate an existing MONAI model workflow into a Hugging Face pipeline, which is widely adopted by the open-source community.
+##### [Fine-tuning for Hugging Face Pipeline](./hugging_face/finetune_vista3d_for_hugging_face_pipeline.ipynb)
+This tutorial explains the process of fine-tuning a VISTA3D model and integrating it into a Hugging Face pipeline for inference.
+
 #### <ins>**Modules**</ins>
 ##### [bundle](./bundle)
 Get started tutorial and concrete training / inference examples for MONAI bundle features.

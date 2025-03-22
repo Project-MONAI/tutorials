@@ -43,7 +43,7 @@ def main():
     parser.add_argument(
         "-c",
         "--config-file",
-        default="./configs/config_maisi.json",
+        default="./configs/config_maisi-ddpm.json",
         help="config json file that stores network hyper-parameters",
     )
     parser.add_argument(
@@ -269,7 +269,7 @@ def main():
                 for label in weighted_loss_label:
                     roi[interpolate_label == label] = 1
                 weights[roi.repeat(1, images.shape[1], 1, 1, 1) == 1] = weighted_loss
-                loss = (F.l1_loss(noise_pred.float(), model_gt.float(), reduction="none") * weights).mean()
+                loss = (F.l1_loss(model_output.float(), model_gt.float(), reduction="none") * weights).mean()
             else:
                 loss = F.l1_loss(model_output.float(), model_gt.float())
 

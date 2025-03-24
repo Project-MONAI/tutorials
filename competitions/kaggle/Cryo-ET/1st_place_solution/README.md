@@ -45,7 +45,7 @@ cd tutorials/competitions/kaggle/Cryo-ET/1st_place_solution/
 
 This tutorial is build upon the official Cryo ET competition data. It can be downloaded directly from kaggle: https://www.kaggle.com/competitions/czii-cryo-et-object-identification/data
 
-Alternativly it can be downloaded using the kaggle API (which can be installed via ```pip install kaggle```)
+Alternativly it can be downloaded using the kaggle API (which can be installed via ```pip install kaggle```). If you decide to use the Kaggle API you need to create a Kaggle account and configure your token as described here.
 
 ```kaggle competitions download -c czii-cryo-et-object-identification```
 

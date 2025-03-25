@@ -14,8 +14,8 @@ import argparse
 import json
 import logging
 import os
-import tempfile
 import sys
+import tempfile
 
 import monai
 import torch
@@ -23,6 +23,7 @@ from monai.apps import download_url
 from monai.config import print_config
 from monai.transforms import LoadImage, Orientation
 from monai.utils import set_determinism
+
 from scripts.sample import LDMSampler, check_input
 from scripts.utils import define_instance
 from scripts.utils_plot import find_label_center_loc, get_xyz_plot, show_image
@@ -60,9 +61,17 @@ def main():
         default=None,
         help="random seed, can be None or int",
     )
+    parser.add_argument(
+        "--version",
+        default="maisi3d-rflow",
+        type=str,
+        help="maisi_version, choose from ['maisi3d-ddpm', 'maisi3d-rflow']",
+    )
     args = parser.parse_args()
     # Step 0: configuration
     logger = logging.getLogger("maisi.inference")
+
+    maisi_version = args.version
 
     # ## Set deterministic training for reproducibility
     if args.random_seed is not None:
@@ -79,40 +88,74 @@ def main():
     root_dir = tempfile.mkdtemp() if directory is None else directory
     print(root_dir)
 
+    # TODO: remove the `files` after the files are uploaded to the NGC
     files = [
         {
             "path": "models/autoencoder_epoch273.pt",
-            "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/model_zoo/model_maisi_autoencoder_epoch273_alternative.pt",
-        },
-        {
-            "path": "models/input_unet3d_data-all_steps1000size512ddpm_random_current_inputx_v1.pt",
-            "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/model_zoo/model_maisi_input_unet3d_data-all_steps1000size512ddpm_random_current_inputx_v1_alternative.pt",
-        },
-        {
-            "path": "models/controlnet-20datasets-e20wl100fold0bc_noi_dia_fsize_current.pt",
-            "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/model_zoo/model_maisi_controlnet-20datasets-e20wl100fold0bc_noi_dia_fsize_current_alternative.pt",
+            "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials"
+            "/model_zoo/model_maisi_autoencoder_epoch273_alternative.pt",
         },
         {
             "path": "models/mask_generation_autoencoder.pt",
-            "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/mask_generation_autoencoder.pt",
+            "url": "https://developer.download.nvidia.com/assets/Clara/monai"
+            "/tutorials/mask_generation_autoencoder.pt",
         },
         {
             "path": "models/mask_generation_diffusion_unet.pt",
-            "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/model_zoo/model_maisi_mask_generation_diffusion_unet_v2.pt",
-        },
-        {
-            "path": "configs/candidate_masks_flexible_size_and_spacing_3000.json",
-            "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/candidate_masks_flexible_size_and_spacing_3000.json",
+            "url": "https://developer.download.nvidia.com/assets/Clara/monai"
+            "/tutorials/model_zoo/model_maisi_mask_generation_diffusion_unet_v2.pt",
         },
         {
             "path": "configs/all_anatomy_size_condtions.json",
             "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/all_anatomy_size_condtions.json",
         },
         {
-            "path": "datasets/all_masks_flexible_size_and_spacing_3000.zip",
-            "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/model_zoo/model_maisi_all_masks_flexible_size_and_spacing_3000.zip",
+            "path": "datasets/all_masks_flexible_size_and_spacing_4000.zip",
+            "url": "https://developer.download.nvidia.com/assets/Clara/monai"
+            "/tutorials/all_masks_flexible_size_and_spacing_4000.zip",
         },
     ]
+
+    if maisi_version == "maisi3d-ddpm":
+        files += [
+            {
+                "path": "models/diff_unet_3d_ddpm.pt",
+                "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/model_zoo"
+                "/model_maisi_input_unet3d_data-all_steps1000size512ddpm_random_current_inputx_v1_alternative.pt",
+            },
+            {
+                "path": "models/controlnet_3d_ddpm.pt",
+                "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/model_zoo"
+                "/model_maisi_controlnet-20datasets-e20wl100fold0bc_noi_dia_fsize_current_alternative.pt",
+            },
+            {
+                "path": "configs/candidate_masks_flexible_size_and_spacing_3000.json",
+                "url": "https://developer.download.nvidia.com/assets/Clara/monai"
+                "/tutorials/candidate_masks_flexible_size_and_spacing_3000.json",
+            },
+        ]
+    elif maisi_version == "maisi3d-rflow":
+        files += [
+            {
+                "path": "models/diff_unet_3d_rflow.pt",
+                "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/"
+                "diff_unet_ckpt_rflow_epoch19350.pt",
+            },
+            {
+                "path": "models/controlnet_3d_rflow.pt",
+                "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/"
+                "controlnet_rflow_epoch60.pt",
+            },
+            {
+                "path": "configs/candidate_masks_flexible_size_and_spacing_4000.json",
+                "url": "https://developer.download.nvidia.com/assets/Clara/monai"
+                "/tutorials/candidate_masks_flexible_size_and_spacing_4000.json",
+            },
+        ]
+    else:
+        raise ValueError(
+            f"maisi_version has to be chosen from ['maisi3d-ddpm', 'maisi3d-rflow'], yet got {maisi_version}."
+        )
 
     for file in files:
         file["path"] = file["path"] if "datasets/" not in file["path"] else os.path.join(root_dir, file["path"])
@@ -175,25 +218,29 @@ def main():
     device = torch.device("cuda")
 
     autoencoder = define_instance(args, "autoencoder").to(device)
-    checkpoint_autoencoder = torch.load(args.trained_autoencoder_path)
+    checkpoint_autoencoder = torch.load(args.trained_autoencoder_path, weights_only=True)
     autoencoder.load_state_dict(checkpoint_autoencoder)
 
     diffusion_unet = define_instance(args, "diffusion_unet").to(device)
-    checkpoint_diffusion_unet = torch.load(args.trained_diffusion_path)
+    checkpoint_diffusion_unet = torch.load(args.trained_diffusion_path, weights_only=False)
     diffusion_unet.load_state_dict(checkpoint_diffusion_unet["unet_state_dict"], strict=True)
     scale_factor = checkpoint_diffusion_unet["scale_factor"].to(device)
 
     controlnet = define_instance(args, "controlnet").to(device)
-    checkpoint_controlnet = torch.load(args.trained_controlnet_path)
+    checkpoint_controlnet = torch.load(args.trained_controlnet_path, weights_only=False)
     monai.networks.utils.copy_model_state(controlnet, diffusion_unet.state_dict())
     controlnet.load_state_dict(checkpoint_controlnet["controlnet_state_dict"], strict=True)
 
     mask_generation_autoencoder = define_instance(args, "mask_generation_autoencoder").to(device)
-    checkpoint_mask_generation_autoencoder = torch.load(args.trained_mask_generation_autoencoder_path)
+    checkpoint_mask_generation_autoencoder = torch.load(
+        args.trained_mask_generation_autoencoder_path, weights_only=True
+    )
     mask_generation_autoencoder.load_state_dict(checkpoint_mask_generation_autoencoder)
 
     mask_generation_diffusion_unet = define_instance(args, "mask_generation_diffusion").to(device)
-    checkpoint_mask_generation_diffusion_unet = torch.load(args.trained_mask_generation_diffusion_path)
+    checkpoint_mask_generation_diffusion_unet = torch.load(
+        args.trained_mask_generation_diffusion_path, weights_only=False
+    )
     mask_generation_diffusion_unet.load_state_dict(checkpoint_mask_generation_diffusion_unet["unet_state_dict"])
     mask_generation_scale_factor = checkpoint_mask_generation_diffusion_unet["scale_factor"]
 
@@ -226,6 +273,7 @@ def main():
         image_output_ext=args.image_output_ext,
         label_output_ext=args.label_output_ext,
         spacing=args.spacing,
+        modality=args.modality,
         num_inference_steps=args.num_inference_steps,
         mask_generation_num_inference_steps=args.mask_generation_num_inference_steps,
         random_seed=args.random_seed,

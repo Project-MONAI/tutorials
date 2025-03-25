@@ -2,6 +2,7 @@
     "spatial_dims": 3,
     "image_channels": 1,
     "latent_channels": 4,
+    "include_body_region": true,
     "mask_generation_latent_shape": [
         4,
         64,
@@ -60,8 +61,8 @@
         ],
         "num_res_blocks": 2,
         "use_flash_attention": true,
-        "include_top_region_index_input": true,
-        "include_bottom_region_index_input": true,
+        "include_top_region_index_input": "@include_body_region",
+        "include_bottom_region_index_input": "@include_body_region",
         "include_spacing_input": true
     },
     "controlnet_def": {

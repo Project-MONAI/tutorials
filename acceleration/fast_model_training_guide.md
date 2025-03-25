@@ -120,7 +120,7 @@ nvtx.end_range(rng_train_dataload)
 optimizer.zero_grad()
 
 rng_train_forward = nvtx.start_range(message="forward", color="green")
-with torch.cuda.amp.autocast():
+with torch.autocast("cuda"):
     outputs = model(inputs)
     loss = loss_function(outputs, labels)
 nvtx.end_range(rng_train_forward)
@@ -231,7 +231,7 @@ NVIDIA GPUs have been widely applied in many areas of deep learning training and
 
 In 2017, NVIDIA researchers developed a methodology for mixed-precision training, which combined single-precision (FP32) with half-precision (e.g., FP16) format when training a network, and it achieved a similar accuracy as FP32 training using the same hyperparameters.
 
-For the PyTorch 1.6 release, developers at NVIDIA and Facebook moved mixed precision functionality into PyTorch core as the AMP package, `torch.cuda.amp`.
+For the PyTorch 1.6 release, developers at NVIDIA and Facebook moved mixed precision functionality into PyTorch core as the AMP package, `torch.autocast`.
 
 MONAI workflows can easily set `amp=True/False` in `SupervisedTrainer` or `SupervisedEvaluator` during training or evaluation to enable/disable AMP.
 We tried to compare the training speed of the spleen segmentation task if AMP ON/OFF on NVIDIA A100 GPU with CUDA 11 and obtained some benchmark results:

@@ -91,7 +91,7 @@ def main(tempdir):
         strides=(2, 2, 2, 2),
         num_res_units=2,
     ).to(device)
-    net.load_state_dict(torch.load("best_metric_model_segmentation3d_dict.pth"))
+    net.load_state_dict(torch.load("best_metric_model_segmentation3d_dict.pth", weights_only=True))
 
     net.eval()
     with torch.no_grad():

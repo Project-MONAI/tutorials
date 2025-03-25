@@ -119,7 +119,7 @@ def evaluate(args):
     # config mapping to expected GPU device
     map_location = {"cuda:0": f"cuda:{args.local_rank}"}
     # load model parameters to GPU device
-    model.load_state_dict(torch.load("final_model.pth", map_location=map_location))
+    model.load_state_dict(torch.load("final_model.pth", map_location=map_location, weights_only=True))
 
     model.eval()
     with torch.no_grad():

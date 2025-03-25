@@ -25,7 +25,7 @@ Cryo-ET is particularly powerful because it enables direct imaging of biological
 
 ## Required Data
 
-This tutorial is build upon the official Cryo ET competition data. 
+This tutorial is build upon the official Cryo ET competition data.
 It can be downloaded to a local ```DATA_FOLDER``` directly from kaggle (You will also need to follow the competition url and click "join competition" to accept the terms and conditions): https://www.kaggle.com/competitions/czii-cryo-et-object-identification/data .
 
 Alternativly it can be downloaded using the kaggle API (which can be installed via ```pip install kaggle```). If you decide to use the Kaggle API you need to create a Kaggle account and configure your token as described [here](https://github.com/Kaggle/kaggle-api/blob/main/docs/README.md#api-credentials) and then be allowed to download the data with the following command:
@@ -60,7 +60,7 @@ cd tutorials/competitions/kaggle/Cryo-ET/1st_place_solution/
 
 ```pip install -r requirements.txt```
 
-If you dont want to mount the DATA_FOLDER, or don't want to use docker, you have to adjust path to the data in ```configs/common_config.py``` with specifying```cfg.data_folder``` 
+If you dont want to mount the DATA_FOLDER, or don't want to use docker, you have to adjust path to the data in ```configs/common_config.py``` with specifying```cfg.data_folder```
 
 ## Training models
 

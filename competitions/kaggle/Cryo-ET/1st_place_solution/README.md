@@ -21,13 +21,32 @@ Investigating neurodegenerative diseases, cancer, and infectious diseases.
 Cryo-ET is particularly powerful because it enables direct imaging of biological systems without the need for staining or chemical fixation, preserving their native conformation.
 
 
+
+
+## Required Data
+
+This tutorial is build upon the official Cryo ET competition data. 
+It can be downloaded to a local ```DATA_FOLDER``` directly from kaggle (You will also need to follow the competition url and click "join competition" to accept the terms and conditions): https://www.kaggle.com/competitions/czii-cryo-et-object-identification/data .
+
+Alternativly it can be downloaded using the kaggle API (which can be installed via ```pip install kaggle```). If you decide to use the Kaggle API you need to create a Kaggle account and configure your token as described [here](https://github.com/Kaggle/kaggle-api/blob/main/docs/README.md#api-credentials) and then be allowed to download the data with the following command:
+
+```kaggle competitions download -c czii-cryo-et-object-identification -p DATA_FOLDER```
+
+Unzip the competition dataset to DATA_FOLDER
+
+```
+cd DATA_FOLDER
+unzip czii-cryo-et-object-identification.zip -d czii-cryo-et-object-identification/
+```
+
+
 ## Environment:
 
-To have a common environment its suggested to use the basic pytorch docker container and add a few pip packages on top
+To have a common environment its suggested to use the basic pytorch docker container and add a few pip packages on top. This tutorial is designed to use a docker container with DATA_FOLDER mounted under "/mount/cryo/data/"
 
 1. This tutorial was tested with tag 24.08-py3, i.e. run the following command to pull/ start the container.
 
-```docker run nvcr.io/nvidia/pytorch:24.08-py3```
+```docker run nvcr.io/nvidia/pytorch:24.08-py3 -v DATA_FOLDER:/mount/cryo/data/```
 
 2. Within the container clone this repository
 
@@ -41,17 +60,7 @@ cd tutorials/competitions/kaggle/Cryo-ET/1st_place_solution/
 
 ```pip install -r requirements.txt```
 
-## Required Data
-
-This tutorial is build upon the official Cryo ET competition data. It can be downloaded directly from kaggle: https://www.kaggle.com/competitions/czii-cryo-et-object-identification/data
-
-Alternativly it can be downloaded using the kaggle API (which can be installed via ```pip install kaggle```). If you decide to use the Kaggle API you need to create a Kaggle account and configure your token as described here.
-
-```kaggle competitions download -c czii-cryo-et-object-identification```
-
-and adjust path to it in ```configs/common_config.py``` with ```cfg.data_folder```.
-
-
+If you dont want to mount the DATA_FOLDER, or don't want to use docker, you have to adjust path to the data in ```configs/common_config.py``` with specifying```cfg.data_folder``` 
 
 ## Training models
 

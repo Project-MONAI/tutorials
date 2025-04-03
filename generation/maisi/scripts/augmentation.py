@@ -60,7 +60,7 @@ def dilate3d(input_tensor, erosion=3):
     return output.squeeze(0).squeeze(0)
 
 
-def augmentation_tumor_bone(pt_nda, output_size, random_seed):
+def augmentation_tumor_bone(pt_nda, output_size, random_seed=None):
     volume = pt_nda.squeeze(0)
     real_l_volume_ = torch.zeros_like(volume)
     real_l_volume_[volume == 128] = 1
@@ -113,7 +113,7 @@ def augmentation_tumor_bone(pt_nda, output_size, random_seed):
     return pt_nda
 
 
-def augmentation_tumor_liver(pt_nda, output_size, random_seed):
+def augmentation_tumor_liver(pt_nda, output_size, random_seed=None):
     volume = pt_nda.squeeze(0)
     real_l_volume_ = torch.zeros_like(volume)
     real_l_volume_[volume == 1] = 1
@@ -163,7 +163,7 @@ def augmentation_tumor_liver(pt_nda, output_size, random_seed):
     return pt_nda
 
 
-def augmentation_tumor_lung(pt_nda, output_size, random_seed):
+def augmentation_tumor_lung(pt_nda, output_size, random_seed=None):
     volume = pt_nda.squeeze(0)
     real_l_volume_ = torch.zeros_like(volume)
     real_l_volume_[volume == 23] = 1
@@ -227,7 +227,7 @@ def augmentation_tumor_lung(pt_nda, output_size, random_seed):
     return pt_nda
 
 
-def augmentation_tumor_pancreas(pt_nda, output_size, random_seed):
+def augmentation_tumor_pancreas(pt_nda, output_size, random_seed=None):
     volume = pt_nda.squeeze(0)
     real_l_volume_ = torch.zeros_like(volume)
     real_l_volume_[volume == 4] = 1
@@ -277,7 +277,7 @@ def augmentation_tumor_pancreas(pt_nda, output_size, random_seed):
     return pt_nda
 
 
-def augmentation_tumor_colon(pt_nda, output_size, random_seed):
+def augmentation_tumor_colon(pt_nda, output_size, random_seed=None):
     volume = pt_nda.squeeze(0)
     real_l_volume_ = torch.zeros_like(volume)
     real_l_volume_[volume == 27] = 1
@@ -335,7 +335,7 @@ def augmentation_tumor_colon(pt_nda, output_size, random_seed):
     return pt_nda
 
 
-def augmentation_body(pt_nda, random_seed):
+def augmentation_body(pt_nda, random_seed=None):
     volume = pt_nda.squeeze(0)
 
     zoom = RandZoom(min_zoom=0.99, max_zoom=1.01, mode="nearest", align_corners=None, prob=1.0)
@@ -347,7 +347,7 @@ def augmentation_body(pt_nda, random_seed):
     return pt_nda
 
 
-def augmentation(pt_nda, output_size, random_seed):
+def augmentation(pt_nda, output_size, random_seed=None):
     label_list = torch.unique(pt_nda)
     label_list = list(label_list.cpu().numpy())
 

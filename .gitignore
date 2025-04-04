@@ -157,3 +157,5 @@ auto3dseg/notebooks/datalist.json
 *.png
 *.np*
 *.pt
+competitions/kaggle/Cryo-ET/1st_place_solution/data/
+competitions/kaggle/Cryo-ET/1st_place_solution/results/

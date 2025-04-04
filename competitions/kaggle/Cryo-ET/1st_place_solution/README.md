@@ -20,47 +20,61 @@ Understanding interactions between viruses and host cells.
 Investigating neurodegenerative diseases, cancer, and infectious diseases.
 Cryo-ET is particularly powerful because it enables direct imaging of biological systems without the need for staining or chemical fixation, preserving their native conformation.
 
+## Requirements
+
+- docker
+- git
+- kaggle API credentials
+
+# Running the tutorial
+
+1. Download the tutorial code from the ProjectMONAI repository.
+
+```bash
+git clone https://github.com/Project-MONAI/tutorials.git
+cd tutorials/competitions/kaggle/Cryo-ET/1st_place_solution/
+```
+
+2. Run container to start the tutorial.
+
+```bash
+docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 -v $PWD:/workspace/ -it nvcr.io/nvidia/pytorch:24.08-py3 /bin/bash
+```
+
+if you want to use the kaggle API to download the data, you need to mount your kaggle.json file into the container. You can do this by adding the following flag to the docker run command:
+
+```bash
+docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 -v $PWD:/workspace/ -v $HOME/.config/kaggle/:/root/.kaggle -it nvcr.io/nvidia/pytorch:24.08-py3 /bin/bash
+```
+
+3. Install necessary additional pip packages inside the container by running the following command on the prompt you get after running the previous command:
 
 
+```bash
+pip install -r requirements.txt
+```
 
-## Required Data
+4. Download the data
 
 This tutorial is build upon the official Cryo ET competition data.
 It can be downloaded to a local ```DATA_FOLDER``` directly from kaggle (You will also need to follow the competition url and click "join competition" to accept the terms and conditions): https://www.kaggle.com/competitions/czii-cryo-et-object-identification/data .
 
 Alternativly it can be downloaded using the kaggle API (which can be installed via ```pip install kaggle```). If you decide to use the Kaggle API you need to create a Kaggle account and configure your token as described [here](https://github.com/Kaggle/kaggle-api/blob/main/docs/README.md#api-credentials) and then be allowed to download the data with the following command:
 
-```kaggle competitions download -c czii-cryo-et-object-identification -p DATA_FOLDER```
+```bash
+export DATA_FOLDER=$PWD/data
+mkdir -p $DATA_FOLDER
+kaggle competitions download -c czii-cryo-et-object-identification -p $DATA_FOLDER
+```
 
 Unzip the competition dataset to DATA_FOLDER
 
-```
-cd DATA_FOLDER
+```bash
+cd $DATA_FOLDER
 unzip czii-cryo-et-object-identification.zip -d czii-cryo-et-object-identification/
 ```
 
-
-## Environment:
-
-To have a common environment its suggested to use the basic pytorch docker container and add a few pip packages on top. This tutorial is designed to use a docker container with DATA_FOLDER mounted under "/mount/cryo/data/"
-
-1. This tutorial was tested with tag 24.08-py3, i.e. run the following command to pull/ start the container.
-
-```docker run nvcr.io/nvidia/pytorch:24.08-py3 -v DATA_FOLDER:/mount/cryo/data/```
-
-2. Within the container clone this repository
-
-```
-git clone https://github.com/ProjectMONAI/tutorials
-cd tutorials/competitions/kaggle/Cryo-ET/1st_place_solution/
-```
-
-
-3. And install necessary additional pip packages via
-
-```pip install -r requirements.txt```
-
-If you dont want to mount the DATA_FOLDER, or don't want to use docker, you have to adjust path to the data in ```configs/common_config.py``` with specifying```cfg.data_folder```
+If you change the DATA_FOLDER location, have to adjust path to the `cfg.data_folder` data at `configs/common_config.py`.
 
 ## Training models
 
@@ -75,9 +89,13 @@ We solve the competition with a 3D-segmentation approach leveraging [MONAI's Fle
 
 We provide three different configurations which differ only in the used backbone and output feature maps. The configuration files are .py files and located under ```configs``` and share all other hyper-parameters. Each hyperparameter can be overwriten by adding a flag to the training command. To train a resnet34 version of our segmentation model simply run
 
-```python train.py -C cfg_resnet34 --output_dir WHATEVERISYOUROUTPUTDIR```
+```bash
+export RESULTS=$PWD/results
+mkdir -p $RESULTS
+python train.py -C cfg_resnet34 --output_dir $RESULTS
+```
 
-This will save checkpoints under the specified WHATEVERISYOUROUTPUTDIR when training is finished.
+This will save checkpoints under the specified $RESULTS when training is finished.
 By default models are trained using bfloat16 which requires a GPU capable of that. Alternatively you can set ```cfg.bf16=False``` or overwrite as flag ```--bf16 False``` when running ```train.py ```.
 
 ### Replicating 1st place solution (segmentation part)

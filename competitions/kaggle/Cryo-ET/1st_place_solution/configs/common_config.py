@@ -95,7 +95,7 @@ cfg.disable_tqdm = False
 
 # paths
 
-cfg.data_folder = "/mount/cryo/data/czii-cryo-et-object-identification/train/static/ExperimentRuns/"
+cfg.data_folder = "/workspace/data/czii-cryo-et-object-identification/train/static/ExperimentRuns/"
 cfg.train_df = "train_folded_v1.csv"
 
 

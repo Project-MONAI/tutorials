@@ -31,7 +31,7 @@ def run(config_file: Union[str, Sequence[str]], ckpt_path: str):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # instantialize the components
     model = parser.get_parsed_content("network").to(device)
-    model.load_state_dict(torch.load(ckpt_path))
+    model.load_state_dict(torch.load(ckpt_path, weights_only=True))
 
     dataloader = parser.get_parsed_content("dataloader")
     if len(dataloader) == 0:

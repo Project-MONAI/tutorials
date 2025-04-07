@@ -9,7 +9,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nibabel as nib
 import numpy as np
 
 
@@ -110,8 +109,11 @@ def is_outlier(statistics, image_data, label_data, label_int_dict):
 
     for label_name, stats in statistics.items():
         # Get the thresholds from the statistics
-        low_thresh = stats["sigma_6_low"]  # or "sigma_12_low" depending on your needs
-        high_thresh = stats["sigma_6_high"]  # or "sigma_12_high" depending on your needs
+        low_thresh = min(stats["sigma_6_low"], stats["percentile_0_5"])  # or "sigma_12_low" depending on your needs
+        high_thresh = max(stats["sigma_6_high"], stats["percentile_99_5"])  # or "sigma_12_high" depending on your needs
+
+        if label_name == "bone":
+            high_thresh = 1000.0
 
         # Retrieve the corresponding label integers
         labels = label_int_dict.get(label_name, [])

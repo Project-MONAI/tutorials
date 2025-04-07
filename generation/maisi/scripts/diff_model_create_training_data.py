@@ -17,12 +17,11 @@ import logging
 import os
 from pathlib import Path
 
+import monai
 import nibabel as nib
 import numpy as np
 import torch
 import torch.distributed as dist
-
-import monai
 from monai.transforms import Compose
 from monai.utils import set_determinism
 

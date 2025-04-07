@@ -71,7 +71,7 @@ class DynUNetTrainer(SupervisedTrainer):
         self.network.train()
         self.optimizer.zero_grad()
         if self.amp and self.scaler is not None:
-            with torch.cuda.amp.autocast():
+            with torch.autocast("cuda"):
                 _compute_pred_loss()
             self.scaler.scale(engine.state.output[Keys.LOSS]).backward()
             self.scaler.unscale_(self.optimizer)

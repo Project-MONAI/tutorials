@@ -154,7 +154,7 @@ def main():
             inference_inputs = [inference_data_i["image"].to(device) for inference_data_i in inference_data]
 
             if amp:
-                with torch.cuda.amp.autocast():
+                with torch.autocast("cuda"):
                     inference_outputs = detector(inference_inputs, use_inferer=use_inferer)
             else:
                 inference_outputs = detector(inference_inputs, use_inferer=use_inferer)

@@ -55,7 +55,7 @@ class InferClass:
         batch_data = list_data_collate([batch_data])
         infer_image = batch_data["image"].to(self.device)
 
-        with torch.cuda.amp.autocast():
+        with torch.autocast("cuda"):
             batch_data["pred"] = sliding_window_inference(
                 infer_image,
                 self.patch_size_valid,

@@ -214,25 +214,25 @@ def convert_mesh_to_usd(input_file, output_file):
                 s = 0.7 + 0.3 * random.random()  # Saturation between 0.7-1.0
                 v = 0.7 + 0.3 * random.random()  # Value between 0.7-1.0
                 r, g, b = colorsys.hsv_to_rgb(h, s, v)
-                
+
                 # Create a material with the random color
                 mat_name = f"{node_name}_material"
                 mat_path = f"{materials_path}/{mat_name}"
                 material = UsdShade.Material.Define(stage, mat_path)
-                
+
                 # Create shader
                 shader = UsdShade.Shader.Define(stage, f"{mat_path}/PreviewSurface")
                 shader.CreateIdAttr("UsdPreviewSurface")
-                
+
                 # Set the random color
                 shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(r, g, b))
                 shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.4)
-                
+
                 # Connect shader to material
                 material_output = material.CreateOutput("surface", Sdf.ValueTypeNames.Token)
                 shader_output = shader.CreateOutput("surface", Sdf.ValueTypeNames.Token)
                 material_output.ConnectToSource(shader_output)
-                
+
                 # Bind material to mesh
                 UsdShade.MaterialBindingAPI(usd_mesh).Bind(material)
 

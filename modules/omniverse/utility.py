@@ -204,9 +204,11 @@ def convert_mesh_to_usd(input_file, output_file):
                 # Create a unique path for each mesh
                 node_path = f"/World/{node_name}"
                 xform = UsdGeom.Xform.Define(stage, node_path)
+                # Define the Mesh under the Xform
+                mesh_path = f"{node_path}/Mesh"
+                usd_mesh = UsdGeom.Mesh.Define(stage, mesh_path)
                 # get the geometry of the node
                 geometry = mesh.geometry[geom_name]
-                usd_mesh = UsdGeom.Mesh.Define(stage, node_path)
 
                 # Create a random color for this mesh
                 # Using HSV for better color distribution

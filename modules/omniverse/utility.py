@@ -38,6 +38,13 @@ def convert_to_mesh(
     reader.SetFileName(segmentation_path)
     reader.Update()
 
+    nifti_transform_matrix = reader.GetSFormMatrix()
+    if nifti_transform_matrix is None or nifti_transform_matrix.IsIdentity():
+        nifti_transform_matrix = vtk.vtkMatrix4x4()
+
+    nifti_transform = vtk.vtkTransform()
+    nifti_transform.SetMatrix(nifti_transform_matrix)
+
     label_values = {label_value: None} if isinstance(label_value, int) else label_value
     if len(label_values.keys()) > 1:
         renderer = vtk.vtkRenderer()
@@ -98,7 +105,13 @@ def convert_to_mesh(
         decimatedNormals.ConsistencyOn()
         decimatedNormals.Update()
 
-        # Step 7: convert to LPS
+        # Step 7: Apply NIFTI SForm transform
+        nifti_transformer = vtk.vtkTransformPolyDataFilter()
+        nifti_transformer.SetTransform(nifti_transform)
+        nifti_transformer.SetInputConnection(decimatedNormals.GetOutputPort())
+        nifti_transformer.Update()
+
+        # Step 8: convert to LPS (apply after NIFTI transform)
         ras2lps = vtk.vtkMatrix4x4()
         ras2lps.SetElement(0, 0, -1)
         ras2lps.SetElement(1, 1, -1)
@@ -106,7 +119,7 @@ def convert_to_mesh(
         ras2lpsTransform.SetMatrix(ras2lps)
         transformer = vtk.vtkTransformPolyDataFilter()
         transformer.SetTransform(ras2lpsTransform)
-        transformer.SetInputConnection(decimatedNormals.GetOutputPort())
+        transformer.SetInputConnection(nifti_transformer.GetOutputPort())
         transformer.Update()
 
         if len(label_values.keys()) > 1:

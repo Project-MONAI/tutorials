@@ -14,10 +14,12 @@ from __future__ import annotations
 import os
 import vtk
 import json
-from pxr import Usd, UsdGeom, Gf, Sdf
+from pxr import Usd, UsdGeom, Gf, Sdf, UsdShade
 import trimesh
 import numpy as np
 import matplotlib.pyplot as plt
+import random
+import colorsys
 
 
 def convert_to_mesh(
@@ -186,30 +188,71 @@ def convert_mesh_to_usd(input_file, output_file):
 
     # Create a new USD stage
     stage = Usd.Stage.CreateNew(output_file)
+    root = UsdGeom.Xform.Define(stage, "/World")
+    stage.SetDefaultPrim(root.GetPrim())
+    materials_path = "/World/Materials"
+    UsdGeom.Scope.Define(stage, materials_path)
 
     # If the mesh is a Scene, process each geometry
     if isinstance(mesh, trimesh.Scene):
-        for name, geometry in mesh.geometry.items():
-            # Create a unique path for each mesh
-            mesh_path = f"/{name}"
-            usd_mesh = UsdGeom.Mesh.Define(stage, mesh_path)
+        for node_name in mesh.graph.nodes:
+            if node_name == "world":
+                continue
+            geom_name = mesh.graph.get(node_name)[1]
+            if geom_name is not None and geom_name.startswith("mesh"):
+                print(f"Processing mesh: {node_name} {geom_name}")
+                # Create a unique path for each mesh
+                node_path = f"/World/{node_name}"
+                xform = UsdGeom.Xform.Define(stage, node_path)
+                # Define the Mesh under the Xform
+                mesh_path = f"{node_path}/Mesh"
+                usd_mesh = UsdGeom.Mesh.Define(stage, mesh_path)
+                # get the geometry of the node
+                geometry = mesh.geometry[geom_name]
 
-            # Set vertex positions
-            usd_mesh.GetPointsAttr().Set([Gf.Vec3f(*vertex) for vertex in geometry.vertices])
+                # Create a random color for this mesh
+                # Using HSV for better color distribution
+                h = random.random()  # Random hue
+                s = 0.7 + 0.3 * random.random()  # Saturation between 0.7-1.0
+                v = 0.7 + 0.3 * random.random()  # Value between 0.7-1.0
+                r, g, b = colorsys.hsv_to_rgb(h, s, v)
 
-            # Set face indices and counts
-            face_vertex_indices = geometry.faces.flatten().tolist()
-            face_vertex_counts = [len(face) for face in geometry.faces]
+                # Create a material with the random color
+                mat_name = f"{node_name}_material"
+                mat_path = f"{materials_path}/{mat_name}"
+                material = UsdShade.Material.Define(stage, mat_path)
 
-            usd_mesh.GetFaceVertexIndicesAttr().Set(face_vertex_indices)
-            usd_mesh.GetFaceVertexCountsAttr().Set(face_vertex_counts)
+                # Create shader
+                shader = UsdShade.Shader.Define(stage, f"{mat_path}/PreviewSurface")
+                shader.CreateIdAttr("UsdPreviewSurface")
 
-            # Optionally, set normals
-            if geometry.vertex_normals is not None:
-                usd_mesh.GetNormalsAttr().Set([Gf.Vec3f(*normal) for normal in geometry.vertex_normals])
-                usd_mesh.SetNormalsInterpolation("vertex")
+                # Set the random color
+                shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(r, g, b))
+                shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.4)
 
-            # Handle materials and other attributes if needed
+                # Connect shader to material
+                material_output = material.CreateOutput("surface", Sdf.ValueTypeNames.Token)
+                shader_output = shader.CreateOutput("surface", Sdf.ValueTypeNames.Token)
+                material_output.ConnectToSource(shader_output)
+
+                # Bind material to mesh
+                UsdShade.MaterialBindingAPI(usd_mesh).Bind(material)
+
+                # Set vertex positions
+                usd_mesh.GetPointsAttr().Set([Gf.Vec3f(*vertex) for vertex in geometry.vertices])
+
+                # Set face indices and counts
+                face_vertex_indices = geometry.faces.flatten().tolist()
+                face_vertex_counts = [len(face) for face in geometry.faces]
+
+                usd_mesh.GetFaceVertexIndicesAttr().Set(face_vertex_indices)
+                usd_mesh.GetFaceVertexCountsAttr().Set(face_vertex_counts)
+
+                # Optionally, set normals
+                if geometry.vertex_normals is not None:
+                    usd_mesh.GetNormalsAttr().Set([Gf.Vec3f(*normal) for normal in geometry.vertex_normals])
+                    usd_mesh.SetNormalsInterpolation("vertex")
+
     else:
         # It's a single mesh, proceed as before
         usd_mesh = UsdGeom.Mesh.Define(stage, "/Mesh")

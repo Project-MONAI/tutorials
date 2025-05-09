@@ -92,7 +92,7 @@ train_transforms = Compose(
                 clip=True,
             )
         ),
-        Range()(CropForegroundd(keys=["image", "label"], source_key="image")),
+        Range()(CropForegroundd(keys=["image", "label"], source_key="image", allow_smaller=True)),
         Range("RandCrop")(
             RandCropByPosNegLabeld(
                 keys=["image", "label"],
@@ -127,7 +127,7 @@ val_transforms = Compose(
             b_max=1.0,
             clip=True,
         ),
-        CropForegroundd(keys=["image", "label"], source_key="image"),
+        CropForegroundd(keys=["image", "label"], source_key="image", allow_smaller=True),
         EnsureTyped(keys=["image", "label"]),
     ]
 )

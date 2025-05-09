@@ -31,9 +31,10 @@ class HecktorCropNeckRegion(CropForegroundd):
         source_key="image",
         box_size=[200, 200, 310],
         allow_missing_keys=True,
+        allow_smaller=True,
         **kwargs,
     ) -> None:
-        super().__init__(keys=keys, source_key=source_key, allow_missing_keys=allow_missing_keys, **kwargs)
+        super().__init__(keys=keys, source_key=source_key, allow_missing_keys=allow_missing_keys, allow_smaller=allow_smaller, **kwargs)
         self.box_size = box_size
 
     def __call__(self, data, **kwargs):

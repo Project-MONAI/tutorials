@@ -143,7 +143,12 @@ class DintsAlgo(BundleAlgo):
                         "b_max": 1.0,
                         "clip": True,
                     },
-                    {"_target_": "CropForegroundd", "keys": ["@image_key", "@label_key"], "source_key": "@image_key"},
+                    {
+                        "_target_": "CropForegroundd",
+                        "keys": ["@image_key", "@label_key"],
+                        "source_key": "@image_key",
+                        "allow_smaller:" True,
+                    },
                 ],
             }
 

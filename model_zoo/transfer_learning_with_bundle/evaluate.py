@@ -37,7 +37,6 @@ from monai.transforms import (
     AsDiscrete,
     AsDiscreted,
     Compose,
-    CropForegroundd,
     EnsureChannelFirstd,
     Invertd,
     LoadImaged,

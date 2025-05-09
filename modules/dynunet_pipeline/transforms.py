@@ -277,7 +277,7 @@ class PreprocessAnisotropic(MapTransform):
         self.mean = normalize_values[0]
         self.std = normalize_values[1]
         self.training = False
-        self.crop_foreg = CropForegroundd(keys=["image", "label"], source_key="image")
+        self.crop_foreg = CropForegroundd(keys=["image", "label"], source_key="image", allow_smaller=True)
         self.normalize_intensity = NormalizeIntensity(nonzero=True, channel_wise=True)
         if model_mode in ["train"]:
             self.training = True
@@ -310,7 +310,7 @@ class PreprocessAnisotropic(MapTransform):
             image, label = cropped_data["image"], cropped_data["label"]
         else:
             d["original_shape"] = np.array(image.shape[1:])
-            box_start, box_end = generate_spatial_bounding_box(image)
+            box_start, box_end = generate_spatial_bounding_box(image, allow_smaller=True)
             image = SpatialCrop(roi_start=box_start, roi_end=box_end)(image)
             d["bbox"] = np.vstack([box_start, box_end])
             d["crop_shape"] = np.array(image.shape[1:])

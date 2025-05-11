@@ -92,7 +92,7 @@ def get_pre_transforms(roi_size, model_size, dimensions):
     t = [
         LoadImaged(keys=("image", "label")),
         EnsureChannelFirstd(keys=("image", "label"), channel_dim="no_channel"),
-        SpatialCropForegroundd(keys=("image", "label"), source_key="label", spatial_size=roi_size),
+        SpatialCropForegroundd(keys=("image", "label"), source_key="label", spatial_size=roi_size, allow_smaller=True),
         Resized(keys=("image", "label"), spatial_size=model_size, mode=("area", "nearest")),
         NormalizeIntensityd(keys="image", subtrahend=208.0, divisor=388.0),
     ]

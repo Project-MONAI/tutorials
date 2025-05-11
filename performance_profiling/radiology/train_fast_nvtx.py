@@ -96,7 +96,7 @@ train_transforms = Compose(
                 clip=True,
             )
         ),
-        Range()(CropForegroundd(keys=["image", "label"], source_key="image")),
+        Range()(CropForegroundd(keys=["image", "label"], source_key="image", allow_smaller=True)),
         # pre-compute foreground and background indexes
         # and cache them to accelerate training
         Range("Indexing")(
@@ -142,7 +142,7 @@ val_transforms = Compose(
             b_max=1.0,
             clip=True,
         ),
-        CropForegroundd(keys=["image", "label"], source_key="image"),
+        CropForegroundd(keys=["image", "label"], source_key="image", allow_smaller=True),
         EnsureTyped(keys=["image", "label"]),
         ToDeviced(keys=["image", "label"], device="cuda:0"),
     ]

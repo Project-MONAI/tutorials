@@ -42,7 +42,7 @@ def get_task_transforms(mode, task_id, pos_sample_num, neg_sample_num, num_sampl
         keys = ["image"]
 
     load_transforms = [
-        LoadImaged(keys=keys),
+        LoadImaged(keys=keys, image_only=False, ensure_channel_first=True),
         EnsureChannelFirstd(keys=keys),
     ]
     # 2. sampling
@@ -284,6 +284,8 @@ class PreprocessAnisotropic(MapTransform):
 
     def calculate_new_shape(self, spacing, shape):
         spacing_ratio = np.array(spacing) / np.array(self.target_spacing)
+        if len(shape) == 4:  # If shape includes channel dimension
+            shape = shape[1:]
         new_shape = (spacing_ratio * np.array(shape)).astype(int).tolist()
         return new_shape
 

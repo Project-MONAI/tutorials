@@ -48,7 +48,7 @@ class InferenceWorkflow(BundleWorkflow):
     """
 
     def __init__(self, dataset_dir: str = "./infer"):
-        super().__init__(workflow="inference")
+        super().__init__(workflow_type="inference")
         print_config()
         # set root log level to INFO and init a evaluation logger, will be used in `StatsHandler`
         logging.basicConfig(stream=sys.stdout, level=logging.INFO)

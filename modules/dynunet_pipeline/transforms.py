@@ -42,7 +42,7 @@ def get_task_transforms(mode, task_id, pos_sample_num, neg_sample_num, num_sampl
         keys = ["image"]
 
     load_transforms = [
-        LoadImaged(keys=keys, image_only=False, ensure_channel_first=True),
+        LoadImaged(keys=keys, image_only=False),
         EnsureChannelFirstd(keys=keys),
     ]
     # 2. sampling

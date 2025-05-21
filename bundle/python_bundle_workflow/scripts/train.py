@@ -67,7 +67,7 @@ class TrainWorkflow(BundleWorkflow):
     """
 
     def __init__(self, dataset_dir: str = "./train"):
-        super().__init__(workflow="train")
+        super().__init__(workflow_type="train")
         print_config()
         # set root log level to INFO and init a train logger, will be used in `StatsHandler`
         logging.basicConfig(stream=sys.stdout, level=logging.INFO)

@@ -117,13 +117,13 @@ def main():
     if args.resume_ckpt:
         map_location = {"cuda:%d" % 0: "cuda:%d" % rank}
         try:
-            autoencoder.load_state_dict(torch.load(trained_g_path, map_location=map_location))
+            autoencoder.load_state_dict(torch.load(trained_g_path, map_location=map_location, weights_only=True))
             print(f"Rank {rank}: Load trained autoencoder from {trained_g_path}")
         except:
             print(f"Rank {rank}: Train autoencoder from scratch.")
 
         try:
-            discriminator.load_state_dict(torch.load(trained_d_path, map_location=map_location))
+            discriminator.load_state_dict(torch.load(trained_d_path, map_location=map_location, weights_only=True))
             print(f"Rank {rank}: Load trained discriminator from {trained_d_path}")
         except:
             print(f"Rank {rank}: Train discriminator from scratch.")

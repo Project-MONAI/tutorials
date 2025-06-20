@@ -77,7 +77,7 @@ class MonaiAlgo(tools.algo.Algo):
 
     def load_model(self, path):
         model, optimizer = self._get_model()
-        data = torch.load(path)
+        data = torch.load(path, weights_only=True)
         model.load_state_dict(data["model_state_dict"])
         optimizer.load_state_dict(data["optimizer_state_dict"])
         return model, optimizer

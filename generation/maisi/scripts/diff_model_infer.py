@@ -21,14 +21,15 @@ import nibabel as nib
 import numpy as np
 import torch
 import torch.distributed as dist
-from tqdm import tqdm
-
 from monai.inferers import sliding_window_inference
+from monai.inferers.inferer import SlidingWindowInferer
+from monai.networks.schedulers import RFlowScheduler
 from monai.utils import set_determinism
+from tqdm import tqdm
 
 from .diff_model_setting import initialize_distributed, load_config, setup_logging
 from .sample import ReconModel, check_input
-from .utils import define_instance
+from .utils import define_instance, dynamic_infer
 
 
 def set_random_seed(seed: int) -> int:
@@ -94,8 +95,11 @@ def prepare_tensors(args: argparse.Namespace, device: torch.device) -> tuple:
     top_region_index_tensor = torch.from_numpy(top_region_index_tensor[np.newaxis, :]).half().to(device)
     bottom_region_index_tensor = torch.from_numpy(bottom_region_index_tensor[np.newaxis, :]).half().to(device)
     spacing_tensor = torch.from_numpy(spacing_tensor[np.newaxis, :]).half().to(device)
+    modality_tensor = args.diffusion_unet_inference["modality"] * torch.ones(
+        (len(spacing_tensor)), dtype=torch.long
+    ).to(device)
 
-    return top_region_index_tensor, bottom_region_index_tensor, spacing_tensor
+    return top_region_index_tensor, bottom_region_index_tensor, spacing_tensor, modality_tensor
 
 
 def run_inference(
@@ -107,6 +111,7 @@ def run_inference(
     top_region_index_tensor: torch.Tensor,
     bottom_region_index_tensor: torch.Tensor,
     spacing_tensor: torch.Tensor,
+    modality_tensor: torch.Tensor,
     output_size: tuple,
     divisor: int,
     logger: logging.Logger,
@@ -123,6 +128,7 @@ def run_inference(
         top_region_index_tensor (torch.Tensor): Top region index tensor.
         bottom_region_index_tensor (torch.Tensor): Bottom region index tensor.
         spacing_tensor (torch.Tensor): Spacing tensor.
+        modality_tensor (torch.Tensor): Modality tensor.
         output_size (tuple): Output size of the synthetic image.
         divisor (int): Divisor for downsample level.
         logger (logging.Logger): Logger for logging information.
@@ -130,6 +136,9 @@ def run_inference(
     Returns:
         np.ndarray: Generated synthetic image data.
     """
+    include_body_region = unet.include_top_region_index_input
+    include_modality = unet.num_class_embeds is not None
+
     noise = torch.randn(
         (
             1,
@@ -144,38 +153,64 @@ def run_inference(
 
     image = noise
     noise_scheduler = define_instance(args, "noise_scheduler")
-    noise_scheduler.set_timesteps(num_inference_steps=args.diffusion_unet_inference["num_inference_steps"])
+    if isinstance(noise_scheduler, RFlowScheduler):
+        noise_scheduler.set_timesteps(
+            num_inference_steps=args.diffusion_unet_inference["num_inference_steps"],
+            input_img_size_numel=torch.prod(torch.tensor(noise.shape[2:])),
+        )
+    else:
+        noise_scheduler.set_timesteps(num_inference_steps=args.diffusion_unet_inference["num_inference_steps"])
 
     recon_model = ReconModel(autoencoder=autoencoder, scale_factor=scale_factor).to(device)
     autoencoder.eval()
     unet.eval()
 
+    all_timesteps = noise_scheduler.timesteps
+    all_next_timesteps = torch.cat((all_timesteps[1:], torch.tensor([0], dtype=all_timesteps.dtype)))
+    progress_bar = tqdm(
+        zip(all_timesteps, all_next_timesteps),
+        total=min(len(all_timesteps), len(all_next_timesteps)),
+    )
     with torch.amp.autocast("cuda", enabled=True):
-        for t in tqdm(noise_scheduler.timesteps, ncols=110):
-            model_output = unet(
-                x=image,
-                timesteps=torch.Tensor((t,)).to(device),
-                top_region_index_tensor=top_region_index_tensor,
-                bottom_region_index_tensor=bottom_region_index_tensor,
-                spacing_tensor=spacing_tensor,
-            )
-            image, _ = noise_scheduler.step(model_output, t, image)
+        for t, next_t in progress_bar:
+            # Create a dictionary to store the inputs
+            unet_inputs = {
+                "x": image,
+                "timesteps": torch.Tensor((t,)).to(device),
+                "spacing_tensor": spacing_tensor,
+            }
 
-        synthetic_images = sliding_window_inference(
-            inputs=image,
-            roi_size=(
-                min(output_size[0] // divisor // 4 * 3, 96),
-                min(output_size[1] // divisor // 4 * 3, 96),
-                min(output_size[2] // divisor // 4 * 3, 96),
-            ),
+            # Add extra arguments if include_body_region is True
+            if include_body_region:
+                unet_inputs.update(
+                    {
+                        "top_region_index_tensor": top_region_index_tensor,
+                        "bottom_region_index_tensor": bottom_region_index_tensor,
+                    }
+                )
+
+            if include_modality:
+                unet_inputs.update(
+                    {
+                        "class_labels": modality_tensor,
+                    }
+                )
+            model_output = unet(**unet_inputs)
+            if not isinstance(noise_scheduler, RFlowScheduler):
+                image, _ = noise_scheduler.step(model_output, t, image)  # type: ignore
+            else:
+                image, _ = noise_scheduler.step(model_output, t, image, next_t)  # type: ignore
+
+        inferer = SlidingWindowInferer(
+            roi_size=[80, 80, 80],
             sw_batch_size=1,
-            predictor=recon_model,
+            progress=True,
             mode="gaussian",
-            overlap=2.0 / 3.0,
+            overlap=0.4,
             sw_device=device,
             device=device,
         )
-
+        synthetic_images = dynamic_infer(inferer, recon_model, image)
         data = synthetic_images.squeeze().cpu().detach().numpy()
         a_min, a_max, b_min, b_max = -1000, 1000, 0, 1
         data = (data - b_min) / (b_max - b_min) * (a_max - a_min) + a_min
@@ -256,7 +291,7 @@ def diff_model_infer(env_config_path: str, model_config_path: str, model_def_pat
     divisor = 2 ** (num_downsample_level - 2)
     logger.info(f"num_downsample_level -> {num_downsample_level}, divisor -> {divisor}.")
 
-    top_region_index_tensor, bottom_region_index_tensor, spacing_tensor = prepare_tensors(args, device)
+    top_region_index_tensor, bottom_region_index_tensor, spacing_tensor, modality_tensor = prepare_tensors(args, device)
     data = run_inference(
         args,
         device,
@@ -266,6 +301,7 @@ def diff_model_infer(env_config_path: str, model_config_path: str, model_def_pat
         top_region_index_tensor,
         bottom_region_index_tensor,
         spacing_tensor,
+        modality_tensor,
         output_size,
         divisor,
         logger,

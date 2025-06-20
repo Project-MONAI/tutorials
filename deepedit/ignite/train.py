@@ -219,7 +219,7 @@ def create_trainer(args):
     if args.resume:
         logging.info("{}:: Loading Network...".format(local_rank))
         map_location = {"cuda:0": "cuda:{}".format(local_rank)}
-        network.load_state_dict(torch.load(args.model_filepath, map_location=map_location))
+        network.load_state_dict(torch.load(args.model_filepath, map_location=map_location, weights_only=True))
 
     # define event-handlers for engine
     val_handlers = [
@@ -333,7 +333,7 @@ def run(args):
         network = get_network(args.network, args.labels, args.spatial_size).to(device)
 
         map_location = {"cuda:0": "cuda:{}".format(args.local_rank)}
-        network.load_state_dict(torch.load(args.input, map_location=map_location))
+        network.load_state_dict(torch.load(args.input, map_location=map_location, weights_only=True))
 
         logging.info("{}:: Saving TorchScript Model".format(args.local_rank))
         model_ts = torch.jit.script(network)

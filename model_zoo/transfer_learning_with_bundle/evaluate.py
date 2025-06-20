@@ -37,7 +37,6 @@ from monai.transforms import (
     AsDiscrete,
     AsDiscreted,
     Compose,
-    CropForegroundd,
     EnsureChannelFirstd,
     Invertd,
     LoadImaged,
@@ -117,7 +116,7 @@ def main(tempdir, load_pretrained_ckpt=False):
         num_res_units=2,
         norm=Norm.BATCH,
     ).to(device)
-    model.load_state_dict(torch.load(save_model))
+    model.load_state_dict(torch.load(save_model, weights_only=True))
     dice_metric = DiceMetric(include_background=False, reduction="mean")
 
     model.eval()

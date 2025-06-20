@@ -29,6 +29,7 @@
             0
         ],
         "random_seed": 0,
-        "num_inference_steps": 10
+        "num_inference_steps": 10,
+        "modality": 1
     }
 }

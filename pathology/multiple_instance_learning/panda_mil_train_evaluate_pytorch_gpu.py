@@ -39,7 +39,7 @@ from monai.transforms import (
     ToTensord,
 )
 from sklearn.metrics import cohen_kappa_score
-from torch.cuda.amp import GradScaler, autocast
+from torch import GradScaler, autocast
 from torch.utils.data.dataloader import default_collate
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.tensorboard import SummaryWriter
@@ -63,7 +63,7 @@ def train_epoch(model, loader, optimizer, scaler, epoch, args):
 
         optimizer.zero_grad(set_to_none=True)
 
-        with autocast(enabled=args.amp):
+        with autocast("cuda", enabled=args.amp):
             logits = model(data)
             loss = criterion(logits, target)
 
@@ -116,7 +116,7 @@ def val_epoch(model, loader, epoch, args, max_tiles=None):
             data = batch_data["image"].as_subclass(torch.Tensor).cuda(args.rank)
             target = batch_data["label"].as_subclass(torch.Tensor).cuda(args.rank)
 
-            with autocast(enabled=args.amp):
+            with autocast("cuda", enabled=args.amp):
                 if max_tiles is not None and data.shape[1] > max_tiles:
                     # During validation, we want to use all instances/patches
                     # and if its number is very big, we may run out of GPU memory
@@ -355,7 +355,7 @@ def main_worker(gpu, args):
     best_acc = 0
     start_epoch = 0
     if args.checkpoint is not None:
-        checkpoint = torch.load(args.checkpoint, map_location="cpu")
+        checkpoint = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
         model.load_state_dict(checkpoint["state_dict"])
         if "epoch" in checkpoint:
             start_epoch = checkpoint["epoch"]
@@ -406,7 +406,7 @@ def main_worker(gpu, args):
     n_epochs = args.epochs
     val_acc_max = 0.0
 
-    scaler = GradScaler(enabled=args.amp)
+    scaler = GradScaler("cuda", enabled=args.amp)
 
     for epoch in range(start_epoch, n_epochs):
         if args.distributed:

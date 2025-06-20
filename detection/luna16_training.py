@@ -337,7 +337,7 @@ def main():
                     val_inputs = [val_data_i.pop("image").to(device) for val_data_i in val_data]
 
                     if amp:
-                        with torch.cuda.amp.autocast():
+                        with torch.autocast("cuda"):
                             val_outputs = detector(val_inputs, use_inferer=use_inferer)
                     else:
                         val_outputs = detector(val_inputs, use_inferer=use_inferer)

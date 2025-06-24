@@ -83,7 +83,7 @@ Training and evaluation examples of 3D regression based on DenseNet3D and [IXI d
 #### <ins>**3D segmentation**</ins>
 ##### [ignite examples](./3d_segmentation/ignite)
 Training and evaluation examples of 3D segmentation based on UNet3D and synthetic dataset.
-The examples are PyTorch Ignite programs and have both dictionary-base and array-based transformations.
+The examples are PyTorch Ignite programs and have both dictionary-based and array-based transformations.
 ##### [torch examples](./3d_segmentation/torch)
 Training, evaluation and inference examples of 3D segmentation based on UNet3D and synthetic dataset.
 The examples are standard PyTorch programs and have both dictionary-based and array-based versions.

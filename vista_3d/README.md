@@ -6,9 +6,9 @@ The **VISTA3D** is a foundation model trained systematically on 11,454 volumes e
 
 The tutorial demonstrates how to finetune the VISTA3D model on user data, where we use the MSD Task09 Spleen as the example.
 
-In Summary the tutorial covers the following:
+In summary, the tutorial covers the following:
 - Creation of datasets and data transforms for training and validation
-- Create and VISTA3D model and load the pretrained checkpoint
+- Create a VISTA3D model and load the pretrained checkpoint
 - Implementation of the finetuning loop
 - Mixed precision training with GradScaler
 - Visualization of training loss and validation accuracy

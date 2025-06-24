@@ -1,6 +1,6 @@
 # MONAI and nnU-Net Integration
 
-[nnU-Net](https://github.com/MIC-DKFZ/nnUNet) is an open-source deep learning framework that has been specifically designed for medical image segmentation. And nnU-Net is a state-of-the-art deep learning framework that is tailored for medical image segmentation. It builds upon the popular U-Net architecture and incorporates various advanced features and improvements, such as cascaded networks, novel loss functions, and pre-processing steps. nnU-Net also provides an easy-to-use interface that allows users to train and evaluate their segmentation models quickly. nnU-Net has been widely used in various medical imaging applications, including brain segmentation, liver segmentation, and prostate segmentation, among others. The framework has consistently achieved state-of-the-art performance in various benchmark datasets and challenges, demonstrating its effectiveness and potential for advancing medical image analysis.
+[nnU-Net](https://github.com/MIC-DKFZ/nnUNet) is an open-source deep learning framework that has been specifically designed for medical image segmentation. nnU-Net is a state-of-the-art deep learning framework that is tailored for medical image segmentation. It builds upon the popular U-Net architecture and incorporates various advanced features and improvements, such as cascaded networks, novel loss functions, and pre-processing steps. nnU-Net also provides an easy-to-use interface that allows users to train and evaluate their segmentation models quickly. nnU-Net has been widely used in various medical imaging applications, including brain segmentation, liver segmentation, and prostate segmentation, among others. The framework has consistently achieved state-of-the-art performance in various benchmark datasets and challenges, demonstrating its effectiveness and potential for advancing medical image analysis.
 
 nnU-Net and MONAI are two powerful open-source frameworks that offer advanced tools and algorithms for medical image analysis. Both frameworks have gained significant popularity in the research community, and many researchers have been using these frameworks to develop new and innovative medical imaging applications.
 
@@ -73,7 +73,7 @@ Users can also set values of directory variables as options in "input.yaml" if a
 dataset_name_or_id: 1 # task-specific integer index (optional)
 nnunet_preprocessed: "./work_dir/nnUNet_preprocessed" # directory for storing pre-processed data (optional)
 nnunet_raw: "./work_dir/nnUNet_raw_data_base" # directory for storing formated raw data (optional)
-nnunet_results: "./work_dir/nnUNet_trained_models" # diretory for storing trained model checkpoints (optional)
+nnunet_results: "./work_dir/nnUNet_trained_models" # directory for storing trained model checkpoints (optional)
 ```
 
 Once the minimum input information is provided, the user can use the following commands to start the process of the entire nnU-Net pipeline automatically (from model training to model ensemble).
@@ -143,7 +143,7 @@ python -m monai.apps.nnunet nnUNetV2Runner predict_ensemble_postprocessing --inp
 	--run_predict false --run_ensemble false
 ```
 
-For utilizing PyTorch DDP in multi-GPU training, the subsequent command is offered to facilitate the training of a singlular model on a specific fold:
+For utilizing PyTorch DDP in multi-GPU training, the subsequent command is offered to facilitate the training of a singular model on a specific fold:
 
 ```bash
 ## [component] multi-gpu training for a single model

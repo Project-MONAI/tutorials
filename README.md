@@ -48,7 +48,7 @@ Each user is responsible for checking the content of datasets and the applicable
 
 ### 2. Questions and bugs
 
-- For questions relating to the use of MONAI, please us our [Discussions tab](https://github.com/Project-MONAI/MONAI/discussions) on the main repository of MONAI.
+- For questions relating to the use of MONAI, please use our [Discussions tab](https://github.com/Project-MONAI/MONAI/discussions) on the main repository of MONAI.
 - For bugs relating to MONAI functionality, please create an issue on the [main repository](https://github.com/Project-MONAI/MONAI/issues).
 - For bugs relating to the running of a tutorial, please create an issue in [this repository](https://github.com/Project-MONAI/Tutorials/issues).
 
@@ -83,7 +83,7 @@ Training and evaluation examples of 3D regression based on DenseNet3D and [IXI d
 #### <ins>**3D segmentation**</ins>
 ##### [ignite examples](./3d_segmentation/ignite)
 Training and evaluation examples of 3D segmentation based on UNet3D and synthetic dataset.
-The examples are PyTorch Ignite programs and have both dictionary-base and array-based transformations.
+The examples are PyTorch Ignite programs and have both dictionary-based and array-based transformations.
 ##### [torch examples](./3d_segmentation/torch)
 Training, evaluation and inference examples of 3D segmentation based on UNet3D and synthetic dataset.
 The examples are standard PyTorch programs and have both dictionary-based and array-based versions.

@@ -1,11 +1,12 @@
 # MONAI Tutorials
-This repository hosts the MONAI tutorials.
 
-### 1. Requirements
-Most of the examples and tutorials require
-[matplotlib](https://matplotlib.org/) and [Jupyter Notebook](https://jupyter.org/).
+Welcome to the MONAI Tutorials repository! This collection provides comprehensive examples and tutorials for medical AI development using MONAI (Medical Open Network for AI).
 
-These can be installed with:
+## Quick Start Guide
+
+### 1. Installation Requirements
+
+Most tutorials require [matplotlib](https://matplotlib.org/) and [Jupyter Notebook](https://jupyter.org/). Install them with:
 
 ```bash
 python -m pip install -U pip
@@ -13,60 +14,85 @@ python -m pip install -U matplotlib
 python -m pip install -U notebook
 ```
 
-Some of the examples may require optional dependencies. In case of any optional import errors,
-please install the relevant packages according to MONAI's [installation guide](https://docs.monai.io/en/latest/installation.html).
-Or install all optional requirements with:
+For complete functionality, install all optional dependencies according to MONAI's [installation guide](https://docs.monai.io/en/latest/installation.html):
 
 ```bash
 pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/dev/requirements-dev.txt
 ```
 
-#### Run the notebooks from Colab
+### 2. Getting Started
 
-Most of the Jupyter Notebooks have an "Open in Colab" button.
-Please right-click on the button, and select "Open Link in New Tab" to start a Colab page with the corresponding notebook content.
+#### New to MONAI?
+Start with these beginner-friendly tutorials:
+- [MONAI 101 Tutorial](./2d_classification/monai_101.ipynb) - Your first medical image classification model
+- [MedNIST Tutorial](./2d_classification/mednist_tutorial.ipynb) - Comprehensive PyTorch integration guide
 
-To use GPU resources through Colab, please remember to change the runtime type to `GPU`:
+#### Ready for Advanced Topics?
+Explore intermediate and advanced tutorials in specific domains like 3D segmentation, registration, and federated learning.
 
-1. From the `Runtime` menu select `Change runtime type`
-1. Choose `GPU` from the drop-down menu
-1. Click `SAVE`
-This will reset the notebook and may ask you if you are a robot (these instructions assume you are not).
+### 3. Running Tutorials
 
-Running:
+#### Option A: Google Colab (Recommended for Beginners)
 
-```bash
-!nvidia-smi
-```
+Most tutorials include an "Open in Colab" button for easy, no-setup execution:
 
-in a cell will verify this has worked and show you what kind of hardware you have access to.
+1. **Click the Colab badge** in any tutorial
+2. **Enable GPU acceleration** (recommended):
+   - Navigate to `Runtime` → `Change runtime type`
+   - Select `GPU` from the Hardware accelerator dropdown
+   - Click `Save`
+3. **Verify GPU access** by running `!nvidia-smi` in a code cell
+4. **Start learning!** All dependencies will be installed automatically
 
-#### Data
+#### Option B: Local Jupyter Environment
 
-Some notebooks will require additional data.
-Each user is responsible for checking the content of datasets and the applicable licenses and determining if suitable for the intended use.
+For advanced users who prefer local development:
+1. Clone this repository
+2. Install requirements as shown above
+3. Launch Jupyter: `jupyter notebook`
+4. Navigate to your desired tutorial
 
-### 2. Questions and bugs
+### 4. Dataset Information
 
-- For questions relating to the use of MONAI, please use our [Discussions tab](https://github.com/Project-MONAI/MONAI/discussions) on the main repository of MONAI.
-- For bugs relating to MONAI functionality, please create an issue on the [main repository](https://github.com/Project-MONAI/MONAI/issues).
-- For bugs relating to the running of a tutorial, please create an issue in [this repository](https://github.com/Project-MONAI/Tutorials/issues).
+**Important**: Each user is responsible for:
+- Reviewing dataset licenses and usage terms
+- Ensuring datasets are appropriate for intended use
+- Complying with data usage policies
 
-### 3. Become a contributor
+Most tutorials use publicly available medical datasets with clear licensing information provided in each notebook.
 
-You can read details about adding a tutorial in our [CONTRIBUTING GUIDELINES](CONTRIBUTING.md).
+## Support and Community
 
-### 4. List of notebooks and examples
-#### <ins>**2D classification**</ins>
-##### [mednist_tutorial](./2d_classification/mednist_tutorial.ipynb)
-This notebook shows how to easily integrate MONAI features into existing PyTorch programs.
-It's based on the MedNIST dataset which is very suitable for beginners as a tutorial.
-This tutorial also makes use of MONAI's in-built occlusion sensitivity functionality.
+### Getting Help
 
-#### <ins>**2D segmentation**
-##### [torch examples](./2d_segmentation/torch)
-Training and evaluation examples of 2D segmentation based on UNet and synthetic dataset.
-The examples are standard PyTorch programs and have both dictionary-based and array-based versions.
+- **General MONAI Questions**: Use our [Discussions tab](https://github.com/Project-MONAI/MONAI/discussions) on the main MONAI repository
+- **MONAI Bug Reports**: Create an issue on the [main MONAI repository](https://github.com/Project-MONAI/MONAI/issues)
+- **Tutorial Issues**: Create an issue in [this tutorials repository](https://github.com/Project-MONAI/Tutorials/issues)
+
+### Contributing
+
+We welcome contributions! See our [Contributing Guidelines](CONTRIBUTING.md) for information on:
+- Adding new tutorials
+- Improving existing content
+- Reporting issues
+- Code style requirements
+
+## Tutorial Catalog
+### 2D Classification
+
+#### [MONAI 101 Tutorial](./2d_classification/monai_101.ipynb) 🔰
+**Perfect for beginners!** Learn the basics of medical image classification with MONAI in just 10 minutes. This tutorial covers dataset loading, preprocessing, training, and evaluation using the MedNIST dataset.
+
+#### [MONAI 201 Tutorial](./2d_classification/monai_201.ipynb) 🎯
+**Intermediate level** - Build upon MONAI 101 with advanced training techniques including validation monitoring, TensorBoard integration, and model checkpointing.
+
+#### [MedNIST Comprehensive Tutorial](./2d_classification/mednist_tutorial.ipynb) 📚
+**Detailed walkthrough** showing how to integrate MONAI features into existing PyTorch programs. Includes occlusion sensitivity analysis for model interpretability. Ideal for understanding MONAI's integration capabilities.
+
+### 2D Segmentation
+
+#### [PyTorch Examples](./2d_segmentation/torch) 🔧
+Training and evaluation examples for 2D segmentation using UNet and synthetic datasets. Available in both dictionary-based and array-based formats for different coding preferences.
 
 #### <ins>**3D classification**</ins>
 ##### [ignite examples](./3d_classification/ignite)

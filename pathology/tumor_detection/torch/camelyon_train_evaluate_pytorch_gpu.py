@@ -43,7 +43,7 @@ from monai.transforms import (
 from monai.utils import first, set_determinism
 
 import torch
-from torch.cuda.amp import GradScaler, autocast
+from torch import GradScaler, autocast
 from torch.optim import SGD, lr_scheduler
 from torch.utils.tensorboard import SummaryWriter
 
@@ -106,7 +106,7 @@ def training(
         if pre_process is not None:
             x = pre_process(x)
 
-        with autocast(enabled=amp):
+        with autocast("cuda", enabled=amp):
             output = model(x)
             loss = loss_fn(output, y)
 
@@ -154,7 +154,7 @@ def validation(model, loss_fn, amp, dataloader, pre_process, post_process, devic
         if pre_process is not None:
             x = pre_process(x)
 
-        with autocast(enabled=amp):
+        with autocast("cuda", enabled=amp):
             output = model(x)
             loss = loss_fn(output, y)
 
@@ -386,7 +386,7 @@ def main(cfg):
 
     # AMP scaler
     if cfg["amp"] is True:
-        scaler = GradScaler()
+        scaler = GradScaler("cuda")
     else:
         scaler = None
 

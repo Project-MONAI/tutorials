@@ -21,7 +21,7 @@ torchrun --nproc_per_node=NUM_GPUS_PER_NODE --nnodes=NUM_NODES brats_training_dd
 
 ## Multi-Node Training
 
-Let's take two-node (16 GPUs in total) model training as an example. In the primary node (node rank 0), we run the following command.
+Let's take a two-node (16 GPUs in total) model training example. In the primary node (node rank 0), we run the following command.
 
 ```
 torchrun --nproc_per_node=8 --nnodes=2 --node_rank=0 --master_addr=PRIMARY_NODE_IP --master_port=1234 brats_training_ddp.py

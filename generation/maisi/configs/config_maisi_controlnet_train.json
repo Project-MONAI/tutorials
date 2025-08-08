@@ -9,7 +9,9 @@
         "weighted_loss": 100
     },
     "controlnet_infer": {
-       "num_inference_steps": 1000,
-       "autoencoder_sliding_window_infer_size": [96, 96, 96]
+       "num_inference_steps": 10,
+       "autoencoder_sliding_window_infer_size": [80, 80, 80],
+       "autoencoder_sliding_window_infer_overlap": 0.4,
+       "modality": 1
     }
 }

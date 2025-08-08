@@ -54,7 +54,7 @@ def create_validator(args, click):
     logging.info("Loading Network...")
     map_location = {"cuda:0": "cuda:{}".format(args.local_rank)}
 
-    checkpoint = torch.load(args.model_path, map_location=map_location)
+    checkpoint = torch.load(args.model_path, map_location=map_location, weights_only=True)
     network.load_state_dict(checkpoint)
     network.eval()
 

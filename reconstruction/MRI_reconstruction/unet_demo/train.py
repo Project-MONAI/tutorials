@@ -135,7 +135,7 @@ def trainer(args):
     ).to(device)
     print("#model_params:", np.sum([len(p.flatten()) for p in model.parameters()]))
     if args.resume_checkpoint:
-        model.load_state_dict(torch.load(args.checkpoint_dir))
+        model.load_state_dict(torch.load(args.checkpoint_dir, weights_only=True))
         print("resume training from a given checkpoint...")
 
     # create the loss function

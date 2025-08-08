@@ -2,7 +2,7 @@
 
 ## Description
 
-Here we use a classification model to classify small batches extracted from very large whole-slide histopathology images. Since the patches are very small compare to the whole image, we can then use this model for the detection of tumors in a different area of a whole-slide pathology image.
+Here we use a classification model to classify small batches extracted from very large whole-slide histopathology images. Since the patches are very small compared to the whole image, we can then use this model for the detection of tumors in a different area of a whole-slide pathology image.
 
 ## Model Overview
 

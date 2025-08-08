@@ -133,7 +133,7 @@ def evaluate(args):
     ).to(device)
     if hvd.rank() == 0:
         # load model parameters for evaluation
-        model.load_state_dict(torch.load("final_model.pth"))
+        model.load_state_dict(torch.load("final_model.pth", weights_only=True))
     # Horovod broadcasts parameters
     hvd.broadcast_parameters(model.state_dict(), root_rank=0)
 

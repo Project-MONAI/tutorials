@@ -92,7 +92,7 @@ def get_pre_transforms(roi_size, model_size, dimensions):
     t = [
         LoadImaged(keys=("image", "label")),
         EnsureChannelFirstd(keys=("image", "label"), channel_dim="no_channel"),
-        SpatialCropForegroundd(keys=("image", "label"), source_key="label", spatial_size=roi_size),
+        SpatialCropForegroundd(keys=("image", "label"), source_key="label", spatial_size=roi_size, allow_smaller=True),
         Resized(keys=("image", "label"), spatial_size=model_size, mode=("area", "nearest")),
         NormalizeIntensityd(keys="image", subtrahend=208.0, divisor=388.0),
     ]
@@ -208,7 +208,7 @@ def create_trainer(args):
     if args.resume:
         logging.info("{}:: Loading Network...".format(local_rank))
         map_location = {"cuda:0": "cuda:{}".format(local_rank)}
-        network.load_state_dict(torch.load(args.model_filepath, map_location=map_location))
+        network.load_state_dict(torch.load(args.model_filepath, map_location=map_location, weights_only=True))
 
     # define event-handlers for engine
     val_handlers = [
@@ -311,7 +311,7 @@ def run(args):
         network = get_network(args.network, args.channels, args.dimensions).to(device)
 
         map_location = {"cuda:0": "cuda:{}".format(args.local_rank)}
-        network.load_state_dict(torch.load(args.input, map_location=map_location))
+        network.load_state_dict(torch.load(args.input, map_location=map_location, weights_only=True))
 
         logging.info("{}:: Saving TorchScript Model".format(args.local_rank))
         model_ts = torch.jit.script(network)

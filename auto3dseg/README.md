@@ -58,14 +58,15 @@ To further demonstrate the capabilities of **Auto3DSeg**, [here](./tasks/instanc
 
 ## Running With Your Own Data
 
-To run Auto3DSeg on your own dataset, all you need to do is build a `datalist.json` file for your dataset, and run the AutoRunner on it.
+To run Auto3DSeg on your own dataset, you need to build a `datalist.json` file for your dataset, and run the AutoRunner on it.
 
-The datalist format is based on the datasets released by the (Medical Segmentation Decathlon)[http://medicaldecathlon.com]. 
+The datalist format is based on the datasets released by the [Medical Segmentation Decathlon](http://medicaldecathlon.com). 
 See the function `load_decathlon_datalist` in `monai/data/decathlon_datalist.py` for a description of the format.
 
-For the AutoRunner, we only need the `training` data, since it will automatically create cross-validation folds.
-You are free to add the cross-validation folds beforehand, these should align with the number of folds set in the configuration of the AutoRunner (by default 5, see [notebook](notebooks/auto_runner.ipynb)).
-Any other metadata, such as `modality`, `numTraining`, `name`, etc. will not be used by the AutoRunner, but we do recommend adding them, to keep track of names and versions of the dataset.
+For the AutoRunner, we only need the `training` list in the JSON, it does not use any other fields.
+The `fold` key for each image is not required, as the AutoRunner will automatically create cross-validation folds.
+If you do add the cross-validation folds beforehand, these should align with the number of folds set in the configuration of the AutoRunner (by default 5, see [notebook](notebooks/auto_runner.ipynb)).
+Any other metadata, such as `modality`, `numTraining`, `name`, etc. will not be used by the AutoRunner, but we do recommend using metadata fields to keep track of names and versions of your dataset.
 In short, your `datalist.json` file should look like this:
 
 ```
@@ -81,9 +82,9 @@ In short, your `datalist.json` file should look like this:
 
 ```
 
-The AutoRunner will create a `work_dir` folder in the directory from which it is ran, with the resulting models and the copied datalist file _with_ cross-validation folds. This allows you to see which datalist file the models are trained on.
+The AutoRunner will create a `work_dir` folder in the directory from which it is ran, which will contain the resulting models and the copied datalist file _with_ cross-validation folds. This allows you to keep track of which datalist file the models are trained on.
 
-See the description below or the file [run_with_minimal_input.md](docs/run_with_minimal_input.md) how to use your datalist with the AutoRunner.
+See the description below or the file [run_with_minimal_input.md](docs/run_with_minimal_input.md) to use your datalist with the AutoRunner.
 
 ## Reference Python APIs for Auto3DSeg
 

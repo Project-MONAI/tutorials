@@ -83,6 +83,8 @@ In short, your `datalist.json` file should look like this:
 
 The AutoRunner will create a `work_dir` folder in the directory from which it is ran, with the resulting models and the copied datalist file _with_ cross-validation folds. This allows you to see which datalist file the models are trained on.
 
+See the description below or the file [run_with_minimal_input.md](docs/run_with_minimal_input.md) how to use your datalist with the AutoRunner.
+
 ## Reference Python APIs for Auto3DSeg
 
 **Auto3DSeg** offers users different levels of APIs to run pipelines that suit their needs.

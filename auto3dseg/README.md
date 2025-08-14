@@ -56,7 +56,7 @@ We provide [a two-minute example](notebooks/auto3dseg_hello_world.ipynb) for use
 
 To further demonstrate the capabilities of **Auto3DSeg**, [here](./tasks/instance22/README.md) is the detailed performance of the algorithm in **Auto3DSeg**, which won 2nd place in the MICCAI 2022 challenge **[INSTANCE22: The 2022 Intracranial Hemorrhage Segmentation Challenge on Non-Contrast Head CT (NCCT)](https://instance.grand-challenge.org/)**
 
-## Running with Own Data
+## Running With Your Own Data
 
 To run Auto3DSeg on your own dataset, all you need to do is build a `datalist.json` file for your dataset, and run the AutoRunner on it.
 

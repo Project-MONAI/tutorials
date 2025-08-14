@@ -65,7 +65,7 @@ See the function `load_decathlon_datalist` in `monai/data/decathlon_datalist.py`
 
 For the AutoRunner, we only need the `training` data, since it will automatically create cross-validation folds.
 You are free to add the cross-validation folds beforehand, these should align with the number of folds set in the configuration of the AutoRunner (by default 5, see [notebook](notebooks/auto_runner.ipynb)).
-Any other metadata, such as `modality`, `numTraining`, `name`, etc. will not be used by the AutoRunner, but we do recommend to keep track of names and versions of the dataset.
+Any other metadata, such as `modality`, `numTraining`, `name`, etc. will not be used by the AutoRunner, but we do recommend adding them, to keep track of names and versions of the dataset.
 In short, your `datalist.json` file should look like this:
 
 ```

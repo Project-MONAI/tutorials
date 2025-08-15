@@ -64,9 +64,10 @@ The datalist format is based on the datasets released by the [Medical Segmentati
 See the function `load_decathlon_datalist` in `monai/data/decathlon_datalist.py` for a description of the format.
 
 For the AutoRunner, we only need the `training` list in the JSON, it does not use any other fields.
-The `fold` key for each image is not required, as the AutoRunner will automatically create cross-validation folds.  
-If you do add the cross-validation folds beforehand, these should align with the number of folds set in the configuration of the AutoRunner (by default 5, see [notebook](notebooks/auto_runner.ipynb)).  
-Any other metadata, such as `modality`, `numTraining`, `name`, etc. will not be used by the AutoRunner, but we do recommend using metadata fields to keep track of names and versions of your dataset.  
+The `fold` key for each image is not required, as the AutoRunner will automatically create cross-validation folds (the number of folds is hard-coded to 5).  
+If you do add the cross-validation folds beforehand, the AutoRunner will use these by default.  
+You can also choose to include a `validation` list in the JSON file, in which case the AutoRunner will disable cross-validation and use the specified validation set.
+Any other metadata, such as `modality`, `numTraining`, `name`, etc. will not be used by the AutoRunner, but we do recommend using metadata fields to keep track of names and versions of your dataset. If you are using multi-modal scans, it is possible to enter lists of image paths for both the `image` and `label` keys; MONAI will stack them into channels.
 In short, your `datalist.json` file should look like this:
 
 ```

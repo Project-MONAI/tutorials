@@ -33,7 +33,8 @@ For the AutoRunner, you only need the `training` field with its list of training
 }
 
 ```
-In each training item, you can add a `fold` field (with an integer starting at 0) to pre-specify the cross-validation folds, otherwise the AutoRunner will generate its own folds. All trained algorithms will use the same generated or pre-specified folds, the file can be found in the `work_dir` folder that the AutoRunner generates.
+In each training item, you can add a `fold` field (with an integer starting at 0) to pre-specify the cross-validation folds, otherwise the AutoRunner will generate its own folds (always 5). All trained algorithms will use the same generated or pre-specified folds, the file can be found in the `work_dir` folder that the AutoRunner generates.  
+If you have a validation set, you can include it under a `validation` key with the same format as the `training` list. This will disable cross-validation.  
 It is recommended to add a `name` field and any other metadata fields that allow you to track which version of your dataset the models are trained on.
 
 Save the file to `./datalist.json`.

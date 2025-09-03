@@ -43,7 +43,7 @@ in a cell will verify this has worked and show you what kind of hardware you hav
 
 #### Google Colab Setup (CUDA 12.x, PyTorch 2.6, MONAI 1.5)
 
-In Google Colab, the default environment may cause version conflicts with MONAI.  
+In Google Colab, the default environment may cause version conflicts with MONAI.
 To ensure compatibility, install PyTorch and MONAI explicitly as follows:
 
 # Install PyTorch 2.6.0 with CUDA 12.4
@@ -56,19 +56,19 @@ pip install "monai[all]" nibabel pydicom ipywidgets==8.1.2
 
 ### Known issues and fixes
 
-- Torchaudio mismatch  
-  Colab may come with torchaudio 2.8.0, which is incompatible with torch 2.6.0.  
+- Torchaudio mismatch
+  Colab may come with torchaudio 2.8.0, which is incompatible with torch 2.6.0.
   Installing the versions above resolves this issue.
 
-- filelock conflicts with nni  
-  Some preinstalled packages (such as pytensor with newer filelock) may conflict.  
+- filelock conflicts with nni
+  Some preinstalled packages (such as pytensor with newer filelock) may conflict.
   Use the following commands to fix:
 
   pip uninstall -y pytensor
   pip install -U filelock
 
-- Too many workers warning  
-  Colab has limited CPU resources, and high num_workers settings may freeze execution.  
+- Too many workers warning
+  Colab has limited CPU resources, and high num_workers settings may freeze execution.
   It is recommended to use --num_workers=2 when running tutorials.
 
 

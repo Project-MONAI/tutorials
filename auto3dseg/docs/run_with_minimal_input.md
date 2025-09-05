@@ -29,12 +29,19 @@ For the AutoRunner, you only need the `training` field with its list of training
             {"image": "/path/to/image_1.nii.gz", "label": "/path/to/label_1.nii.gz"},
             {"image": "/path/to/image_2.nii.gz", "label": "/path/to/label_2.nii.gz"},
             ...
+        ],
+    "testing":
+        [
+           "/path/to/test_image_1.nii.gz",
+           "/path/to/test_image_2.nii.gz",
+            ...
         ]
 }
 
 ```
 In each training item, you can add a `fold` field (with an integer starting at 0) to pre-specify the cross-validation folds, otherwise the AutoRunner will generate its own folds (always 5). All trained algorithms will use the same generated or pre-specified folds, the file can be found in the `work_dir` folder that the AutoRunner generates.
-If you have a validation set, you can include it under a `validation` key with the same format as the `training` list. This will disable cross-validation.
+If you have a validation set, you can include it under a `validation` key with the same format as the `training` list. This will disable cross-validation.  
+A "testing" list can also be added, which only requires the image files, not the labels. If it is included, the AutoRunner will output predictions on the testing set after training.  
 It is recommended to add a `name` field and any other metadata fields that allow you to track which version of your dataset the models are trained on.
 
 Save the file to `./datalist.json`.

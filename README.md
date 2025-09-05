@@ -82,6 +82,9 @@ python -u unet_training_array.py --max_epochs 2 --batch_size 1 --num_workers 2
 
 If the logs show decreasing training loss and a Dice score, the setup is correct.
 
+**Note:** In most cases, users can run MONAI tutorials directly in Colab notebooks without additional installation.  
+The steps above are mainly for resolving dependency conflicts when installing extra packages.
+
 #### Data
 
 Some notebooks will require additional data.

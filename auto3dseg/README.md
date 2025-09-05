@@ -83,7 +83,7 @@ In short, your `datalist.json` file should look like this:
 
 ```
 
-The AutoRunner will create a `work_dir` folder in the directory from which it is ran, which will contain the resulting models and the copied datalist file _with_ cross-validation folds. This allows you to keep track of which datalist file the models are trained on.
+The AutoRunner will create a `work_dir` folder in the directory from which it is run, which will contain the resulting models and the copied datalist file _with_ cross-validation folds. This allows you to keep track of which datalist file the models are trained on.
 
 See the description below or the file [run_with_minimal_input.md](docs/run_with_minimal_input.md) to use your datalist with the AutoRunner.
 

@@ -69,7 +69,7 @@ pip install "monai[all]" nibabel pydicom ipywidgets==8.1.2
 
 - Too many workers warning
   Colab has limited CPU resources, and high num_workers settings may freeze execution.
-  It is recommended to use --num_workers=2 when running tutorials.
+  It is recommended to use --num_workers=2 when running tutorials and adjust the `num_workers` parameters where it is used in notebooks (eg. for data loaders).
 
 
 ### Quick smoke test

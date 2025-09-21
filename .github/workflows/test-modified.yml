@@ -17,16 +17,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python 3.9
+    - name: Set up Python 3.10
       uses: actions/setup-python@v3
       with:
-        python-version: 3.9
+        python-version: 3.10
     - name: Install MONAI
       id: monai-install
       run: |
         which python
-        python -m pip install --upgrade pip wheel
-        python -m pip install -U torch torchvision torchaudio
+        python -m pip install -U pip wheel
+        python -m pip install torch torchvision torchaudio
 
         python -m pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/dev/requirements-dev.txt
         python -m pip install -r requirements.txt
@@ -39,9 +39,9 @@ jobs:
         python -c "import monai; monai.config.print_debug_info()"
         git fetch origin main
         git diff --name-only origin/main | while read line
-        do 
+        do
           if [[ $line == *.ipynb ]]
-          then 
+          then
             ./runner.sh -p " -and -wholename './${line}'"
           fi
         done

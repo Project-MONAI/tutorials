@@ -79,7 +79,7 @@ class TritonPythonModel:
         """
         `initialize` is called only once when the model is being loaded.
         Implementing `initialize` function is optional. This function allows
-        the model to intialize any state associated with this model.
+        the model to initialize any state associated with this model.
         """
 
         # Pull model from google drive
@@ -112,7 +112,7 @@ class TritonPythonModel:
                 LoadImage(reader="NibabelReader", image_only=True, dtype=np.float32),
                 EnsureChannelFirst(channel_dim="no_channel"),
                 ScaleIntensityRange(a_min=-1000, a_max=500, b_min=0.0, b_max=1.0, clip=True),
-                CropForeground(margin=5),
+                CropForeground(margin=5, allow_smaller=True),
                 Resize([192, 192, 64], mode="area"),
                 EnsureChannelFirst(channel_dim="no_channel"),
                 ToTensor(),

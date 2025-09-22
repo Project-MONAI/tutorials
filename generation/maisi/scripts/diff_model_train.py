@@ -480,13 +480,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--env_config",
         type=str,
-        default="./configs/environment_maisi_diff_model_train.json",
+        default="./configs/environment_maisi_diff_model.json",
         help="Path to environment configuration file",
     )
     parser.add_argument(
         "--model_config",
         type=str,
-        default="./configs/config_maisi_diff_model_train.json",
+        default="./configs/config_maisi_diff_model.json",
         help="Path to model training/inference configuration",
     )
     parser.add_argument(

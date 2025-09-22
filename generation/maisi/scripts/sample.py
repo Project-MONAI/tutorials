@@ -597,7 +597,7 @@ class LDMSampler:
             label_dict = json.load(f)
         self.all_anatomy_size_condtions_json = all_anatomy_size_condtions_json
 
-        # intialize variables
+        # initialize variables
         self.body_region = body_region
         self.anatomy_list = [label_dict[organ] for organ in anatomy_list]
         self.all_mask_files_json = all_mask_files_json

@@ -20,6 +20,10 @@ We are excited to announce the new MAISI Version `maisi3d-rflow`. Compared with 
 - For the released model weights, `maisi3d-rflow` can generate images with better quality for head region and small output volumes than `maisi3d-ddpm`; they have comparable quality for other cases.
 - `maisi3d-rflow` added a diffusion model input `modality`, which gives it flexibility to extend to other modalities. Currently it is set as always equal to 1 since this version only supports CT generation. We predefined some modalities in [./configs/modality_mapping.json](./configs/modality_mapping.json).
 
+More details can be found in our 2025 report:
+
+[Zhao, C., Guo, P., Yang, D., Tang, Y., ... & Xu, D. (2025). MAISI-v2: Accelerated 3D High-Resolution Medical Image Synthesis with Rectified Flow and Region-specific Contrastive Loss](https://arxiv.org/pdf/2508.05772)
+
 **GUI demo:** Welcome to try our GUI demo at [https://build.nvidia.com/nvidia/maisi](https://build.nvidia.com/nvidia/maisi).
 The GUI is only a demo for toy examples. This Github repo is the full version.
 

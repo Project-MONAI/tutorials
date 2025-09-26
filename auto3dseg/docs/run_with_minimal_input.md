@@ -18,55 +18,39 @@ if os.path.exists(root):
     download_and_extract(resource, compressed_file, root)
 ```
 
-**Step 1.** Provide the following data list (a ".json" file) for a new task and the data root. The typical data list is shown as follows.
+**Step 1.** Provide a `datalist.json` file.
+See the documentation under the `load_decathlon_datalist` function in `monai.data.decathlon_datalist` for details on the file format.
 
+For the AutoRunner, you only need the `training` field with its list of training files:
 ```
 {
-    "training": [
-        {
-            "fold": 0,
-            "image": "image_001.nii.gz",
-            "label": "label_001.nii.gz"
-        },
-        {
-            "fold": 0,
-            "image": "image_002.nii.gz",
-            "label": "label_002.nii.gz"
-        },
-        {
-            "fold": 1,
-            "image": "image_003.nii.gz",
-            "label": "label_001.nii.gz"
-        },
-        {
-            "fold": 2,
-            "image": "image_004.nii.gz",
-            "label": "label_002.nii.gz"
-        },
-        {
-            "fold": 3,
-            "image": "image_005.nii.gz",
-            "label": "label_003.nii.gz"
-        },
-        {
-            "fold": 4,
-            "image": "image_006.nii.gz",
-            "label": "label_004.nii.gz"
-        }
-    ],
-    "testing": [
-        {
-            "image": "image_010.nii.gz"
-        }
-    ]
+    "training":
+        [
+            {"image": "/path/to/image_1.nii.gz", "label": "/path/to/label_1.nii.gz"},
+            {"image": "/path/to/image_2.nii.gz", "label": "/path/to/label_2.nii.gz"},
+            ...
+        ],
+    "testing":
+        [
+           "/path/to/test_image_1.nii.gz",
+           "/path/to/test_image_2.nii.gz",
+            ...
+        ]
 }
+
 ```
+In each training item, you can add a `fold` field (with an integer starting at 0) to pre-specify the cross-validation folds, otherwise the AutoRunner will generate its own folds (always 5). All trained algorithms will use the same generated or pre-specified folds, the file can be found in the `work_dir` folder that the AutoRunner generates.
+If you have a validation set, you can include it under a `validation` key with the same format as the `training` list. This will disable cross-validation.
+A "testing" list can also be added, which only requires the image files, not the labels. If it is included, the AutoRunner will output predictions on the testing set after training.
+It is recommended to add a `name` field and any other metadata fields that allow you to track which version of your dataset the models are trained on.
+
+Save the file to `./datalist.json`.
 
 **Step 2.** Prepare "task.yaml" with the necessary information as follows.
 
 ```
-modality: CT
-datalist: "./task.json"
+modality: CT  # or MRI
+datalist: "./datalist.json"
 dataroot: "/workspace/data/task"
 ```
 

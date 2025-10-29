@@ -24,6 +24,7 @@ jobs:
     - name: Install MONAI
       id: monai-install
       run: |
+        find  /opt/hostedtoolcache/* -maxdepth 0 ! -name 'Python' -exec rm -rf {} \;
         which python
         python -m pip install -U pip wheel
         python -m pip install torch torchvision torchaudio

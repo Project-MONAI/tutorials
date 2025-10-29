@@ -386,3 +386,4 @@ Example shows the use cases of using MONAI to evaluate the performance of a gene
 
 #### [VISTA2D](./vista_2d)
 This tutorial demonstrates how to train a cell segmentation model using the [MONAI](https://monai.io/) framework and the [Segment Anything Model (SAM)](https://github.com/facebookresearch/segment-anything) on the [Cellpose dataset](https://www.cellpose.org/).
+ECHO가 설정되어 있습니다.

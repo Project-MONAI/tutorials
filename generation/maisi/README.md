@@ -138,7 +138,7 @@ MAISI is based on the following papers:
 [**Rectified Flow:** Liu, Xingchao, Chengyue Gong, and Qiang Liu. "Flow straight and fast: Learning to generate and transfer data with rectified flow." ICLR 2023](https://arxiv.org/pdf/2209.03003).
 
 ### 1. Network Definition
-Network definition is stored in [./configs/config_maisi.json](./configs/config_maisi.json). Training and inference should use the same [./configs/config_maisi.json](./configs/config_maisi.json).
+Network definition is stored in [./configs/config_maisi3d-rflow.json](./configs/config_maisi3d-rflow.json) for the Rectified Flow model and [./configs/config_maisi3d-ddpm.json](./configs/config_maisi3d-ddpm.json) for the DDPM model. Training and inference should use the same [./configs/config_maisi3d-rflow.json](./configs/config_maisi3d-rflow.json) or [./configs/config_maisi3d-ddpm.json](./configs/config_maisi3d-ddpm.json).
 
 ### 2. Model Inference
 #### Inference parameters:

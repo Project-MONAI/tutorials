@@ -43,11 +43,14 @@ Example shows the use cases of using MONAI to evaluate the performance of a gene
 ## [Training a 2D VQ-VAE + Autoregressive Transformers](./2d_vqvae_transformer/2d_vqvae_transformer_tutorial.ipynb):
 Example shows how to train a Vector-Quantized Variation Autoencoder + Transformers on the MedNIST dataset.
 
-## Training VQ-VAEs and VQ-GANs: [2D VAE](./2d_vqvae/2d_vqvae_tutorial.ipynb), [3D VAE](./3d_vqvae/3d_vqvae_tutorial.ipynb) and [2D GAN](./3d_autoencoderkl/2d_vqgan_tutorial.ipynb)
+## Training VQ-VAEs and VQ-GANs: [2D VAE](./2d_vqvae/2d_vqvae_tutorial.ipynb), [3D VAE](./3d_vqvae/3d_vqvae_tutorial.ipynb) and [2D GAN](./2d_vqgan/2d_vqgan_tutorial.ipynb)
 Examples show how to train Vector Quantized Variation Autoencoder on [2D](./2d_vqvae/2d_vqvae_tutorial.ipynb) and [3D](./3d_vqvae/3d_vqvae_tutorial.ipynb), and how to use the PatchDiscriminator class to train a [VQ-GAN](./2d_vqgan/2d_vqgan_tutorial.ipynb) and improve the quality of the generated images.
 
 ## [Training a 2D Denoising Diffusion Probabilistic Model](./2d_ddpm/2d_ddpm_tutorial.ipynb):
 Example shows how to easily train a DDPM on medical data (MedNIST).
+
+## [Training a 3D Denoising Diffusion Probabilistic Model](./3d_ddpm/3d_ddpm_tutorial.ipynb):
+Example shows how to easily train a DDPM on medical data (Decathlon Task 01).
 
 ## [Comparing different noise schedulers](./2d_ddpm/2d_ddpm_compare_schedulers.ipynb):
 Example compares the performance of different noise schedulers. This shows how to sample a diffusion model using the DDPM, DDIM, and PNDM schedulers and how different numbers of timesteps affect the quality of the samples.
@@ -72,3 +75,9 @@ Example shows the use cases of applying a spatial VAE to a 3D synthesis example.
 
 ## Performing anomaly detection with diffusion models: [implicit guidance](./anomaly_detection/2d_classifierfree_guidance_anomalydetection_tutorial.ipynb), [using transformers](./anomaly_detection/anomaly_detection_with_transformers.ipynb) and [classifier free guidance](./anomaly_detection/anomalydetection_tutorial_classifier_guidance.ipynb)
 Examples show how to perform anomaly detection in 2D, using implicit guidance [2D-classifier free guiance](./anomaly_detection/2d_classifierfree_guidance_anomalydetection_tutorial.ipynb), transformers [using transformers](./anomaly_detection/anomaly_detection_with_transformers.ipynb) and [classifier free guidance](./anomalydetection_tutorial_classifier_guidance).
+
+## 2D super-resolution using diffusion models: [using torch](./2d_super_resolution/2d_sd_super_resolution.ipynb) and [using torch lightning](./2d_super_resolution/2d_sd_super_resolution_lightning.ipynb).
+Examples show how to perform super-resolution in 2D, using PyTorch and PyTorch Lightning.
+
+## [Guiding the synthetic process using a semantic encoder](./2d_diffusion_autoencoder/2d_diffusion_autoencoder.ipynb)
+Example shows how to train a DDPM and an encoder simultaneously, resulting in the latents of the encoder guiding the inference process of the DDPM.

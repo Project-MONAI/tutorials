@@ -1,5 +1,5 @@
 default_language_version:
-  python: python3.9
+  python: python3
 
 ci:
   autofix_prs: true
@@ -9,7 +9,7 @@ ci:
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
       - id: end-of-file-fixer
       - id: trailing-whitespace
@@ -22,8 +22,8 @@ repos:
         args: ['--maxkb=1024']
       - id: detect-private-key
 
-  - repo: https://github.com/psf/black
-    rev: "24.4.2"
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: "25.9.0"
     hooks:
       - id: black
       - id: black-jupyter

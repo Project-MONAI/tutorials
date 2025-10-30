@@ -54,7 +54,7 @@ logger = logging.getLogger(__name__)
 parser = argparse.ArgumentParser(description="Active Learning Setting")
 
 # Directory & Json & Seed
-parser.add_argument("--base_dir", default="/home/vishwesh/experiments/al_sanity_test_apr27_2023", type=str)
+parser.add_argument("--base_dir", default="./experiments/al_sanity_test_apr27_2023", type=str)
 parser.add_argument("--data_root", default="/scratch_2/data_2021/68111", type=str)
 parser.add_argument("--json_path", default="/scratch_2/data_2021/68111/dataset_val_test_0_debug.json", type=str)
 parser.add_argument("--seed", default=102, type=int)
@@ -155,7 +155,7 @@ def main():
     # Model Definition
     device = torch.device("cuda:0")
     network = UNet(
-        dimensions=3,
+        spatial_dims=3,
         in_channels=1,
         out_channels=3,
         channels=(16, 32, 64, 128, 256),
@@ -187,7 +187,7 @@ def main():
                 b_max=1.0,
                 clip=True,
             ),
-            CropForegroundd(keys=["image", "label"], source_key="image"),
+            CropForegroundd(keys=["image", "label"], source_key="image", allow_smaller=True),
             SpatialPadd(keys=["image", "label"], spatial_size=(96, 96, 96)),
             RandCropByPosNegLabeld(
                 keys=["image", "label"],
@@ -225,7 +225,7 @@ def main():
                 b_max=1.0,
                 clip=True,
             ),
-            CropForegroundd(keys=["image", "label"], source_key="image"),
+            CropForegroundd(keys=["image", "label"], source_key="image", allow_smaller=True),
             EnsureTyped(keys=["image", "label"]),
         ]
     )
@@ -240,7 +240,7 @@ def main():
                 mode=("bilinear"),
             ),
             ScaleIntensityRanged(keys="image", a_min=-21, a_max=189, b_min=0.0, b_max=1.0, clip=True),
-            CropForegroundd(keys=("image"), source_key="image"),
+            CropForegroundd(keys=("image"), source_key="image", allow_smaller=True),
             EnsureTyped(keys=["image"]),
         ]
     )
@@ -315,7 +315,7 @@ def main():
         unl_loader = DataLoader(unl_ds, batch_size=1)
 
         # Calculation of Epochs based on steps
-        max_epochs = np.int(args.steps / (np.ceil(len(train_d) / args.batch_size)))
+        max_epochs = int(args.steps / (np.ceil(len(train_d) / args.batch_size)))
         print("Epochs Estimated are {} for Active Iter {} with {} Vols".format(max_epochs, active_iter, len(train_d)))
 
         # Model Training begins for one active iteration
@@ -393,7 +393,7 @@ def main():
         prev_best_ckpt = os.path.join(active_model_dir, "model.pt")
 
         device = torch.device("cuda:0")
-        ckpt = torch.load(prev_best_ckpt)
+        ckpt = torch.load(prev_best_ckpt, weights_only=True)
         network.load_state_dict(ckpt)
         network.to(device=device)
 
@@ -487,16 +487,16 @@ def main():
 
                     variance_dims = np.shape(variance)
                     score_list.append(np.nanmean(variance))
-                    name_list.append(unl_data["image_meta_dict"]["filename_or_obj"][0])
+                    name_list.append(unl_data["image"].meta["filename_or_obj"][0])
                     print(
                         "Variance for image: {} is: {}".format(
-                            unl_data["image_meta_dict"]["filename_or_obj"][0], np.nanmean(variance)
+                            unl_data["image"].meta["filename_or_obj"][0], np.nanmean(variance)
                         )
                     )
 
                     # Plot with matplotlib and save all slices
                     plt.figure(1)
-                    plt.imshow(np.squeeze(variance[:, :, np.int(variance_dims[2] / 2)]))
+                    plt.imshow(np.squeeze(variance[:, :, int(variance_dims[2] / 2)]))
                     plt.colorbar()
                     plt.title("Dropout Uncertainty")
                     fig_path = os.path.join(fig_base_dir, "active_{}_file_{}.png".format(active_iter, counter))

@@ -8,7 +8,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" A demo of overwriting the configuration content using the command line input """
+"""A demo of overwriting the configuration content using the command line input"""
 
 from monai.bundle import ConfigParser
 

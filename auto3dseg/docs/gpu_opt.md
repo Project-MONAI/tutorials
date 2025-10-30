@@ -8,7 +8,7 @@ Sometimes the low GPU utilization is because that GPU capacities is not fully ut
 Our proposed solution is capable to automatically estimate hyper-parameters in model training configurations maximizing utilities of the available GPU capacities.
 The solution is leveraging hyper-parameter optimization algorithms to search for optimital hyper-parameters with any given GPU devices.
 
-The following hyper-paramters in model training configurations are optimized in the process.
+The following hyper-parameters in model training configurations are optimized in the process.
 
 1. **num_images_per_batch:** Batch size determines how many images are in each mini-batch and how many training iterations per epoch. Large batch size can reduce training time per epoch and increase GPU memory usage with decent CPU capacities for I/O;
 2. **num_sw_batch_size:** Batch size in sliding-window inference directly relates to how many patches are in one pass of model feedforward operation. Large batch size in sliding-window inference can reduce overall inference time and increase GPU memory usage;

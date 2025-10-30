@@ -4,7 +4,7 @@ The tutorial demonstrates how to train a cell segmentation model using the [MONA
 
 ![image](../figures/vista_2d_overview.png)
 
-In Summary the tutorial covers the following:
+In summary, the tutorial covers the following:
 - Initialization of the CellSamWrapper model with pre-trained SAM weights
 - Creation of data lists for training, validation, and testing
 - Definition of data transforms for training and validation

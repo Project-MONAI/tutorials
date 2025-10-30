@@ -81,6 +81,8 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" bending_energy_diff
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" mask_augmentation_example.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" maisi_inference_tutorial.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" realism_diversity_metrics.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" omniverse_integration.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" hugging_face_pipeline_for_monai.ipynb)
 
 # Execution of the notebook in these folders / with the filename cannot be automated
 skip_run_papermill=()
@@ -127,6 +129,9 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*nuclei_classification_infer.ipy
 skip_run_papermill=("${skip_run_papermill[@]}" .*nuclick_infer.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1542
 skip_run_papermill=("${skip_run_papermill[@]}" .*unet_segmentation_3d_ignite_clearml.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/1555
 skip_run_papermill=("${skip_run_papermill[@]}" .*vista_2d_tutorial_monai.ipynb*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*learn2reg_oasis_unpaired_brain_mr.ipynb*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*finetune_vista3d_for_hugging_face_pipeline.ipynb*)
+skip_run_papermill=("${skip_run_papermill[@]}" .*TCIA_PROSTATEx_Prostate_MRI_Anatomy_Model.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/2029
 
 # output formatting
 separator=""
@@ -462,6 +467,15 @@ trap finish EXIT
 # After setup, don't want to exit immediately after error
 set +e
 
+# FIXME: https://github.com/Project-MONAI/MONAI/issues/4354
+protobuf_major_version=$(${PY_EXE} -m pip list | grep '^protobuf ' | tr -s ' ' | cut -d' ' -f2 | cut -d'.' -f1)
+if [ "$protobuf_major_version" -ge "4" ]
+then
+    export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+else
+    unset PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
+fi
+
 ########################################################################
 #                                                                      #
 #  loop over files                                                     #
@@ -554,15 +568,6 @@ for file in "${files[@]}"; do
         done
 
         python -c 'import monai; monai.config.print_config()'
-
-        # FIXME: https://github.com/Project-MONAI/MONAI/issues/4354
-        protobuf_major_version=$(${PY_EXE} -m pip list | grep '^protobuf ' | tr -s ' ' | cut -d' ' -f2 | cut -d'.' -f1)
-        if [ "$protobuf_major_version" -ge "4" ]
-        then
-            export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-        else
-            unset PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
-        fi
 
         cmd=$(echo "papermill ${papermill_opt} --progress-bar --log-output -k ${kernelspec}")
         echo "$cmd"

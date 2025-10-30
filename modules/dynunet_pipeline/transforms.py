@@ -40,9 +40,9 @@ def get_task_transforms(mode, task_id, pos_sample_num, neg_sample_num, num_sampl
         keys = ["image", "label"]
     else:
         keys = ["image"]
-
+    # 1. loading
     load_transforms = [
-        LoadImaged(keys=keys),
+        LoadImaged(keys=keys, image_only=False),
         EnsureChannelFirstd(keys=keys),
     ]
     # 2. sampling
@@ -277,13 +277,15 @@ class PreprocessAnisotropic(MapTransform):
         self.mean = normalize_values[0]
         self.std = normalize_values[1]
         self.training = False
-        self.crop_foreg = CropForegroundd(keys=["image", "label"], source_key="image")
+        self.crop_foreg = CropForegroundd(keys=["image", "label"], source_key="image", allow_smaller=True)
         self.normalize_intensity = NormalizeIntensity(nonzero=True, channel_wise=True)
         if model_mode in ["train"]:
             self.training = True
 
     def calculate_new_shape(self, spacing, shape):
         spacing_ratio = np.array(spacing) / np.array(self.target_spacing)
+        if len(shape) == 4:  # If shape includes channel dimension
+            shape = shape[1:]
         new_shape = (spacing_ratio * np.array(shape)).astype(int).tolist()
         return new_shape
 
@@ -310,7 +312,7 @@ class PreprocessAnisotropic(MapTransform):
             image, label = cropped_data["image"], cropped_data["label"]
         else:
             d["original_shape"] = np.array(image.shape[1:])
-            box_start, box_end = generate_spatial_bounding_box(image)
+            box_start, box_end = generate_spatial_bounding_box(image, allow_smaller=True)
             image = SpatialCrop(roi_start=box_start, roi_end=box_end)(image)
             d["bbox"] = np.vstack([box_start, box_end])
             d["crop_shape"] = np.array(image.shape[1:])

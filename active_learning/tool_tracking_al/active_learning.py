@@ -47,7 +47,7 @@ from monai.networks.nets import FlexibleUNet
 parser = argparse.ArgumentParser(description="Active Learning Settings")
 
 # Directory & Json & Seed
-parser.add_argument("--base_dir", default="/home/vishwesh/experiments/robo_tool_experiments/variance_sanity", type=str)
+parser.add_argument("--base_dir", default="./experiments/robo_tool_experiments/variance_sanity", type=str)
 parser.add_argument("--data_root", default="/scratch_2/robo_tool_dataset_2023", type=str)
 parser.add_argument("--json_path", default="/scratch_2/robo_tool_dataset_2023/data_list.json", type=str)
 parser.add_argument("--seed", default=120, type=int)
@@ -281,7 +281,7 @@ def main():
         unl_loader = DataLoader(unl_ds, batch_size=1)
 
         # Calculation of Epochs based on steps
-        max_epochs = np.int(args.steps / (np.ceil(len(train_d) / args.batch_size)))
+        max_epochs = int(args.steps / (np.ceil(len(train_d) / args.batch_size)))
         print("Epochs Estimated are {} for Active Iter {} with {} Vols".format(max_epochs, active_iter, len(train_d)))
 
         # Keep track of Best_metric, it is being used as IoU and not Dice
@@ -379,7 +379,7 @@ def main():
         prev_best_ckpt = os.path.join(active_model_dir, "model.pt")
 
         device = torch.device("cuda:0")
-        ckpt = torch.load(prev_best_ckpt)
+        ckpt = torch.load(prev_best_ckpt, weights_only=True)
         network.load_state_dict(ckpt)
         network.to(device=device)
 
@@ -469,10 +469,10 @@ def main():
                     variance = np.sum(np.nanvar(vol_input, axis=0), axis=0)
 
                     score_list.append(np.nanmean(variance))
-                    name_list.append(unl_data["image_meta_dict"]["filename_or_obj"][0])
+                    name_list.append(unl_data["image"].meta["filename_or_obj"][0])
                     print(
                         "Variance for image: {} is: {}".format(
-                            unl_data["image_meta_dict"]["filename_or_obj"][0], np.nanmean(variance)
+                            unl_data["image"].meta["filename_or_obj"][0], np.nanmean(variance)
                         )
                     )
 

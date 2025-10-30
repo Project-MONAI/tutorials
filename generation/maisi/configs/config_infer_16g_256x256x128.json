@@ -1,0 +1,29 @@
+{
+    "num_output_samples": 1,
+    "body_region": ["chest"],
+    "anatomy_list": ["lung tumor"],
+    "controllable_anatomy_size": [],
+    "num_inference_steps": 30,
+    "mask_generation_num_inference_steps": 1000,
+    "output_size": [
+        256,
+        256,
+        128
+    ],
+    "image_output_ext": ".nii.gz",
+    "label_output_ext": ".nii.gz",
+    "spacing": [
+        1.5,
+        1.5,
+        4.0
+    ],
+    "autoencoder_sliding_window_infer_size": [96,96,96],
+    "autoencoder_sliding_window_infer_overlap": 0.25,
+    "autoencoder_tp_num_splits": 2,
+    "controlnet": "$@controlnet_def",
+    "diffusion_unet": "$@diffusion_unet_def",
+    "autoencoder": "$@autoencoder_def",
+    "mask_generation_autoencoder": "$@mask_generation_autoencoder_def",
+    "mask_generation_diffusion": "$@mask_generation_diffusion_def",
+    "modality": 1
+}

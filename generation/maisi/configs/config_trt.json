@@ -1,0 +1,24 @@
+{
+    "+imports": [
+        "$from monai.networks import trt_compile"
+    ],
+    "c_trt_args": {
+        "export_args": {
+            "dynamo": "$False",
+            "report": "$True"
+        },
+        "output_lists": [
+            [
+                -1
+            ],
+            [
+	    ]
+        ]
+    },
+    "device": "cuda",
+    "controlnet": "$trt_compile(@controlnet_def.to(@device), @trained_controlnet_path, @c_trt_args)",
+    "diffusion_unet": "$trt_compile(@diffusion_unet_def.to(@device), @trained_diffusion_path)",
+    "autoencoder": "$trt_compile(@autoencoder_def.to(@device), @trained_autoencoder_path, submodule='decoder')",
+    "mask_generation_autoencoder": "$trt_compile(@mask_generation_autoencoder_def.to(@device), @trained_mask_generation_autoencoder_path, submodule='decoder')",
+    "mask_generation_diffusion": "$trt_compile(@mask_generation_diffusion_def.to(@device), @trained_mask_generation_diffusion_path)"
+}

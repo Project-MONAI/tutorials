@@ -46,11 +46,7 @@ class ModelLoader:
             self._device = torch.device("cpu")
             logger.info("Using CPU for inference")
 
-    def load_model(
-        self,
-        model_name: str = "spleen_ct_segmentation",
-        bundle_dir: str = "./models"
-    ) -> None:
+    def load_model(self, model_name: str = "spleen_ct_segmentation", bundle_dir: str = "./models") -> None:
         """
         Load a MONAI model bundle.
 
@@ -74,18 +70,14 @@ class ModelLoader:
 
             # Load the model
             logger.info("Loading model into memory...")
-            self._model = load(
-                name=model_name,
-                bundle_dir=bundle_dir,
-                source="monaihosting"
-            )
+            self._model = load(name=model_name, bundle_dir=bundle_dir, source="monaihosting")
 
             # Move model to device
-            if hasattr(self._model, 'to'):
+            if hasattr(self._model, "to"):
                 self._model = self._model.to(self._device)
 
             # Set model to evaluation mode
-            if hasattr(self._model, 'eval'):
+            if hasattr(self._model, "eval"):
                 self._model.eval()
 
             logger.info("Model loaded successfully")
@@ -98,9 +90,7 @@ class ModelLoader:
     def model(self):
         """Get the loaded model instance."""
         if self._model is None:
-            raise RuntimeError(
-                "Model not loaded. Call load_model() first."
-            )
+            raise RuntimeError("Model not loaded. Call load_model() first.")
         return self._model
 
     @property

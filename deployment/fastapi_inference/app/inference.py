@@ -32,19 +32,17 @@ class InferenceEngine:
 
     def __init__(self):
         """Initialize the inference engine with preprocessing transforms."""
-        self.preprocess = Compose([
-            LoadImage(image_only=True),
-            EnsureChannelFirst(),
-            Spacing(pixdim=(1.5, 1.5, 2.0)),
-            ScaleIntensity(),
-            EnsureType(dtype=torch.float32),
-        ])
+        self.preprocess = Compose(
+            [
+                LoadImage(image_only=True),
+                EnsureChannelFirst(),
+                Spacing(pixdim=(1.5, 1.5, 2.0)),
+                ScaleIntensity(),
+                EnsureType(dtype=torch.float32),
+            ]
+        )
 
-    async def process_image(
-        self,
-        image_bytes: bytes,
-        filename: str
-    ) -> Dict:
+    async def process_image(self, image_bytes: bytes, filename: str) -> Dict:
         """
         Process an uploaded image and return predictions.
 
@@ -80,13 +78,15 @@ class InferenceEngine:
             result = {
                 "success": True,
                 "prediction": self._format_prediction(prediction),
-                "segmentation_shape": list(prediction.shape) if isinstance(prediction, (np.ndarray, torch.Tensor)) else None,
+                "segmentation_shape": (
+                    list(prediction.shape) if isinstance(prediction, (np.ndarray, torch.Tensor)) else None
+                ),
                 "metadata": {
                     "image_shape": list(image_tensor.shape),
                     "processing_time": round(processing_time, 3),
                     "device": str(model_loader.device),
                 },
-                "message": f"Inference completed successfully in {processing_time:.3f}s"
+                "message": f"Inference completed successfully in {processing_time:.3f}s",
             }
 
             logger.info(f"Inference completed in {processing_time:.3f}s")
@@ -112,15 +112,12 @@ class InferenceEngine:
         """
         try:
             # Support NIfTI format (.nii, .nii.gz)
-            if filename.endswith(('.nii', '.nii.gz')):
+            if filename.endswith((".nii", ".nii.gz")):
                 image_buffer.seek(0)
                 img = nib.load(image_buffer)
                 return img.get_fdata()
             else:
-                raise ValueError(
-                    f"Unsupported image format: {filename}. "
-                    "Supported formats: .nii, .nii.gz"
-                )
+                raise ValueError(f"Unsupported image format: {filename}. " "Supported formats: .nii, .nii.gz")
         except Exception as e:
             raise ValueError(f"Failed to load image: {str(e)}")
 
@@ -170,7 +167,7 @@ class InferenceEngine:
 
             # Run inference with no gradient computation
             with torch.no_grad():
-                if hasattr(model, '__call__'):
+                if hasattr(model, "__call__"):
                     prediction = model(image_tensor)
                 else:
                     raise RuntimeError("Model is not callable")

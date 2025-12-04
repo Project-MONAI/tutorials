@@ -63,24 +63,10 @@ class MONAIClient:
 
 def main():
     """Main function for command-line usage."""
-    parser = argparse.ArgumentParser(
-        description="MONAI FastAPI Inference Client"
-    )
-    parser.add_argument(
-        "--url",
-        default="http://localhost:8000",
-        help="API base URL (default: http://localhost:8000)"
-    )
-    parser.add_argument(
-        "--health",
-        action="store_true",
-        help="Check API health status"
-    )
-    parser.add_argument(
-        "--image",
-        type=str,
-        help="Path to medical image file for prediction"
-    )
+    parser = argparse.ArgumentParser(description="MONAI FastAPI Inference Client")
+    parser.add_argument("--url", default="http://localhost:8000", help="API base URL (default: http://localhost:8000)")
+    parser.add_argument("--health", action="store_true", help="Check API health status")
+    parser.add_argument("--image", type=str, help="Path to medical image file for prediction")
 
     args = parser.parse_args()
 

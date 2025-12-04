@@ -29,14 +29,8 @@ class PredictionResponse(BaseModel):
     """Response model for inference predictions."""
 
     success: bool = Field(..., description="Whether prediction was successful")
-    prediction: Optional[Dict] = Field(
-        None,
-        description="Prediction results (format depends on model output)"
-    )
-    segmentation_shape: Optional[List[int]] = Field(
-        None,
-        description="Shape of segmentation mask if applicable"
-    )
+    prediction: Optional[Dict] = Field(None, description="Prediction results (format depends on model output)")
+    segmentation_shape: Optional[List[int]] = Field(None, description="Shape of segmentation mask if applicable")
     metadata: PredictionMetadata = Field(..., description="Prediction metadata")
     message: Optional[str] = Field(None, description="Additional information or error message")
 

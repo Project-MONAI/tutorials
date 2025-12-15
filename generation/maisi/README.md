@@ -1,4 +1,4 @@
-# 🚨🚨🚨 THIS FOLDER IS DEPRECATED 🚨🚨🚨  
+# 🚨🚨🚨 THIS FOLDER IS DEPRECATED 🚨🚨🚨
 # 👉 Please switch to: [https://github.com/NVIDIA-Medtech/NV-Generate-CTMR/tree/main](https://github.com/NVIDIA-Medtech/NV-Generate-CTMR/tree/main)
 
 # Medical AI for Synthetic Imaging (MAISI)

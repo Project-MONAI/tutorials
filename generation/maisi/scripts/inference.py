@@ -89,7 +89,7 @@ def main():
     root_dir = tempfile.mkdtemp() if directory is None else directory
     print(root_dir)
 
-    download_model_data(maisi_version,root_dir)
+    download_model_data(maisi_version, root_dir)
 
     # ## Read in environment setting, including data directory, model directory, and output directory
     # The information for data directory, model directory, and output directory are saved in ./configs/environment.json

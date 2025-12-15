@@ -20,6 +20,10 @@ We are excited to announce the new MAISI Version `maisi3d-rflow`. Compared with 
 - For the released model weights, `maisi3d-rflow` can generate images with better quality for head region and small output volumes than `maisi3d-ddpm`; they have comparable quality for other cases.
 - `maisi3d-rflow` added a diffusion model input `modality`, which gives it flexibility to extend to other modalities. Currently it is set as always equal to 1 since this version only supports CT generation. We predefined some modalities in [./configs/modality_mapping.json](./configs/modality_mapping.json).
 
+More details can be found in our 2025 report:
+
+[Zhao, C., Guo, P., Yang, D., Tang, Y., ... & Xu, D. (2025). MAISI-v2: Accelerated 3D High-Resolution Medical Image Synthesis with Rectified Flow and Region-specific Contrastive Loss](https://arxiv.org/pdf/2508.05772)
+
 **GUI demo:** Welcome to try our GUI demo at [https://build.nvidia.com/nvidia/maisi](https://build.nvidia.com/nvidia/maisi).
 The GUI is only a demo for toy examples. This Github repo is the full version.
 
@@ -134,7 +138,7 @@ MAISI is based on the following papers:
 [**Rectified Flow:** Liu, Xingchao, Chengyue Gong, and Qiang Liu. "Flow straight and fast: Learning to generate and transfer data with rectified flow." ICLR 2023](https://arxiv.org/pdf/2209.03003).
 
 ### 1. Network Definition
-Network definition is stored in [./configs/config_maisi.json](./configs/config_maisi.json). Training and inference should use the same [./configs/config_maisi.json](./configs/config_maisi.json).
+Network definition is stored in [./configs/config_maisi3d-rflow.json](./configs/config_maisi3d-rflow.json) for the Rectified Flow model and [./configs/config_maisi3d-ddpm.json](./configs/config_maisi3d-ddpm.json) for the DDPM model. Training and inference should use the same [./configs/config_maisi3d-rflow.json](./configs/config_maisi3d-rflow.json) or [./configs/config_maisi3d-ddpm.json](./configs/config_maisi3d-ddpm.json).
 
 ### 2. Model Inference
 #### Inference parameters:

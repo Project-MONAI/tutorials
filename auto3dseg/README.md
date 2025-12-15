@@ -56,13 +56,44 @@ We provide [a two-minute example](notebooks/auto3dseg_hello_world.ipynb) for use
 
 To further demonstrate the capabilities of **Auto3DSeg**, [here](./tasks/instance22/README.md) is the detailed performance of the algorithm in **Auto3DSeg**, which won 2nd place in the MICCAI 2022 challenge **[INSTANCE22: The 2022 Intracranial Hemorrhage Segmentation Challenge on Non-Contrast Head CT (NCCT)](https://instance.grand-challenge.org/)**
 
+## Running With Your Own Data
+
+To run Auto3DSeg on your own dataset, you need to build a `datalist.json` file, and pass it to the AutoRunner.
+
+The datalist format is based on the datasets released by the [Medical Segmentation Decathlon](http://medicaldecathlon.com).
+See the function `load_decathlon_datalist` in `monai/data/decathlon_datalist.py` for a description of the format.
+
+For the AutoRunner, we only need the `training` list in the JSON, it does not use any other fields.
+The `fold` key for each image is not required, as the AutoRunner will automatically create cross-validation folds (the number of folds is hard-coded to 5).
+If you do add the cross-validation folds beforehand, the AutoRunner will use these by default.
+You can also choose to include a `validation` list in the JSON file, in which case the AutoRunner will disable cross-validation and use the specified validation set.
+Any other metadata, such as `modality`, `numTraining`, `name`, etc. will not be used by the AutoRunner, but we do recommend using metadata fields to keep track of names and versions of your dataset. If you are using multi-modal scans, it is possible to enter lists of image paths for both the `image` and `label` keys; MONAI will stack them into channels.
+In short, your `datalist.json` file should look like this:
+
+```
+{
+    "name": "Example datalist.json"
+    "training":
+        [
+            {"image": "/path/to/image_1.nii.gz", "label": "/path/to/label_1.nii.gz"},
+            {"image": "/path/to/image_2.nii.gz", "label": "/path/to/label_2.nii.gz"},
+            ...
+        ]
+}
+
+```
+
+The AutoRunner will create a `work_dir` folder in the directory from which it is run, which will contain the resulting models and the copied datalist file _with_ cross-validation folds. This allows you to keep track of which datalist file the models are trained on.
+
+See the description below or the file [run_with_minimal_input.md](docs/run_with_minimal_input.md) to use your datalist with the AutoRunner.
+
 ## Reference Python APIs for Auto3DSeg
 
 **Auto3DSeg** offers users different levels of APIs to run pipelines that suit their needs.
 
 ### 1. Run with Minimal Input using ```AutoRunner```
 
-The user needs to provide a data list (".json" file) for the new task and data root. A typical data list is as this [example](tasks/msd/Task05_Prostate/msd_task05_prostate_folds.json). A sample datalist for an existing MSD formatted dataset can be created using [this notebook](notebooks/msd_datalist_generator.ipynb). After creating the data list, the user can create a simple "task.yaml" file (shown below) as the minimum input for **Auto3DSeg**.
+The user needs to provide a data list (".json" file) for the new task and data root. A typical data list is as this [example](tasks/msd/Task05_Prostate/msd_task05_prostate_folds.json). [This notebook](notebooks/msd_crossval_datalist_generator.ipynb) features an example to create a datalist with cross-validation folds from an existing MSD dataset. After creating the data list, the user can create a simple "task.yaml" file (shown below) as the minimum input for **Auto3DSeg**.
 
 ```
 modality: CT

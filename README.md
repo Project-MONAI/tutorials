@@ -41,6 +41,50 @@ Running:
 
 in a cell will verify this has worked and show you what kind of hardware you have access to.
 
+#### Google Colab Setup (CUDA 12.x, PyTorch 2.6, MONAI 1.5)
+
+In Google Colab, the default environment may cause version conflicts with MONAI.
+To ensure compatibility, install PyTorch and MONAI explicitly as follows:
+
+# Install PyTorch 2.6.0 with CUDA 12.4
+pip install --index-url https://download.pytorch.org/whl/cu124 \
+  torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0
+
+# Install MONAI and common dependencies
+pip install "monai[all]" nibabel pydicom ipywidgets==8.1.2
+
+
+### Known issues and fixes
+
+- Torchaudio mismatch
+  Colab may come with torchaudio 2.8.0, which is incompatible with torch 2.6.0.
+  Installing the versions above resolves this issue.
+
+- filelock conflicts with nni
+  Some preinstalled packages (such as pytensor with newer filelock) may conflict.
+  Use the following commands to fix:
+
+  pip uninstall -y pytensor
+  pip install -U filelock
+
+- Too many workers warning
+  Colab has limited CPU resources, and high num_workers settings may freeze execution.
+  It is recommended to use --num_workers=2 when running tutorials and adjust the `num_workers` parameters where it is used in notebooks (eg. for data loaders).
+
+
+### Quick smoke test
+
+After installation, verify the environment by running:
+
+git clone https://github.com/Project-MONAI/tutorials.git
+cd tutorials/3d_segmentation/torch
+python -u unet_training_array.py --max_epochs 2 --batch_size 1 --num_workers 2
+
+If the logs show decreasing training loss and a Dice score, the setup is correct.
+
+**Note:** In most cases, users can run MONAI tutorials directly in Colab notebooks without additional installation.
+The steps above are mainly for resolving dependency conflicts when installing extra packages.
+
 #### Data
 
 Some notebooks will require additional data.
@@ -342,3 +386,4 @@ Example shows the use cases of using MONAI to evaluate the performance of a gene
 
 #### [VISTA2D](./vista_2d)
 This tutorial demonstrates how to train a cell segmentation model using the [MONAI](https://monai.io/) framework and the [Segment Anything Model (SAM)](https://github.com/facebookresearch/segment-anything) on the [Cellpose dataset](https://www.cellpose.org/).
+ECHO가 설정되어 있습니다.

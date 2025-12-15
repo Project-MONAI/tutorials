@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  monai-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: monai-fastapi-inference
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount models directory for persistence
+      - ../models:/app/models
+      # Mount app directory for development (comment out in production)
+      - ../app:/app/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=info
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

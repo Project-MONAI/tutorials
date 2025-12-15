@@ -27,6 +27,7 @@ from monai.utils import set_determinism
 from scripts.sample import LDMSampler, check_input
 from scripts.utils import define_instance
 from scripts.utils_plot import find_label_center_loc, get_xyz_plot, show_image
+from scripts.download_model_data import download_model_data
 
 
 def main():
@@ -88,78 +89,7 @@ def main():
     root_dir = tempfile.mkdtemp() if directory is None else directory
     print(root_dir)
 
-    # TODO: remove the `files` after the files are uploaded to the NGC
-    files = [
-        {
-            "path": "models/autoencoder_epoch273.pt",
-            "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials"
-            "/model_zoo/model_maisi_autoencoder_epoch273_alternative.pt",
-        },
-        {
-            "path": "models/mask_generation_autoencoder.pt",
-            "url": "https://developer.download.nvidia.com/assets/Clara/monai"
-            "/tutorials/mask_generation_autoencoder.pt",
-        },
-        {
-            "path": "models/mask_generation_diffusion_unet.pt",
-            "url": "https://developer.download.nvidia.com/assets/Clara/monai"
-            "/tutorials/model_zoo/model_maisi_mask_generation_diffusion_unet_v2.pt",
-        },
-        {
-            "path": "configs/all_anatomy_size_condtions.json",
-            "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/all_anatomy_size_condtions.json",
-        },
-        {
-            "path": "datasets/all_masks_flexible_size_and_spacing_4000.zip",
-            "url": "https://developer.download.nvidia.com/assets/Clara/monai"
-            "/tutorials/all_masks_flexible_size_and_spacing_4000.zip",
-        },
-    ]
-
-    if maisi_version == "maisi3d-ddpm":
-        files += [
-            {
-                "path": "models/diff_unet_3d_ddpm.pt",
-                "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/model_zoo"
-                "/model_maisi_input_unet3d_data-all_steps1000size512ddpm_random_current_inputx_v1_alternative.pt",
-            },
-            {
-                "path": "models/controlnet_3d_ddpm.pt",
-                "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/model_zoo"
-                "/model_maisi_controlnet-20datasets-e20wl100fold0bc_noi_dia_fsize_current_alternative.pt",
-            },
-            {
-                "path": "configs/candidate_masks_flexible_size_and_spacing_3000.json",
-                "url": "https://developer.download.nvidia.com/assets/Clara/monai"
-                "/tutorials/candidate_masks_flexible_size_and_spacing_3000.json",
-            },
-        ]
-    elif maisi_version == "maisi3d-rflow":
-        files += [
-            {
-                "path": "models/diff_unet_3d_rflow.pt",
-                "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/"
-                "diff_unet_ckpt_rflow_epoch19350.pt",
-            },
-            {
-                "path": "models/controlnet_3d_rflow.pt",
-                "url": "https://developer.download.nvidia.com/assets/Clara/monai/tutorials/"
-                "controlnet_rflow_epoch60.pt",
-            },
-            {
-                "path": "configs/candidate_masks_flexible_size_and_spacing_4000.json",
-                "url": "https://developer.download.nvidia.com/assets/Clara/monai"
-                "/tutorials/candidate_masks_flexible_size_and_spacing_4000.json",
-            },
-        ]
-    else:
-        raise ValueError(
-            f"maisi_version has to be chosen from ['maisi3d-ddpm', 'maisi3d-rflow'], yet got {maisi_version}."
-        )
-
-    for file in files:
-        file["path"] = file["path"] if "datasets/" not in file["path"] else os.path.join(root_dir, file["path"])
-        download_url(url=file["url"], filepath=file["path"])
+    download_model_data(maisi_version,root_dir)
 
     # ## Read in environment setting, including data directory, model directory, and output directory
     # The information for data directory, model directory, and output directory are saved in ./configs/environment.json

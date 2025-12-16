@@ -19,9 +19,6 @@ import tempfile
 
 import monai
 import torch
-from monai.apps import download_url
-from monai.config import print_config
-from monai.transforms import LoadImage, Orientation
 from monai.utils import set_determinism
 
 from scripts.sample import LDMSampler, check_input

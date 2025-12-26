@@ -1,3 +1,6 @@
+# 🚨🚨🚨 THIS FOLDER IS DEPRECATED (as of Oct 2025) 🚨🚨🚨
+# 👉 Please switch to: [https://github.com/NVIDIA-Medtech/NV-Generate-CTMR/tree/main](https://github.com/NVIDIA-Medtech/NV-Generate-CTMR/tree/main)
+
 # Medical AI for Synthetic Imaging (MAISI)
 This example demonstrates the applications of training and validating NVIDIA MAISI, a 3D Latent Diffusion Model (LDM) capable of generating large CT images accompanied by corresponding segmentation masks. It supports variable volume size and voxel spacing and allows for the precise control of organ/tumor size.
 

@@ -23,16 +23,23 @@ jobs:
         python-version: '3.10'
     - name: Install MONAI
       id: monai-install
+      env:
+        PIP_NO_CACHE_DIR: "1"
+        PIP_DISABLE_PIP_VERSION_CHECK: "1"
       run: |
         find  /opt/hostedtoolcache/* -maxdepth 0 ! -name 'Python' -exec rm -rf {} \;
+        df -h
         which python
         python -m pip install -U pip wheel
-        python -m pip install torch torchvision torchaudio
+        # Force CPU-only PyTorch wheels so we don't download huge CUDA/nvidia-* wheels in CI.
+        # Keep PyPI available for torch's dependencies.
+        python -m pip install --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple torch torchvision torchaudio
 
         python -m pip install -r https://raw.githubusercontent.com/Project-MONAI/MONAI/dev/requirements-dev.txt
         python -m pip install -r requirements.txt
 
-        BUILD_MONAI=0 python -m pip install git+https://github.com/Project-MONAI/MONAI#egg=MONAI
+        # Avoid PEP517 build isolation (which can re-install torch and pull CUDA wheels).
+        BUILD_MONAI=0 python -m pip install --no-build-isolation git+https://github.com/Project-MONAI/MONAI#egg=MONAI
         python -m pip list
     - name: Notebook quick check
       shell: bash

@@ -87,7 +87,7 @@ def fetch_to_hf_path_cmd(
 
 def download_model_data(generate_version, root_dir, model_only=False):
     # TODO: remove the `files` after the files are uploaded to the NGC
-    if generate_version == "ddpm-ct" or generate_version == "rflow-ct":
+    if generate_version == 'maisi3d-ddpm' or generate_version == 'maisi3d-rflow':
         files = [
             {
                 "path": "models/autoencoder_v1.pt",
@@ -118,24 +118,11 @@ def download_model_data(generate_version, root_dir, model_only=False):
                     "filename": "datasets/all_masks_flexible_size_and_spacing_4000.zip",
                 },
             ]
-    elif generate_version == "rflow-mr":
-        files = [
-            {
-                "path": "models/autoencoder_v2.pt",
-                "repo_id": "nvidia/NV-Generate-MR",
-                "filename": "models/autoencoder_v2.pt",
-            },
-            {
-                "path": "models/diff_unet_3d_rflow-mr.pt",
-                "repo_id": "nvidia/NV-Generate-MR",
-                "filename": "models/diff_unet_3d_rflow-mr.pt",
-            },
-        ]
     else:
         raise ValueError(
-            f"generate_version has to be chosen from ['ddpm-ct', 'rflow-ct', 'rflow-mr'], yet got {generate_version}."
+            f"generate_version has to be chosen from ['maisi3d-ddpm', 'maisi3d-rflow'], yet got {generate_version}."
         )
-    if generate_version == "ddpm-ct":
+    if generate_version == 'maisi3d-ddpm':
         files += [
             {
                 "path": "models/diff_unet_3d_ddpm-ct.pt",
@@ -156,7 +143,7 @@ def download_model_data(generate_version, root_dir, model_only=False):
                     "filename": "datasets/candidate_masks_flexible_size_and_spacing_3000.json",
                 },
             ]
-    elif generate_version == "rflow-ct":
+    elif generate_version == 'maisi3d-rflow':
         files += [
             {
                 "path": "models/diff_unet_3d_rflow-ct.pt",
@@ -193,7 +180,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--version",
         type=str,
-        default="rflow-ct",
+        default='maisi3d-rflow',
     )
     parser.add_argument(
         "--root_dir",

@@ -132,6 +132,7 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*vista_2d_tutorial_monai.ipynb*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*learn2reg_oasis_unpaired_brain_mr.ipynb*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*finetune_vista3d_for_hugging_face_pipeline.ipynb*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*TCIA_PROSTATEx_Prostate_MRI_Anatomy_Model.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/2029
+skip_run_papermill=("${skip_run_papermill[@]}" .*maisi_inference_tutorial.ipynb*)
 
 # output formatting
 separator=""

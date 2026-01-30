@@ -6,6 +6,6 @@
     "model_filename": "diff_unet_ckpt.pt",
     "output_dir": "./predictions",
     "output_prefix": "unet_3d",
-    "trained_autoencoder_path": "./models/autoencoder_epoch273.pt",
+    "trained_autoencoder_path": "./models/autoencoder_v1.pt",
     "existing_ckpt_filepath": null
 }

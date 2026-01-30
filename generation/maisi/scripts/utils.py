@@ -410,7 +410,7 @@ def get_body_region_index_from_mask(input_mask):
     region_indices["region_3"] = [93, 94]
 
     nda = input_mask.cpu().numpy().squeeze()
-    unique_elements = np.lib.arraysetops.unique(nda)
+    unique_elements = np.unique(nda)
     unique_elements = list(unique_elements)
     # print(f"nda: {nda.shape} {unique_elements}.")
     overlap_array = np.zeros(len(region_indices), dtype=np.uint8)

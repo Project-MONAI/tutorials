@@ -9,9 +9,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os, subprocess, shutil
+import os
+import shutil
 import argparse
-from tqdm.auto import tqdm
 from monai.apps import download_url
 from pathlib import Path
 from typing import List, Dict, Optional

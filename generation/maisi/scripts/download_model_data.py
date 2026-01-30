@@ -61,7 +61,6 @@ def fetch_to_hf_path_cmd(
     return saved
 
 
-
 def download_model_data(generate_version, root_dir, model_only=False):
     # TODO: remove the `files` after the files are uploaded to the NGC
     if generate_version == "maisi3d-ddpm" or generate_version == "maisi3d-rflow":

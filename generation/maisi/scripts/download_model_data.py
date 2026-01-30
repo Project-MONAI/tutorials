@@ -14,31 +14,24 @@ import argparse
 from tqdm.auto import tqdm
 from monai.apps import download_url
 from pathlib import Path
-from huggingface_hub import snapshot_download
 from typing import List, Dict, Optional
+from huggingface_hub import hf_hub_download
 
 
 def fetch_to_hf_path_cmd(
     items: List[Dict[str, str]],
-    root_dir: str = "./",  # staging dir for CLI output
+    root_dir: str = "./",  # (kept for signature compatibility; not required)
     revision: str = "main",
     overwrite: bool = False,
-    token: Optional[str] = None,  # or rely on env HUGGINGFACE_HUB_TOKEN
+    token: Optional[str] = None,  # or rely on env HF_TOKEN / HUGGINGFACE_HUB_TOKEN
 ) -> list[str]:
     """
     items: list of {"repo_id": "...", "filename": "path/in/repo.ext", "path": "local/target.ext"}
     Returns list of saved local paths (in the same order as items).
+
+    Pure Python implementation (CI-safe): no `huggingface-cli` dependency.
     """
     saved = []
-    root = Path(root_dir)
-    root.mkdir(parents=True, exist_ok=True)
-
-    # Env for subprocess; keep Rust fast-path off to avoid notebook progress quirks
-    env = os.environ.copy()
-    if token:
-        env["HUGGINGFACE_HUB_TOKEN"] = token
-    env.setdefault("HF_HUB_ENABLE_HF_TRANSFER", "0")  # safer in Jupyter
-    env.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "0")  # show CLI progress in terminal
 
     for it in items:
         repo_id = it["repo_id"]
@@ -50,39 +43,23 @@ def fetch_to_hf_path_cmd(
             saved.append(str(dst))
             continue
 
-        # Build command (no shell=True; no quoting issues)
-        cmd = [
-            "huggingface-cli",
-            "download",
-            repo_id,
-            "--include",
-            repo_file,
-            "--revision",
-            revision,
-            "--local-dir",
-            str(root),
-        ]
-        # Run
-        subprocess.run(cmd, check=True, env=env)
+        # Download into HF cache, then copy to requested destination
+        cached_path = hf_hub_download(
+            repo_id=repo_id,
+            filename=repo_file,
+            revision=revision,
+            token=token,  # if None, huggingface_hub will use env / cached auth if present
+        )
 
-        # Source path where CLI placed the file
-        src = root / repo_file
-        if not src.exists():
-            raise FileNotFoundError(
-                f"Expected downloaded file missing: {src}\n"
-                f"Tip: authenticate (`huggingface-cli login` or pass token=...),"
-                f" and avoid shared-IP 429s."
-            )
-
-        # Move to desired target
+        # Copy/move into place
         if dst.exists() and overwrite:
             dst.unlink()
-        if src.resolve() != dst.resolve():
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            shutil.move(str(src), str(dst))
+
+        shutil.copy2(cached_path, dst)
         saved.append(str(dst))
 
     return saved
+
 
 
 def download_model_data(generate_version, root_dir, model_only=False):

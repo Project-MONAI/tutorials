@@ -83,6 +83,7 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" maisi_inference_tut
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" realism_diversity_metrics.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" omniverse_integration.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" hugging_face_pipeline_for_monai.ipynb)
+doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" 01_kspace_basics_fastmri_knee.ipynb)
 
 # Execution of the notebook in these folders / with the filename cannot be automated
 skip_run_papermill=()

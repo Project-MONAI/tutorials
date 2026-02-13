@@ -15,12 +15,12 @@ jobs:
     - name: Set up Python 3.10
       uses: actions/setup-python@v6
       with:
-        python-version: 3.10
+        python-version: '3.10'
         cache: 'pip'
     - name: Install dependencies
       run: |
         find  /opt/hostedtoolcache/* -maxdepth 0 ! -name 'Python' -exec rm -rf {} \;
-        python -m pip install --upgrade pip wheel
+        python -m pip install --upgrade pip wheel wheel-stub
         pip install --no-build-isolation -r https://raw.githubusercontent.com/Project-MONAI/MONAI/dev/requirements-dev.txt
         pip install -r requirements.txt
     - name: Copyright check

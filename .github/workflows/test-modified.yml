@@ -31,7 +31,7 @@ jobs:
         find  /opt/hostedtoolcache/* -maxdepth 0 ! -name 'Python' -exec rm -rf {} \;
         df -h
         which python
-        python -m pip install -U pip wheel
+        python -m pip install -U pip wheel wheel-stub
         # Force CPU-only PyTorch wheels so we don't download huge CUDA/nvidia-* wheels in CI.
         # Keep PyPI available for torch's dependencies.
         pip install --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple torch torchvision torchaudio

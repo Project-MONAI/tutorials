@@ -21,8 +21,7 @@ jobs:
       run: |
         find  /opt/hostedtoolcache/* -maxdepth 0 ! -name 'Python' -exec rm -rf {} \;
         python -m pip install --upgrade pip wheel wheel-stub
-        pip install --no-build-isolation -r https://raw.githubusercontent.com/Project-MONAI/MONAI/dev/requirements-dev.txt
-        pip install -r requirements.txt
+        python -m pip install -r requirements.txt
     - name: PEP8 check
       run: |
         $(pwd)/runner.sh --no-run

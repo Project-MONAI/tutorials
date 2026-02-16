@@ -394,4 +394,3 @@ This tutorial introduces MRI reconstruction fundamentals: what k-space is, how t
 Training and inference for accelerated MRI reconstruction using BasicUNet on the fastMRI brain multi-coil dataset.
 ##### [VarNet MRI Reconstruction](./reconstruction/MRI_reconstruction/varnet_demo)
 Training and inference for accelerated MRI reconstruction using e2e-VarNet on the fastMRI brain multi-coil dataset.
-ECHO�� �����Ǿ� �ֽ��ϴ�.

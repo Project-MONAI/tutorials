@@ -331,6 +331,8 @@ Illustrate reading NIfTI files and iterating over image patches of the volumes l
 This tutorial illustrates the flexible network APIs and utilities.
 ##### [postprocessing_transforms](./modules/postprocessing_transforms.ipynb)
 This notebook shows the usage of several postprocessing transforms based on the model output of spleen segmentation task.
+##### [idc_dataset](./modules/idc_dataset.ipynb)
+This notebook shows how to query and download public cancer imaging data from NCI Imaging Data Commons (IDC) using `idc-index`, and how to load DICOM images and DICOM-SEG segmentations into MONAI for AI/ML preprocessing.
 ##### [public_datasets](./modules/public_datasets.ipynb)
 This notebook shows how to quickly set up training workflow based on `MedNISTDataset` and `DecathlonDataset`, and how to create a new dataset.
 ##### [tcia_csv_processing](./modules/tcia_csv_processing.ipynb)
@@ -386,4 +388,3 @@ Example shows the use cases of using MONAI to evaluate the performance of a gene
 
 #### [VISTA2D](./vista_2d)
 This tutorial demonstrates how to train a cell segmentation model using the [MONAI](https://monai.io/) framework and the [Segment Anything Model (SAM)](https://github.com/facebookresearch/segment-anything) on the [Cellpose dataset](https://www.cellpose.org/).
-ECHO가 설정되어 있습니다.

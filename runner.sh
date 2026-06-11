@@ -85,7 +85,6 @@ doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" realism_diversity_m
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" omniverse_integration.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" hugging_face_pipeline_for_monai.ipynb)
 doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" msd_crossval_datalist_generator.ipynb)  # inference/datalist-only notebook, no training loop
-doesnt_contain_max_epochs=("${doesnt_contain_max_epochs[@]}" hovernet_infer_compare.ipynb)  # inference-only notebook
 
 # Execution of the notebook in these folders / with the filename cannot be automated
 skip_run_papermill=()

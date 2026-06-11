@@ -438,7 +438,7 @@ Changes committed to bring Docker run to parity with Eric's run:
 
 | File | Change |
 |---|---|
-| `runner.sh` | Add `msd_crossval_datalist_generator.ipynb` and `hovernet_infer_compare.ipynb` to `doesnt_contain_max_epochs`; add `image_restoration.ipynb` to `skip_run_papermill` |
+| `runner.sh` | Add `msd_crossval_datalist_generator.ipynb` to `doesnt_contain_max_epochs`; add `image_restoration.ipynb`, `05_spleen_segmentation_lightning.ipynb`, `deep_atlas_tutorial.ipynb` to `skip_run_papermill` |
 | `computer_assisted_intervention/endoscopic_inbody_classification.ipynb` | Reverted `return_state_dict=False` — upstream MONAI ≥1.5 already returns `nn.Module` by default; the extra kwarg caused `TypeError` in CI |
 | `bundle/05_spleen_segmentation_lightning.ipynb` | Change `pytorch-lightning~=2.0.0` → `pytorch-lightning>=2.1` to avoid mlflow eager-import failure (R7) |
 
@@ -449,5 +449,4 @@ Changes committed to bring Docker run to parity with Eric's run:
 | Disk space (R2) | Free `/data` disk or bind-mount scratch volume; `deep_atlas` (~2 GB), `deployment/bentoml`, `experiment_management/bundle_integrate_mlflow`, `microscopy` notebooks |
 | Socket FD limit (R8) | ✓ Confirmed fixed — `--ulimit nofile=65536:65536` resolves ancdata error; isolated run completed in 3m1s (2026-06-11) |
 | pytorch-lightning/mlflow import chain (R7) | ✓ Fixed: `pytorch-lightning>=2.1` in notebook (PR #2065) |
-| PEP8 in 3 notebooks | Run `bash runner.sh --autofix` for `surgtoolloc/preprocess_detect_scene_and_split_fold.ipynb`, `deep_atlas/deep_atlas_tutorial.ipynb`, `modules/interpretability/class_lung_lesion.ipynb` |
 | Restormer in MONAI dev | Cherry-pick Restormer network class commit; remove from skip list once merged |

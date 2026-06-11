@@ -139,6 +139,7 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*TCIA_PROSTATEx_Prostate_MRI_Ana
 skip_run_papermill=("${skip_run_papermill[@]}" .*maisi_inference_tutorial.ipynb*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*image_restoration.ipynb*)  # monai.networks.nets.restormer not yet in dev branch
 skip_run_papermill=("${skip_run_papermill[@]}" .*05_spleen_segmentation_lightning*)  # requires GPU; hardcoded .to("cuda") with no CPU fallback
+skip_run_papermill=("${skip_run_papermill[@]}" .*deep_atlas_tutorial*)  # requires GPU; device hardcoded to "cuda:0"
 
 # output formatting
 separator=""

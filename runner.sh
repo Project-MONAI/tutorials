@@ -138,6 +138,7 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*finetune_vista3d_for_hugging_fa
 skip_run_papermill=("${skip_run_papermill[@]}" .*TCIA_PROSTATEx_Prostate_MRI_Anatomy_Model.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/2029
 skip_run_papermill=("${skip_run_papermill[@]}" .*maisi_inference_tutorial.ipynb*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*image_restoration.ipynb*)  # monai.networks.nets.restormer not yet in dev branch
+skip_run_papermill=("${skip_run_papermill[@]}" .*05_spleen_segmentation_lightning*)  # requires GPU; hardcoded .to("cuda") with no CPU fallback
 
 # output formatting
 separator=""

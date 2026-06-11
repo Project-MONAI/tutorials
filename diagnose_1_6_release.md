@@ -318,28 +318,25 @@ eccefc57 (+143 commits) which may already include it, or the notebook needs upda
 **Fix:** Cherry-pick the Restormer commit into the dev branch, or add the
 notebook to `skip_run_papermill` until the class is merged.
 
-#### Group R5 — MONAI `bundle.load` API change (1 notebook)
+#### Group R5 — MONAI `bundle.load` API — local-only issue (1 notebook)
 
-| Notebook | Error |
+| Notebook | Error (local MONAI dev @ 19cab577 only) |
 |---|---|
 | `computer_assisted_intervention/endoscopic_inbody_classification.ipynb` | `AttributeError: 'collections.OrderedDict' object has no attribute 'train'` |
 
-`monai.bundle.load(name="endoscopic_inbody_classification")` returns an
-`OrderedDict` (the raw state dict) in our branch but the notebook calls
-`.train()` on it expecting a full `nn.Module`.
+`monai.bundle.load()` in our local MONAI dev branch (19cab577) has
+`@deprecated_arg("return_state_dict", since="1.2", removed="1.5")` with
+`return_state_dict=True` still active as the default, so it returns an
+`OrderedDict` instead of an `nn.Module`.
 
-**Fix (notebook):** Replace
-```python
-pretrained_model = monai.bundle.load(name="endoscopic_inbody_classification", bundle_dir="./")
-pretrained_model.train()
-```
-with
-```python
-bundle = monai.bundle.load(name="endoscopic_inbody_classification", bundle_dir="./",
-                            return_state_dict=False)   # or use BundleWorkflow
-```
-**Fix (MONAI):** Verify whether `bundle.load` is supposed to return a model or a
-state dict and align the API with the notebook expectation.
+**This is a local-environment-only issue.** The upstream MONAI dev branch
+(eccefc57, used by CI and the upstream Docker image) removed the
+`return_state_dict` parameter in MONAI 1.5, and `load()` now returns `nn.Module`
+by default. The notebook is correct as-is for any MONAI ≥ 1.5.
+
+**No notebook fix needed.** The `return_state_dict=False` workaround that was
+previously applied broke CI because the upstream MONAI does not accept that
+parameter at all (`TypeError: unexpected keyword argument`). It has been reverted.
 
 #### Group R6 — Missing `aim` package (1 notebook)
 
@@ -377,8 +374,14 @@ This happens when the per-process open-file-descriptor limit is too low
 (Docker default: 1024; DataLoader workers need ~65 k).
 
 **Fix:** Add `--ulimit nofile=65536:65536` to the docker run command (already
-reflected in the working command above). Confirmed fixed in rerun
-`runner_output_rerun_r2r7r8.logs`.
+reflected in the working command above).
+
+**Rerun note:** The targeted rerun (`runner_output_rerun_r2r7r8.logs`) ran `public_datasets` in
+the same container as `deep_atlas`. That notebook pip-installs packages which upgraded `urllib3`
+to 2.x; `papermill` then failed to import immediately (`ModuleNotFoundError: No module named
+'urllib3.packages.six.moves'`) — a run-order contamination, **not** the ancdata fix being tested.
+**Confirmed fixed** in isolated run (container with `--ulimit nofile=65536:65536`, no shared
+container): all 39 cells passed, `real 3m1s`. No `ancdata` error observed.
 
 #### Group R9 — MissingKeyword (1 notebook)
 
@@ -394,12 +397,12 @@ Known issue (documented in Category 2 above). Add to `doesnt_contain_max_epochs`
 
 1. **Pin `mlflow<3.0`** in the Dockerfile — fixes 4 notebooks (Group R1). ✓ DONE (PR #8912)
 2. **R2 is a run-order artifact** — not applicable on this host (39 GB free, data cached).
-3. **`--ulimit nofile=65536:65536`** added to working docker run command — fixes R8. ✓ DONE
+3. **`--ulimit nofile=65536:65536`** added to working docker run command — fixes R8. ✓ DONE (confirmed clean run 3m1s)
 4. **PEP8 autofix** — all three notebooks autofixed with `runner.sh --autofix`. ✓ DONE
 5. **Fix MissingKeyword** — `msd_crossval_datalist_generator.ipynb` added to exemption list. ✓ DONE (PR #2065)
 6. **Pin `transformers<5.0`** — fixes R3. ✓ DONE (PR #8912)
 7. **Add `aim`** to `requirements-dev.txt` — fixes R6. ✓ DONE (PR #8912)
-8. **Fix `bundle.load` API** (R5) — `return_state_dict=False` added to notebook. ✓ DONE (PR #2065)
+8. **R5 is local-only** — no notebook fix needed; upstream MONAI ≥ 1.5 removed the deprecated param and `load()` returns `nn.Module` directly. ✓ CONFIRMED (reverted wrong fix)
 9. **Skip `image_restoration.ipynb`** until Restormer is merged (R4). ✓ DONE (PR #2065)
 10. **Fix R7** — `pytorch-lightning>=2.1` pin in `bundle/05_spleen_segmentation_lightning.ipynb`. ✓ DONE (PR #2065)
 
@@ -409,11 +412,11 @@ Known issue (documented in Category 2 above). Add to `doesnt_contain_max_epochs`
 |---|---|---|---|
 | High | Pin `mlflow<3.0` (Dockerfile rebuild) | +4 passes | ✓ Done (PR #8912) |
 | High | R2 disk-full | +4 passes | ✓ Not an issue (run-order artifact) |
-| Medium | `--ulimit nofile=65536:65536` in docker run | +1 pass | ✓ Done |
+| Medium | `--ulimit nofile=65536:65536` in docker run | +1 pass | ✓ Done (confirmed, 3m1s clean run) |
 | Medium | Add `msd_crossval_datalist_generator` to exemption | +1 pass | ✓ Done (PR #2065) |
 | Medium | Pin `transformers<5.0` | +1 pass | ✓ Done (PR #8912) |
 | Low | Add `aim` to requirements | +1 pass | ✓ Done (PR #8912) |
-| Low | Fix `bundle.load` in endoscopic notebook | +1 pass | ✓ Done (PR #2065) |
+| Low | R5 `bundle.load` API — local-only, no fix needed | +1 pass (upstream) | ✓ Confirmed (reverted bad fix) |
 | Low | PEP8 autofix (3 notebooks) | 0 fails eliminated | ✓ Done |
 | Low | Skip `image_restoration.ipynb` (Restormer missing) | +1 pass | ✓ Done (PR #2065) |
 | Low | Fix Spleen Lightning notebook (`pytorch-lightning>=2.1`) | +1 pass | ✓ Done (PR #2065) |
@@ -436,7 +439,7 @@ Changes committed to bring Docker run to parity with Eric's run:
 | File | Change |
 |---|---|
 | `runner.sh` | Add `msd_crossval_datalist_generator.ipynb` and `hovernet_infer_compare.ipynb` to `doesnt_contain_max_epochs`; add `image_restoration.ipynb` to `skip_run_papermill` |
-| `computer_assisted_intervention/endoscopic_inbody_classification.ipynb` | Pass `return_state_dict=False` to `monai.bundle.load` so it returns `nn.Module` instead of `OrderedDict` |
+| `computer_assisted_intervention/endoscopic_inbody_classification.ipynb` | Reverted `return_state_dict=False` — upstream MONAI ≥1.5 already returns `nn.Module` by default; the extra kwarg caused `TypeError` in CI |
 | `bundle/05_spleen_segmentation_lightning.ipynb` | Change `pytorch-lightning~=2.0.0` → `pytorch-lightning>=2.1` to avoid mlflow eager-import failure (R7) |
 
 ### Still pending (require environment changes or separate PRs)
@@ -444,7 +447,7 @@ Changes committed to bring Docker run to parity with Eric's run:
 | Issue | Action needed |
 |---|---|
 | Disk space (R2) | Free `/data` disk or bind-mount scratch volume; `deep_atlas` (~2 GB), `deployment/bentoml`, `experiment_management/bundle_integrate_mlflow`, `microscopy` notebooks |
-| Socket FD limit (R8) | Add `--ulimit nofile=65536:65536` to docker run invocation |
+| Socket FD limit (R8) | ✓ Confirmed fixed — `--ulimit nofile=65536:65536` resolves ancdata error; isolated run completed in 3m1s (2026-06-11) |
 | pytorch-lightning/mlflow import chain (R7) | ✓ Fixed: `pytorch-lightning>=2.1` in notebook (PR #2065) |
 | PEP8 in 3 notebooks | Run `bash runner.sh --autofix` for `surgtoolloc/preprocess_detect_scene_and_split_fold.ipynb`, `deep_atlas/deep_atlas_tutorial.ipynb`, `modules/interpretability/class_lung_lesion.ipynb` |
 | Restormer in MONAI dev | Cherry-pick Restormer network class commit; remove from skip list once merged |

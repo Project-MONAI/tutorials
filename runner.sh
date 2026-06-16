@@ -164,6 +164,8 @@ autofix=false
 failfast=false
 pattern=""
 papermill_opt=""
+jobs=1
+data_dir=""
 
 kernelspec="python3"
 
@@ -173,7 +175,7 @@ NB_OUTPUT_LINE_CAP=100
 
 function print_usage {
     echo "runner.sh [--no-run] [--no-checks] [--autofix] [-f/--failfast] [-p/--pattern <find pattern>] [-h/--help]"
-    echo            "[-v/--version] [--verbose]"
+    echo            "[-v/--version] [--verbose] [-j/--jobs <N>] [--data-dir <path>]"
     echo ""
     echo "MONAI tutorials testing utilities. When running the notebooks, we first search for variables, such as"
     echo "\"max_epochs\" and set them to 1 to reduce testing time."
@@ -184,12 +186,21 @@ function print_usage {
     echo "    --autofix         : autofix where possible"
     echo "    --cell-standard   : check guidelines standards such as ## setup environment cell blocks"
     echo "    --copyright       : check whether every source code and notebook has a copyright header"
-    echo "    -f, --failfast    : stop on first error"
+    echo "    -f, --failfast    : stop on first error (ignored when --jobs > 1)"
     echo "    -p, --pattern     : pattern of files to be run (added to \`find . -type f -name *.ipynb -and ! -wholename *.ipynb_checkpoints*\`)"
     echo "    -h, --help        : show this help message and exit"
     echo "    -t, --test        : shortcut to run a single notebook using pattern \`-and -wholename\`"
     echo "    -v, --version     : show MONAI and system version information and exit"
-    echo "    --verbose         : show papermill logs when testing the noteboobks"
+    echo "    --verbose         : show papermill logs when testing the notebooks"
+    echo "    -j, --jobs N      : run N notebooks in parallel (default: 1). Each notebook logs independently;"
+    echo "                        logs are printed in original order after all jobs finish."
+    echo "                        Note: parallel jobs share the same Python environment; use --jobs 1 when"
+    echo "                        notebooks do conflicting pip installs."
+    echo "    --data-dir PATH   : set MONAI_DATA_DIRECTORY to PATH before running notebooks. Notebooks that"
+    echo "                        respect this env var will persist downloads there instead of a temp dir."
+    echo "                        Tip: mount a host directory at this path in Docker to cache across runs:"
+    echo "                          docker run ... -v /host/data:/data -e MONAI_DATA_DIRECTORY=/data ..."
+    echo "                        or pass --data-dir /data to this script after the Docker bind-mount."
     echo ""
     echo "Examples:"
     echo "./runner.sh                             # run full tests (${green}recommended before making pull requests${noColor})."
@@ -201,6 +212,8 @@ function print_usage {
     echo "                                        # check filenames containing \"read\" or \"load\", but not if the"
     echo "                                          whole path contains \"deepgrow\"."
     echo "./runner.sh --kernelspec \"kernel\"       # Set the kernelspec value used to run notebooks, default is \"python3\"."
+    echo "./runner.sh -j 4 --data-dir /data/monai_cache"
+    echo "                                        # run 4 notebooks in parallel; reuse cached downloads."
     echo "./runner.sh --no-checks --no-run --copyright
     echo "                                        # test if all notebooks and scripts have the copyright header"
     echo "./runner.sh --no-checks --no-run --cell-standard
@@ -249,6 +262,14 @@ do
         -p|--pattern)
             pattern+="$2"
             echo $pattern
+            shift
+        ;;
+        -j|--jobs)
+            jobs="$2"
+            shift
+        ;;
+        --data-dir)
+            data_dir="$2"
             shift
         ;;
         -k|--kernelspec)
@@ -433,6 +454,19 @@ fi
 base_path="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 cd "${base_path}"
 
+# Export MONAI_DATA_DIRECTORY so notebooks persist downloads across runs.
+# 109/117 runnable notebooks honour this env var (pattern:
+#   directory = os.environ.get("MONAI_DATA_DIRECTORY")
+#   root_dir  = tempfile.mkdtemp() if directory is None else directory
+# Without it each notebook re-downloads on every container run.
+if [ -n "$data_dir" ]; then
+    mkdir -p "$data_dir"
+    export MONAI_DATA_DIRECTORY="$data_dir"
+    echo "Data cache: $data_dir  (MONAI_DATA_DIRECTORY)"
+elif [ -n "${MONAI_DATA_DIRECTORY:-}" ]; then
+    echo "Data cache: $MONAI_DATA_DIRECTORY  (MONAI_DATA_DIRECTORY from environment)"
+fi
+
 function replace_text {
     oldString="${s}\s*=\s*[0-9]\+"
     newString="${s} = 1"
@@ -485,24 +519,28 @@ fi
 
 ########################################################################
 #                                                                      #
-#  loop over files                                                     #
+#  per-notebook logic (used by both sequential and parallel paths)     #
 #                                                                      #
 ########################################################################
-for file in "${files[@]}"; do
-    current_test_successful=0
+# _run_notebook FILE RESULT_FILE
+#   Runs PEP8 checks and/or papermill for FILE.
+#   Writes 0 (pass) or 1 (fail) to RESULT_FILE.
+#   Must be called in a subshell so cwd changes are isolated.
+function _run_notebook {
+    local file="$1"
+    local result_file="$2"
+    local current_test_successful=0
 
     echo "${separator}${blue}Running $file${noColor}"
 
-    # Get to file's folder and get file contents
+    local path filename
     path="$(dirname "${file}")"
     filename="$(basename "${file}")"
-    cd ${base_path}/${path}
+    cd "${base_path}/${path}"
 
-    ########################################################################
-    #                                                                      #
-    #  code checks                                                         #
-    #                                                                      #
-    ########################################################################
+    ####################################################################
+    #  code checks                                                     #
+    ####################################################################
     if [ $doChecks = true ]; then
 
         if [ $autofix = true ]; then
@@ -513,33 +551,26 @@ for file in "${files[@]}"; do
                 --pipe "sed 's/ = list()/ = []/'"
         fi
 
-        # to check flake8, convert to python script, don't check
-        # magic cells, and don't check line length for comment
-        # lines (as this includes markdown), and then run flake8
         echo Checking PEP8 compliance...
         jupytext "$filename" --opt custom_cell_magics="writefile" -w --to script -o - | \
             sed 's/\(^\s*\)%/\1pass  # %/' | \
             sed 's/\(^#.*\)$/\1  # noqa: E501/' | \
             flake8 - --show-source --extend-ignore=E203,N812,W503 --max-line-length 120
-        success=$?
-        if [ ${success} -ne 0 ]
-        then
+        local success=$?
+        if [ ${success} -ne 0 ]; then
             print_error_msg "Try running with autofixes: ${green}--autofix${noColor}"
-            test_fail ${success}
+            current_test_successful=1
         fi
     fi
 
-    ########################################################################
-    #                                                                      #
-    #  run notebooks with papermill                                        #
-    #                                                                      #
-    ########################################################################
-    if [ $doRun = true ]; then
+    ####################################################################
+    #  run notebook with papermill                                     #
+    ####################################################################
+    if [ $doRun = true ] && [ $current_test_successful -eq 0 ]; then
 
-        skipRun=false
-
+        local skipRun=false
         for skip_pattern in "${skip_run_papermill[@]}"; do
-            if [[  $file =~ $skip_pattern ]]; then
+            if [[ $file =~ $skip_pattern ]]; then
                 echo "Skip Pattern Match"
                 skipRun=true
                 break
@@ -548,45 +579,112 @@ for file in "${files[@]}"; do
 
         if [ $skipRun = true ]; then
             echo "Skipping"
-            continue
+            echo "$current_test_successful" > "$result_file"
+            return
         fi
 
         echo Running notebook...
+        local notebook
         notebook=$(cat "$filename")
 
-        # if compulsory keyword, max_epochs, missing...
         if [[ ! "$notebook" =~ "max_epochs" ]]; then
-            # and notebook isn't in list of those expected to not have that keyword...
-            should_contain_max_epochs=true
+            local should_contain_max_epochs=true
             for e in "${doesnt_contain_max_epochs[@]}"; do
                 [[ "$e" == "$filename" ]] && should_contain_max_epochs=false && break
             done
-            # then error
             if [[ $should_contain_max_epochs == true ]]; then
                 print_error_msg "Couldn't find the keyword \"max_epochs\", and the notebook wasn't on the list of expected exemptions (\"doesnt_contain_max_epochs\")."
-                test_fail 1
+                current_test_successful=1
+                echo "$current_test_successful" > "$result_file"
+                return
             fi
         fi
 
-        # Set some variables to 1 to speed up proceedings
-        strings_to_replace=(max_epochs val_interval disc_train_interval disc_train_steps num_batches_for_histogram)
+        local strings_to_replace=(max_epochs val_interval disc_train_interval disc_train_steps num_batches_for_histogram)
         for s in "${strings_to_replace[@]}"; do
             replace_text
         done
 
         python -c 'import monai; monai.config.print_config()'
 
+        local cmd
         cmd=$(echo "papermill ${papermill_opt} --progress-bar --log-output -k ${kernelspec}")
         echo "$cmd"
+        local out
         time out=$(echo "$notebook" | eval "$cmd")
-        success=$?
+        local success=$?
         if [[ ${success} -ne 0 || "$out" =~ "\"status\": \"failed\"" ]]; then
-            test_fail ${success}
+            current_test_successful=1
         fi
     fi
 
-    num_tested=$((num_tested + 1))
-    if [[ ${current_test_successful} -eq 0 ]]; then
-        num_successful_tests=$((num_successful_tests + 1))
-    fi
-done
+    echo "$current_test_successful" > "$result_file"
+}
+
+########################################################################
+#                                                                      #
+#  loop over files — sequential (jobs=1) or parallel (jobs>1)         #
+#                                                                      #
+########################################################################
+if [ "$jobs" -le 1 ]; then
+    # ---------------------------------------------------------------- #
+    #  Sequential path — original behaviour, unchanged                 #
+    # ---------------------------------------------------------------- #
+    for file in "${files[@]}"; do
+        current_test_successful=0
+        _result_file=$(mktemp)
+
+        ( trap - EXIT; _run_notebook "$file" "$_result_file" )
+
+        current_test_successful=$(cat "$_result_file" 2>/dev/null || echo 1)
+        rm -f "$_result_file"
+
+        num_tested=$((num_tested + 1))
+        if [[ ${current_test_successful} -eq 0 ]]; then
+            num_successful_tests=$((num_successful_tests + 1))
+        elif [ $failfast = true ]; then
+            finish
+        fi
+    done
+
+else
+    # ---------------------------------------------------------------- #
+    #  Parallel path — N notebooks run concurrently                    #
+    # ---------------------------------------------------------------- #
+    echo "Running ${#files[@]} notebooks with --jobs $jobs"
+    _work_dir=$(mktemp -d)
+
+    for file in "${files[@]}"; do
+        # Throttle: wait until a slot is free
+        while [ "$(jobs -rp | wc -l)" -ge "$jobs" ]; do
+            wait -n 2>/dev/null || sleep 0.2
+        done
+
+        _slug=$(printf '%s' "$file" | tr '/.' '--')
+        _log="${_work_dir}/${_slug}.log"
+        _result="${_work_dir}/${_slug}.result"
+
+        (
+            trap - EXIT
+            set +e
+            _run_notebook "$file" "$_result"
+        ) > "$_log" 2>&1 &
+    done
+
+    wait  # wait for all remaining background jobs
+
+    # Print logs in original notebook order; collect pass/fail counts
+    for file in "${files[@]}"; do
+        _slug=$(printf '%s' "$file" | tr '/.' '--')
+        _log="${_work_dir}/${_slug}.log"
+        _result="${_work_dir}/${_slug}.result"
+
+        cat "$_log"
+        num_tested=$((num_tested + 1))
+        if [ "$(cat "$_result" 2>/dev/null)" = "0" ]; then
+            num_successful_tests=$((num_successful_tests + 1))
+        fi
+    done
+
+    rm -rf "$_work_dir"
+fi

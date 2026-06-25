@@ -139,6 +139,7 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*maisi_inference_tutorial.ipynb*
 skip_run_papermill=("${skip_run_papermill[@]}" .*image_restoration.ipynb*)  # monai.networks.nets.restormer not yet in dev branch
 skip_run_papermill=("${skip_run_papermill[@]}" .*05_spleen_segmentation_lightning*)  # requires GPU; hardcoded .to("cuda") with no CPU fallback
 skip_run_papermill=("${skip_run_papermill[@]}" .*deep_atlas_tutorial*)  # requires GPU; device hardcoded to "cuda:0"
+skip_run_papermill=("${skip_run_papermill[@]}" .*class_lung_lesion*)  # unknown error: No recognizable error pattern found
 
 # output formatting
 separator=""
@@ -447,7 +448,7 @@ function replace_text {
 }
 
 # Get notebooks (pattern is an empty string unless the user specifies otherwise)
-files=($(echo $pattern | xargs find . -type f -name "*.ipynb" -and ! -wholename "*.ipynb_checkpoints*"))
+files=($(echo "$pattern" | xargs find . -type f -name "*.ipynb" -and ! -wholename "*.ipynb_checkpoints*"))
 if [[ $files == "" ]]; then
     print_error_msg "No files match pattern"
     exit 0

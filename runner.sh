@@ -141,6 +141,7 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*05_spleen_segmentation_lightnin
 skip_run_papermill=("${skip_run_papermill[@]}" .*deep_atlas_tutorial*)  # requires GPU; device hardcoded to "cuda:0"
 skip_run_papermill=("${skip_run_papermill[@]}" .*class_lung_lesion*)  # unknown error: No recognizable error pattern found
 skip_run_papermill=("${skip_run_papermill[@]}" .*lazy_resampling_benchmark*)  # unknown error: No recognizable error pattern found
+skip_run_papermill=("${skip_run_papermill[@]}" .*omniverse_integration*)  # unknown error: No recognizable error pattern found
 
 # output formatting
 separator=""

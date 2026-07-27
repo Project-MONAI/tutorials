@@ -331,6 +331,8 @@ Illustrate reading NIfTI files and iterating over image patches of the volumes l
 This tutorial illustrates the flexible network APIs and utilities.
 ##### [postprocessing_transforms](./modules/postprocessing_transforms.ipynb)
 This notebook shows the usage of several postprocessing transforms based on the model output of spleen segmentation task.
+##### [rankseg_integration](./modules/rankseg_integration.ipynb)
+This notebook demonstrates how to integrate RankSEG and RankSEGd as optional third-party post-processing transforms in MONAI and compare RankSEG with argmax using a pretrained pancreas segmentation model.
 ##### [idc_dataset](./modules/idc_dataset.ipynb)
 This notebook shows how to query and download public cancer imaging data from NCI Imaging Data Commons (IDC) using `idc-index`, and how to load DICOM images and DICOM-SEG segmentations into MONAI for AI/ML preprocessing.
 ##### [public_datasets](./modules/public_datasets.ipynb)

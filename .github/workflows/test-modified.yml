@@ -7,6 +7,9 @@ on:
       - main
   pull_request:
 
+permissions:
+  contents: read
+
 concurrency:
   # automatically cancel the previously triggered workflows when there's a newer version
   group: build-${{ github.event.pull_request.number || github.ref }}
@@ -16,7 +19,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
+    - uses: actions/checkout@v7
+      with:
+        repository: Project-MONAI/MONAI
+        path: monai
     - name: Set up Python 3.10
       uses: actions/setup-python@v6
       with:
@@ -27,25 +34,20 @@ jobs:
       env:
         PIP_NO_CACHE_DIR: "1"
         PIP_DISABLE_PIP_VERSION_CHECK: "1"
+        BUILD_MONAI: 0
+        PIP_EXTRA_INDEX_URL: "https://download.pytorch.org/whl/cpu"  # forces CPU PyTorch installation, should be faster
       run: |
         find  /opt/hostedtoolcache/* -maxdepth 0 ! -name 'Python' -exec rm -rf {} \;
         df -h
         which python
-        python -m pip install -U pip wheel wheel-stub
-        # Force CPU-only PyTorch wheels so we don't download huge CUDA/nvidia-* wheels in CI.
-        # Keep PyPI available for torch's dependencies.
-        pip install --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple torch torchvision torchaudio
-
-        pip install --no-build-isolation -r https://raw.githubusercontent.com/Project-MONAI/MONAI/dev/requirements-dev.txt
-        pip install -r requirements.txt
-
-        # Avoid PEP517 build isolation (which can re-install torch and pull CUDA wheels).
-        BUILD_MONAI=0 pip install --no-build-isolation git+https://github.com/Project-MONAI/MONAI#egg=MONAI
-        pip list
+        python -m pip install -U pip wheel
+        (cd monai; pip install .[all])
+        python -m pip install -r requirements.txt
+        python -m pip list
     - name: Notebook quick check
       shell: bash
       run: |
-        python -c "import monai; monai.config.print_debug_info()"
+        python -m monai.config
         git fetch origin main
         git diff --name-only origin/main | while read line
         do

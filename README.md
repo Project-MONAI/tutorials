@@ -235,6 +235,10 @@ This tutorial demonstrates how to construct a training workflow of [HoVerNet](ht
 ##### [Nuclei Classification](./pathology/nuclick#nuclei-classification-model)
 The notebook demonstrates examples of training and inference pipelines with interactive annotation for pathology, NuClick is used for delineating nuclei, cells and a squiggle for outlining glands.
 
+#### <ins>**Multimodal**</ins>
+##### [Multimodal Early-Fusion Network](./multimodal/nakaseke_multimodal_early_fusion)
+An end-to-end tutorial fusing a 2D radiograph stream (MONAI `DenseNet121`) with a low-dimensional clinical tabular stream via dictionary-based transforms and `torch.cat`, using a fully synthetic, locally generated dataset.
+
 #### <ins>**Acceleration**</ins>
 ##### [fast_model_training_guide](./acceleration/fast_model_training_guide.md)
 The document introduces details of how to profile the training pipeline, how to analyze the dataset and select suitable algorithms, and how to optimize GPU utilization in single GPU, multi-GPUs or even multi-nodes.

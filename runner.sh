@@ -137,9 +137,10 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*learn2reg_oasis_unpaired_brain_
 skip_run_papermill=("${skip_run_papermill[@]}" .*finetune_vista3d_for_hugging_face_pipeline.ipynb*)
 skip_run_papermill=("${skip_run_papermill[@]}" .*TCIA_PROSTATEx_Prostate_MRI_Anatomy_Model.ipynb*)  # https://github.com/Project-MONAI/tutorials/issues/2029
 skip_run_papermill=("${skip_run_papermill[@]}" .*maisi_inference_tutorial.ipynb*)
-skip_run_papermill=("${skip_run_papermill[@]}" .*image_restoration.ipynb*)  # monai.networks.nets.restormer not yet in dev branch
 skip_run_papermill=("${skip_run_papermill[@]}" .*05_spleen_segmentation_lightning*)  # requires GPU; hardcoded .to("cuda") with no CPU fallback
 skip_run_papermill=("${skip_run_papermill[@]}" .*deep_atlas_tutorial*)  # requires GPU; device hardcoded to "cuda:0"
+skip_run_papermill=("${skip_run_papermill[@]}" .*lazy_resampling_benchmark*)  # slow benchmark: downloads Task01_BrainTumour (~7 GB) and iterates the full dataset twice
+skip_run_papermill=("${skip_run_papermill[@]}" .*omniverse_integration*)  # requires apt/root, VTK+OpenGL, usd-core and the MAISI bundle; targets NVIDIA Omniverse
 
 # output formatting
 separator=""
@@ -267,6 +268,10 @@ do
         ;;
         -j|--jobs)
             jobs="$2"
+            if ! [[ "$jobs" =~ ^[1-9][0-9]*$ ]]; then
+                print_error_msg "--jobs must be a positive integer, got '$jobs'"
+                exit 1
+            fi
             shift
         ;;
         --data-dir)
@@ -482,7 +487,7 @@ function replace_text {
 }
 
 # Get notebooks (pattern is an empty string unless the user specifies otherwise)
-files=($(echo $pattern | xargs find . -type f -name "*.ipynb" -and ! -wholename "*.ipynb_checkpoints*"))
+mapfile -t files < <(echo "$pattern" | xargs find . -type f -name "*.ipynb" -and ! -wholename "*.ipynb_checkpoints*")
 if [[ $files == "" ]]; then
     print_error_msg "No files match pattern"
     exit 0
@@ -655,15 +660,17 @@ else
     echo "Running ${#files[@]} notebooks with --jobs $jobs"
     _work_dir=$(mktemp -d)
 
-    for file in "${files[@]}"; do
+    # Per-job artifacts are keyed by the notebook's index in $files, which is
+    # guaranteed unique (a path-derived slug can collide, e.g. ./a/b.ipynb vs ./a-b.ipynb).
+    for _idx in "${!files[@]}"; do
+        file="${files[$_idx]}"
         # Throttle: wait until a slot is free
         while [ "$(jobs -rp | wc -l)" -ge "$jobs" ]; do
             wait -n 2>/dev/null || sleep 0.2
         done
 
-        _slug=$(printf '%s' "$file" | tr '/.' '--')
-        _log="${_work_dir}/${_slug}.log"
-        _result="${_work_dir}/${_slug}.result"
+        _log="${_work_dir}/${_idx}.log"
+        _result="${_work_dir}/${_idx}.result"
 
         (
             trap - EXIT
@@ -675,10 +682,9 @@ else
     wait  # wait for all remaining background jobs
 
     # Print logs in original notebook order; collect pass/fail counts
-    for file in "${files[@]}"; do
-        _slug=$(printf '%s' "$file" | tr '/.' '--')
-        _log="${_work_dir}/${_slug}.log"
-        _result="${_work_dir}/${_slug}.result"
+    for _idx in "${!files[@]}"; do
+        _log="${_work_dir}/${_idx}.log"
+        _result="${_work_dir}/${_idx}.result"
 
         cat "$_log"
         num_tested=$((num_tested + 1))

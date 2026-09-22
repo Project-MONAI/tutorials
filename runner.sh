@@ -141,6 +141,7 @@ skip_run_papermill=("${skip_run_papermill[@]}" .*05_spleen_segmentation_lightnin
 skip_run_papermill=("${skip_run_papermill[@]}" .*deep_atlas_tutorial*)  # requires GPU; device hardcoded to "cuda:0"
 skip_run_papermill=("${skip_run_papermill[@]}" .*lazy_resampling_benchmark*)  # slow benchmark: downloads Task01_BrainTumour (~7 GB) and iterates the full dataset twice
 skip_run_papermill=("${skip_run_papermill[@]}" .*omniverse_integration*)  # requires apt/root, VTK+OpenGL, usd-core and the MAISI bundle; targets NVIDIA Omniverse
+skip_run_papermill=("${skip_run_papermill[@]}" .*multichannel_microscopy_classification*)  # kernel dies mid-run (DeadKernelError ~cell 17-21, likely OOM); not fixable from logs
 
 # output formatting
 separator=""

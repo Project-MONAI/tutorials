@@ -53,6 +53,7 @@ jobs:
         do
           if [[ $line == *.ipynb ]]
           then
+            date
             ./runner.sh -p " -and -wholename './${line}'"
           fi
         done

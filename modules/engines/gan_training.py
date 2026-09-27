@@ -61,7 +61,7 @@ def main():
     md5_value = "0bc7306e7427e00ad1c5526a6677552d"
     extract_dir = "data"
     tar_save_path = os.path.join(extract_dir, "MedNIST.tar.gz")
-    download_and_extract(mednist_url, tar_save_path, extract_dir, md5_value)
+    download_and_extract(mednist_url, tar_save_path, extract_dir, md5_value, "md5")
     hand_dir = os.path.join(extract_dir, "MedNIST", "Hand")
     real_data = [{"hand": os.path.join(hand_dir, filename)} for filename in os.listdir(hand_dir)]
 

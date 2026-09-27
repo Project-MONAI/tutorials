@@ -59,7 +59,7 @@ md5 = "410d4a301da4e5b2f6f86ec3ddba524e"
 compressed_file = os.path.join(root_dir, "Task09_Spleen.tar")
 data_root = os.path.join(root_dir, "Task09_Spleen")
 if not os.path.exists(data_root):
-    download_and_extract(resource, compressed_file, root_dir, md5)
+    download_and_extract(resource, compressed_file, root_dir, md5, "md5")
 
 out_dir = "./outputs_base"
 

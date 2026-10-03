@@ -4,6 +4,8 @@ Typically, model training is a time-consuming step during deep learning developm
 ### List of notebooks and examples
 #### [fast_model_training_guide](./fast_model_training_guide.md)
 The document introduces details of how to profile the training pipeline, how to analyze the dataset and select suitable algorithms, and how to optimize GPU utilization in single GPU, multi-GPUs or even multi-nodes.
+#### [fast_inference_tutorial](./fast_inference_tutorial)
+The example introduces details of how to use GDS, GPU transforms and TensorRT to accelerate the inference.
 #### [distributed_training](./distributed_training)
 The examples show how to execute distributed training and evaluation based on 3 different frameworks:
 - PyTorch native `DistributedDataParallel` module with `torchrun`.

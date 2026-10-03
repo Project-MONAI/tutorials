@@ -37,3 +37,58 @@ torchrun --nproc_per_node=8 --nnodes=2 --node_rank=1 --master_addr="localhost" -
 Note that the only difference between the two commands is `--node_rank`.
 
 There would be some possible delay between the execution of the two commands in the two nodes. But the first node would always wait for the second one, and they would start and train together. If there is an IP issue for the validation part during model training, please refer to the solution [here](https://discuss.pytorch.org/t/connect-127-0-1-1-a-port-connection-refused/100802/25) to resolve it.
+
+## Running on MacBook M4 Max 2024
+
+To run a model on a MacBook M4 Max 2024, follow these steps to optimize GPU utilization:
+
+1. **Install Dependencies**:
+   - Install Homebrew if you haven't already:
+     ```sh
+     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+     ```
+   - Install Python:
+     ```sh
+     brew install python
+     ```
+   - Install virtualenv:
+     ```sh
+     pip install virtualenv
+     ```
+   - Create a virtual environment:
+     ```sh
+     virtualenv monai_env
+     ```
+   - Activate the virtual environment:
+     ```sh
+     source monai_env/bin/activate
+     ```
+   - Install MONAI and other dependencies:
+     ```sh
+     pip install monai numpy torch torchvision
+     ```
+
+2. **Set Up the Environment**:
+   - Clone the Project-MONAI repository:
+     ```sh
+     git clone https://github.com/Project-MONAI/tutorials.git
+     cd tutorials
+     ```
+   - Navigate to the desired tutorial directory, for example:
+     ```sh
+     cd acceleration
+     ```
+
+3. **Run a Model**:
+   - Choose the tutorial or example you want to run. For instance, to run the `fast_training_tutorial.ipynb`, you can use Jupyter Notebook.
+   - Install Jupyter Notebook:
+     ```sh
+     pip install notebook
+     ```
+   - Start Jupyter Notebook:
+     ```sh
+     jupyter notebook
+     ```
+   - Open the desired notebook (e.g., `fast_training_tutorial.ipynb`) in your browser and follow the instructions to run the model.
+
+By following these steps, you should be able to install and run a model on your MacBook M4 Max 2024 with the specified system information.

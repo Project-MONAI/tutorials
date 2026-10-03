@@ -27,3 +27,72 @@ This notebook shows how to use TensorRT to accelerate the model and achieve a be
 
 #### [Tutorials for resource monitoring](./monitoring/README.md)
 Information about how to set up and apply existing tools to monitor the computing resources.
+
+### Running a Model on MacBook M4 Max 2024
+
+#### Step-by-Step Guide
+
+##### 1. Installing Dependencies
+
+To run a model on a MacBook M4 Max 2024, you need to install the necessary dependencies. Follow these steps:
+
+1. Install Homebrew if you haven't already:
+   ```sh
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
+
+2. Install Python:
+   ```sh
+   brew install python
+   ```
+
+3. Install virtualenv:
+   ```sh
+   pip install virtualenv
+   ```
+
+4. Create a virtual environment:
+   ```sh
+   virtualenv monai_env
+   ```
+
+5. Activate the virtual environment:
+   ```sh
+   source monai_env/bin/activate
+   ```
+
+6. Install MONAI and other dependencies:
+   ```sh
+   pip install monai numpy torch torchvision
+   ```
+
+##### 2. Setting Up the Environment
+
+1. Clone the Project-MONAI repository:
+   ```sh
+   git clone https://github.com/Project-MONAI/tutorials.git
+   cd tutorials
+   ```
+
+2. Navigate to the desired tutorial directory, for example:
+   ```sh
+   cd acceleration
+   ```
+
+##### 3. Running a Model
+
+1. Choose the tutorial or example you want to run. For instance, to run the `fast_training_tutorial.ipynb`, you can use Jupyter Notebook.
+
+2. Install Jupyter Notebook:
+   ```sh
+   pip install notebook
+   ```
+
+3. Start Jupyter Notebook:
+   ```sh
+   jupyter notebook
+   ```
+
+4. Open the desired notebook (e.g., `fast_training_tutorial.ipynb`) in your browser and follow the instructions to run the model.
+
+By following these steps, you should be able to install and run a model on your MacBook M4 Max 2024 with the specified system information.

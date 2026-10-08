@@ -32,8 +32,8 @@ Pre-training Dataset: Datasets from multiple sources has been used. Below is a l
 Fine-tuning Dataset: The dataset from Beyond the Cranial Vault Challenge
 [(BTCV)](https://www.synapse.org/#!Synapse:syn3193805/wiki/217789)
 2015 hosted at MICCAI, was used as a fully supervised fine-tuning task on the pre-trained weights. The dataset
-consists of 30 3D Volumes with annotated labels of up to 13 different organs [2]. There are 3 JSON files provided in the
-json_files directory for the dataset. They correspond to having a different number of training volumes ranging from
+consists of 30 3D Volumes with annotated labels of up to 13 different organs [2]. There are 5 JSON files provided in the
+[datalists](datalists) directory for the dataset. They correspond to having a different number of training volumes ranging from
 3, 5, 7, 12 and 24. All 5 JSON files have the same validation split.
 
 ### 2. Pretrained SwinUNETR Weights

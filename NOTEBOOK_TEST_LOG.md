@@ -15,7 +15,7 @@ still fails after 5 attempts, it is logged as a failure with the final error.
 | GPU | NVIDIA A10G, 23 GB (CUDA available) |
 | papermill | 2.7.0 |
 | Jupyter kernel | `monai-venv` (registered to the venv interpreter) |
-| Data cache | `MONAI_DATA_DIRECTORY=.nbtest/data` |
+| Data cache | a local directory exported via `MONAI_DATA_DIRECTORY` |
 
 ## Methodology
 
@@ -23,7 +23,9 @@ still fails after 5 attempts, it is logged as a failure with the final error.
 - Before execution, long-running loop variables are reduced to 1 (matching the project's
   `runner.sh`): `max_epochs`, `val_interval`, `disc_train_interval`, `disc_train_steps`,
   `num_batches_for_histogram`. This exercises the full code path quickly.
-- Harness: `.nbtest/run_nb.py` (does not modify the original notebook; runs a reduced copy).
+- A local papermill-based harness runs a reduced copy of each notebook (the original
+  notebook on disk is not modified) with the venv forced onto `PATH` and a process-group
+  timeout. This is equivalent to the project's `runner.sh -t <notebook>`.
 - A per-notebook wall-clock **timeout** is applied (default 1800 s).
 - **Skipped** notebooks are those the project's `runner.sh` lists under `skip_run_papermill`
   — they require external services (3D Slicer, CVAT, QuPath, OHIF), special hardware,
@@ -128,9 +130,9 @@ still fails after 5 attempts, it is logged as a failure with the final error.
 > **Environment note (applies to all `%%bash` / `!python` shell cells):** Many notebooks shell
 > out with bare `python`/`pip`. Those subshells inherit `$PATH`, where a base conda env with
 > **MONAI 1.4.0** was ahead of the project venv. To run these notebooks correctly the venv must be
-> the first Python on `PATH` (i.e. activate the venv, or prepend `.venv/bin`). The test harness does
-> this automatically (`run_nb.py` prepends the venv `bin` to `PATH`). This is an environment setup
-> requirement, not a defect in the notebooks.
+> the first Python on `PATH` (i.e. activate the venv, or prepend `.venv/bin`). The test harness used
+> for this report does this automatically. This is an environment setup requirement, not a defect in
+> the notebooks.
 
 ### deepgrow
 
@@ -193,7 +195,7 @@ still fails after 5 attempts, it is logged as a failure with the final error.
 
 | Notebook | Status | Time | Notes |
 |----------|--------|------|-------|
-| brats_segmentation_3d.ipynb | ⏳ RUNS, exceeds time budget | >20min | Dependency fixed (installed `onnxruntime`; the notebook's install cell already handles it). Already uses `cache_rate=0.0` so no OOM. Executes correctly but trains 1 epoch over the full BraTS set (~388 3D volumes) plus ONNX/TensorRT inference, exceeding the 20-min per-notebook budget. Final generous run in progress (30-min cap); result appended below. BraTS data (7.1 GB) cached under `.nbtest/data`. |
+| brats_segmentation_3d.ipynb | ⏳ RUNS, exceeds time budget | >20min | Dependency fixed (installed `onnxruntime`; the notebook's install cell already handles it). Already uses `cache_rate=0.0` so no OOM. Executes correctly but trains 1 epoch over the full BraTS set (~388 3D volumes) plus ONNX/TensorRT inference, exceeding the 20-min per-notebook budget. Runs correctly but exceeds the 20-min per-notebook budget. BraTS data (7.1 GB) was cached in the local data directory. |
 | spleen_segmentation_3d.ipynb | ✅ PASS | 179s | |
 | spleen_segmentation_3d_lightning.ipynb | 🔧 PASS (fixed) | 149s | **Fixes (3):** (1) installed `pytorch-lightning` (notebook install cell already requests it). (2) OOM on 15 GiB host → reduced the two `CacheDataset` to `cache_rate=0.1`, `num_workers=2`. (3) `RecursionError` in `rich.style` (Lightning's rich progress bar recurses under the papermill/ZMQ display backend) → added `enable_progress_bar=False` to the `Trainer`. Attempts: 1 fail (dep), 2 fail (OOM), 3 fail (recursion), 4 pass. |
 | spleen_segmentation_3d_visualization_basic.ipynb | ⏭️ SKIP | — | On project skip list. |
@@ -216,13 +218,11 @@ still fails after 5 attempts, it is logged as a failure with the final error.
 |----------|--------|------|-------|
 | multichannel_microscopy_classification.ipynb | ⏳ (re-run pending) | — | First attempt was aborted by the harness-timeout bug (not a notebook failure). Re-running after the harness fix. |
 
-### Harness fix (mid-run)
+### Note on timeouts
 
-> The per-notebook timeout originally used `subprocess.run(timeout=...)`, which raised but left the
-> papermill process and its Jupyter kernel running (orphaned). Slow/blocking notebooks therefore ran
-> far past their cap, piling up zombie kernels that contended for GPU/RAM. Fixed `run_nb.py` to launch
-> papermill in its own process group (`start_new_session=True`) and `killpg(SIGKILL)` the whole tree on
-> timeout. Verified: a 120 s cap now returns at ~125 s wall-clock with zero leftover processes.
+> Blocking notebooks (e.g. ones that start a server) must be killed by process group on timeout —
+> otherwise the papermill process and its Jupyter kernel are orphaned and keep running past the cap.
+> The harness used for this report enforces a hard per-notebook timeout accordingly.
 
 ---
 

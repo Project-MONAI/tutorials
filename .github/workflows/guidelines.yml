@@ -7,20 +7,36 @@ on:
       - main
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  # automatically cancel the previously triggered workflows when there's a newer version
+  group: guidelines-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   guidelines:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
+    - uses: actions/checkout@v7
+      with:
+        repository: Project-MONAI/MONAI
+        path: monai
     - name: Set up Python 3.10
       uses: actions/setup-python@v6
       with:
         python-version: '3.10'
         cache: 'pip'
     - name: Install dependencies
+      env:
+        PIP_EXTRA_INDEX_URL: "https://download.pytorch.org/whl/cpu"  # forces CPU PyTorch installation, should be faster
+        BUILD_MONAI: 0
       run: |
         find  /opt/hostedtoolcache/* -maxdepth 0 ! -name 'Python' -exec rm -rf {} \;
-        python -m pip install --upgrade pip wheel wheel-stub
+        python -m pip install --upgrade pip wheel
+        (cd monai; pip install .[all])
         python -m pip install -r requirements.txt
     - name: Guidelines notebook format check
       run: |

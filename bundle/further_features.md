@@ -47,7 +47,7 @@ root_dir = tempfile.mkdtemp() if directory is None else directory
 compressed_file = os.path.join(root_dir, "Task09_Spleen.tar")
 data_dir = os.path.join(root_dir, "Task09_Spleen")
 if not os.path.exists(data_dir):
-    download_and_extract(resource, compressed_file, root_dir, md5)
+    download_and_extract(resource, compressed_file, root_dir, md5, "md5")
 ```
 
 ## Define train config - Set imports and input / output environments

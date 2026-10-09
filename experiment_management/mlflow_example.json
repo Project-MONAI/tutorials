@@ -14,7 +14,7 @@
         }
     },
     "configs": {
-        "tracking_uri": "$@output_dir + '/mlruns'",
+        "tracking_uri": "$'sqlite:///' + @output_dir + '/mlruns.db'",
         "experiment_name": "monai_experiment",
         "run_name": "test1",
         "is_not_rank0": "$torch.distributed.is_available() and torch.distributed.is_initialized() and torch.distributed.get_rank() > 0",

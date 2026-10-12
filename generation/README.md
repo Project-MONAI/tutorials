@@ -74,10 +74,10 @@ Example shows the use cases of applying a spatial VAE to a 2D synthesis example.
 Example shows the use cases of applying a spatial VAE to a 3D synthesis example. To obtain realistic results, the model is trained on the original VAE losses, as well as perceptual and adversarial ones.
 
 ## Performing anomaly detection with diffusion models: [implicit guidance](./anomaly_detection/2d_classifierfree_guidance_anomalydetection_tutorial.ipynb), [using transformers](./anomaly_detection/anomaly_detection_with_transformers.ipynb) and [classifier free guidance](./anomaly_detection/anomalydetection_tutorial_classifier_guidance.ipynb)
-Examples show how to perform anomaly detection in 2D, using implicit guidance [2D-classifier free guiance](./anomaly_detection/2d_classifierfree_guidance_anomalydetection_tutorial.ipynb), transformers [using transformers](./anomaly_detection/anomaly_detection_with_transformers.ipynb) and [classifier free guidance](./anomalydetection_tutorial_classifier_guidance).
+Examples show how to perform anomaly detection in 2D, using implicit guidance [2D-classifier free guiance](./anomaly_detection/2d_classifierfree_guidance_anomalydetection_tutorial.ipynb), transformers [using transformers](./anomaly_detection/anomaly_detection_with_transformers.ipynb) and [classifier free guidance](./anomaly_detection/anomalydetection_tutorial_classifier_guidance.ipynb).
 
 ## 2D super-resolution using diffusion models: [using torch](./2d_super_resolution/2d_sd_super_resolution.ipynb) and [using torch lightning](./2d_super_resolution/2d_sd_super_resolution_lightning.ipynb).
 Examples show how to perform super-resolution in 2D, using PyTorch and PyTorch Lightning.
 
-## [Guiding the synthetic process using a semantic encoder](./2d_diffusion_autoencoder/2d_diffusion_autoencoder.ipynb)
+## [Guiding the synthetic process using a semantic encoder](./2d_diffusion_autoencoder/2d_diffusion_autoencoder_tutorial.ipynb)
 Example shows how to train a DDPM and an encoder simultaneously, resulting in the latents of the encoder guiding the inference process of the DDPM.

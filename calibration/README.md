@@ -8,8 +8,9 @@ the directory configured by `MONAI_DATA_DIRECTORY`.
 The notebook demonstrates MONAI's calibration metrics, low-level bin statistics, Ignite handler, and hard- and
 soft-binned L1 Average Calibration Error losses. It uses complete-volume train/validation/test cohorts and compares
 a segmentation baseline with one hard L1-ACE configuration chosen in validation-only preliminary experiments for
-its calibration improvement with minimal Dice reduction. The focused comparison discusses the associated
-publication's 1:1:1 objective, finite-bin estimates, and the limitations of auxiliary calibration training.
+its calibration improvement with minimal Dice reduction. The focused comparison uses a validation-selected
+Dice:CE:Hard-L1-ACE objective with an approximate ratio of 1:1:0.30. It also discusses the associated publication's
+1:1:1 objective, finite-bin estimates, and the limitations of auxiliary calibration training.
 
 For a one-epoch CI smoke test, run:
 

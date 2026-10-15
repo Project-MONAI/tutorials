@@ -101,6 +101,13 @@ Each user is responsible for checking the content of datasets and the applicable
 You can read details about adding a tutorial in our [CONTRIBUTING GUIDELINES](CONTRIBUTING.md).
 
 ### 4. List of notebooks and examples
+#### <ins>**Calibration**</ins>
+##### [Training and evaluating calibrated segmentation models](./calibration/segmentation_calibration.ipynb)
+This tutorial trains two models on complete 3D MRI volumes from the Medical Segmentation Decathlon
+`Task04_Hippocampus` dataset to demonstrate calibration metrics, reliability diagrams, the Ignite calibration
+handler, and L1-ACE auxiliary training. It compares a validation-selected hard L1-ACE configuration with a controlled
+segmentation baseline on separate held-out test volumes.
+
 #### <ins>**2D classification**</ins>
 ##### [mednist_tutorial](./2d_classification/mednist_tutorial.ipynb)
 This notebook shows how to easily integrate MONAI features into existing PyTorch programs.

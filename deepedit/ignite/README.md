@@ -92,7 +92,7 @@ python ./train.py
     --export      true
 ```
 
-#### [DeepEdit Inference](./inference.ipynb)
+#### [DeepEdit Inference](./infoANDinference.ipynb)
 
 This notebook helps to run any pre-transforms before running inference over a DeepEdit single label model.
 It also helps to run post-transforms to get the final label mask.

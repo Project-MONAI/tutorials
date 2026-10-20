@@ -179,7 +179,7 @@ def define_vae_transform(
                 for axes in [(0, 1), (1, 2), (0, 2)]
             ]
             + [
-                RandScaleIntensityd(keys=image_keys, allow_missing_keys=True, prob=0.3, factors=(0.9, 1.1)),
+                RandScaleIntensityd(keys=image_keys, allow_missing_keys=True, prob=0.3, factors=(-0.1, 0.1)),
                 RandShiftIntensityd(keys=image_keys, allow_missing_keys=True, prob=0.3, offsets=0.05),
             ]
         )

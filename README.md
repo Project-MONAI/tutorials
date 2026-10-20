@@ -101,6 +101,13 @@ Each user is responsible for checking the content of datasets and the applicable
 You can read details about adding a tutorial in our [CONTRIBUTING GUIDELINES](CONTRIBUTING.md).
 
 ### 4. List of notebooks and examples
+#### <ins>**Calibration**</ins>
+##### [Training and evaluating calibrated segmentation models](./calibration/segmentation_calibration.ipynb)
+This tutorial trains two models on complete 3D MRI volumes from the Medical Segmentation Decathlon
+`Task04_Hippocampus` dataset to demonstrate calibration metrics, reliability diagrams, the Ignite calibration
+handler, and L1-ACE auxiliary training. It compares a validation-selected hard L1-ACE configuration with a controlled
+segmentation baseline on separate held-out test volumes.
+
 #### <ins>**2D classification**</ins>
 ##### [mednist_tutorial](./2d_classification/mednist_tutorial.ipynb)
 This notebook shows how to easily integrate MONAI features into existing PyTorch programs.
@@ -157,7 +164,7 @@ This folder provides a simple baseline method for training, validation, and infe
 This notebook demonstrates how to construct a training workflow of UNETR on multi-organ segmentation task using the BTCV challenge dataset.
 ##### [unetr_btcv_segmentation_3d_lightning](./3d_segmentation/unetr_btcv_segmentation_3d_lightning.ipynb)
 This tutorial demonstrates how MONAI can be used in conjunction with [PyTorch Lightning](https://www.pytorchlightning.ai/) framework to construct a training workflow of UNETR on multi-organ segmentation task using the BTCV challenge dataset.
-##### [vista3d](./3d_segmentation/vista3d)
+##### [vista3d](./vista_3d)
 This tutorial showcases the process of fine-tuning VISTA3D on [MSD Spleen dataset](http://medicaldecathlon.com) using MONAI. For an in-depth exploration, please visit the [VISTA](https://github.com/Project-MONAI/VISTA) repository.
 
 #### <ins>**2D registration**</ins>

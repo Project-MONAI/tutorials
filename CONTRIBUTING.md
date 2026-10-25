@@ -186,7 +186,7 @@ By making a contribution to this project, I certify that:
 Once the changes are ready, push your local branch to the remote, e.g. `git push --set-upstream origin <your new branch name>`, and [open a pull request](https://github.com/Project-MONAI/tutorials/pulls).
 When the pull request is opened, the MONAI repository has a set of GitHub actions that will run checks on the changes.
 
-Please check more [details in the guidelines](#ci-test-passing-guide) for how to pass the tests.
+Please check more [details in the guidelines](#cicd-test-passing-guide) for how to pass the tests.
 
 In addition, the team will perform diligent code reviews following this [set of guidelines](#common-recommendations-for-the-review) to reduce the amount of work for users to run the tutorials.
 

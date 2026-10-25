@@ -69,7 +69,7 @@ any C++ code. We will use this to demonstrate implementing MONAI code inside Tri
 * [Quick Start](#quick-start)
 * [Examples](#examples)
 * [Usage](#usage)
-* [Model Config File](#model-config-file)
+* [Model Config File](#model-config)
 * [Error Hanldling](#error-handling)
 
 
@@ -130,14 +130,14 @@ COPY models/monai_covid/1/model.py /models/monai_covid/1
 
 ENTRYPOINT [ "tritonserver", "--model-repository=/models"]
 ```
-Note: The Triton service expects a certain directory structure discussed in [Model Config File](#model-config-file) to load the model definitions.
+Note: The Triton service expects a certain directory structure discussed in [Model Config File](#model-config) to load the model definitions.
 
 2. Next, the container with the Triton Service runs as a service (in background or separate terminal for demo).  In this example, the ports used by the Triton Service are set to `8000` for client communications.
 ```Dockerfile:
 demo_app_image_name="monai_triton:demo"
 docker run --shm-size=128G --rm -p 127.0.0.1:8000:8000 -p 127.0.0.1:8001:8001 -p 127.0.0.1:8090:8002 ${demo_app_image_name}
 ```
-3. See [Model Config File](#model-config-file) to see the expected file structure for Triton.
+3. See [Model Config File](#model-config) to see the expected file structure for Triton.
 - Modify the models/monai_prostrate/1/model.py file to satisfy any model configuration requirements while keeping the required components in the model definition. See the * [Usage](#usage) section for background.
 - In the models/monai_prostrate/1/config.pbtxt file configure the number of GPUs and which ones are used.
 e.g. Using two available GPUs and two parallel versions of the model per GPU

@@ -53,7 +53,7 @@ This demo and description borrows heavily from the [Triton Python Backend](https
 
 Get The Demo Source Code
 -------------------------------
-Pull down the demo repository and start with the [Quick Start] (#quick-start) guide.
+Pull down the demo repository and start with the [Quick Start](#quick-start) guide.
 
 ```
 $ git clone https://github.com/Project-MONAI/tutorials.git
@@ -106,7 +106,6 @@ Alternatively, the user can just run the shell script provided the previous step
 $ ./mednist_client_run.sh
 ```
 The expected result is variety of classification results for body images and local inference times.
-```
 
 ## Examples:
 The example demonstrates running a Triton Python Backend on a single image classification problem.

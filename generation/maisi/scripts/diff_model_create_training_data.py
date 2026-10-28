@@ -194,12 +194,8 @@ def diff_model_create_training_data(
             continue
 
         filepath = filenames_raw[_iter]
-        new_dim = tuple(
-            round_number(
-                int(plain_transforms({"image": os.path.join(args.data_base_dir, filepath)})["image"].meta["dim"][_i])
-            )
-            for _i in range(1, 4)
-        )
+        image = plain_transforms({"image": os.path.join(args.data_base_dir, filepath)})["image"]
+        new_dim = tuple(round_number(dim) for dim in image.shape[1:])
         new_transforms = create_transforms(new_dim)
 
         process_file(filepath, args, autoencoder, device, plain_transforms, new_transforms, logger)

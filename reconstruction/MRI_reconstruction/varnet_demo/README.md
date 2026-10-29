@@ -19,7 +19,7 @@ This folder contains code to train and validate an e2e-VarNet ([https://arxiv.or
 
 * [Inference](#Inference)
 
-* [Acknowledgment](#Acknowledgement)
+* [Acknowledgment](#acknowledgment)
 
 ***
 

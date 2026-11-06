@@ -16,6 +16,7 @@
 
 ## Introduction
 
+
 Thank you for considering a contribution to the MONAI Tutorials Repository and reading the Contributing Guidelines.
 
 The following is a set of guidelines for contributing tutorials to Project MONAI.

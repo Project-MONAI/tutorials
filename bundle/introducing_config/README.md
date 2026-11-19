@@ -155,5 +155,5 @@ plt.show()
 - Running customized Python components (made available on the `PYTHONPATH`).
 - Overriding the component in `example.yaml` using, for example, `--id=new_value` in the command line.
 - Multiple configuration files and cross-file references.
-- Replacing in terms of plain texts instead of Python objects ([tutorial](../get_started.md)).
+- Replacing in terms of plain texts instead of Python objects ([tutorial](../further_features.md)).
 - The debugging mode to investigate the intermediate variables and results.

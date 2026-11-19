@@ -19,7 +19,7 @@ This folder contains code to train and validate a U-Net for accelerated MRI reco
 
 * [Inference](#Inference)
 
-* [Acknowledgment](#Acknowledgement)
+* [Acknowledgment](#acknowledgment)
 
 ***
 

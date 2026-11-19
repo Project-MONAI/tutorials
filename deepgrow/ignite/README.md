@@ -143,7 +143,7 @@ This notebook helps to run any pre-transforms before running inference over a De
 It also helps to run post-transforms to get the final label mask.
 
 
-#### [Deepgrow Stats](./handler.py)
+#### Deepgrow Stats
 It contains basic ignite handler to capture region/organ-wise statistics, save snapshots, outputs while running train/validation over a dataset that has multi-label mask.
 By-default the handler is added as part of training/validation steps.
 

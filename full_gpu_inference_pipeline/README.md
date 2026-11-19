@@ -11,7 +11,7 @@
   * [Benchmark](#benchmark)
     + [Understanding the benchmark output](#understanding-the-benchmark-output)
     + [HTTP vs. gRPC vs. shared memory](#http-vs-grpc-vs-shared-memory)
-    + [Pre/Post-processing on GPU vs. CPU](#pre-post-processing-on-gpu-vs-cpu)
+    + [Pre/Post-processing on GPU vs. CPU](#prepost-processing-on-gpu-vs-cpu)
 
 ## Overview
 
@@ -57,7 +57,7 @@ Triton environment can be quickly setup by running a Triton docker container:
 docker run --gpus=1 -it --name='triton_monai' --ipc=host -p18100:8000 -p18101:8001 -p18102:8002 --shm-size=1g -v /yourfolderpath:/triton_monai nvcr.io/nvidia/tritonserver:21.12-py3
 ```
 Please note that when starting the docker container, --ipc=host should be set, so that shared memory can be used to do the data transmission between server and client. Also you should allocate a relatively large shared memory using --shm-size option, because starting from 21.04 release, Python backend uses shared memory to connect user's code to Triton.
-### Setup python execution environment
+### Setup python execution environment
 Since we will use MONAI transforms in Triton python backend, we should set up the python execution environment in Triton container by following the instructions in [Triton python backend repository](https://github.com/triton-inference-server/python_backend#using-custom-python-execution-environments). For the installation steps of MONAI, you can refer to [monai install](https://docs.monai.io/en/latest/installation.html "monai install"). Below are the steps used to setup the proper environments for this experiment:
 
 Install the software packages below:
@@ -140,7 +140,7 @@ From the result, we can come to a conclusion that using shared memory will great
 
 ![](../figures/full_gpu_inference_figure1.png)
 
-### Pre/Post-processing on GPU vs. CPU 
+### Pre/Post-processing on GPU vs. CPU
 After doing pre and post-processing on GPU, we can get a 12x speedup for the full pipeline.
 
 ![](../figures/full_gpu_inference_figure2.png)
